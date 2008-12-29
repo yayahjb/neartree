@@ -121,36 +121,47 @@ The provided interface is:
        instantiated by something like:      CNearTree &lt;v&gt; vTree;
        for some type v
 
-    void m_fnInsert( T&amp; t )
+    ~CNearTree(void)  // destructor
+       invoked by  vTree.CNeartree<v>::~CNearTree
+       for an object vTree of some type v
+
+    bool empty( ) const
+       test for an empty NearTree
+
+    void Insert( T&amp; t )
        where t is an object of the type v
 
-    bool m_bfnNearestNeighbor ( const double&amp; dRadius,  T&amp; tClosest,   const T&amp; t ) const
+    bool NearestNeighbor ( const double&amp; dRadius,  T&amp; tClosest,   const T&amp; t ) const
        dRadius is the largest radius within which to search; make it
           very large if you want to include every point that was loaded; dRadius
           is returned as the closest distance to the probe (or the search radius
           if nothing is found)
        tClosest is returned as the object that was found closest to the probe
           point (if any were within radius dRadius of the probe)
-       t is the probe point, used to search in the group of points m_fnInsert'ed
+       t is the probe point, used to search in the group of points Insert'ed
        return value is true if some object was found within the search radius, false otherwise
 
-    bool m_bfnFarthestNeighbor ( T&amp; tFarthest,   const T&amp; t ) const
+    bool FarthestNeighbor ( T&amp; tFarthest,   const T&amp; t ) const
        tFarthest is returned as the object that was found farthest to the probe
           point
-       t is the probe point, used to search in the group of points m_fnInsert'ed
+       t is the probe point, used to search in the group of points Insert'ed
        return value is true if some object was found, false otherwise
 
-    long m_lfnFindInSphere ( const double&amp; dRadius,  std::vector&lt;  T &gt;&amp; tClosest,   const T&amp; t ) const
+    long FindInSphere ( const double&amp; dRadius,  std::vector&lt;  T &gt;&amp; tClosest,   const T&amp; t ) const
        dRadius is the radius within which to search; make it very large if you want to
            include every point that was loaded;
        tClosest is returned as the vector of objects that were found within a radius dRadius
           of the probe point
-       t is the probe point, used to search in the group of points m_fnInsert'ed
+       t is the probe point, used to search in the group of points Insert'ed
        return value is the number of objects found within the search radius
-
-    ~CNearTree( void )  // destructor
-       invoked by  vTree.CNeartree&lt;v&gt;::~CNearTree
-       for an object vTree of some type v
+    
+    T InSphere ( const double& dRadius,  const T& t )
+      dRadius is the radius within which to search; make it very large if you want to
+           include every point that was loaded;
+      t is the probe point, used to search in the group of points Insert'ed
+      return value if an object of the type v which is closest within the sphere to
+           the probe point t
+      
 </tt>
 </pre>
 <p>
@@ -164,8 +175,8 @@ So a complete program is:
  {
    CNearTree&lt; double &gt; dT;
    double dNear;
-   dT.m_fnInsert( 1.5 );
-   if ( dT.m_bfnNearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",dRad );
+   dT.Insert( 1.5 );
+   if ( dT.NearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",dRad );
  }
 </tt>
 </pre>
