@@ -1,0 +1,177 @@
+<html>
+<head>
+<title>
+NearTree -- function library efficiently solving the Nearest Neighbor Problem
+</title>
+</head>
+<body>
+<font face="Arial,Helvetica,Times" size="3">
+<table border=2>
+<tr>
+<td valign="center" width="88" align="center" height="35" bgcolor="yellow">
+<font face="Arial,Helvetica,Times" size="2">
+<a href="http://sf.net/projects/neartree"style="text-decoration:none" >NearTree</a>
+</font>
+</td>
+<td valign="center" width="88" align="center" height="35" bgcolor="cyan">
+<font face="Arial,Helvetica,Times" size="2">
+<a href="http://sf.net/projects/cvector" style="text-decoration:none">CVector</a>
+</font>
+</td>
+<td valign="center"  width="88" align="center" height="35">
+<a href="http://sourceforge.net"><img src="http://sflogo.sourceforge.net/sflogo.php?group_id=237121&amp;type=1" width="88" height="31" border="0" alt="SourceForge.net Logo" /></a>
+</td>
+</tr>
+</table>
+<hr>
+<center>
+<h2>NearTree</h2>
+&#169; Copyright 2001, 2008 Larry Andrews.  All rights reserved
+<br />
+based on<br />
+Larry Andrews, &quot;<i>A template for the nearest neighbor problem</i>&quot;,<br />
+C/C++ Users Journal, Volume 19 ,  Issue 11  (November 2001), 40 - 49  (2001),
+ISSN:1075-2838,<br />
+<a href="http://www.ddj.com/architect/184401449" style="text-decoration:none">www.ddj.com/architect/184401449</a>
+<p>
+Revised 12 Dec 2008 for sourceforge release, Herbert J. Bernstein
+</h2>
+<P>
+
+<h4>YOU MAY REDISTRIBUTE NearTree UNDER THE TERMS OF THE <a href=lgpl.txt style="text-decoration:none">LGPL</a></h4>
+<p>
+</center>
+<center>
+<table border=1>
+<tr>
+<td><font face="Arial,Helvetica,Times" size="2">
+<h4 align=center>LGPL NOTICES</h4>
+<p>
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+<p>
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU*
+Lesser General Public License for more details.
+<p>
+You should have received a copy of the GNU Lesser General Public 
+License along with this library; if not, write to the Free
+Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+MA  02110-1301  USA
+</td>
+</table>
+</center>
+<P>
+This is a revised release of
+<blockquote>
+template &lt;typename T&gt; class CNearTree;
+</blockquote>
+<P>
+Nearest Neighbor algorithm after Kalantari and McDonald,
+(IEEE Transactions on Software Engineering, v. SE-9, pp.   631-634,1983)
+modified to use recursion instead of a double-linked tree
+and simplified so that it does a bit less checking for
+things like is the distance to the right less than the
+distance to the left; it was found that these checks little
+to no difference.
+<p>
+
+
+The user of this class needs to provide at least the following
+functionality for the template to work. For the built-in
+numerics of C++, they are provided by the system.
+<p>
+<center>
+<table>
+<tr>
+<td><font face="Arial,Helvetica,Times" size="3">
+operator double( );   </font></td><td><font face="Arial,Helvetica,Times" size="3">// conversion constructor from the templated class to double (usually will return a "length")
+</font></td>
+</tr>
+<tr>
+<td><font face="Arial,Helvetica,Times" size="3">
+operator- ( );         </font></td><td><font face="Arial,Helvetica,Times" size="3">// geometrical (vector) difference of two objects
+</font></td>
+</tr>
+<tr>
+<td></td><td><font face="Arial,Helvetica,Times" size="3">//    a copy constructor
+</font></td>
+</tr>
+<tr>
+<td></td><td><font face="Arial,Helvetica,Times" size="3">//    a constructor would be nice
+</font></td>
+</tr>
+<tr>
+<td></td><td><font face="Arial,Helvetica,Times" size="3">//    a destructor would be nice
+</font></td>
+</tr>
+</table>
+</center>
+<p>
+
+The provided interface is:
+<p>
+<pre><tt>
+    #include "TNear.h"
+
+    CNearTree( void )   // constructor
+       instantiated by something like:      CNearTree &lt;v&gt; vTree;
+       for some type v
+
+    void m_fnInsert( T&amp; t )
+       where t is an object of the type v
+
+    bool m_bfnNearestNeighbor ( const double&amp; dRadius,  T&amp; tClosest,   const T&amp; t ) const
+       dRadius is the largest radius within which to search; make it
+          very large if you want to include every point that was loaded; dRadius
+          is returned as the closest distance to the probe (or the search radius
+          if nothing is found)
+       tClosest is returned as the object that was found closest to the probe
+          point (if any were within radius dRadius of the probe)
+       t is the probe point, used to search in the group of points m_fnInsert'ed
+       return value is true if some object was found within the search radius, false otherwise
+
+    bool m_bfnFarthestNeighbor ( T&amp; tFarthest,   const T&amp; t ) const
+       tFarthest is returned as the object that was found farthest to the probe
+          point
+       t is the probe point, used to search in the group of points m_fnInsert'ed
+       return value is true if some object was found, false otherwise
+
+    long m_lfnFindInSphere ( const double&amp; dRadius,  std::vector&lt;  T &gt;&amp; tClosest,   const T&amp; t ) const
+       dRadius is the radius within which to search; make it very large if you want to
+           include every point that was loaded;
+       tClosest is returned as the vector of objects that were found within a radius dRadius
+          of the probe point
+       t is the probe point, used to search in the group of points m_fnInsert'ed
+       return value is the number of objects found within the search radius
+
+    ~CNearTree( void )  // destructor
+       invoked by  vTree.CNeartree&lt;v&gt;::~CNearTree
+       for an object vTree of some type v
+</tt>
+</pre>
+<p>
+So a complete program is:
+<p>
+<pre>
+<tt>
+ #include "TNear.h"
+ #include &lt;cstdio&gt;
+ void main()
+ {
+   CNearTree&lt; double &gt; dT;
+   double dNear;
+   dT.m_fnInsert( 1.5 );
+   if ( dT.m_bfnNearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",dRad );
+ }
+</tt>
+</pre>
+ and it should print 0.5 (that's how for 2.0 is from 1.5)
+
+
+</font>
+</body>
+</html>
