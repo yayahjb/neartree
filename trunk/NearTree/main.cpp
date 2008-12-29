@@ -32,7 +32,7 @@
 //**********************************************************************/
 
 #include <stdio.h>
-#include <iostream.h>
+#include <iostream>
 #include <stdlib.h>
 #include <limits.h>
 #include <time.h>
@@ -60,7 +60,7 @@ int main ( )
       {
          for ( i= lMaxRow ; i>=-1;  i-- ) 
          {
-            vTree.m_fnInsert( v((double)i, (double)j, (double)k) );
+            vTree.Insert( v((double)i, (double)j, (double)k) );
          }  // for i
       }     // for j
    }        // for k
@@ -87,7 +87,7 @@ int main ( )
 
 
 // find the nearest point to vSearch
-      if ( vTree.m_bfnNearestNeighbor( dRad, vBest, vSearch ) )
+      if ( vTree.NearestNeighbor( dRad, vBest, vSearch ) )
       {
          cout
             << " Closest distance " << (double) ( vSearch - vBest ) << " to " << vBest << endl;
@@ -99,7 +99,7 @@ int main ( )
       }
 
 // find the farthest point from vSearch
-      if ( vTree.m_bfnFarthestNeighbor ( vBest, vSearch ) )
+      if ( vTree.FarthestNeighbor ( vBest, vSearch ) )
       {
          cout 
             << " Farthest distance " << (double) ( vSearch - vBest ) << " to " << vBest << endl;
@@ -110,7 +110,7 @@ int main ( )
       }
 
 // search for all points within a "sphere" out to radius dRad
-      if ( ( lReturn = vTree.m_lfnFindInSphere( dRad, vReturn, vSearch )) > 0 ) 
+      if ( ( lReturn = vTree.FindInSphere( dRad, vReturn, vSearch )) > 0 ) 
       {
          cout << " Returned " << lReturn << " items within " << dRad << " of "<< vSearch << endl;
          std::vector <v>::iterator iv;
