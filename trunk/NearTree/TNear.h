@@ -72,7 +72,7 @@
 //       instantiated by something like:      CNearTree <v> vTree;
 //       for some type v
 //
-//    void insert( T& t )
+//    void Insert( T& t )
 //       where t is an object of the type v
 //
 //    bool NearestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) const
@@ -82,13 +82,13 @@
 //          if nothing is found)
 //       tClosest is returned as the object that was found closest to the probe
 //          point (if any were within radius dRadius of the probe)
-//       t is the probe point, used to search in the group of points insert'ed
+//       t is the probe point, used to search in the group of points Insert'ed
 //       return value is true if some object was found within the search radius, false otherwise
 //
 //    bool FarthestNeighbor ( T& tFarthest,   const T& t ) const
 //       tFarthest is returned as the object that was found farthest to the probe
 //          point
-//       t is the probe point, used to search in the group of points insert'ed
+//       t is the probe point, used to search in the group of points Insert'ed
 //       return value is true if some object was found, false otherwise
 //
 //    long FindInSphere ( const double& dRadius,  std::vector<  T >& tClosest,   const T& t ) const
@@ -96,7 +96,7 @@
 //           include every point that was loaded;
 //       tClosest is returned as the vector of objects that were found within a radius dRadius
 //          of the probe point
-//       t is the probe point, used to search in the group of points insert'ed
+//       t is the probe point, used to search in the group of points Insert'ed
 //       return value is the number of objects found within the search radius
 //
 //    ~CNearTree( void )  // destructor
@@ -111,7 +111,7 @@
 // {
 //   CNearTree< double > dT;
 //   double dNear;
-//   dT.insert( 1.5 );
+//   dT.Insert( 1.5 );
 //   if ( dT.NearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",dRad );
 // }
 //
@@ -199,7 +199,7 @@ public:
    }  //  ~CNearTree
 
 //=======================================================================
-//  void insert ( const T& t )
+//  void Insert ( const T& t )
 //
 //  Function to insert some "point" as an object into a CNearTree for
 //  later searching
@@ -213,7 +213,7 @@ public:
 //  when they are both already used.
 //
 //=======================================================================
-   void insert( const T& t )
+   void Insert( const T& t )
    {
       // do a bit of precomputing if it is possible so that we can
       // reduce the number of calls to operator 'double' as much as possible;
@@ -240,17 +240,17 @@ public:
          if ( m_pRightBranch == 0 ) m_pRightBranch = new CNearTree;
          // note that the next line assumes that m_dMaxRight is negative for a new node
          if ( m_dMaxRight < dTempRight ) m_dMaxRight = dTempRight;
-         m_pRightBranch->insert( t );
+         m_pRightBranch->Insert( t );
       }
       else  // ((double)(t - *m_tLeft) <= (double)(t - *m_tRight) )
       {
          if ( m_pLeftBranch  == 0 ) m_pLeftBranch  = new CNearTree;
          // note that the next line assumes that m_dMaxLeft is negative for a new node
          if ( m_dMaxLeft < dTempLeft ) m_dMaxLeft  = dTempLeft;
-         m_pLeftBranch->insert( t );
+         m_pLeftBranch->Insert( t );
       }
 
-   }  //  insert
+   }  //  Insert
 
 //=======================================================================
 //  bool NearestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) const
@@ -428,7 +428,7 @@ public:
 //=======================================================================
    bool Nearest ( double& dRadius,  T& tClosest,   const T& t )
    {
-      vector <CNearTree<T>* > sStack;
+      std::vector <CNearTree<T>* > sStack;
       enum  { left, right, end } eDir;
       eDir = left; // examine the left nodes first
       CNearTree* pt = this;
@@ -547,7 +547,7 @@ public:
    public:
    T InSphere ( const double& dRadius,  const T& t )
    {
-      static vector<CNearTree<T>* > sStack;
+      static std::vector<CNearTree<T>* > sStack;
       enum  { left, right, end } eDir;
       eDir = left; // examine the left nodes first
       static CNearTree* pt = this;
@@ -603,7 +603,7 @@ public:
       }
       while ( !sStack.empty( ) ) // for safety !!!
          sStack.pop_back( );
-      v tClosest;
+      T tClosest;
       if ( pClosest != 0 )
          tClosest = *pClosest;
       return ( tClosest );
