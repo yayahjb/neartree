@@ -64,8 +64,8 @@ int main ( )
          }  // for i
       }     // for j
    }        // for k
-    cout
-      << endl;
+    std::cout
+      << std::endl;
 
 //---------------------------------------
 //   Done building the tree; now try a retrieval
@@ -80,8 +80,8 @@ int main ( )
       double y = x;
       double z = ( 1.25 * double(lMaxRow) - 1.5 * x );
       v vSearch( x, 0.5*(x+y), z );
-      cout
-         << "Trial " << i << " from probe point " << vSearch << endl;
+      std::cout
+         << "Trial " << i << " from probe point " << vSearch << std::endl;
 
 
 
@@ -89,38 +89,38 @@ int main ( )
 // find the nearest point to vSearch
       if ( vTree.NearestNeighbor( dRad, vBest, vSearch ) )
       {
-         cout
-            << " Closest distance " << (double) ( vSearch - vBest ) << " to " << vBest << endl;
+         std::cout
+            << " Closest distance " << (double) ( vSearch - vBest ) << " to " << vBest << std::endl;
       }
       else
       {
-         cout
-            << " ***** nothing within " << dRad << " of " << vSearch << endl;
+         std::cout
+            << " ***** nothing within " << dRad << " of " << vSearch << std::endl;
       }
 
 // find the farthest point from vSearch
       if ( vTree.FarthestNeighbor ( vBest, vSearch ) )
       {
-         cout 
-            << " Farthest distance " << (double) ( vSearch - vBest ) << " to " << vBest << endl;
+         std::cout 
+            << " Farthest distance " << (double) ( vSearch - vBest ) << " to " << vBest << std::endl;
       }
       else
       {
-         cout << " No Farthest object found" << endl;
+         std::cout << " No Farthest object found" << std::endl;
       }
 
 // search for all points within a "sphere" out to radius dRad
       if ( ( lReturn = vTree.FindInSphere( dRad, vReturn, vSearch )) > 0 ) 
       {
-         cout << " Returned " << lReturn << " items within " << dRad << " of "<< vSearch << endl;
+         std::cout << " Returned " << lReturn << " items within " << dRad << " of "<< vSearch << std::endl;
          std::vector <v>::iterator iv;
          for ( iv=vReturn.begin( ); iv<vReturn.end( ); iv++ )
          {
-            cout << "\t" << *iv << endl;
+            std::cout << "\t" << *iv << std::endl;
          }
       }
 
-      cout << " -------------------------------------------------------------"<<endl;
+      std::cout << " -------------------------------------------------------------"<<std::endl;
    }  // for i
 
    vTree.CNearTree<v>::~CNearTree( );

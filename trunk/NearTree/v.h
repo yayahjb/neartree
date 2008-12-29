@@ -46,7 +46,7 @@
 #define V_H_INCLUDED
 
 
-#include <ostream.h>
+// #include <ostream.h>
 
 class v  
 {
@@ -59,7 +59,7 @@ public:
    v  ( );
    ~v ( );
 
-friend ostream& operator <<( ostream& os, const v& v );
+friend std::ostream& operator <<( std::ostream& os, const v& v );
 
 private:
    bool   m_bIsDefined;
