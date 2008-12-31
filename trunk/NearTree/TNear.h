@@ -132,7 +132,7 @@
 template <typename T> class CNearTree
 {
 
-    // insert copies the input objects into a binary NEAR tree. When a node has
+   // Insert copies the input objects into a binary NEAR tree. When a node has
    // two entries, a descending node is used or created. The current datum is
    // put into the branch descending from the nearer of the two
    // objects in the current node.
@@ -157,10 +157,6 @@ template <typename T> class CNearTree
 
 public:
 
-   bool empty( ) const
-   {
-      return( m_ptLeft == 0 );
-   }
 
 //=======================================================================
 //  CNearTree ( )
@@ -171,6 +167,7 @@ public:
 //  greater than the negative value
 //
 //=======================================================================
+
    CNearTree(void)  // constructor
    {
       m_ptLeft       = 0;
@@ -187,6 +184,7 @@ public:
 //  Destructor for class CNearTree
 //
 //=======================================================================
+
    ~CNearTree(void)  // destructor
    {
       delete m_pLeftBranch  ;  m_pLeftBranch  =0;
@@ -198,6 +196,18 @@ public:
       m_dMaxRight    = DBL_MIN;
    }  //  ~CNearTree
 
+//=======================================================================
+//  empty ( )
+//
+//  Test for an empty CNearTree
+//
+//=======================================================================
+    
+    bool empty( ) const
+    {
+        return( m_ptLeft == 0 );
+    }
+    
 //=======================================================================
 //  void Insert ( const T& t )
 //
@@ -256,13 +266,15 @@ public:
 //  bool NearestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) const
 //
 //  Function to search a Neartree for the object closest to some probe point, t. This function
-//  is only here so that the function Nearest can be called without having dRadius const
+//  is only here so that the function Nearest can be called without having the radius const.
+//  This was necessary because Nearest is recursive, but needs to keep the current radius.
 //
 //    dRadius is the maximum search radius - any point farther than dRadius from the probe
 //             point will be ignored
 //    tClosest is an object of the templated type and is the returned nearest point
 //             to the probe point that can be found in the Neartree
 //    t  is the probe point
+//
 //    the return value is true only if a point was found
 //
 //=======================================================================
@@ -283,6 +295,7 @@ public:
 //    tFarthest is an object of the templated type and is the returned farthest point
 //             from the probe point that can be found in the Neartree
 //    t  is the probe point
+//
 //    the return value is true only if a point was found (should only be false for
 //             an empty tree)
 //
@@ -360,59 +373,7 @@ public:
       return ( lReturn );
    }  //  InSphere
 
-/*
-//=======================================================================
-//  bool Nearest ( double& dRadius,  T& tClosest,   const T& t ) const
-//
-//  Private function to search a Neartree for the object closest to some probe point, t.
-//  This function is only called by NearestNeighbor.
-//
-//    dRadius is the smallest currently known distance of an object from the probe point.
-//    tClosest is an object of the templated type and is the returned closest point
-//             to the probe point that can be found in the Neartree
-//    t  is the probe point
-//    the return value is true only if a point was found within dRadius
-//
-//=======================================================================
-   bool Nearest ( double& dRadius,  T& tClosest,   const T& t ) const
-   {
-      double   dTempRadius;
-      bool  bRet = false;
-
-      // first test each of the left and right positions to see if
-      // one holds a point nearer than the nearest so far discovered.
-      if (( m_ptLeft!=0 ) && (( dTempRadius = ::fabs( double( t - *m_ptLeft ))) <= dRadius ))
-      {
-         dRadius  = dTempRadius;
-         tClosest = *m_ptLeft;
-         bRet     = true;
-      }
-      if (( m_ptRight!=0 ) && (( dTempRadius = ::fabs( double( t - *m_ptRight))) <= dRadius ))
-      {
-         dRadius  = dTempRadius;
-         tClosest = *m_ptRight;
-         bRet     = true;
-      }
-
-      //
-      // Now we test to see if the branches below might hold an object
-      // nearer than the best so far found. The triangle rule is used
-      // to test whether it's even necessary to descend.
-      //
-      if (( m_pLeftBranch  != 0 )  && (( dRadius + m_dMaxLeft  ) >= ::fabs( double( t - *m_ptLeft  ))))
-      {
-         bRet |= m_pLeftBranch->Nearest( dRadius, tClosest, t );
-      }
-
-      if (( m_pRightBranch != 0 )  && (( dRadius + m_dMaxRight ) >= ::fabs( double( t - *m_ptRight ))))
-      {
-         bRet |= m_pRightBranch->Nearest( dRadius, tClosest, t );
-      }
-
-      return ( bRet );
-   };   // Nearest
-*/
-
+private:
 //=======================================================================
 //  bool Nearest ( double& dRadius,  T& tClosest,   const T& t ) const
 //
@@ -433,11 +394,12 @@ public:
       eDir = left; // examine the left nodes first
       CNearTree* pt = this;
       T* pClosest = 0;
+      if (!(pt->m_ptLeft)) return 0; // test for empty
       while ( ! ( eDir == end && sStack.empty( ) ) )
       {
          if ( eDir == right )
          {
-            const double dDR = double( *(pt->m_ptRight) - t );
+            const double dDR = ::fabs(double( *(pt->m_ptRight) - t ));
             if ( dDR < dRadius )
             {
                dRadius = dDR;
@@ -455,7 +417,7 @@ public:
          }
          if ( eDir == left )
          {
-            const double dDL = double( *(pt->m_ptLeft) - t );
+            const double dDL = ::fabs(double( *(pt->m_ptLeft) - t ));
             if ( dDL < dRadius )
             {
                dRadius = dDL;
@@ -545,6 +507,17 @@ public:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    public:
+    
+//=======================================================================
+//    
+//    T InSphere ( const double& dRadius,  const T& t )
+//    dRadius is the radius within which to search; make it very large if you want to
+//        include every point that was loaded;
+//    t is the probe point, used to search in the group of points Insert'ed
+//    return value if an object of the type v which is closest within the sphere to
+//    the probe point t
+//=======================================================================
+    
    T InSphere ( const double& dRadius,  const T& t )
    {
       static std::vector<CNearTree<T>* > sStack;
@@ -556,7 +529,7 @@ public:
       {
          if ( eDir == right )
          {
-            const double dDR = double( *(pt->m_ptRight) - t );
+            const double dDR = ::fabs(double( *(pt->m_ptRight) - t ));
             if ( dDR < dRadius )
             {
                pClosest = pt->m_ptRight;
@@ -574,7 +547,7 @@ public:
          }
          if ( eDir == left )
          {
-            const double dDL = double( *(pt->m_ptLeft) - t );
+            const double dDL = ::fabs(double( *(pt->m_ptLeft) - t ));
             if ( dDL < dRadius )
             {
                pClosest = pt->m_ptLeft;
@@ -613,4 +586,3 @@ public:
 }; // template class TNear
 
 #endif // !defined(TNEAR_H_INCLUDED)
-
