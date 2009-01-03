@@ -1,11 +1,58 @@
 /*
  *  CNearTree.c
- *  CNearTree
+ *  NearTree
  *
- *  Created by Herbert J. Bernstein on 11/29/08.
- *  Copyright 2008 __MyCompanyName__. All rights reserved.
+ *  Based on TNear.h C++ Template
+ *  Copyright 2001 Larry Andrews.  All rights reserved
+ *
+ *  C Version created by Herbert J. Bernstein on 11/29/08
+ *  with permission from Larry Andrews.
+ *  Copyright 2008 Larry Andrews and Herbert J. Bernstein. 
+ *  All rights reserved.
  *
  */
+
+/**********************************************************************
+ *                                                                    *
+ * YOU MAY REDISTRIBUTE THE CNearTree API UNDER THE TERMS OF THE LGPL *
+ *                                                                    *
+ **********************************************************************/
+
+/************************* LGPL NOTICES *******************************
+ *                                                                    *
+ * This library is free software; you can redistribute it and/or      *
+ * modify it under the terms of the GNU Lesser General Public         *
+ * License as published by the Free Software Foundation; either       *
+ * version 2.1 of the License, or (at your option) any later version. *
+ *                                                                    *
+ * This library is distributed in the hope that it will be useful,    *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  *
+ * Lesser General Public License for more details.                    *
+ *                                                                    *
+ * You should have received a copy of the GNU Lesser General Public   *
+ * License along with this library; if not, write to the Free         *
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,    *
+ * MA  02110-1301  USA                                                *
+ *                                                                    *
+ **********************************************************************/
+
+/* Notices from original C++ template:
+ 
+ Nearest Neighbor algorithm after Kalantari and McDonald,
+ (IEEE Transactions on Software Engineering, v. SE-9, pp.
+ 631-634,1983)
+ modified to use recursion instead of a double-linked tree
+ and simplified so that it does a bit less checking for
+ things like is the distance to the right less than the
+ distance to the left; it was found that these checks little
+ to no difference.
+ 
+ copyright by Larry Andrews, 2001
+ may be freely distributed or used as long as this copyright notice
+ is included
+ */
+
 
 #ifdef __cplusplus
 
@@ -191,12 +238,14 @@ extern "C" {
         return errorcode;
     }
     
-    //=======================================================================
-    //  CNearTreeZeroIfEmpty (CNearTreeHandle treehandle)
-    //
-    //  Test for an empty CNearTree, returning 0 in that case
-    //
-    //=======================================================================
+    /*
+     =======================================================================
+     int CNearTreeZeroIfEmpty (CNearTreeHandle treehandle)
+     
+     Test for an empty CNearTree, returning 0 in that case
+     
+     =======================================================================
+     */
     
     int CNearTreeZeroIfEmpty (CNearTreeHandle treehandle)
     {
@@ -208,7 +257,7 @@ extern "C" {
     /*
      =======================================================================
      int CNearTreeInsert ( CNearTreeHandle treehandle, 
-     const CNEARTREE_TYPE FAR * coord, 
+     const void FAR * coord, 
      const void * obj )
      
      Function to insert some "point" as an object into a CNearTree for
@@ -239,7 +288,7 @@ extern "C" {
         double dTempLeft  =  0.;
         int errorcode = 0;
         
-        if (!treehandle) return CNEARTREE_BAD_ARGUMENT;
+        if ( !treehandle || !coord ) return CNEARTREE_BAD_ARGUMENT;
         
         if ( (treehandle->m_flags)&CNEARTREE_FLAG_RIGHT_DATA ) {
             dTempRight = CNearTreeDistsq((void FAR *)coord,treehandle->m_coordRight,
@@ -339,7 +388,7 @@ extern "C" {
                                   const void FAR * coord ) {
         
         double dSearchRadius = dRadius;
-        if (!treehandle) return CNEARTREE_BAD_ARGUMENT;
+        if (!treehandle || ! coord ) return CNEARTREE_BAD_ARGUMENT;
         if (!(treehandle->m_flags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
         return ( CNearTreeNearest ( treehandle, &dSearchRadius, coordClosest, objClosest, coord ) );
     }
@@ -358,7 +407,7 @@ extern "C" {
      objClosest is the address into which a pointer to the object associated with coordClosest
      will be stored
      coord  is the probe point
-     the return value is true only if a point was found
+     the return value is 0 only if a point was found
      
      =======================================================================
      */
@@ -367,7 +416,7 @@ extern "C" {
                                    void FAR * FAR * objFarthest,   
                                    const void FAR * coord ) {
         double dSearchRadius = DBL_MIN;
-        if (!treehandle) return CNEARTREE_BAD_ARGUMENT;
+        if ( !treehandle || !coord ) return CNEARTREE_BAD_ARGUMENT;
         if (!(treehandle->m_flags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
         return ( CNearTreeFindFarthest ( treehandle, &dSearchRadius, coordFarthest, objFarthest, coord ) );
     }
@@ -408,15 +457,17 @@ extern "C" {
         CNearTreeHandle pt;
         enum  { left, right, end } eDir;
         
-        eDir = left; // examine the left nodes first
+        eDir = left; /* examine the left nodes first */
         
         pt = treehandle;
         
         nopoints = 1;
         
+        if (dRadius < 0.) return 1;
+        
         dradiussq = dRadius*dRadius;
 
-        if (!treehandle) return CNEARTREE_BAD_ARGUMENT;
+        if ( !treehandle || !coord ) return CNEARTREE_BAD_ARGUMENT;
 
         if (!(treehandle->m_flags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
         
@@ -510,44 +561,39 @@ extern "C" {
                           void FAR * FAR * coordClosest,
                           void FAR * FAR * objClosest,
                           const void FAR * coord ) {
-        double   dTempRadius;
-        double   dradiussq;
-        double   dDRsq, dDLsq;
-        int  bRet = 0;
+        double   dDR, dDL;
         CVectorHandle sStack;
         CNearTreeHandle pt;
         void FAR * pobjClosest;
         void FAR * pcoordClosest;
         enum  { left, right, end } eDir;
         
-        eDir = left; // examine the left nodes first
+        eDir = left; /* examine the left nodes first */
         
         pt = treehandle;
         pobjClosest = NULL;
         pcoordClosest = NULL;
         
-        if (!treehandle) return CNEARTREE_BAD_ARGUMENT;
+        if ( !treehandle || !coord ) return CNEARTREE_BAD_ARGUMENT;
         if (!(treehandle->m_flags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
         
         CVectorCreate(&sStack,sizeof(CNearTreeHandle),10);
         
-        dradiussq = (*dRadius)*(*dRadius);
         
         while (!(eDir == end && CVectorSize(sStack) == 0)) {
             
             if ( eDir == right ) {
-                dDRsq = CNearTreeDistsq((void FAR *)coord,
+                dDR = sqrt(CNearTreeDistsq((void FAR *)coord,
                                         pt->m_coordRight,
                                         pt->m_dimension,
-                                        pt->m_flags&CNEARTREE_TYPE);
-                if (dDRsq < dradiussq ) {
-                    dradiussq = dDRsq;
-                    *dRadius = sqrt(dDRsq);
+                                        pt->m_flags&CNEARTREE_TYPE));
+                if (dDR < *dRadius ) {
+                    *dRadius = dDR;
                     pobjClosest = pt->m_ptobjRight;
                     pcoordClosest = pt->m_coordRight;
                 }
                 if ((pt->m_flags&CNEARTREE_FLAG_RIGHT_CHILD)&& 
-                    (pt->m_dMaxRight+*dRadius)*(pt->m_dMaxRight+*dRadius) >= dDRsq) {
+                    (pt->m_dMaxRight+*dRadius) >= dDR) {
                     /* we did the left and now we finished the right, go down */
                     pt = pt->m_pRightBranch;
                     eDir = left;
@@ -556,13 +602,12 @@ extern "C" {
                 }
             }
             if ( eDir == left ) {
-                dDLsq = CNearTreeDistsq((void FAR *)coord,
+                dDL = sqrt(CNearTreeDistsq((void FAR *)coord,
                                         pt->m_coordLeft,
                                         pt->m_dimension,
-                                        pt->m_flags&CNEARTREE_TYPE);
-                if (dDLsq < dradiussq ) {
-                    dradiussq = dDLsq;
-                    *dRadius = sqrt(dDRsq);
+                                        pt->m_flags&CNEARTREE_TYPE));
+                if (dDL < *dRadius ) {
+                    *dRadius = dDL;
                     pobjClosest = pt->m_ptobjLeft;
                     pcoordClosest = pt->m_coordLeft;
                 }
@@ -570,7 +615,7 @@ extern "C" {
                     CVectorAddElement(sStack,&pt);
                 }
                 if ((pt->m_flags&CNEARTREE_FLAG_LEFT_CHILD)&&
-                    (pt->m_dMaxLeft+*dRadius)*(pt->m_dMaxLeft+*dRadius) >= dDLsq){
+                    (pt->m_dMaxLeft+*dRadius) >= dDL){
                     pt = pt->m_pLeftBranch;
                 } else {
                     eDir = end;
@@ -588,7 +633,7 @@ extern "C" {
         if (coordClosest) *coordClosest = pcoordClosest;
         if (objClosest) *objClosest = pobjClosest;
         return  pcoordClosest?CNEARTREE_SUCCESS:CNEARTREE_NOT_FOUND;
-    };   // Nearest
+    }   /* Nearest */
     
     
     /*
@@ -617,11 +662,11 @@ extern "C" {
                                void FAR * FAR * coordFarthest,
                                void FAR * FAR * objFarthest,
                                const void FAR * coord ) {
-        double   dTempRadius;
+        double   dTempRadius = DBL_MAX;
         double   dradiussq;
         int  bRet = 0;
-        
-        if (!treehandle) return CNEARTREE_BAD_ARGUMENT;
+                
+        if ( !treehandle || !coord ) return CNEARTREE_BAD_ARGUMENT;
         if (!(treehandle->m_flags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
         
         dradiussq = (*dRadius)*(*dRadius);
@@ -631,19 +676,20 @@ extern "C" {
          the calling function is presumed initially to have set dRadius to a
          negative value before the recursive calls to  CNearTreeFindFarthest */
         
-        if (( treehandle->m_dMaxLeft>=0. ) && 
+        if ((treehandle->m_flags&CNEARTREE_FLAG_LEFT_DATA ) && 
             (( dTempRadius = CNearTreeDistsq((void FAR *)coord,
                                              treehandle->m_coordLeft,
                                              treehandle->m_dimension,
                                              treehandle->m_flags&CNEARTREE_TYPE))>= dradiussq )) {
             *dRadius  = sqrt(dTempRadius);
+            dradiussq = dTempRadius;
             *coordFarthest = treehandle->m_coordLeft;
             if ( objFarthest) *objFarthest = treehandle->m_ptobjLeft;
             bRet     =  1;
         }
-        if (( treehandle->m_dMaxRight>=0. ) && 
+        if ((treehandle->m_flags&CNEARTREE_FLAG_RIGHT_DATA ) && 
             (( dTempRadius = CNearTreeDistsq((void FAR *)coord,
-                                             treehandle->m_coordLeft,
+                                             treehandle->m_coordRight,
                                              treehandle->m_dimension,
                                              treehandle->m_flags&CNEARTREE_TYPE))>= dradiussq )) {            
             *dRadius   = sqrt(dTempRadius);
@@ -664,7 +710,7 @@ extern "C" {
                                  treehandle->m_flags&CNEARTREE_TYPE)))
         {
             if (!CNearTreeFindFarthest( treehandle->m_pLeftBranch,
-                                       dRadius, coordFarthest, objFarthest, coord)) bRet |= 1;
+                                       dRadius, coordFarthest, objFarthest, coord)) bRet = 1;
         }
         
         if (( treehandle->m_pRightBranch  != 0 ) && ( treehandle->m_dMaxRight>=0. )
@@ -674,7 +720,7 @@ extern "C" {
                                  treehandle->m_dimension,
                                  treehandle->m_flags&CNEARTREE_TYPE)))        {
             if (!CNearTreeFindFarthest( treehandle->m_pRightBranch,
-                                       dRadius, coordFarthest, objFarthest, coord)) bRet |= 1;
+                                       dRadius, coordFarthest, objFarthest, coord)) bRet = 1;
         }
         
         return ( bRet?0:1 );

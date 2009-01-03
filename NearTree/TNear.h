@@ -280,8 +280,19 @@ public:
 //=======================================================================
    bool NearestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) 
    {
-      double dSearchRadius = dRadius;
-      return ( Nearest ( dSearchRadius, tClosest, t ) );
+      if( dRadius < 0.0 ) 
+      {
+         return( false );
+      }
+      else if( this->empty( ) )
+      {
+         return( false );
+      }
+      else
+      {
+        double dSearchRadius = dRadius;
+        return ( Nearest ( dSearchRadius, tClosest, t ) );
+      }
    }  //  NearestNeighbor
 
 //=======================================================================
@@ -302,8 +313,15 @@ public:
 //=======================================================================
    bool FarthestNeighbor ( T& tFarthest,   const T& t ) const
    {
-      double dSearchRadius = DBL_MIN;
-      return ( Farthest ( dSearchRadius, tFarthest, t ) );
+      if( this->empty( ) )
+      {
+         return( false );
+      }
+      else
+      {
+        double dSearchRadius = DBL_MIN;
+        return ( Farthest ( dSearchRadius, tFarthest, t ) );
+      }
    }  //  FarthestNeighbor
 
 //=======================================================================
@@ -327,6 +345,7 @@ public:
       return ( InSphere( dRadius, tClosest, t ) );
    }  //  FindInSphere
 
+   private:
 //=======================================================================
 //  long InSphere ( const double& dRadius,  std::vector<  T >& tClosest,   const T& t ) const
 //
@@ -373,7 +392,6 @@ public:
       return ( lReturn );
    }  //  InSphere
 
-private:
 //=======================================================================
 //  bool Nearest ( double& dRadius,  T& tClosest,   const T& t ) const
 //
@@ -394,12 +412,12 @@ private:
       eDir = left; // examine the left nodes first
       CNearTree* pt = this;
       T* pClosest = 0;
-      if (!(pt->m_ptLeft)) return 0; // test for empty
+      if (!(pt->m_ptLeft)) return false; // test for empty
       while ( ! ( eDir == end && sStack.empty( ) ) )
       {
          if ( eDir == right )
          {
-            const double dDR = ::fabs(double( *(pt->m_ptRight) - t ));
+            const double dDR = ::fabs(double( t - *(pt->m_ptRight) ));
             if ( dDR < dRadius )
             {
                dRadius = dDR;
@@ -417,7 +435,7 @@ private:
          }
          if ( eDir == left )
          {
-            const double dDL = ::fabs(double( *(pt->m_ptLeft) - t ));
+            const double dDL = ::fabs(double( t - *(pt->m_ptLeft) ));
             if ( dDL < dRadius )
             {
                dRadius = dDL;
@@ -467,7 +485,6 @@ private:
 //=======================================================================
    bool Farthest ( double& dRadius,  T& tFarthest,   const T& t ) const
    {
-      double   dTempRadius;
       bool  bRet     = false;
 
       // first test each of the left and right positions to see if
@@ -475,15 +492,18 @@ private:
       // the calling function is presumed initially to have set dRadius to a
       // negative value before the recursive calls to FindFarthestNeighbor
 
-      if (( m_ptLeft!=0  ) && (( dTempRadius = ::fabs( double( t - *m_ptLeft ))) >= dRadius ))
+      double dTempRadiusLeft = DBL_MAX;
+      if (( m_ptLeft!=0  ) && ( (dTempRadiusLeft = ::fabs( double( t - *m_ptLeft )) ) >= dRadius ))
       {
-         dRadius   = dTempRadius;
+         dRadius   = dTempRadiusLeft;
          tFarthest = *m_ptLeft;
          bRet      = true;
       }
-      if (( m_ptRight!=0 ) && (( dTempRadius = ::fabs( double( t - *m_ptRight))) >= dRadius ))
+
+      double dTempRadiusRight = DBL_MAX;
+      if (( m_ptRight!=0 ) && ( (dTempRadiusRight = ::fabs( double( t - *m_ptRight )) ) >= dRadius ))
       {
-         dRadius   = dTempRadius;
+         dRadius   = dTempRadiusRight;
          tFarthest = *m_ptRight;
          bRet      = true;
       }
@@ -504,84 +524,6 @@ private:
 
       return ( bRet );
    };   // Farthest
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-   public:
-    
-//=======================================================================
-//    
-//    T InSphere ( const double& dRadius,  const T& t )
-//    dRadius is the radius within which to search; make it very large if you want to
-//        include every point that was loaded;
-//    t is the probe point, used to search in the group of points Insert'ed
-//    return value if an object of the type v which is closest within the sphere to
-//    the probe point t
-//=======================================================================
-    
-   T InSphere ( const double& dRadius,  const T& t )
-   {
-      static std::vector<CNearTree<T>* > sStack;
-      enum  { left, right, end } eDir;
-      eDir = left; // examine the left nodes first
-      static CNearTree* pt = this;
-      T* pClosest = 0;
-      while ( ! ( eDir == end && sStack.empty( ) ) )
-      {
-         if ( eDir == right )
-         {
-            const double dDR = ::fabs(double( *(pt->m_ptRight) - t ));
-            if ( dDR < dRadius )
-            {
-               pClosest = pt->m_ptRight;
-               break;
-            }
-            if ( pt->m_pRightBranch != 0 && pt->m_dMaxRight+dRadius >= dDR )
-            { // we did the left and now we finished the right, go down
-               pt = pt->m_pRightBranch;
-               eDir = left;
-            }
-            else
-            {
-               eDir = end;
-            }
-         }
-         if ( eDir == left )
-         {
-            const double dDL = ::fabs(double( *(pt->m_ptLeft) - t ));
-            if ( dDL < dRadius )
-            {
-               pClosest = pt->m_ptLeft;
-               break;
-            }
-            if ( pt->m_ptRight != 0 ) // only stack if there's a right object
-            {
-               sStack.push_back( pt );
-            }
-            if ( pt->m_pLeftBranch != 0 &&  pt->m_dMaxLeft+dRadius >= dDL )
-            { // we did the left, go down
-               pt = pt->m_pLeftBranch;
-            }
-            else
-            {
-               eDir = end;
-            }
-         }
-
-         if ( eDir == end && !sStack.empty( ) )
-         {
-            pt = sStack.back( );
-            sStack.pop_back( );
-            eDir = right;
-         }
-      }
-      while ( !sStack.empty( ) ) // for safety !!!
-         sStack.pop_back( );
-      T tClosest;
-      if ( pClosest != 0 )
-         tClosest = *pClosest;
-      return ( tClosest );
-   };
-
 
 }; // template class TNear
 
