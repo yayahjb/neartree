@@ -1,6 +1,6 @@
 /*
  *  CNearTree.h
- *  CNearTree
+ *  NearTree
  *
  *  Based on TNear.h C++ Template
  *  Copyright 2001 Larry Andrews.  All rights reserved
@@ -217,10 +217,21 @@ extern "C" {
      
      =======================================================================
      */
-    
+ 
     int CNearTreeInsert( CNearTreeHandle treehandle,
                         const void FAR * coord, 
                         const void * obj );
+    
+    /*
+     =======================================================================
+     int CNearTreeZeroIfEmpty (CNearTreeHandle treehandle)
+     
+     Test for an empty CNearTree, returning 0 in that case
+     
+     =======================================================================
+     */
+    
+    int CNearTreeZeroIfEmpty (CNearTreeHandle treehandle);
     
     /*
      =======================================================================
