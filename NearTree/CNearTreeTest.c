@@ -402,7 +402,7 @@ void testFindLastObject( void )
     
     f[0] = 1.0;
     /* generate an unbalanced tree*/
-    while( f[0] > 0.0 )
+    while( f[0] > 2.0*sqrt(DBL_MIN) )
     {
         bReturn = !CNearTreeInsert(tree,f, NULL);
         fFinal = f[0];
@@ -416,7 +416,7 @@ void testFindLastObject( void )
     if( ! bReturn || closest[0] != 1.0 )
     {
         ++g_errorCount;
-        fprintf(stdout, "CNearTreeTest: testFindLastObject: failed for double, got %f\n", closest[0] );
+      fprintf(stdout, "CNearTreeTest: testFindLastObject: Near(1) failed for double, got %g\n", closest[0] );
     }
     
     f[0] = -11.0;
@@ -424,7 +424,7 @@ void testFindLastObject( void )
     if( ! bReturn || closest[0] != 1.0 )
     {
         ++g_errorCount;
-        fprintf(stdout, "CNearTreeTest: testFindLastObject: failed for double, got %f\n", closest[0] );
+      fprintf(stdout, "CNearTreeTest: testFindLastObject: Near(2) failed for double, got %g\n", closest[0] );
     }
     
     bResult = !CNearTreeFree(&tree);
@@ -687,7 +687,7 @@ int CopyVec17(double dst[17], double src[17]) {
     size_t i;
     
     for (i = 0; i < 17; i++) {
-        dst[i] = src[17];
+      dst[i] = src[i];
     }
     return 0;
 }
@@ -764,7 +764,7 @@ void testBigVector(  )
             }
         }
         
-        if( sqrt(CNearTreeDistsq(vSearch,v17min,17,CNEARTREE_TYPE_DOUBLE)) > DBL_MIN )
+      if( sqrt(CNearTreeDistsq(vSearch,vFarthest,17,CNEARTREE_TYPE_DOUBLE)) > DBL_MIN )
         {
             ++g_errorCount;
             fprintf(stdout, "CNearTreeTest: testBigVector: FarthestNeighbor has failed\n" );
@@ -777,7 +777,8 @@ void testBigVector(  )
         
         ConstVec17(vCenter, (double)(MYRAND_MAX/2) );
         CVectorCreate(&vhand,sizeof(double *),10);
-        bResult = !CNearTreeNearestNeighbor( tree, 1000.0, (void FAR * FAR *)&vNearCenter, NULL, vCenter );
+
+      bResult = !CNearTreeNearestNeighbor( tree, 100000.0, (void FAR * FAR *)&vNearCenter, NULL, vCenter );
         if (!bResult)
           fprintf(stdout, "CNearTreeTest: testBigVector: CNearTreeNearestNeighbor has failed\n" );
         bResult = !CNearTreeFindInSphere(tree, 100.0, vhand, NULL, vNearCenter,1);
@@ -787,14 +788,22 @@ void testBigVector(  )
         
         /* Brute force search for the point closest to the point closest to the center */
         dmin = DBL_MAX;
-        for( i=0; i<iFoundNearCenter; ++i )
-        {
-            CVectorGetElement(vhand,&vv,i);
+      for( i=0; i<1000; ++i )
+      {
+         const int iGetElementReturn = CVectorGetElement(vhand,&vv,i);
+         if( iGetElementReturn == CVECTOR_NOT_FOUND )
+         {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest: testBigVector: CVectorGetElement failed\n" );
+         }
+         else
+         {
             if( CNearTreeDistsq(vNearCenter,vv,17,CNEARTREE_TYPE_DOUBLE)!=0. && 
                 sqrt(CNearTreeDistsq(vNearCenter,vv,17,CNEARTREE_TYPE_DOUBLE))< dmin)
             {
                 dmin = sqrt(CNearTreeDistsq(vNearCenter,vv,17,CNEARTREE_TYPE_DOUBLE));
                 CopyVec17(vCloseToNearCenter,vv);
+            }
             }
         }
         
@@ -803,7 +812,8 @@ void testBigVector(  )
             ++g_errorCount;
             fprintf(stdout, "CNearTreeTest: testBigVector: FindInSphere failed\n" );
         }
-        
+      else
+      {
         {
             /* Using zero radius, check that only one point is found when a point is searched
              with FindInSphere */
@@ -863,6 +873,7 @@ void testBigVector(  )
                 fprintf(stdout, "CNearTreeTest: testBigVector: FindInSphere found %ld points using %f radius\n", 
                        iFound, 
                        0.9* sqrt(CNearTreeDistsq(vCloseToNearCenter,vNearCenter,17,CNEARTREE_TYPE_DOUBLE)) );
+            }
             }
         }
         
