@@ -126,6 +126,129 @@ extern "C" {
         
     }
     
+    
+    int CNearTreeSetNorm(CNearTreeHandle treehandle, int treenorm) {
+        
+        if (!treehandle ||
+            (treenorm != CNEARTREE_NORM_L1
+            && treenorm != CNEARTREE_NORM_L2
+            && treenorm != CNEARTREE_NORM_LINF)
+            || (treehandle->m_flags & CNEARTREE_NORM)!=CNEARTREE_NORM_UNKNOWN ) return CNEARTREE_BAD_ARGUMENT;
+        treehandle->m_flags &= ~CNEARTREE_NORM_UNKNOWN;
+        treehandle->m_flags |= treenorm;
+        return CNEARTREE_SUCCESS;
+    }
+    /*
+     =======================================================================
+     double CNearTreeDist(CNearTreeHandle treehandle, 
+                          void FAR * coord1, 
+                          void FAR * coord2))
+     
+     function to return the distance (L1, L2 or L-infinity) between two 
+     coordinate vectors according to the parameters of the given tree  
+     
+     =======================================================================
+     */
+    
+     double CNearTreeDist(CNearTreeHandle treehandle, 
+                          void FAR * coord1,
+                          void FAR * coord2)  {
+         size_t index;
+         double dist, distsq;
+         
+         size_t treedim;
+         int treetype;
+         int treenorm;
+         
+         double FAR * dcoord1;
+         double FAR * dcoord2;
+         int FAR * icoord1;
+         int FAR * icoord2;
+
+         
+         treedim = treehandle->m_dimension;
+         treetype = treehandle->m_flags&CNEARTREE_TYPE;
+         treenorm = treehandle->m_flags&CNEARTREE_NORM;
+         
+         if (treenorm == CNEARTREE_NORM_UNKNOWN || treenorm == 0) {
+             treehandle->m_flags &= ~CNEARTREE_NORM;
+             treehandle->m_flags |= CNEARTREE_NORM_L2;
+             treenorm = CNEARTREE_NORM_L2;
+         }
+         
+         if (!treehandle || !coord1 || !coord2) return -1.;
+
+             
+         if (treetype == CNEARTREE_TYPE_DOUBLE) {
+                 
+            dcoord1 = (double FAR *)coord1;
+            dcoord2 = (double FAR *)coord2;
+         } else if (treetype == CNEARTREE_TYPE_INTEGER) {
+             icoord1 = (int FAR *)coord1;
+             icoord2 = (int FAR *)coord2;
+        } else return -1.0;
+                 
+         if (treedim == 1) {
+             if (treetype == CNEARTREE_TYPE_DOUBLE) {
+                 return fabs(dcoord1[0]-dcoord2[0]);
+             } else if (treetype == CNEARTREE_TYPE_INTEGER) {
+                 return fabs((double)(icoord1[0]-icoord2[0]));
+             } else {
+                 return -1.0;
+             }
+         }
+             
+         switch (treenorm) {
+             case CNEARTREE_NORM_L1:
+                 if (treetype == CNEARTREE_TYPE_DOUBLE) {
+                     dist= fabs(dcoord1[0]-dcoord2[0]);
+                     for (index=1; index < treedim; index++) {
+                         dist += fabs(dcoord1[index]-dcoord2[index]);
+                     }
+                 } else if (treetype == CNEARTREE_TYPE_INTEGER) {
+                     dist = fabs((double)(icoord1[0]-icoord2[0]));
+                     for (index=1; index < treedim; index++) {
+                         dist += fabs((double)(dcoord1[index]-dcoord2[index]));
+                      }
+                 } else return -1.0;
+                 return dist;
+             case CNEARTREE_NORM_LINF:
+                 if (treetype == CNEARTREE_TYPE_DOUBLE) {
+                     dist= fabs(dcoord1[0]-dcoord2[0]);
+                     for (index=1; index < treedim; index++) {
+                         dist = fmax(dist,fabs(dcoord1[index]-dcoord2[index]));
+                     }
+                 } else if (treetype == CNEARTREE_TYPE_INTEGER) {
+                     dist = fabs((double)(icoord1[0]-icoord2[0]));
+                     for (index=1; index < treedim; index++) {
+                         dist = fmax(dist,fabs((double)(dcoord1[index]-dcoord2[index])));
+                     }
+                 } else return -1.0;
+                 return dist;
+                 
+             case CNEARTREE_NORM_L2:
+             default:
+                 if (treetype == CNEARTREE_TYPE_DOUBLE) {
+                     distsq = (dcoord1[0]-dcoord2[0])*(dcoord1[0]-dcoord2[0]);
+                 
+                     for (index=1; index < treedim; index++) {
+                         distsq += (dcoord1[index]-dcoord2[index])
+                                   *(dcoord1[index]-dcoord2[index]);
+                     }
+                 } else if (treetype == CNEARTREE_TYPE_INTEGER) {
+                     distsq = ((double)(icoord1[0]-icoord2[0]))*((double)(icoord1[0]-icoord2[0]));
+                         
+                     for (index=1; index < treedim; index++) {
+                        distsq += ((double)(icoord1[index]-icoord2[index]))
+                                  *((double)(icoord1[index]-icoord2[index]));
+                    }
+                 } else return -1;
+                 return sqrt(distsq);
+         }
+         
+     }
+    
+    
     /*
      =======================================================================
      int CNearTreeCreate ( CNearTreeHandle FAR * treehandle, 
@@ -138,9 +261,14 @@ extern "C" {
      
      
      treedim -- the dimension of the vectors
-     treetype -- double or integer flag for type of the vectors
+     treetype -- double or integer flag for type of the vectors ored with norm
      CNEARTREE_TYPE_DOUBLE for double
      CNEARTREE_TYPE_INTEGER for integer
+       ored with
+     CNEARTREE_NORM_L1        for the sum of the absolute values
+     CNEARTREE_NORM_L2        for the square root of the sum of the squares
+     CNEARTREE_NORM_LINF      for the max
+     
      
      creates an empty tree with no right or left node and with the dMax-below
      set to negative values so that any match found will be stored since it will
@@ -156,13 +284,21 @@ extern "C" {
         
         size_t ntsize, nvsize;
         
+        int treenorm;
+        
         if (!treehandle) return CNEARTREE_BAD_ARGUMENT;
+        
+        treenorm = treetype & CNEARTREE_NORM;
+        
+        if (!treenorm) treenorm = CNEARTREE_NORM_UNKNOWN;
+
+        treetype &= CNEARTREE_TYPE;
         
         if (treedim < 0 
             || (treetype != CNEARTREE_TYPE_DOUBLE 
                 && treetype != CNEARTREE_TYPE_INTEGER)) return CNEARTREE_BAD_ARGUMENT;
         
-        
+         
         if (treetype == CNEARTREE_TYPE_INTEGER) {
             ntsize = (sizeof(CNearTree)+(sizeof(int)-1))/sizeof(int);
             ntsize *= sizeof(int);
@@ -198,7 +334,8 @@ extern "C" {
         (*treehandle)->m_dMaxRight    = -1.;        /* negative for an empty branch */
         (*treehandle)->m_ptobjLeft    = NULL;
         (*treehandle)->m_ptobjRight   = NULL;
-        (*treehandle)->m_flags        = treetype;   /* no data, no children         */
+        (*treehandle)->m_flags        = treetype;  /* no data, no children */
+        (*treehandle)->m_flags       |= treenorm;
         (*treehandle)->m_dimension    = treedim;    /* number of ints or doubles    */
         return CNEARTREE_SUCCESS;
     }
@@ -292,13 +429,11 @@ extern "C" {
         if ( !treehandle || !coord ) return CNEARTREE_BAD_ARGUMENT;
         
         if ( (treehandle->m_flags)&CNEARTREE_FLAG_RIGHT_DATA ) {
-            dTempRight = CNearTreeDistsq((void FAR *)coord,treehandle->m_coordRight,
-                                         treehandle->m_dimension, treehandle->m_flags&CNEARTREE_TYPE);
+            dTempRight = CNearTreeDist(treehandle, (void FAR *)coord,treehandle->m_coordRight);
         }
         
         if ( (treehandle->m_flags)&CNEARTREE_FLAG_LEFT_DATA ) {
-            dTempLeft = CNearTreeDistsq((void FAR *)coord,treehandle->m_coordLeft,
-                                        treehandle->m_dimension, treehandle->m_flags&CNEARTREE_TYPE);
+            dTempLeft = CNearTreeDist(treehandle, (void FAR *)coord,treehandle->m_coordLeft);
         }
         
         if ( !((treehandle->m_flags)&CNEARTREE_FLAG_LEFT_DATA) ) {
@@ -332,11 +467,10 @@ extern "C" {
             treehandle->m_flags |= CNEARTREE_FLAG_RIGHT_DATA;
             return CNEARTREE_SUCCESS;
         } else if ( dTempLeft > dTempRight ) {
-            dTempRight = sqrt(dTempRight);
             if (  !((treehandle->m_flags)&CNEARTREE_FLAG_RIGHT_CHILD) ) {
                 if ( (errorcode = CNearTreeCreate(&(treehandle->m_pRightBranch), 
                                                     treehandle->m_dimension, 
-                                                    treehandle->m_flags&CNEARTREE_TYPE))) return errorcode;
+                                                    treehandle->m_flags&(CNEARTREE_TYPE|CNEARTREE_NORM)))) return errorcode;
                 treehandle->m_flags |= CNEARTREE_FLAG_RIGHT_CHILD;
                 treehandle->m_dMaxRight = dTempRight;
             }
@@ -345,11 +479,10 @@ extern "C" {
                 treehandle->m_dMaxRight = dTempRight;
             return CNearTreeInsert(treehandle->m_pRightBranch, coord, obj);
         } else { /* ((double)(t - *m_tLeft) <= (double)(t - *m_tRight) ) */
-            dTempLeft = sqrt(dTempLeft);
             if (  !((treehandle->m_flags)&CNEARTREE_FLAG_LEFT_CHILD) ) {
                 if ( (errorcode = CNearTreeCreate(&(treehandle->m_pLeftBranch),
                                                     treehandle->m_dimension, 
-                                                    treehandle->m_flags&CNEARTREE_TYPE))) return errorcode;
+                                                    treehandle->m_flags&(CNEARTREE_TYPE|CNEARTREE_NORM)))) return errorcode;
                 treehandle->m_flags |= CNEARTREE_FLAG_LEFT_CHILD;
                 treehandle->m_dMaxLeft = dTempLeft;
             }
@@ -451,8 +584,7 @@ extern "C" {
                                CVectorHandle objClosest,
                                const void FAR * coord,
                                int resetcount) {
-        double dradiussq;
-        double dDRsq, dDLsq;
+        double dDR, dDL;
         int nopoints;
         CVectorHandle sStack;
         CNearTreeHandle pt;
@@ -466,8 +598,6 @@ extern "C" {
         
         if (dRadius < 0.) return 1;
         
-        dradiussq = dRadius*dRadius;
-
         if ( !treehandle || !coord ) return CNEARTREE_BAD_ARGUMENT;
 
         if (!(treehandle->m_flags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
@@ -483,20 +613,17 @@ extern "C" {
         while (!(eDir == end && CVectorSize(sStack) == 0)) {
             
             if ( eDir == right ) {
-               dDRsq = DBL_MAX;
+                dDR = DBL_MAX;
                 if ((pt->m_flags)&CNEARTREE_FLAG_RIGHT_DATA) {
-                  dDRsq = CNearTreeDistsq((void FAR *)coord,
-                                        pt->m_coordRight,
-                                        pt->m_dimension,
-                                        pt->m_flags&CNEARTREE_TYPE);
-                  if (dDRsq <= dradiussq ) {
+                  dDR = CNearTreeDist(pt, (void FAR *)coord, pt->m_coordRight);
+                  if (dDR < dRadius ) {
                     nopoints = 0;
                     if (coordClosest) CVectorAddElement(coordClosest,&(pt->m_coordRight));
                     if (objClosest && pt->m_ptobjRight) CVectorAddElement(objClosest,&(pt->m_ptobjRight));
                   }
                 }
                 if ((pt->m_flags&CNEARTREE_FLAG_RIGHT_CHILD)&& 
-                    (pt->m_dMaxRight+dRadius)*(pt->m_dMaxRight+dRadius) >= dDRsq) {
+                    (pt->m_dMaxRight+dRadius) >= dDR) {
                     /* we did the left and now we finished the right, go down */
                     pt = pt->m_pRightBranch;
                     eDir = left;
@@ -506,11 +633,8 @@ extern "C" {
             }
             if ( eDir == left ) {
                 if ((pt->m_flags)&CNEARTREE_FLAG_LEFT_DATA) {
-                  dDLsq = CNearTreeDistsq((void FAR *)coord,
-                                        pt->m_coordLeft,
-                                        pt->m_dimension,
-                                        pt->m_flags&CNEARTREE_TYPE);
-                  if (dDLsq <= dradiussq ) {
+                  dDL = CNearTreeDist(pt, (void FAR *)coord, pt->m_coordLeft);
+                  if (dDL < dRadius ) {
                     nopoints = 0;
                     if (coordClosest) CVectorAddElement(coordClosest,&(pt->m_coordLeft));
                     if (objClosest &&  pt->m_ptobjLeft) CVectorAddElement(objClosest,&(pt->m_ptobjLeft));
@@ -520,7 +644,7 @@ extern "C" {
                     CVectorAddElement(sStack,&pt);
                 }
                 if ((pt->m_flags&CNEARTREE_FLAG_LEFT_CHILD)&&
-                    (pt->m_dMaxLeft+dRadius)*(pt->m_dMaxLeft+dRadius) >= dDLsq){
+                    (pt->m_dMaxLeft+dRadius) >= dDL){
                     pt = pt->m_pLeftBranch;
                 } else {
                     eDir = end;
@@ -585,10 +709,7 @@ extern "C" {
         while (!(eDir == end && CVectorSize(sStack) == 0)) {
             
             if ( eDir == right ) {
-                dDR = sqrt(CNearTreeDistsq((void FAR *)coord,
-                                        pt->m_coordRight,
-                                        pt->m_dimension,
-                                        pt->m_flags&CNEARTREE_TYPE));
+                dDR = CNearTreeDist(pt, (void FAR *)coord,  pt->m_coordRight);
                 if (dDR < *dRadius ) {
                     *dRadius = dDR;
                     pobjClosest = pt->m_ptobjRight;
@@ -604,10 +725,7 @@ extern "C" {
                 }
             }
             if ( eDir == left ) {
-                dDL = sqrt(CNearTreeDistsq((void FAR *)coord,
-                                        pt->m_coordLeft,
-                                        pt->m_dimension,
-                                        pt->m_flags&CNEARTREE_TYPE));
+                dDL = CNearTreeDist(pt, (void FAR *)coord, pt->m_coordLeft);
                 if (dDL < *dRadius ) {
                     *dRadius = dDL;
                     pobjClosest = pt->m_ptobjLeft;
@@ -665,13 +783,10 @@ extern "C" {
                                void FAR * FAR * objFarthest,
                                const void FAR * coord ) {
         double   dTempRadius = DBL_MAX;
-        double   dradiussq;
         int  bRet = 0;
                 
         if ( !treehandle || !coord ) return CNEARTREE_BAD_ARGUMENT;
         if (!(treehandle->m_flags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
-        
-        dradiussq = (*dRadius)*(*dRadius);
         
         /* first test each of the left and right positions to see if
          one holds a point farther than the farthest so far discovered.
@@ -679,22 +794,17 @@ extern "C" {
          negative value before the recursive calls to  CNearTreeFindFarthest */
         
         if ((treehandle->m_flags&CNEARTREE_FLAG_LEFT_DATA ) && 
-            (( dTempRadius = CNearTreeDistsq((void FAR *)coord,
-                                             treehandle->m_coordLeft,
-                                             treehandle->m_dimension,
-                                             treehandle->m_flags&CNEARTREE_TYPE))>= dradiussq )) {
-            *dRadius  = sqrt(dTempRadius);
-            dradiussq = dTempRadius;
+            (( dTempRadius = CNearTreeDist(treehandle, (void FAR *)coord,
+                                             treehandle->m_coordLeft))>= *dRadius )) {
+            *dRadius  = dTempRadius;
             *coordFarthest = treehandle->m_coordLeft;
             if ( objFarthest) *objFarthest = treehandle->m_ptobjLeft;
             bRet     =  1;
         }
         if ((treehandle->m_flags&CNEARTREE_FLAG_RIGHT_DATA ) && 
-            (( dTempRadius = CNearTreeDistsq((void FAR *)coord,
-                                             treehandle->m_coordRight,
-                                             treehandle->m_dimension,
-                                             treehandle->m_flags&CNEARTREE_TYPE))>= dradiussq )) {            
-            *dRadius   = sqrt(dTempRadius);
+            (( dTempRadius = CNearTreeDist(treehandle, (void FAR *)coord,
+                                             treehandle->m_coordRight))>= *dRadius )) {            
+            *dRadius   = dTempRadius;
             *coordFarthest = treehandle->m_coordRight;
             if (objFarthest) *objFarthest = treehandle->m_ptobjRight;
             bRet      = 1;
@@ -705,22 +815,18 @@ extern "C" {
          to test whether it's even necessary to descend.
          */
         if (( treehandle->m_pLeftBranch  != 0 )  && ( treehandle->m_dMaxLeft>=0. )
-            && (((*dRadius) - treehandle->m_dMaxLeft< 0.)||( (*dRadius) - treehandle->m_dMaxLeft )*( (*dRadius) - treehandle->m_dMaxLeft ) <= 
-                CNearTreeDistsq ( (void FAR *)coord, 
-                                 treehandle->m_coordLeft,
-                                 treehandle->m_dimension,
-                                 treehandle->m_flags&CNEARTREE_TYPE)))
+            && (( (*dRadius) - treehandle->m_dMaxLeft ) <= 
+                CNearTreeDist (treehandle, (void FAR *)coord, 
+                                 treehandle->m_coordLeft)))
         {
             if (!CNearTreeFindFarthest( treehandle->m_pLeftBranch,
                                        dRadius, coordFarthest, objFarthest, coord)) bRet = 1;
         }
         
         if (( treehandle->m_pRightBranch  != 0 ) && ( treehandle->m_dMaxRight>=0. )
-            && (((*dRadius) - treehandle->m_dMaxRight< 0.)||( (*dRadius) - treehandle->m_dMaxRight )*( (*dRadius) - treehandle->m_dMaxRight ) <= 
-                CNearTreeDistsq ( (void FAR *)coord,
-                                 treehandle->m_coordRight,
-                                 treehandle->m_dimension,
-                                 treehandle->m_flags&CNEARTREE_TYPE)))        {
+            && (( (*dRadius) - treehandle->m_dMaxRight ) <= 
+                CNearTreeDist ( treehandle, (void FAR *)coord,
+                                 treehandle->m_coordRight)))        {
             if (!CNearTreeFindFarthest( treehandle->m_pRightBranch,
                                        dRadius, coordFarthest, objFarthest, coord)) bRet = 1;
         }
