@@ -94,18 +94,25 @@ extern "C" {
      0 for n data, n children
      */
     
-#define CNEARTREE_FLAG_LEFT_DATA   1
-#define CNEARTREE_FLAG_RIGHT_DATA  2
-#define CNEARTREE_FLAG_LEFT_CHILD  4
-#define CNEARTREE_FLAG_RIGHT_CHILD 8
+#define CNEARTREE_FLAG_LEFT_DATA   1          /* 0x0001 */
+#define CNEARTREE_FLAG_RIGHT_DATA  2          /* 0x0002 */
+#define CNEARTREE_FLAG_LEFT_CHILD  4          /* 0x0004 */
+#define CNEARTREE_FLAG_RIGHT_CHILD 8          /* 0x0008 */
     
-#define CNEARTREE_DATA_OR_CHILDREN 15
+#define CNEARTREE_DATA_OR_CHILDREN 15         /* 0x000F */
     
-#define CNEARTREE_TYPE_DOUBLE      16
-#define CNEARTREE_TYPE_INTEGER     32
+#define CNEARTREE_TYPE_DOUBLE      16         /* 0x0010 */
+#define CNEARTREE_TYPE_INTEGER     32         /* 0x0020 */
     
-#define CNEARTREE_TYPE             48
+#define CNEARTREE_TYPE             48         /* 0x0030 */
     
+#define CNEARTREE_NORM_UNKNOWN     64         /* 0x0040 */
+#define CNEARTREE_NORM_L1         128         /* 0x0080 */
+#define CNEARTREE_NORM_L2         256         /* 0x0100 */
+#define CNEARTREE_NORM_LINF       512         /* 0x0200 */
+    
+#define CNEARTREE_NORM            960         /* 0x03C0 */
+
     
     typedef struct _CNearTree {
         void       FAR * m_coordLeft;    /* coords of left object stored in this node   */
@@ -138,6 +145,8 @@ extern "C" {
      function to return the square of the Euclidean distance between two 
      coordinate vectors.  
      
+     THIS FUNCTION IS DEPRECATED
+     
      treedim -- the dimension of the vectors
 
      treetype -- and integer flag for type of the vectors
@@ -147,10 +156,23 @@ extern "C" {
      =======================================================================
      */
     
-    double CNearTreeDistsq(void FAR * coord1,
-                           void FAR * coord2, 
-                           size_t treedim, 
-                           int treetype);
+     double CNearTreeDistsq(void FAR * coord1,
+                            void FAR * coord2, 
+                            size_t treedim, 
+                            int treetype);
+    /*
+     =======================================================================
+     double CNearTreeDist(CNearTreeHandle treehandle, void FAR * coord1, 
+                                      void FAR * coord2))
+     
+     function to return the distance (L1, L2 or L-infinity) between two 
+     coordinate vectors according to the parameters of the given tree  
+     
+     =======================================================================
+     */
+    
+     double CNearTreeDist(CNearTreeHandle treehandle,void FAR * coord1,
+                           void FAR * coord2);
     
     /*
      =======================================================================
