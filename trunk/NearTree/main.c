@@ -58,7 +58,7 @@ int main ( )
     CVectorCreate(&oReturn,sizeof(void *),10);
     
     srand( (unsigned)time( NULL ) );  /* use the current time to seed the
-     random number generator */
+                                         random number generator */
     /*---------------------------------------
      build up a library of points to search among
      ---------------------------------------*/

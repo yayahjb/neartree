@@ -61,6 +61,7 @@ extern "C" {
 #endif
     
 #include "CNearTree.h"
+#include <math.h>
     
     
     /*
@@ -482,12 +483,13 @@ extern "C" {
         while (!(eDir == end && CVectorSize(sStack) == 0)) {
             
             if ( eDir == right ) {
+               dDRsq = DBL_MAX;
                 if ((pt->m_flags)&CNEARTREE_FLAG_RIGHT_DATA) {
                   dDRsq = CNearTreeDistsq((void FAR *)coord,
                                         pt->m_coordRight,
                                         pt->m_dimension,
                                         pt->m_flags&CNEARTREE_TYPE);
-                  if (dDRsq < dradiussq ) {
+                  if (dDRsq <= dradiussq ) {
                     nopoints = 0;
                     if (coordClosest) CVectorAddElement(coordClosest,&(pt->m_coordRight));
                     if (objClosest && pt->m_ptobjRight) CVectorAddElement(objClosest,&(pt->m_ptobjRight));
@@ -508,7 +510,7 @@ extern "C" {
                                         pt->m_coordLeft,
                                         pt->m_dimension,
                                         pt->m_flags&CNEARTREE_TYPE);
-                  if (dDLsq < dradiussq ) {
+                  if (dDLsq <= dradiussq ) {
                     nopoints = 0;
                     if (coordClosest) CVectorAddElement(coordClosest,&(pt->m_coordLeft));
                     if (objClosest &&  pt->m_ptobjLeft) CVectorAddElement(objClosest,&(pt->m_ptobjLeft));
