@@ -616,14 +616,14 @@ extern "C" {
                 dDR = DBL_MAX;
                 if ((pt->m_flags)&CNEARTREE_FLAG_RIGHT_DATA) {
                   dDR = CNearTreeDist(pt, (void FAR *)coord, pt->m_coordRight);
-                  if (dDR < dRadius ) {
+                  if (dDR <= dRadius ) {
                     nopoints = 0;
                     if (coordClosest) CVectorAddElement(coordClosest,&(pt->m_coordRight));
                     if (objClosest && pt->m_ptobjRight) CVectorAddElement(objClosest,&(pt->m_ptobjRight));
                   }
                 }
                 if ((pt->m_flags&CNEARTREE_FLAG_RIGHT_CHILD)&& 
-                    (pt->m_dMaxRight+dRadius) >= dDR) {
+                    (pt->m_dMaxRight+dRadius) > dDR) {
                     /* we did the left and now we finished the right, go down */
                     pt = pt->m_pRightBranch;
                     eDir = left;
@@ -634,7 +634,7 @@ extern "C" {
             if ( eDir == left ) {
                 if ((pt->m_flags)&CNEARTREE_FLAG_LEFT_DATA) {
                   dDL = CNearTreeDist(pt, (void FAR *)coord, pt->m_coordLeft);
-                  if (dDL < dRadius ) {
+                  if (dDL <= dRadius ) {
                     nopoints = 0;
                     if (coordClosest) CVectorAddElement(coordClosest,&(pt->m_coordLeft));
                     if (objClosest &&  pt->m_ptobjLeft) CVectorAddElement(objClosest,&(pt->m_ptobjLeft));
@@ -644,7 +644,7 @@ extern "C" {
                     CVectorAddElement(sStack,&pt);
                 }
                 if ((pt->m_flags&CNEARTREE_FLAG_LEFT_CHILD)&&
-                    (pt->m_dMaxLeft+dRadius) >= dDL){
+                    (pt->m_dMaxLeft+dRadius) > dDL){
                     pt = pt->m_pLeftBranch;
                 } else {
                     eDir = end;
