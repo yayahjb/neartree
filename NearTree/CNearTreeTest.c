@@ -102,7 +102,9 @@ void testEmptyTree( void )
     CNearTreeHandle tree;
     CVectorHandle v;
     int FAR * close;
+    void FAR * vclose;
     int FAR * nFar;
+    void FAR * vnFar;
     int probe[1];
     bool bTreeEmpty;
     bool bTreeHasNearest;
@@ -124,7 +126,8 @@ void testEmptyTree( void )
     }
     
     probe[0] = 1;
-    bTreeHasNearest =  !CNearTreeNearestNeighbor(tree, 0.0, (void FAR * FAR *) &close, NULL, probe); 
+    bTreeHasNearest =  !CNearTreeNearestNeighbor(tree, 0.0, &vclose, NULL, probe); 
+    close = (int FAR *)vclose;
     if( bTreeHasNearest )
     {
         ++g_errorCount;
@@ -132,7 +135,8 @@ void testEmptyTree( void )
     }
     
     probe[0] = 0;
-    bTreeHasFarthest = !CNearTreeFarthestNeighbor(tree, (void FAR * FAR *) &nFar, NULL, probe); 
+    bTreeHasFarthest = !CNearTreeFarthestNeighbor(tree, &vnFar, NULL, probe);
+    nFar = (int FAR *)vnFar;
     if( bTreeHasFarthest )
     {
         ++g_errorCount;
@@ -179,7 +183,9 @@ void testLinearTree( const int n )
     CVectorHandle v;
     bool bInsert, bClose, bFar, bInSphere, bResult;
     int FAR * closest;   
+    void FAR * vclosest;
     int FAR * farthest;
+    void FAR * vfarthest;
     int probe[1];
     size_t lFoundPointsInSphere;
     int i;
@@ -211,7 +217,8 @@ void testLinearTree( const int n )
      last value entered into the tree. 
      */
     probe[0] = 2*n;
-    bClose = !CNearTreeNearestNeighbor(tree,22.,(void FAR * FAR *)&closest,NULL,probe);
+    bClose = !CNearTreeNearestNeighbor(tree,22.,&vclosest,NULL,probe);
+    closest = (int FAR *)vclosest;
     if( ! bClose || closest[0] != n )
     {
         ++g_errorCount;
@@ -225,7 +232,8 @@ void testLinearTree( const int n )
      */
     
     probe[0] = 2*n;
-    bFar = !CNearTreeFarthestNeighbor(tree,(void FAR * FAR *)&farthest,NULL,probe);
+    bFar = !CNearTreeFarthestNeighbor(tree,&vfarthest,NULL,probe);
+    farthest = (int FAR *)vfarthest;
     if( ! bFar || farthest[0] != 1 )
     {
         ++g_errorCount;
@@ -294,7 +302,7 @@ void testLinearTree( const int n )
     if( found != (size_t)n )
     {
         ++g_errorCount;
-        fprintf(stdout, "CNearTreeTest: testLinearTree: FindInSphere did not find all the points, found %ld\n", found );
+        fprintf(stdout, "CNearTreeTest: testLinearTree: FindInSphere did not find all the points, found %lu\n", (long unsigned int)found );
     }
 
     bResult = !CVectorFree(&v);
@@ -333,7 +341,9 @@ void testFindFirstObject( void )
     long count = 0;
     double f[1];
     double FAR * closest;
+    void FAR * vclosest;
     double FAR * farthest;
+    void FAR * vfarthest;
     size_t lFound;
     
     bReturn = !CNearTreeCreate(&tree,1,CNEARTREE_TYPE_DOUBLE);
@@ -364,7 +374,8 @@ void testFindFirstObject( void )
      denormalized number.
      */
     f[0] = 0.0;
-    bReturnNear = !CNearTreeNearestNeighbor(tree, 1.0e-10, (void FAR * FAR *)&closest, NULL, f);
+    bReturnNear = !CNearTreeNearestNeighbor(tree, 1.0e-10, &vclosest, NULL, f);
+    closest = (double FAR *)vclosest;
     if( ! bReturnNear || closest[0] != fFinal )
     {
         ++g_errorCount;
@@ -376,7 +387,8 @@ void testFindFirstObject( void )
      very small, probably denormalized number.
      */
     f[0] = 100.0;
-    bReturnFar = !CNearTreeFarthestNeighbor(tree, (void FAR * FAR *)&farthest, NULL,f);
+    bReturnFar = !CNearTreeFarthestNeighbor(tree, &vfarthest, NULL,f);
+    farthest = (double FAR *)vfarthest;
     if( ! bReturnFar || farthest[0] != fFinal )
     {
         ++g_errorCount;
@@ -398,7 +410,7 @@ void testFindFirstObject( void )
     if( lFound != (size_t)count )
     {
         ++g_errorCount;
-        fprintf(stdout, "CNearTreeTest: testFindFirstObject: found wrong count for FindInSphere for float, should be%ld, got %ld\n", count, lFound );
+        fprintf(stdout, "CNearTreeTest: testFindFirstObject: found wrong count for FindInSphere for float, should be%ld, got %lu\n", count, (long unsigned int)lFound );
     }
  
     bResult = !CVectorFree(&v);
@@ -434,6 +446,7 @@ void testFindLastObject( void )
     long count = 0;
     double f[1];
     double FAR * closest;
+    void FAR * vclosest;
     
     bReturn = !CNearTreeCreate(&tree,1,CNEARTREE_TYPE_DOUBLE);
     if (!bReturn)
@@ -454,7 +467,8 @@ void testFindLastObject( void )
     
     
     f[0] = 11.0;
-    bReturn = !CNearTreeNearestNeighbor(tree, 100.0, (void FAR * FAR *)&closest, NULL, f);
+    bReturn = !CNearTreeNearestNeighbor(tree, 100.0, &vclosest, NULL, f);
+    closest = (double FAR *)vclosest;
     if( ! bReturn || closest[0] != 1.0 )
     {
         ++g_errorCount;
@@ -462,7 +476,8 @@ void testFindLastObject( void )
     }
     
     f[0] = -11.0;
-    bReturn = !CNearTreeFarthestNeighbor(tree, (void FAR * FAR *)&closest, NULL, f);
+    bReturn = !CNearTreeFarthestNeighbor(tree, &vclosest, NULL, f);
+    closest = (double FAR *)vclosest;
     if( ! bReturn || closest[0] != 1.0 )
     {
         ++g_errorCount;
@@ -591,7 +606,9 @@ void testRandomTree( const int nRequestedRandoms )
     int i;
     int next[1];
     int FAR * closest;
+    void FAR * vclosest;
     int FAR * farthest;
+    void FAR * vfarthest;
     bool bReturn, bNear, bFar;
     double radius;
     size_t lReturn;
@@ -613,7 +630,8 @@ void testRandomTree( const int nRequestedRandoms )
     {
         /*verify that the correct extremal point is detected (from below)*/
         next[0] = INT_MIN/2;
-        bNear = !CNearTreeNearestNeighbor(tree, (double)LONG_MAX, (void FAR * FAR *)&closest, NULL, next);
+        bNear = !CNearTreeNearestNeighbor(tree, (double)LONG_MAX, &vclosest, NULL, next);
+        closest = (int FAR *)vclosest;
         if( ! bNear || closest[0] != nmin )
         {
             ++g_errorCount;
@@ -621,7 +639,8 @@ void testRandomTree( const int nRequestedRandoms )
         }
         
         next[0] = INT_MIN/2;
-        bFar = !CNearTreeFarthestNeighbor(tree, (void FAR * FAR *)&farthest, NULL, next);
+        bFar = !CNearTreeFarthestNeighbor(tree, &vfarthest, NULL, next);
+        farthest = (int FAR *)vfarthest;
         if( !bFar || farthest[0] != nmax )
         {
             ++g_errorCount;
@@ -632,7 +651,8 @@ void testRandomTree( const int nRequestedRandoms )
     {
         /*verify that the correct extremal point is detected (from above)*/
         next[0] = INT_MAX/2;
-        bNear = !CNearTreeNearestNeighbor(tree, (double)LONG_MAX, (void FAR * FAR *)&closest, NULL, next);
+        bNear = !CNearTreeNearestNeighbor(tree, (double)LONG_MAX, &vclosest, NULL, next);
+        closest = (int FAR *)vclosest;
         if( ! bNear || closest[0] != nmax )
         {
             ++g_errorCount;
@@ -640,7 +660,8 @@ void testRandomTree( const int nRequestedRandoms )
         }
         
         next[0] = INT_MAX/2;
-        bFar = !CNearTreeFarthestNeighbor(tree, (void FAR * FAR *)&farthest, NULL, next);
+        bFar = !CNearTreeFarthestNeighbor(tree, &vfarthest, NULL, next);
+        farthest = (int FAR *)vfarthest;
         if( !bFar || farthest[0] != nmin )
         {
             ++g_errorCount;
@@ -663,7 +684,7 @@ void testRandomTree( const int nRequestedRandoms )
         if( lReturn != (size_t)n )
         {
             ++g_errorCount;
-            fprintf(stdout, "CNearTreeTest: testRandomTree: FindInSphere failed, n=%d, lReturn=%ld\n", n, lReturn );
+            fprintf(stdout, "CNearTreeTest: testRandomTree: FindInSphere failed, n=%d, lReturn=%lu\n", n, (long unsigned int)lReturn );
         }
     }
     
@@ -677,7 +698,7 @@ void testRandomTree( const int nRequestedRandoms )
         if( lReturn != 0 )
         {
             ++g_errorCount;
-            fprintf(stdout, "CNearTreeTest: testRandomTree: FindInSphere failed found points incorrectly, n=%d, lReturn=%ld\n", n, lReturn );
+            fprintf(stdout, "CNearTreeTest: testRandomTree: FindInSphere failed found points incorrectly, n=%d, lReturn=%lu\n", n, (long unsigned int)lReturn );
         }
     }
     
@@ -766,8 +787,11 @@ void testBigVector(  )
     double v[17], vSearch[17], vCenter[17], vCloseToNearCenter[17];
     double FAR * vv;
     double FAR * vFarthest;
+    void FAR * vvFarthest;
     double FAR * vNearCenter;
+    void FAR * vvNearCenter;
     double FAR * vExtreme;
+    void FAR * vvExtreme;
     
     double rmax = -DBL_MAX;
     double rmin =  DBL_MAX;
@@ -815,7 +839,8 @@ void testBigVector(  )
     
     {        
         /* Find the point farthest from the point that was nearest the origin. */
-        bResult = !CNearTreeFarthestNeighbor(tree,(void FAR * FAR *)&vFarthest,NULL,v17min);
+        bResult = !CNearTreeFarthestNeighbor(tree,&vvFarthest,NULL,v17min);
+        vFarthest = (double FAR *)vvFarthest;
         if (!bResult)
         {
            ++g_errorCount;
@@ -847,7 +872,8 @@ void testBigVector(  )
         ConstVec17(vCenter, (double)(MYRAND_MAX/2) );
         CVectorCreate(&vhand,sizeof(double *),10);
 
-        bResult = !CNearTreeNearestNeighbor( tree, 100000.0, (void FAR * FAR *)&vNearCenter, NULL, vCenter );
+        bResult = !CNearTreeNearestNeighbor( tree, 100000.0, &vvNearCenter, NULL, vCenter );
+        vNearCenter = (double FAR *)vvNearCenter;
         if (!bResult)
         {
            ++g_errorCount;
@@ -957,7 +983,8 @@ void testBigVector(  )
         }
         
         /* Just make sure that FarthestNeighbor works for objects */
-         bResult = !CNearTreeFarthestNeighbor(tree, (void FAR * FAR *)&vExtreme, NULL, vNearCenter );
+         bResult = !CNearTreeFarthestNeighbor(tree, &vvExtreme, NULL, vNearCenter );
+         vExtreme = (double FAR *)vvExtreme;
          if (!bResult)
             {
                 ++g_errorCount;

@@ -46,6 +46,7 @@ int main ( int argc, char** argv )
     CNearTreeHandle treehandle;
     double v[3],vSearch[3];
     double * vBest;
+    void * vvBest;
     CVectorHandle vReturn;
     CVectorHandle oReturn;
     long i,j,k;
@@ -94,9 +95,10 @@ int main ( int argc, char** argv )
         
         
         /* find the nearest point to vSearch */
-        if ( !CNearTreeNearestNeighbor(treehandle,dRad,(void * *)&vBest,NULL,vSearch))
-        {  fprintf(stdout," Closest distance %g to [%g, %g, %g]\n",
-                   sqrt(CNearTreeDistsq((void *)vSearch,(void *)vBest,3,CNEARTREE_TYPE_DOUBLE)),
+        if ( !CNearTreeNearestNeighbor(treehandle,dRad,&vvBest,NULL,vSearch))
+        {   vBest = (double *)vvBest;
+            fprintf(stdout," Closest distance %g to [%g, %g, %g]\n",
+                   sqrt(CNearTreeDistsq((void *)vSearch,vvBest,3,CNEARTREE_TYPE_DOUBLE)),
                    vBest[0],vBest[1],vBest[2]);
         }
         else
@@ -105,8 +107,9 @@ int main ( int argc, char** argv )
         }
         
         /* find the farthest point from vSearch */
-        if ( !CNearTreeFarthestNeighbor(treehandle,(void * *)&vBest,NULL,vSearch))
-        {  fprintf(stdout," Farthest distance %g to [%g, %g, %g]\n",
+        if ( !CNearTreeFarthestNeighbor(treehandle,&vvBest,NULL,vSearch))
+        {   vBest = (double *)vvBest; 
+            fprintf(stdout," Farthest distance %g to [%g, %g, %g]\n",
                    sqrt(CNearTreeDistsq(vSearch,vBest,3,CNEARTREE_TYPE_DOUBLE)),
                    vBest[0],vBest[1],vBest[2]);
         }
@@ -121,8 +124,8 @@ int main ( int argc, char** argv )
             size_t index;
             void * foundpoint;
             
-            fprintf(stdout," Returned %ld items within %g of [%g,%g,%g]\n",
-                    vReturn->size, dRad, vSearch[0], vSearch[1], vSearch[2]);
+            fprintf(stdout," Returned %lu items within %g of [%g,%g,%g]\n",
+                    (long unsigned int)vReturn->size, dRad, vSearch[0], vSearch[1], vSearch[2]);
             for (index=0; index < CVectorSize(vReturn); index++) {
                 CVectorGetElement(vReturn,&foundpoint,index);
                 fprintf (stdout,"\t [%g,%g,%g]\n",((double *)foundpoint)[0],
