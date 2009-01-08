@@ -41,89 +41,93 @@
 #include "TNear.h"
 #include "v.h"
 
-int main ( )
+int main ( int argc, char* argv[] )
 {
-   CNearTree <v> vTree;
-   v vBest = DBL_MAX;
-   long i,j,k;
-   const long lMaxRow = 10;
-   std::vector <v> vReturn;
-
-   srand( (unsigned)time( NULL ) );  // use the current time to seed the
-                              // random number generator
-//---------------------------------------
-// build up a library of points to search among
-//---------------------------------------
-   for ( k=-1; k<=lMaxRow; k++ )
-   {
-      for ( j=-1; j<=lMaxRow; j++) 
-      {
-         for ( i= lMaxRow ; i>=-1;  i-- ) 
-         {
-            vTree.Insert( v((double)i, (double)j, (double)k) );
-         }  // for i
-      }     // for j
-   }        // for k
+    CNearTree <v> vTree;
+    v vBest = DBL_MAX;
+    long i,j,k;
+    const long lMaxRow = 10;
+    std::vector <v> vReturn;
+    
+    if (argc <= 1) {
+        srand( (unsigned int)time( NULL ) );  /* use the current time to seed the
+                                                random number generator */
+    } else {
+        srand((unsigned int)atoi(argv[1]));
+    }
+    //---------------------------------------
+    // build up a library of points to search among
+    //---------------------------------------
+    for ( k=-1; k<=lMaxRow; k++ )
+    {
+        for ( j=-1; j<=lMaxRow; j++) 
+        {
+            for ( i= lMaxRow ; i>=-1;  i-- ) 
+            {
+                vTree.Insert( v((double)i, (double)j, (double)k) );
+            }  // for i
+        }     // for j
+    }        // for k
     std::cout
-      << std::endl;
-
-//---------------------------------------
-//   Done building the tree; now try a retrieval
-//---------------------------------------
-
-   double   dRad = 0.6;
-   long lReturn;
-   for ( i=0;  i<10; i++ )
-   {
-      dRad += 0.05;
-      double x = rand( ) * double( lMaxRow ) / RAND_MAX;
-      double y = x;
-      double z = ( 1.25 * double(lMaxRow) - 1.5 * x );
-      v vSearch( x, 0.5*(x+y), z );
-      std::cout
-         << "Trial " << i << " from probe point " << vSearch << std::endl;
-
-
-
-
-// find the nearest point to vSearch
-      if ( vTree.NearestNeighbor( dRad, vBest, vSearch ) )
-      {
-         std::cout
+    << std::endl;
+    
+    //---------------------------------------
+    //   Done building the tree; now try a retrieval
+    //---------------------------------------
+    
+    double   dRad = 0.6;
+    long lReturn;
+    for ( i=0;  i<10; i++ )
+    {
+        dRad += 0.05;
+        double x = rand( ) * double( lMaxRow ) / RAND_MAX;
+        double y = x;
+        double z = ( 1.25 * double(lMaxRow) - 1.5 * x );
+        v vSearch( x, 0.5*(x+y), z );
+        std::cout
+        << "Trial " << i << " from probe point " << vSearch << std::endl;
+        
+        
+        
+        
+        // find the nearest point to vSearch
+        if ( vTree.NearestNeighbor( dRad, vBest, vSearch ) )
+        {
+            std::cout
             << " Closest distance " << (double) ( vSearch - vBest ) << " to " << vBest << std::endl;
-      }
-      else
-      {
-         std::cout
+        }
+        else
+        {
+            std::cout
             << " ***** nothing within " << dRad << " of " << vSearch << std::endl;
-      }
-
-// find the farthest point from vSearch
-      if ( vTree.FarthestNeighbor ( vBest, vSearch ) )
-      {
-         std::cout 
+        }
+        
+        // find the farthest point from vSearch
+        if ( vTree.FarthestNeighbor ( vBest, vSearch ) )
+        {
+            std::cout 
             << " Farthest distance " << (double) ( vSearch - vBest ) << " to " << vBest << std::endl;
-      }
-      else
-      {
-         std::cout << " No Farthest object found" << std::endl;
-      }
-
-// search for all points within a "sphere" out to radius dRad
-      if ( ( lReturn = vTree.FindInSphere( dRad, vReturn, vSearch )) > 0 ) 
-      {
-         std::cout << " Returned " << lReturn << " items within " << dRad << " of "<< vSearch << std::endl;
-         std::vector <v>::iterator iv;
-         for ( iv=vReturn.begin( ); iv<vReturn.end( ); iv++ )
-         {
-            std::cout << "\t" << *iv << std::endl;
-         }
-      }
-
-      std::cout << " -------------------------------------------------------------"<<std::endl;
-   }  // for i
-
-   vTree.CNearTree<v>::~CNearTree( );
-
-   return ( EXIT_SUCCESS );
+        }
+        else
+        {
+            std::cout << " No Farthest object found" << std::endl;
+        }
+        
+        // search for all points within a "sphere" out to radius dRad
+        if ( ( lReturn = vTree.FindInSphere( dRad, vReturn, vSearch )) > 0 ) 
+        {
+            std::cout << " Returned " << lReturn << " items within " << dRad << " of "<< vSearch << std::endl;
+            std::vector <v>::iterator iv;
+            for ( iv=vReturn.begin( ); iv<vReturn.end( ); iv++ )
+            {
+                std::cout << "\t" << *iv << std::endl;
+            }
+        }
+        
+        std::cout << " -------------------------------------------------------------"<<std::endl;
+    }  // for i
+    
+    vTree.CNearTree<v>::~CNearTree( );
+    
+    return ( EXIT_SUCCESS );
 }

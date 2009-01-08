@@ -60,9 +60,14 @@ extern "C" {
     
 #endif
     
+#ifndef USE_LOCAL_HEADERS
+#include <CNearTree.h>
+#else
 #include "CNearTree.h"
+#endif
 #include <math.h>
-    
+
+#define max2(x,y) ((x)>=(y)?(x):(y))    
     
     /*
      =======================================================================
@@ -160,10 +165,10 @@ extern "C" {
          int treetype;
          int treenorm;
          
-         double FAR * dcoord1;
-         double FAR * dcoord2;
-         int FAR * icoord1;
-         int FAR * icoord2;
+         double FAR * dcoord1 = NULL;
+         double FAR * dcoord2 = NULL;
+         int FAR * icoord1 = NULL;
+         int FAR * icoord2 = NULL;
 
          
          treedim = treehandle->m_dimension;
@@ -216,12 +221,12 @@ extern "C" {
                  if (treetype == CNEARTREE_TYPE_DOUBLE) {
                      dist= fabs(dcoord1[0]-dcoord2[0]);
                      for (index=1; index < treedim; index++) {
-                         dist = fmax(dist,fabs(dcoord1[index]-dcoord2[index]));
+                         dist = max2(dist,fabs(dcoord1[index]-dcoord2[index]));
                      }
                  } else if (treetype == CNEARTREE_TYPE_INTEGER) {
                      dist = fabs((double)(icoord1[0]-icoord2[0]));
                      for (index=1; index < treedim; index++) {
-                         dist = fmax(dist,fabs((double)(dcoord1[index]-dcoord2[index])));
+                         dist = max2(dist,fabs((double)(dcoord1[index]-dcoord2[index])));
                      }
                  } else return -1.0;
                  return dist;
@@ -595,6 +600,8 @@ extern "C" {
         pt = treehandle;
         
         nopoints = 1;
+        
+        dDR = dDL = DBL_MAX;
         
         if (dRadius < 0.) return 1;
         

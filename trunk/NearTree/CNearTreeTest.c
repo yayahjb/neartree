@@ -87,7 +87,6 @@ int main(int argc, char** argv)
     
     if( g_errorCount == 0 )
     {
-      ++g_errorCount;
       fprintf(stdout, "No errors were detected while testing CNearTree\n" );
     }
     
