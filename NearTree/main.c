@@ -40,7 +40,7 @@
 
 #include "CNearTree.h"
 
-int main ( )
+int main ( int argc, char** argv )
 {
     
     CNearTreeHandle treehandle;
@@ -57,8 +57,12 @@ int main ( )
     CVectorCreate(&vReturn,sizeof(void *),10);
     CVectorCreate(&oReturn,sizeof(void *),10);
     
-    srand( (unsigned)time( NULL ) );  /* use the current time to seed the
-                                         random number generator */
+    if (argc <= 1) {
+        srand( (unsigned int)time( NULL ) );  /* use the current time to seed the
+                                                 random number generator */
+    } else {
+        srand((unsigned int)atoi(argv[1]));
+    }
     /*---------------------------------------
      build up a library of points to search among
      ---------------------------------------*/

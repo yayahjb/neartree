@@ -81,8 +81,11 @@ extern "C" {
 #include <limits.h>
 #include <float.h>
 #include <math.h>
+#ifndef USE_LOCAL_HEADERS
 #include <CVector.h>
-    
+#else
+#include "CVector.h"
+#endif    
     
     /* function returns */
 #define CNEARTREE_SUCCESS       0

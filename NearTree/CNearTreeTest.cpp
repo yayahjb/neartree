@@ -40,7 +40,11 @@
 #include <float.h>
 #include <limits.h>
 #include <math.h>
+#ifndef USE_LOCAL_HEADERS
 #include <TNear.h>
+#else
+#include "TNear.h"
+#endif
 
 void testEmptyTree( void );
 void testLinearTree( const int n );
@@ -59,8 +63,6 @@ long g_errorCount;
 /*=======================================================================*/
 int main(int argc, char* argv[])
 {
-    argc;
-    argv;
     
     /* test the interface with an empty tree */
     testEmptyTree( );
@@ -151,7 +153,7 @@ void testLinearTree( const int n )
      the largest value that was input. The returned values should be the
      last value entered into the tree. 
      */
-    int closest;   
+    int closest=-1;   
     const bool bClose = tree.NearestNeighbor( 22, closest, 2*n );
     if( ! bClose || closest != n )
     {
@@ -207,7 +209,7 @@ void testLinearTree( const int n )
    if( localErrorCount != 0 )
    {
             ++g_errorCount;
-      printf( "FindInSphere found too many points (as many as %d) %d times\n", localErrorMax, localErrorCount );
+      printf( "FindInSphere found too many points (as many as %ld) %ld times\n", localErrorMax, localErrorCount );
     }
     v.clear( );
     
@@ -219,7 +221,7 @@ void testLinearTree( const int n )
     if( tree.FindInSphere( (double)(10*n), v, 0 ) != n )
     {
         ++g_errorCount;
-        printf( "FindInSphere did not find all the points, found %d\n", tree.FindInSphere( 1000, v, 0 ) );
+        printf( "FindInSphere did not find all the points, found %ld\n", tree.FindInSphere( 1000, v, 0 ) );
     }
     v.clear( );
     
@@ -289,7 +291,7 @@ void testFindFirstObject( void )
         if( lFound != count )
         {
             ++g_errorCount;
-            printf( "testFindFirstObject: found wrong count for FindInSphere for float, should be%d, got %f\n", count, lFound );
+            printf( "testFindFirstObject: found wrong count for FindInSphere for float, should be%ld, got %ld\n", count, lFound );
         }
     }
     
@@ -347,7 +349,7 @@ void testFindFirstObject( void )
         if( lFound != count )
         {
             ++g_errorCount;
-            printf( "testFindFirstObject: found wrong count for FindInSphere for double, should be%d, got %f\n", count, lFound );
+            printf( "testFindFirstObject: found wrong count for FindInSphere for double, should be%ld, got %ld\n", count, lFound );
         }
     }
 }
@@ -532,7 +534,7 @@ void testRandomTree( const int nRequestedRandoms )
     
     {
         /*verify that the correct extremal point is detected (from below)*/
-        int closest;
+        int closest=INT_MAX;
         const bool bNear = tree.NearestNeighbor( (double)LONG_MAX, closest, INT_MIN/2 );
         if( ! bNear || closest != nmin )
         {
@@ -551,7 +553,7 @@ void testRandomTree( const int nRequestedRandoms )
     
     {
         /*verify that the correct extremal point is detected (from above)*/
-        int closest;
+        int closest=INT_MIN;
         const bool bNear = tree.NearestNeighbor( (double)LONG_MAX, closest, INT_MAX/2 );
         if( ! bNear || closest != nmax )
         {
@@ -576,7 +578,7 @@ void testRandomTree( const int nRequestedRandoms )
         if( lReturn != n )
         {
             ++g_errorCount;
-            printf( "FindInSphere failed in testRandomTree, n=%d, lReturn=%d\n", n, lReturn );
+            printf( "FindInSphere failed in testRandomTree, n=%d, lReturn=%ld\n", n, lReturn );
         }
     }
     
@@ -588,7 +590,7 @@ void testRandomTree( const int nRequestedRandoms )
         if( lReturn != 0 )
         {
             ++g_errorCount;
-            printf( "FindInSphere failed in testRandomTree found points incorrectly, n=%d, lReturn=%d\n", n, lReturn );
+            printf( "FindInSphere failed in testRandomTree found points incorrectly, n=%d, lReturn=%ld\n", n, lReturn );
         }
     }
     
@@ -772,7 +774,7 @@ void testBigVector(  )
             else if( iFound != 1 )
             {
                 ++g_errorCount;
-                printf( "testBigVector: FindInSphere found more than %d points using zero radius\n", iFound );
+                printf( "testBigVector: FindInSphere found more than %ld points using zero radius\n", iFound );
             }
         }
         
@@ -801,7 +803,7 @@ void testBigVector(  )
             else if( iFound != 1 )
             {
                 ++g_errorCount;
-                printf( "testBigVector: FindInSphere found %d points using %f radius\n", iFound, (double)(vCloseToNearCenter-vNearCenter)*0.9 );
+                printf( "testBigVector: FindInSphere found %ld points using %f radius\n", iFound, (double)(vCloseToNearCenter-vNearCenter)*0.9 );
             }
         }
         
