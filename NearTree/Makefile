@@ -78,8 +78,8 @@ SRC      = $(ROOT)
 INC      = $(ROOT)
 EXAMPLES = $(ROOT)
 TESTDATA = $(ROOT)
-#INSTALLDIR = /usr/local
-INSTALLDIR  = $(HOME)
+INSTALLDIR = /usr/local
+#INSTALLDIR  = $(HOME)
 
 #
 # Include directories
@@ -156,6 +156,18 @@ default:
 	@echo '   $(CPPCOMPILE_COMMAND)'
 	@echo '   $(COMPILE_COMMAND)'
 	@echo ' '
+	@echo ' The C API, CNearTree.c, depends on the sourceforge project CVector '
+ifdef CVECTOR_INCLUDE
+	@echo ' The variable CVECTOR_INCLUDE is defined as '
+	@echo '   $(CVECTOR_INCLUDE)'
+else
+	@echo ' You are currently setup to use the system defaults for CVector'
+	@echo ' If that is not correct, define the variable CVECTOR_INCLUDE '
+endif
+	@echo ' '
+	@echo '   $(CPPCOMPILE_COMMAND)'
+	@echo '   $(COMPILE_COMMAND)'
+	@echo ' '
 	@echo ' The current library link command is:'
 	@echo ' '
 	@echo '   $(LIBRARY_LINK_COMMAND)'
@@ -176,7 +188,7 @@ default:
 	@echo '   $(INSTALL_COMMAND) '	
 	@echo '   $(INSTALL_FINISH) '	
 	@echo ' '
-	@echo ' To compile the CVector library and example programs type:'
+	@echo ' To compile the NearTree library and example programs type:'
 	@echo ' '
 	@echo '   make clean'
 	@echo '   make all'
@@ -189,7 +201,7 @@ default:
 	@echo ' '
 	@echo '   make clean'
 	@echo ' '
-	@echo ' To install the library and binaries type:'
+	@echo ' To install the library and headers type:'
 	@echo ' '
 	@echo '   make install'
 	@echo ' '

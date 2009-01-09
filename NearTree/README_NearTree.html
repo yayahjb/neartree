@@ -26,7 +26,9 @@ NearTree -- function library efficiently solving the Nearest Neighbor Problem
 <hr>
 <center>
 <h2>NearTree</h2>
-&#169; Copyright 2001, 2008 Larry Andrews.  All rights reserved
+Release 1.0<br />
+8 January 2009
+&#169; Copyright 2001, 2008, 2009 Larry Andrews.  All rights reserved
 <br />
 based on<br />
 Larry Andrews, &quot;<i>A template for the nearest neighbor problem</i>&quot;,<br />
@@ -34,7 +36,7 @@ C/C++ Users Journal, Volume 19 ,  Issue 11  (November 2001), 40 - 49  (2001),
 ISSN:1075-2838,<br />
 <a href="http://www.ddj.com/architect/184401449" style="text-decoration:none">www.ddj.com/architect/184401449</a>
 <p>
-Revised 12 Dec 2008 for sourceforge release, Herbert J. Bernstein
+Revised 12 Dec 2008, 8 January 2009 for sourceforge release, Larry Andrews and Herbert J. Bernstein
 </h2>
 <P>
 
@@ -64,6 +66,109 @@ MA  02110-1301  USA
 </td>
 </table>
 </center>
+<P>
+This is a release of an API for finding nearest neighbors among points in spaces of
+arbtrary dimensions.  This release provides a C++ template, TNear.h, and a
+C library, CNearTree.c, with example/test programs.
+<P>
+<ul>
+  <li><a href="#Installation">Installation</a>
+  <li><a href="#Tnear.h">The C++ template, TNear.h</a>
+  <li><a href="#CNearTree.c">The C NearTree API CNearTree.c</a>
+</ul>
+<hr>
+<hr>
+<h4><a name="Installation">Installation</a></h4>
+<p>
+The NearTree package is available at <a href="http://www.sourceforge.net/projects/neartree">www.sourceforge.net/projects/neartree</a>.
+A source tarball is available at <a href="http://downloads.sourceforge.net/neartree/NearTree-1.0.0.tar.gz">downloads.sourceforge.net/neartree/NearTree-1.0.0.tar.gz</a>.
+Later tarballs may be available.
+<P>
+When the source tarball is dowloaded and unpacked, you should have a directory NearTree-1.0.0.  To see the current settings for a build
+execute
+<p>
+make
+</p>
+which should give the following information:
+<p>
+<pre><tt>
+ PLEASE READ README_NearTree.txt and lgpl.txt
+ 
+ Before making the NearTree libraries and example programs, check
+ that the chosen settings are correct
+ 
+ The current C++ and C compile commands are:
+ 
+   libtool --mode=compile g++ -g -O2  -Wall -ansi -pedantic -I.   -c
+   libtool --mode=compile gcc -g -O2  -Wall -ansi -pedantic -I.   -c
+ 
+ The C API, CNearTree.c, depends on the sourceforge project CVector 
+ You are currently setup to use the system defaults for CVector
+ If that is not correct, define the variable CVECTOR_INCLUDE 
+ 
+   libtool --mode=compile g++ -g -O2  -Wall -ansi -pedantic -I.   -c
+   libtool --mode=compile gcc -g -O2  -Wall -ansi -pedantic -I.   -c
+ 
+ The current library link command is:
+ 
+   libtool --mode=link  gcc -version-info 1:0:1 -release 1.0 -rpath /usr/local/lib
+ 
+ The current C++ and C library local, and C dynamic and static build commands are:
+ 
+   libtool --mode=link g++ -g -O2  -Wall -ansi -pedantic -I. 
+   libtool --mode=link gcc -g -O2  -Wall -ansi -pedantic -I.  -L./lib
+   libtool --mode=link gcc -g -O2  -Wall -ansi -pedantic -dynamic \
+      -I /usr/local/include -L/usr/local/lib
+   libtool --mode=link gcc -g -O2  -Wall -ansi -pedantic -static \
+      -I /usr/local/include -L/usr/local/lib
+ 
+ Before installing the NearTree library and example programs, check
+ that the install directory and install commands are correct:
+ 
+ The current values are :
+ 
+   /usr/local 
+   libtool --mode=install cp 
+    
+ 
+ To compile the NearTree library and example programs type:
+ 
+   make clean
+   make all
+ 
+ To run a set of tests type:
+ 
+   make tests
+ 
+ To clean up the directories type:
+ 
+   make clean
+ 
+ To install the library and headers type:
+ 
+   make install
+
+</tt>
+</pre>
+<p>
+If these settings need to be changed, edit Makefile.  On some systems, e.g. Mac OS X, the default
+libtool is not appropriate.  In that case you should install a recent version of libtool.  The
+CVector kit has been tested with libtool versions 1.3.5 and 1.5.4.  If the system libtool is
+not to be used, define the variable LIBTOOL to be the path to the libtaol executable, e.g.
+in bash
+<p>
+export LIBTOOL=$HOME/bin/libtool
+<p>
+or in the Makefie
+<p>
+LIBTOOL = $(HOME)/bin/libtool
+<p>
+If you need to include local header files using #include &quot;...&quot; instead of #include &lt;...&gt;,
+define the variable USE_LOCAL_HEADERS
+
+<hr>
+<hr>
+<h4><a name="Tnear.h">The C++ template, TNear.h</a></h4>
 <P>
 This is a revised release of
 <blockquote>
@@ -115,51 +220,51 @@ operator- ( );         </font></td><td><font face="Arial,Helvetica,Times" size="
 The provided interface is:
 <p>
 <pre><tt>
-    #include "TNear.h"
+    <b>#include &lt;TNear.h&gt;</b>
 
-    CNearTree( void )   // constructor
+    <b>CNearTree</b>( <b>void</b> )   // constructor
        instantiated by something like:      CNearTree &lt;v&gt; vTree;
        for some type v
 
-    ~CNearTree(void)  // destructor
+    <b>~CNearTree</b>( <b>void</b> )  // destructor
        invoked by  vTree.CNeartree<v>::~CNearTree
        for an object vTree of some type v
 
-    bool empty( ) const
+    <b>bool empty</b>( ) <b>const</b>
        test for an empty NearTree
 
-    void Insert( T&amp; t )
+    <b>void Insert</b>( <b>T&amp;</b> <i>t</i> )
        where t is an object of the type v
 
-    bool NearestNeighbor ( const double&amp; dRadius,  T&amp; tClosest,   const T&amp; t ) const
-       dRadius is the largest radius within which to search; make it
+    <b>bool NearestNeighbor</b> ( <b>const double&amp;</b> <i>dRadius</i>,  <b>T&amp;</b> <i>tClosest</i>,   <b>const T&amp;</b> <i>t</i> ) <b>const</b>
+       <i>dRadius</i> is the largest radius within which to search; make it
           very large if you want to include every point that was loaded; dRadius
           is returned as the closest distance to the probe (or the search radius
           if nothing is found)
-       tClosest is returned as the object that was found closest to the probe
+       <i>tClosest</i> is returned as the object that was found closest to the probe
           point (if any were within radius dRadius of the probe)
-       t is the probe point, used to search in the group of points Insert'ed
+       <i>t</i> is the probe point, used to search in the group of points Insert'ed
        return value is true if some object was found within the search radius, false otherwise
 
-    bool FarthestNeighbor ( T&amp; tFarthest,   const T&amp; t ) const
-       tFarthest is returned as the object that was found farthest to the probe
+    <b>bool FarthestNeighbor</b> ( <b>T&amp;</b> <i>tFarthest</i>,   <b>const T&amp;</b> <i>t</i> ) <b>const</b>
+       <i>tFarthest</i> is returned as the object that was found farthest to the probe
           point
-       t is the probe point, used to search in the group of points Insert'ed
+       <i>t</i> is the probe point, used to search in the group of points Insert'ed
        return value is true if some object was found, false otherwise
 
-    long FindInSphere ( const double&amp; dRadius,  std::vector&lt;  T &gt;&amp; tClosest,   const T&amp; t ) const
-       dRadius is the radius within which to search; make it very large if you want to
+    <b>long FindInSphere</b> ( <b>const double&amp;</b> <i>dRadius</i>,  <b>std::vector&lt;  T &gt;&amp;</b> <i>tClosest</i>,   <b>const T&amp;</b> t ) <b>const</b>
+       <i>dRadius</i> is the radius within which to search; make it very large if you want to
            include every point that was loaded;
-       tClosest is returned as the vector of objects that were found within a radius dRadius
+       <i>tClosest</i> is returned as the vector of objects that were found within a radius dRadius
           of the probe point
-       t is the probe point, used to search in the group of points Insert'ed
+       <i>t</i> is the probe point, used to search in the group of points Insert'ed
        return value is the number of objects found within the search radius
     
-    T InSphere ( const double& dRadius,  const T& t )
-      dRadius is the radius within which to search; make it very large if you want to
+    <b>T InSphere</b> ( <b>const double&amp;</b> <i>dRadius</i>,  <b>const T&amp;</b> <i>t</i> )
+      <i>dRadius</i> is the radius within which to search; make it very large if you want to
            include every point that was loaded;
-      t is the probe point, used to search in the group of points Insert'ed
-      return value if an object of the type v which is closest within the sphere to
+      <i>t</i> is the probe point, used to search in the group of points Insert'ed
+      return value is an object of the type v which is closest within the sphere to
            the probe point t
       
 </tt>
@@ -180,8 +285,190 @@ So a complete program is:
  }
 </tt>
 </pre>
- and it should print 0.5 (that's how for 2.0 is from 1.5)
+ and it should print 0.5 (that's how for 2.0 is from 1.5).  For more examples of
+ the use of TNear.h, see <a href="main.cpp">main.cpp</a> and <a href="CNearTreeTest.cpp">CNearTreeTest.cpp</a>.
 
+<hr>
+<hr>
+<h4><a name="CNearTree.c">The C NearTree API CNearTree.c</a></h4>
+<h4>Synopsis</h4>
+<P>
+<b>#include &lt;CNearTree.h&gt;</b>
+<P>
+
+<p>   
+     <b>double</b> <b>CNearTreeDist</b> (<b>CNearTreeHandle</b> <i>treehandle</i>, <b><b>void *</b></b> <i><i>coord</i>1</i>,
+                           <b><b>void *</b></b> <i><i>coord</i>2</i>);
+<p>
+    
+    <b>int</b> <b>CNearTreeCreate</b> (<b>CNearTreeHandle *</b> <i>treehandle</i>, 
+                        <b>size_t</b> <i>treedim</i>, 
+                        <b>int</b> <i>treetype</i>);
+    
+<p>    
+    <b>int</b> <b>CNearTreeFree</b>(<b>CNearTreeHandle *</b> <i>treehandle</i>);
+    
+<p>    
+ 
+    <b>int</b> <b>CNearTreeInsert</b>( <b>CNearTreeHandle</b> <i>treehandle</i>,
+                        <b>const</b> <b>void *</b> <i>coord</i>, 
+                        <b>const</b> <b>void *</b> <i>obj</i> );
+<p>     
+    
+    <b>int</b> <b>CNearTreeZeroIfEmpty</b> (<b>CNearTreeHandle</b> <i>treehandle</i>);
+    
+<p>     
+    <b>int</b> <b>CNearTreeNearestNeighbor</b> (<b>CNearTreeHandle</b> <i>treehandle</i>, 
+                                  <b>const</b> <b>double</b> dRadius,  
+                                  <b>void * *</b> <i>coordClosest</i>,
+                                  <b>void * *</b>  <i>objClosest</i>, 
+                                  <b>const</b> <b>void *</b> <i>coord</i> );
+<p>     
+    <b>int</b> <b>CNearTreeFarthestNeighbor</b> (<b>CNearTreeHandle</b> <i>treehandle</i>, 
+                                   <b>void *</b> * <i>coordFarthest</i>,
+                                   <b>void *</b> * <i>objFarthest</i>,   
+                                   <b>const</b> <b>void *</b> <i>coord</i> );
+<p>  
+        
+    <b>int</b> <b>CNearTreeFindInSphere</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+                               <b>const</b> <b>double</b> <i>dRadius</i>,
+                               CVectorHandle <i>coords</i>,
+                               CVectorHandle <i>objs</i>,
+                               <b>const</b> <b>void *</b> <i>coord</i>,
+                               <b>int</b> <i>resetcount</i>);
+<p> 
+    <b>int</b> <b>CNearTreeNearest</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>, 
+                          <b>double</b> * dRadius,  
+                          <b>void *</b> * <i>coordClosest</i>,
+                          <b>void *</b> * <i>objClosest</i>,
+                          <b>const</b> <b>void *</b> <i>coord</i> );
+<p>     
+    <b>int</b> <b>CNearTreeFindFarthest</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+                               <b>double</b> * dRadius,  
+                               <b>void *</b> * <i>coordFarthest</i>,
+                               <b>void *</b> * <i>objFarthest</i>,
+                               <b>const</b> <b>void *</b> <i>coord</i> );
+<p>    
+
+The NearTree API works with coordinate vectors in an arbitrary number of
+dimensions.  Each neartree is accessed by a pointer of type <b>CNearTreeHandle</b>
+which points to a struct of type <b>CNearTree</b>:
+<p>
+<pre><tt>
+    typedef struct _CNearTree {
+        void           * m_coordLeft;    /* coords of left object stored in this node   */
+        void           * m_coordRight;   /* coords of right object stored in this node  */
+        double           m_dMaxLeft;     /* longest distance from the left object
+                                            to anything below it in the tree            */
+        double           m_dMaxRight;    /* longest distance from the right object 
+                                            to anything below it in the tree            */
+        struct _CNearTree FAR * m_pLeftBranch;  
+                                         /* tree descending from the left object        */
+        struct _CNearTree FAR * m_pRightBranch; 
+                                         /* tree descending from the right object       */
+        void FAR *       m_ptobjLeft;    /* pointer to the left object                  */
+        void FAR *       m_ptobjRight;   /* pointer to the right object                 */
+        size_t           m_dimension;    /* dimension of the coordinates                */
+        int              m_flags;        /* flags                                       */
+        /* NOTE:  in actual blocks the coordinates will be stored here after the flags         */
+    } CNearTree;
+
+</pre></tt>
+</p>
+The internal operation of the API depends on the function <b>CNearTreeDist</b> 
+that returns the distance (L1, L2 or L-infinity)  between two 
+coordinate vectors as a double according to the parameters of the given tree.
+Note that the tree may store the coordinates as integers or as doubles, but
+the distance is always computed as a double.
+If this function is replaced by a user function, it is important that the
+replacement obey the triangle inequality.
+<P>
+A neartree is created by  <b>CNearTreeCreate</b> and freed by <b>CNearTreeFree</b>.
+<i>treedim</i> is the dimension of the coordinate vectors and <i>treetype</i>
+is one of the two predefined constants <b>CNEARTREE_TYPE_DOUBLE</b> for double
+or <b>CNEARTREE_TYPE_INTEGER</b> for integer, optionally ORed with CNEARTREE_NORM_L1,
+CNEARTREE_NORM_L2 or CNEARTREE_NORM_LINF for L1, L2 or L-infinity norms.
+When first created, a neartree has no right or left node and with the dMax-below
+set to negative values so that any match found will be stored since it will
+greater than the negative value.  The tree is then populated by calls to
+<b>CNearTreeInsert</b>, with each call providing a coordinate vector <i>coord</i>
+and an optional object pointer <i>obj</i>.  The API copies the coordinate vector,
+but does not copy the object.  The tree is populated in the order left, right
+and then the nearer child.
+<p>
+The neartree is searched for the nearest or farthest coordinate vector in the neartree to a given
+probe coordinate vector <i>coord</i> by <b>CNearTreeNearestNeighbor</b> and 
+<b>CNearTreeFarthestNeighbor</b>, respectively.  The given radius contains the search
+to a sphere around the probe.  If more than a single extremal coordinate point is
+needed, <b>CNearTreeFindInSphere</b> can be used to obtain a CVector result vector of 
+all the coordinate vectors that satisfy the constraint.  The vectors themselves
+are not copied into the result vector.  If the parameter <i>resetcount</i> is true (non
+zero) the result vector is cleared before the search.   A parallel CVector result vector
+of the matching object pointers is returned is <i>objs</i> is not NULL. The functions
+<b>CNearTreeNearest</b> and <b>CNearTreeFindFarthest</b> implement <b>CNearTreeNearestNeighbor</b> and 
+<b>CNearTreeFarthestNeighbor</b>, respectively, adjusting the radius of the search while
+the searh is in progress, and are not normall used by users
+<P>
+<h4>Returns</h4>
+If <b>CNearTreeDist</b> fails, it returns -1.  Except for <b>CNearTreeDist</b>, all the functions 
+in the API return 0 (<b>CNEARTREE_SUCCESS</b>) for
+success.    If dynamic memory allocation fails, <b>CNEARTREE_MALLOC_FAILED</b> is returned.
+If a call is made with an improper argument, <b>CNEARTREE_BAD_ARGUMENT</b> is returned.
+If a search fails to find anything, <b>CNEARTREE_NOT_FOUND</b> is returned.
+<p>
+<h4>Examples</h4>
+<P>
+To create a neartree for 3-dimensional vectors of doubles:
+<P>
+<pre>
+<tt> 
+#include <CNearTree.h>
+CNearTreeHandle treehandle;
+int bReturn;
+ 
+ ...
+ 
+ bReturn = !CNearTreeCreate(&treehandle,3,CNEARTREE_TYPE_DOUBLE);
+</tt>
+</pre>
+<p>
+ 
+To insert a copy of a 3-dimensional vector of doubles into this tree,
+with no associated object:
+<P>
+<pre>
+<tt> 
+    double v[3];
+ 
+ ...
+     
+    v[0] = 1.; v[1] = 2.; v[2] = 3.;
+    bReturn = !CNearTreeInsert(treehandle,&amp;v[0],NULL);
+</tt>
+</pre>
+<p>
+To search for the nearest neighbor to a probe vector vSearch in a radius of 3.,
+returning a pointer to the resulting vector in vBest:
+<P>
+<pre>
+<tt> 
+    double * vBest;
+    void * vvBest;
+    double vSearch[3];
+    double   dRad = =3.;
+    
+  ...
+  
+    if ( !CNearTreeNearestNeighbor(treehandle,dRad,&amp;vvBest,NULL,vSearch))
+        {   vBest = (double *)vvBest; }
+</tt>
+</pre>
+<p>
+Note the use of a seaparate void * vvBest instead of a cast of &amp;vBest to avoid compiler 
+type punning warnings.
+<P>
+For more examples of the use of CNearTree.c, see <a href="main.c">main.c</a> and <a href="CNearTreeTest.c">CNearTreeTest.c</a>
+in the release kit.
 
 </font>
 </body>
