@@ -40,6 +40,8 @@
 
 #include "CNearTree.h"
 
+#define MYRAND_MAX 32767
+
 int main ( int argc, char** argv )
 {
     
@@ -59,10 +61,10 @@ int main ( int argc, char** argv )
     CVectorCreate(&oReturn,sizeof(void *),10);
     
     if (argc <= 1) {
-        srand( (unsigned int)time( NULL ) );  /* use the current time to seed the
+        srandom( (unsigned int)time( NULL ) );  /* use the current time to seed the
                                                  random number generator */
     } else {
-        srand((unsigned int)atoi(argv[1]));
+        srandom((unsigned int)atoi(argv[1]));
     }
     /*---------------------------------------
      build up a library of points to search among
@@ -86,7 +88,7 @@ int main ( int argc, char** argv )
     for ( i=0;  i<10; i++ )
     {  double x, y, z;
         dRad += 0.05;
-        x = rand( ) * ((double) lMaxRow ) / RAND_MAX;
+        x = (random( )%MYRAND_MAX) * ((double) lMaxRow ) / MYRAND_MAX;
         y = x;
         z = ( 1.25 * ((double) lMaxRow) - 1.5 * x );
         vSearch[0] = x; vSearch[1] = 0.5*(x+y); vSearch[2] = z;

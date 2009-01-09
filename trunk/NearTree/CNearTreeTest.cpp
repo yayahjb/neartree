@@ -526,7 +526,7 @@ void testRandomTree( const int nRequestedRandoms )
     /* Build the tree with n random numbers. Remember the largest and smallest values. */
     for( int i=0; i<n; ++i )
     {
-        const int next = rand( )%MYRAND_MAX;
+        const int next = random( )%MYRAND_MAX;
         tree.Insert( next );
         if( next > nmax ) nmax = next;
         if( next < nmin ) nmin = next;
@@ -640,7 +640,7 @@ class vec17
             dim = 17;
             for( int i=0; i<dim; ++i )
             {
-                pd[i] = (double)(rand( )%MYRAND_MAX);
+                pd[i] = (double)(random( )%MYRAND_MAX);
             }
         }
         vec17( const double d )

@@ -621,7 +621,7 @@ void testRandomTree( const int nRequestedRandoms )
     /* Build the tree with n random numbers. Remember the largest and smallest values. */
     for( i=0; i<n; ++i )
     {
-        next[0] = rand( )%MYRAND_MAX;
+        next[0] = random( )%MYRAND_MAX;
         bReturn = !CNearTreeInsert(tree,next,NULL);
         if( next[0] > nmax ) nmax = next[0];
         if( next[0] < nmin ) nmin = next[0];
@@ -742,7 +742,7 @@ void testRandomTree( const int nRequestedRandoms )
 int LoadVec17(double vec[17]) {
     size_t i;
     for (i = 0; i < 17; i++) {
-        vec[i] = (double)(rand( )%MYRAND_MAX);
+        vec[i] = (double)(random( )%MYRAND_MAX);
     }
     return 0;
 }
@@ -929,7 +929,7 @@ void testBigVector(  )
             else if( iFound != 1 )
             {
                 ++g_errorCount;
-                fprintf(stdout, "CNearTreeTest:testBigVector: FindInSphere found more than 1 point using zero radius, found=%ld\n", iFound );
+                fprintf(stdout, "CNearTreeTest:testBigVector: FindInSphere found more than 1 point using zero radius, found=%lu\n", (long unsigned int)iFound );
             }
         }
         
@@ -975,8 +975,8 @@ void testBigVector(  )
             else if( iFound != 1 )
             {
                 ++g_errorCount;
-                fprintf(stdout, "CNearTreeTest: testBigVector: FindInSphere found %ld points using %g radius\n", 
-                       iFound, 
+                fprintf(stdout, "CNearTreeTest: testBigVector: FindInSphere found %ud points using %g radius\n", 
+                       (long unsigned int)iFound, 
                        0.9* CNearTreeDist(tree,vCloseToNearCenter,vNearCenter) );
             }
             }
