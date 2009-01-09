@@ -46,7 +46,12 @@
 #include <float.h>
 #include <limits.h>
 #include <math.h>
+#include <stdlib.h>
+#ifndef USE_LOCAL_HEADERS
 #include <CNearTree.h>
+#else
+#include "CNearTree.h"
+#endif
 
 void testEmptyTree( void );
 void testLinearTree( const int n );
@@ -975,7 +980,7 @@ void testBigVector(  )
             else if( iFound != 1 )
             {
                 ++g_errorCount;
-                fprintf(stdout, "CNearTreeTest: testBigVector: FindInSphere found %ud points using %g radius\n", 
+                fprintf(stdout, "CNearTreeTest: testBigVector: FindInSphere found %lu points using %g radius\n", 
                        (long unsigned int)iFound, 
                        0.9* CNearTreeDist(tree,vCloseToNearCenter,vNearCenter) );
             }
