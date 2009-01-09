@@ -37,8 +37,11 @@
 #include <time.h>
 #include <CVector.h>
 
-
+#ifndef USE_LOCAL_HEADERS
+#include <CNearTree.h>
+#else
 #include "CNearTree.h"
+#endif
 
 #define MYRAND_MAX 32767
 
