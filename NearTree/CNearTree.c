@@ -822,7 +822,7 @@ extern "C" {
          to test whether it's even necessary to descend.
          */
         if (( treehandle->m_pLeftBranch  != 0 )  && ( treehandle->m_dMaxLeft>=0. )
-            && (( (*dRadius) - treehandle->m_dMaxLeft ) <= 
+            && ( (*dRadius) <= treehandle->m_dMaxLeft +
                 CNearTreeDist (treehandle, (void FAR *)coord, 
                                  treehandle->m_coordLeft)))
         {
@@ -831,7 +831,7 @@ extern "C" {
         }
         
         if (( treehandle->m_pRightBranch  != 0 ) && ( treehandle->m_dMaxRight>=0. )
-            && (( (*dRadius) - treehandle->m_dMaxRight ) <= 
+            && ( (*dRadius) - treehandle->m_dMaxRight + 
                 CNearTreeDist ( treehandle, (void FAR *)coord,
                                  treehandle->m_coordRight)))        {
             if (!CNearTreeFindFarthest( treehandle->m_pRightBranch,

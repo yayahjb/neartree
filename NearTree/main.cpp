@@ -41,6 +41,8 @@
 #include "TNear.h"
 #include "v.h"
 
+#define MYRAND_MAX 31767
+
 int main ( int argc, char* argv[] )
 {
     CNearTree <v> vTree;
@@ -50,10 +52,10 @@ int main ( int argc, char* argv[] )
     std::vector <v> vReturn;
     
     if (argc <= 1) {
-        srand( (unsigned int)time( NULL ) );  /* use the current time to seed the
+        srandom( (unsigned int)time( NULL ) );  /* use the current time to seed the
                                                 random number generator */
     } else {
-        srand((unsigned int)atoi(argv[1]));
+        srandom((unsigned int)atoi(argv[1]));
     }
     //---------------------------------------
     // build up a library of points to search among
@@ -80,7 +82,7 @@ int main ( int argc, char* argv[] )
     for ( i=0;  i<10; i++ )
     {
         dRad += 0.05;
-        double x = rand( ) * double( lMaxRow ) / RAND_MAX;
+        double x = (random( )%MYRAND_MAX) * double( lMaxRow ) / MYRAND_MAX;
         double y = x;
         double z = ( 1.25 * double(lMaxRow) - 1.5 * x );
         v vSearch( x, 0.5*(x+y), z );
