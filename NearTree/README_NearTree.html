@@ -154,7 +154,7 @@ which should give the following information:
 If these settings need to be changed, edit Makefile.  On some systems, e.g. Mac OS X, the default
 libtool is not appropriate.  In that case you should install a recent version of libtool.  The
 CVector kit has been tested with libtool versions 1.3.5 and 1.5.4.  If the system libtool is
-not to be used, define the variable LIBTOOL to be the path to the libtaol executable, e.g.
+not to be used, define the variable LIBTOOL to be the path to the libtool executable, e.g.
 in bash
 <p>
 export LIBTOOL=$HOME/bin/libtool
@@ -180,7 +180,7 @@ Nearest Neighbor algorithm after Kalantari and McDonald,
 modified to use recursion instead of a double-linked tree
 and simplified so that it does a bit less checking for
 things like is the distance to the right less than the
-distance to the left; it was found that these checks little
+distance to the left; it was found that these checks made little
 to no difference.
 <p>
 
@@ -238,19 +238,19 @@ The provided interface is:
 
     <b>bool NearestNeighbor</b> ( <b>const double&amp;</b> <i>dRadius</i>,  <b>T&amp;</b> <i>tClosest</i>,   <b>const T&amp;</b> <i>t</i> ) <b>const</b>
        <i>dRadius</i> is the largest radius within which to search; make it
-          very large if you want to include every point that was loaded; dRadius
-          is returned as the closest distance to the probe (or the search radius
-          if nothing is found)
+          very large if you want to include every point that was loaded.
        <i>tClosest</i> is returned as the object that was found closest to the probe
           point (if any were within radius dRadius of the probe)
        <i>t</i> is the probe point, used to search in the group of points Insert'ed
-       return value is true if some object was found within the search radius, false otherwise
+       return value is true if some object was found within the search radius, false otherwise.
+          If false is returned, tClosest is invalid (at best).
 
     <b>bool FarthestNeighbor</b> ( <b>T&amp;</b> <i>tFarthest</i>,   <b>const T&amp;</b> <i>t</i> ) <b>const</b>
        <i>tFarthest</i> is returned as the object that was found farthest to the probe
           point
        <i>t</i> is the probe point, used to search in the group of points Insert'ed
        return value is true if some object was found, false otherwise
+          If false is returned, tFarthest is invalid (at best).
 
     <b>long FindInSphere</b> ( <b>const double&amp;</b> <i>dRadius</i>,  <b>std::vector&lt;  T &gt;&amp;</b> <i>tClosest</i>,   <b>const T&amp;</b> t ) <b>const</b>
        <i>dRadius</i> is the radius within which to search; make it very large if you want to
@@ -258,7 +258,7 @@ The provided interface is:
        <i>tClosest</i> is returned as the vector of objects that were found within a radius dRadius
           of the probe point
        <i>t</i> is the probe point, used to search in the group of points Insert'ed
-       return value is the number of objects found within the search radius
+       return value is the count of the number of points found within the search radius
     
     <b>T InSphere</b> ( <b>const double&amp;</b> <i>dRadius</i>,  <b>const T&amp;</b> <i>t</i> )
       <i>dRadius</i> is the radius within which to search; make it very large if you want to
@@ -281,7 +281,7 @@ So a complete program is:
    CNearTree&lt; double &gt; dT;
    double dNear;
    dT.Insert( 1.5 );
-   if ( dT.NearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",dRad );
+   if ( dT.NearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",double(dNear-2.0) );
  }
 </tt>
 </pre>
@@ -398,16 +398,16 @@ and then the nearer child.
 <p>
 The neartree is searched for the nearest or farthest coordinate vector in the neartree to a given
 probe coordinate vector <i>coord</i> by <b>CNearTreeNearestNeighbor</b> and 
-<b>CNearTreeFarthestNeighbor</b>, respectively.  The given radius contains the search
+<b>CNearTreeFarthestNeighbor</b>, respectively.  The given radius confines the search
 to a sphere around the probe.  If more than a single extremal coordinate point is
 needed, <b>CNearTreeFindInSphere</b> can be used to obtain a CVector result vector of 
 all the coordinate vectors that satisfy the constraint.  The vectors themselves
 are not copied into the result vector.  If the parameter <i>resetcount</i> is true (non
 zero) the result vector is cleared before the search.   A parallel CVector result vector
-of the matching object pointers is returned is <i>objs</i> is not NULL. The functions
+of the matching object pointers is returned if <i>objs</i> is not NULL. The functions
 <b>CNearTreeNearest</b> and <b>CNearTreeFindFarthest</b> implement <b>CNearTreeNearestNeighbor</b> and 
 <b>CNearTreeFarthestNeighbor</b>, respectively, adjusting the radius of the search while
-the searh is in progress, and are not normall used by users
+the search is in progress, and are not normally used by users
 <P>
 <h4>Returns</h4>
 If <b>CNearTreeDist</b> fails, it returns -1.  Except for <b>CNearTreeDist</b>, all the functions 
@@ -464,7 +464,7 @@ returning a pointer to the resulting vector in vBest:
 </tt>
 </pre>
 <p>
-Note the use of a seaparate void * vvBest instead of a cast of &amp;vBest to avoid compiler 
+Note the use of a separate void * vvBest instead of a cast of &amp;vBest to avoid compiler 
 type punning warnings.
 <P>
 For more examples of the use of CNearTree.c, see <a href="main.c">main.c</a> and <a href="CNearTreeTest.c">CNearTreeTest.c</a>
