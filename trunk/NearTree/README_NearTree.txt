@@ -1,5 +1,10 @@
+   +---------------------------------------------------------------------+
+   |      NearTree      |      CVector      |    SourceForge.net Logo    |
+   +---------------------------------------------------------------------+
 
-                                   NearTree
+     ----------------------------------------------------------------------
+
+NearTree
 
                                   Release 1.0
 8 January 2009 (c) Copyright 2001, 2008, 2009 Larry Andrews. All rights reserved
@@ -77,11 +82,9 @@
  
   The current library link command is:
  
-    libtool --mode=link  gcc -version-info 1:0:1 -release 1.0 -rpath \
-        /usr/local/lib
+    libtool --mode=link  gcc -version-info 1:0:1 -release 1.0 -rpath /usr/local/lib
  
-  The current C++ and C library local, and C dynamic and static build 
-  commands are:
+  The current C++ and C library local, and C dynamic and static build commands are:
  
     libtool --mode=link g++ -g -O2  -Wall -ansi -pedantic -I.
     libtool --mode=link gcc -g -O2  -Wall -ansi -pedantic -I.  -L./lib
@@ -121,7 +124,7 @@
    Mac OS X, the default libtool is not appropriate. In that case you should
    install a recent version of libtool. The CVector kit has been tested with
    libtool versions 1.3.5 and 1.5.4. If the system libtool is not to be used,
-   define the variable LIBTOOL to be the path to the libtaol executable, e.g.
+   define the variable LIBTOOL to be the path to the libtool executable, e.g.
    in bash
 
    export LIBTOOL=$HOME/bin/libtool
@@ -147,8 +150,8 @@
    Transactions on Software Engineering, v. SE-9, pp. 631-634,1983) modified
    to use recursion instead of a double-linked tree and simplified so that it
    does a bit less checking for things like is the distance to the right less
-   than the distance to the left; it was found that these checks little to no
-   difference.
+   than the distance to the left; it was found that these checks made little
+   to no difference.
 
    The user of this class needs to provide at least the following
    functionality for the template to work. For the built-in numerics of C++,
@@ -181,19 +184,19 @@ operator- ( );      // geometrical (vector) difference of two objects
 
      bool NearestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) const
         dRadius is the largest radius within which to search; make it
-           very large if you want to include every point that was loaded; dRadius
-           is returned as the closest distance to the probe (or the search radius
-           if nothing is found)
+           very large if you want to include every point that was loaded.
         tClosest is returned as the object that was found closest to the probe
            point (if any were within radius dRadius of the probe)
         t is the probe point, used to search in the group of points Insert'ed
-        return value is true if some object was found within the search radius, false otherwise
+        return value is true if some object was found within the search radius, false otherwise.
+           If false is returned, tClosest is invalid (at best).
 
      bool FarthestNeighbor ( T& tFarthest,   const T& t ) const
         tFarthest is returned as the object that was found farthest to the probe
            point
         t is the probe point, used to search in the group of points Insert'ed
         return value is true if some object was found, false otherwise
+           If false is returned, tFarthest is invalid (at best).
 
      long FindInSphere ( const double& dRadius,  std::vector<  T >& tClosest,   const T& t ) const
         dRadius is the radius within which to search; make it very large if you want to
@@ -201,7 +204,7 @@ operator- ( );      // geometrical (vector) difference of two objects
         tClosest is returned as the vector of objects that were found within a radius dRadius
            of the probe point
         t is the probe point, used to search in the group of points Insert'ed
-        return value is the number of objects found within the search radius
+        return value is the count of the number of points found within the search radius
     
      T InSphere ( const double& dRadius,  const T& t )
        dRadius is the radius within which to search; make it very large if you want to
@@ -220,7 +223,7 @@ operator- ( );      // geometrical (vector) difference of two objects
     CNearTree< double > dT;
     double dNear;
     dT.Insert( 1.5 );
-    if ( dT.NearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",dRad );
+    if ( dT.NearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",double(dNear-2.0) );
   }
 
    and it should print 0.5 (that's how for 2.0 is from 1.5). For more
@@ -312,17 +315,17 @@ operator- ( );      // geometrical (vector) difference of two objects
    The neartree is searched for the nearest or farthest coordinate vector in
    the neartree to a given probe coordinate vector coord by
    CNearTreeNearestNeighbor and CNearTreeFarthestNeighbor, respectively. The
-   given radius contains the search to a sphere around the probe. If more
+   given radius confines the search to a sphere around the probe. If more
    than a single extremal coordinate point is needed, CNearTreeFindInSphere
    can be used to obtain a CVector result vector of all the coordinate
    vectors that satisfy the constraint. The vectors themselves are not copied
    into the result vector. If the parameter resetcount is true (non zero) the
    result vector is cleared before the search. A parallel CVector result
-   vector of the matching object pointers is returned is objs is not NULL.
+   vector of the matching object pointers is returned if objs is not NULL.
    The functions CNearTreeNearest and CNearTreeFindFarthest implement
    CNearTreeNearestNeighbor and CNearTreeFarthestNeighbor, respectively,
-   adjusting the radius of the search while the searh is in progress, and are
-   not normall used by users
+   adjusting the radius of the search while the search is in progress, and
+   are not normally used by users
 
     Returns
 
@@ -370,7 +373,7 @@ operator- ( );      // geometrical (vector) difference of two objects
      if ( !CNearTreeNearestNeighbor(treehandle,dRad,&vvBest,NULL,vSearch))
          {   vBest = (double *)vvBest; }
 
-   Note the use of a seaparate void * vvBest instead of a cast of &vBest to
+   Note the use of a separate void * vvBest instead of a cast of &vBest to
    avoid compiler type punning warnings.
 
    For more examples of the use of CNearTree.c, see main.c and
