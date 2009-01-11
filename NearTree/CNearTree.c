@@ -723,7 +723,9 @@ extern "C" {
                     pcoordClosest = pt->m_coordRight;
                 }
                 if ((pt->m_flags&CNEARTREE_FLAG_RIGHT_CHILD)&& 
-                    (pt->m_dMaxRight+*dRadius) >= dDR) {
+                    ((pt->m_dMaxRight+*dRadius) >= dDR
+                     || (*dRadius >= dDR-pt->m_dMaxRight)
+                     || (pt->m_dMaxRight >= dDR-*dRadius))) {
                     /* we did the left and now we finished the right, go down */
                     pt = pt->m_pRightBranch;
                     eDir = left;
@@ -742,7 +744,9 @@ extern "C" {
                     CVectorAddElement(sStack,&pt);
                 }
                 if ((pt->m_flags&CNEARTREE_FLAG_LEFT_CHILD)&&
-                    (pt->m_dMaxLeft+*dRadius) >= dDL){
+                    ((pt->m_dMaxLeft+*dRadius) >= dDL
+                     || (*dRadius >= dDL-pt->m_dMaxLeft)
+                     || (pt->m_dMaxLeft >= dDL-*dRadius))) {
                     pt = pt->m_pLeftBranch;
                 } else {
                     eDir = end;
@@ -825,7 +829,8 @@ extern "C" {
             && (( (*dRadius) <= treehandle->m_dMaxLeft +
                 (dTempRadius = CNearTreeDist (treehandle, (void FAR *)coord, 
                                  treehandle->m_coordLeft)))
-                || (*dRadius) - treehandle->m_dMaxLeft <= dTempRadius ))
+                || ((*dRadius) - dTempRadius <= treehandle->m_dMaxLeft)
+                || ((*dRadius) - treehandle->m_dMaxLeft <= dTempRadius )))
         {
             if (!CNearTreeFindFarthest( treehandle->m_pLeftBranch,
                                        dRadius, coordFarthest, objFarthest, coord)) bRet = 1;
@@ -835,7 +840,8 @@ extern "C" {
             && (( (*dRadius) <= treehandle->m_dMaxRight + 
                 (dTempRadius = CNearTreeDist ( treehandle, (void FAR *)coord,
                                  treehandle->m_coordRight)))
-                || (*dRadius) - treehandle->m_dMaxRight <= dTempRadius ))
+                || ((*dRadius) - dTempRadius <= treehandle->m_dMaxRight)
+                || ((*dRadius) - treehandle->m_dMaxRight <= dTempRadius)))
         {
             if (!CNearTreeFindFarthest( treehandle->m_pRightBranch,
                                        dRadius, coordFarthest, objFarthest, coord)) bRet = 1;
