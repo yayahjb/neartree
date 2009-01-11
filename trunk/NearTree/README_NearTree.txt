@@ -1,16 +1,18 @@
+                                    NearTree
 
-                                   NearTree
-
-                                  Release 1.0
-8 January 2009 (c) Copyright 2001, 2008, 2009 Larry Andrews. All rights reserved
+                                 Release 1.0.1
+                                11 January 2009
+       (c) Copyright 2001, 2008, 2009 Larry Andrews. All rights reserved
                                     based on
          Larry Andrews, "A template for the nearest neighbor problem",
    C/C++ Users Journal, Volume 19 , Issue 11 (November 2001), 40 - 49 (2001),
                                 ISSN:1075-2838,
                         www.ddj.com/architect/184401449
 
-   Revised 12 Dec 2008, 8 January 2009 for sourceforge release, Larry Andrews
-                            and Herbert J. Bernstein
+   Revised 12 Dec 2008, for sourceforge release, Larry Andrews and Herbert J.
+                                   Bernstein
+                       8 Jan 2009 Release 1.0 LCA and HJB
+                     11 Jan 2009 Release 1.0.1 LCA and HJB
 
     YOU MAY REDISTRIBUTE NearTree UNDER THE TERMS OF THE LGPL
 
@@ -36,9 +38,19 @@
    spaces of arbtrary dimensions. This release provides a C++ template,
    TNear.h, and a C library, CNearTree.c, with example/test programs.
 
+   This is a minor update to the 1.0 release of 8 January 2009 to deal with
+   the following issues:
+     * Adapt the API for building under MINGW
+     * Provide code to deal with compiler misoptimizations of the triangle
+       inequality on some systems
+
+     ----------------------------------------------------------------------
+
+    Contents
+
      * Installation
-     * The C++ template, TNear.h
-     * The C NearTree API CNearTree.c
+     * The C++ template: TNear.h
+     * The C NearTree API: CNearTree.c
 
      ----------------------------------------------------------------------
 
@@ -48,11 +60,11 @@
 
    The NearTree package is available at
    www.sourceforge.net/projects/neartree. A source tarball is available at
-   downloads.sourceforge.net/neartree/NearTree-1.0.0.tar.gz. Later tarballs
+   downloads.sourceforge.net/neartree/NearTree-1.0.1.tar.gz. Later tarballs
    may be available.
 
    When the source tarball is dowloaded and unpacked, you should have a
-   directory NearTree-1.0.0. To see the current settings for a build execute
+   directory NearTree-1.0.1. To see the current settings for a build execute
 
    make
 
@@ -65,30 +77,30 @@
  
   The current C++ and C compile commands are:
  
-    libtool --mode=compile g++ -g -O2  -Wall -ansi -pedantic -I.   -c
-    libtool --mode=compile gcc -g -O2  -Wall -ansi -pedantic -I.   -c
+    libtool --mode=compile g++ -g -O2  -Wall -ansi -pedantic  \
+       -DCNEARTREE_SAFE_TRIANG=1 -I.   -c
+    libtool --mode=compile gcc -g -O2  -Wall -ansi -pedantic  \
+       -DCNEARTREE_SAFE_TRIANG=1 -I.   -c
  
   The C API, CNearTree.c, depends on the sourceforge project CVector
   You are currently setup to use the system defaults for CVector
   If that is not correct, define the variable CVECTOR_INCLUDE
- 
-    libtool --mode=compile g++ -g -O2  -Wall -ansi -pedantic -I.   -c
-    libtool --mode=compile gcc -g -O2  -Wall -ansi -pedantic -I.   -c
- 
+
   The current library link command is:
  
-    libtool --mode=link  gcc -version-info 1:0:1 -release 1.0 -rpath \
-        /usr/local/lib
+    libtool --mode=link  gcc -version-info 1:0:1 -release 1.0.1 \
+      -no-undefined -rpath /usr/local/lib
  
-  The current C++ and C library local, and C dynamic and static build 
-  commands are:
+  The current C++ and C library local, and C dynamic and static build commands are:
  
-    libtool --mode=link g++ -g -O2  -Wall -ansi -pedantic -I.
-    libtool --mode=link gcc -g -O2  -Wall -ansi -pedantic -I.  -L./lib
-    libtool --mode=link gcc -g -O2  -Wall -ansi -pedantic -dynamic \
-       -I /usr/local/include -L/usr/local/lib
-    libtool --mode=link gcc -g -O2  -Wall -ansi -pedantic -static \
-       -I /usr/local/include -L/usr/local/lib
+    libtool --mode=link g++ -no-undefined -g -O2  -Wall -ansi -pedantic \
+       -DCNEARTREE_SAFE_TRIANG=1 -I.
+    libtool --mode=link gcc -g -O2  -Wall -ansi -pedantic \
+       -DCNEARTREE_SAFE_TRIANG=1 -I.
+    libtool --mode=link gcc -no-undefined -g -O2  -Wall -ansi -pedantic \
+       -DCNEARTREE_SAFE_TRIANG=1 -shared -I/usr/local/include
+    libtool --mode=link gcc -g -O2  -Wall -ansi -pedantic  \
+       -DCNEARTREE_SAFE_TRIANG=1 -static-libtool-libs -I/usr/local/include
  
   Before installing the NearTree library and example programs, check
   that the install directory and install commands are correct:
@@ -120,9 +132,10 @@
    If these settings need to be changed, edit Makefile. On some systems, e.g.
    Mac OS X, the default libtool is not appropriate. In that case you should
    install a recent version of libtool. The CVector kit has been tested with
-   libtool versions 1.3.5 and 1.5.4. If the system libtool is not to be used,
-   define the variable LIBTOOL to be the path to the libtool executable, e.g.
-   in bash
+   libtool versions 1.3.5 and 1.5.4. For MINGW, libtool version 2.2.6 and gcc
+   version 4 are needed to work with shared libraries (DLLs). If the system
+   libtool is not to be used, define the variable LIBTOOL to be the path to
+   the libtool executable, e.g. in bash
 
    export LIBTOOL=$HOME/bin/libtool
 
@@ -133,33 +146,53 @@
    If you need to include local header files using #include "..." instead of
    #include <...>, define the variable USE_LOCAL_HEADERS
 
-     ----------------------------------------------------------------------
+   There is an optimization error in some compilers that miscompiles the
+   triangle inequality. The default in this API is to do the triangle
+   inequality three different ways under the control of CNEARTREE_SAFE_TRIANG
+
+ #ifdef CNEARTREE_SAFE_TRIANG
+ #define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0) \
+                       || ((b)-((a)-(c)) >= 0) \
+                       || ((c)-((a)-(b)) >= 0))   
+ #else
+ #define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0))
+ #endif
+
+   Problems with the unsafe definition of TRIANG have been seen in Linux
+   under gcc version 4 and in MS Window under VS 2003. There is a slight
+   performance hit from the triple test. If maximal speed is critical and
+   misidentification of nearest points by relative distance errors of about 1
+   part in 10**15 is not a serious problem, the definition of
+   -DCNEARTREE_SAFE_TRIANG=1 can be removed from the definition of CFLAGS in
+   the Makefile.
 
      ----------------------------------------------------------------------
 
-    The C++ template, TNear.h
+     ----------------------------------------------------------------------
+
+    The C++ template: TNear.h
 
    This is a revised release of
 
      template <typename T> class CNearTree;
 
-   Nearest Neighbor algorithm after Kalantari and McDonald, (IEEE
-   Transactions on Software Engineering, v. SE-9, pp. 631-634,1983) modified
-   to use recursion instead of a double-linked tree and simplified so that it
-   does a bit less checking for things like is the distance to the right less
-   than the distance to the left; it was found that these checks made little
-   to no difference.
+   implementing the Nearest Neighbor algorithm after Kalantari and McDonald,
+   (IEEE Transactions on Software Engineering, v. SE-9, pp. 631-634,1983)
+   modified to use recursion instead of a double-linked tree and simplified
+   so that it does a bit less checking for things like is the distance to the
+   right less than the distance to the left; it was found that these checks
+   made little to no difference.
 
    The user of this class needs to provide at least the following
    functionality for the template to work. For the built-in numerics of C++,
    they are provided by the system.
 
-operator double( ); // conversion constructor from the templated class to double 
-                    (usually will return a "length")                             
-operator- ( );      // geometrical (vector) difference of two objects            
-                    // a copy constructor                                        
-                    // a constructor would be nice                               
-                    // a destructor would be nice                                
+     operator double( ); // conversion constructor from the templated class 
+                         // to double (usually will return a "length")
+     operator- ( );      // geometrical (vector) difference of two objects
+                         // a copy constructor
+                         // a constructor would be nice
+                         // a destructor would be nice
 
    The provided interface is:
 
@@ -179,14 +212,15 @@ operator- ( );      // geometrical (vector) difference of two objects
      void Insert( T& t )
         where t is an object of the type v
 
-     bool NearestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) const
+     bool NearestNeighbor ( const double& dRadius,  T& tClosest,   
+                            const T& t ) const
         dRadius is the largest radius within which to search; make it
            very large if you want to include every point that was loaded.
         tClosest is returned as the object that was found closest to the probe
            point (if any were within radius dRadius of the probe)
         t is the probe point, used to search in the group of points Insert'ed
-        return value is true if some object was found within the search radius, false otherwise.
-           If false is returned, tClosest is invalid (at best).
+        return value is true if some object was found within the search radius,
+           false otherwise.  If false is returned, tClosest is invalid (at best).
 
      bool FarthestNeighbor ( T& tFarthest,   const T& t ) const
         tFarthest is returned as the object that was found farthest to the probe
@@ -195,20 +229,22 @@ operator- ( );      // geometrical (vector) difference of two objects
         return value is true if some object was found, false otherwise
            If false is returned, tFarthest is invalid (at best).
 
-     long FindInSphere ( const double& dRadius,  std::vector<  T >& tClosest,   const T& t ) const
-        dRadius is the radius within which to search; make it very large if you want to
-            include every point that was loaded;
-        tClosest is returned as the vector of objects that were found within a radius dRadius
-           of the probe point
+     long FindInSphere ( const double& dRadius,  std::vector<  T >& tClosest,
+                         const T& t ) const
+        dRadius is the radius within which to search; make it very large if 
+            you want to  include every point that was loaded;
+        tClosest is returned as the vector of objects that were found within a
+           radius dRadius of the probe point
         t is the probe point, used to search in the group of points Insert'ed
-        return value is the count of the number of points found within the search radius
+        return value is the count of the number of points found within the 
+           search radius
     
      T InSphere ( const double& dRadius,  const T& t )
-       dRadius is the radius within which to search; make it very large if you want to
-            include every point that was loaded;
+       dRadius is the radius within which to search; make it very large if you
+           want to include every point that was loaded;
        t is the probe point, used to search in the group of points Insert'ed
-       return value is an object of the type v which is closest within the sphere to
-            the probe point t
+       return value is an object of the type v which is closest within the 
+           sphere to the probe point t
       
 
    So a complete program is:
@@ -220,7 +256,8 @@ operator- ( );      // geometrical (vector) difference of two objects
     CNearTree< double > dT;
     double dNear;
     dT.Insert( 1.5 );
-    if ( dT.NearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",double(dNear-2.0) );
+    if ( dT.NearestNeighbor( 10000.0,   dNear,  2.0 )) 
+      printf( "%f\n",double(dNear-2.0) );
   }
 
    and it should print 0.5 (that's how for 2.0 is from 1.5). For more
@@ -230,40 +267,42 @@ operator- ( );      // geometrical (vector) difference of two objects
 
      ----------------------------------------------------------------------
 
-    The C NearTree API CNearTree.c
+    The C NearTree API: CNearTree.c
 
     Synopsis
 
-   #include <CNearTree.h>
+     #include <CNearTree.h>
 
-   double CNearTreeDist (CNearTreeHandle treehandle, void * coord1, void *
-   coord2);
+     double CNearTreeDist (CNearTreeHandle treehandle, void * coord1, void *
+     coord2);
 
-   int CNearTreeCreate (CNearTreeHandle * treehandle, size_t treedim, int
-   treetype);
+     int CNearTreeCreate (CNearTreeHandle * treehandle, size_t treedim, int
+     treetype);
 
-   int CNearTreeFree(CNearTreeHandle * treehandle);
+     int CNearTreeFree(CNearTreeHandle * treehandle);
 
-   int CNearTreeInsert( CNearTreeHandle treehandle, const void * coord, const
-   void * obj );
+     int CNearTreeInsert( CNearTreeHandle treehandle, const void * coord,
+     const void * obj );
 
-   int CNearTreeZeroIfEmpty (CNearTreeHandle treehandle);
+     int CNearTreeZeroIfEmpty (CNearTreeHandle treehandle);
 
-   int CNearTreeNearestNeighbor (CNearTreeHandle treehandle, const double
-   dRadius, void * * coordClosest, void * * objClosest, const void * coord );
+     int CNearTreeNearestNeighbor (CNearTreeHandle treehandle, const double
+     dRadius, void * * coordClosest, void * * objClosest, const void * coord
+     );
 
-   int CNearTreeFarthestNeighbor (CNearTreeHandle treehandle, void * *
-   coordFarthest, void * * objFarthest, const void * coord );
+     int CNearTreeFarthestNeighbor (CNearTreeHandle treehandle, void * *
+     coordFarthest, void * * objFarthest, const void * coord );
 
-   int CNearTreeFindInSphere ( CNearTreeHandle treehandle, const double
-   dRadius, CVectorHandle coords, CVectorHandle objs, const void * coord, int
-   resetcount);
+     int CNearTreeFindInSphere ( CNearTreeHandle treehandle, const double
+     dRadius, CVectorHandle coords, CVectorHandle objs, const void * coord,
+     int resetcount);
 
-   int CNearTreeNearest ( CNearTreeHandle treehandle, double * dRadius, void
-   * * coordClosest, void * * objClosest, const void * coord );
+     int CNearTreeNearest ( CNearTreeHandle treehandle, double * dRadius,
+     void * * coordClosest, void * * objClosest, const void * coord );
 
-   int CNearTreeFindFarthest ( CNearTreeHandle treehandle, double * dRadius,
-   void * * coordFarthest, void * * objFarthest, const void * coord );
+     int CNearTreeFindFarthest ( CNearTreeHandle treehandle, double *
+     dRadius, void * * coordFarthest, void * * objFarthest, const void *
+     coord );
 
    The NearTree API works with coordinate vectors in an arbitrary number of
    dimensions. Each neartree is accessed by a pointer of type CNearTreeHandle
@@ -375,3 +414,10 @@ operator- ( );      // geometrical (vector) difference of two objects
 
    For more examples of the use of CNearTree.c, see main.c and
    CNearTreeTest.c in the release kit.
+
+     ----------------------------------------------------------------------
+
+     ----------------------------------------------------------------------
+
+   Updated 11 Jan 2009
+   yaya@bernstein-plus-sons.com
