@@ -172,9 +172,6 @@ else
 	@echo ' If that is not correct, define the variable CVECTOR_INCLUDE '
 endif
 	@echo ' '
-	@echo '   $(CPPCOMPILE_COMMAND)'
-	@echo '   $(COMPILE_COMMAND)'
-	@echo ' '
 	@echo ' The current library link command is:'
 	@echo ' '
 	@echo '   $(LIBRARY_LINK_COMMAND)'
