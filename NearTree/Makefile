@@ -70,8 +70,8 @@ endif
 # Uncomment the next two lines if CVector is installed locally in $(HOME)/include
 # and $(HOME)/lib
 #
-CVECTOR_INCLUDE = -I$(HOME)/include 
-CVECTOR_LIBLOC = -L$(HOME)/lib
+#CVECTOR_INCLUDE = -I$(HOME)/include 
+#CVECTOR_LIBLOC = -L$(HOME)/lib
 
 #
 # Directories
