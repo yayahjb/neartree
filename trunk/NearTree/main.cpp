@@ -43,6 +43,11 @@
 
 #define MYRAND_MAX 31767
 
+#ifdef USE_MINGW_RAND
+#define random(x) rand(x)
+#define srandom(x) srand(x)
+#endif
+
 int main ( int argc, char* argv[] )
 {
     CNearTree <v> vTree;

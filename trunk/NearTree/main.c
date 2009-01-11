@@ -37,6 +37,11 @@
 #include <time.h>
 #include <CVector.h>
 
+#ifdef USE_MINGW_RAND
+#define random(x) rand(x)
+#define srandom(x) srand(x)
+#endif
+
 #ifndef USE_LOCAL_HEADERS
 #include <CNearTree.h>
 #else
