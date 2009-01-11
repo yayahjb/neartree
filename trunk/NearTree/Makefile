@@ -48,9 +48,9 @@ RELEASE = 1.0.1
 #
 CC	= gcc
 ifneq ($(MSYSTEM),MINGW32)
-CFLAGS  = -g -O2  -Wall -ansi -pedantic 
+CFLAGS  = -g -O2  -Wall -ansi -pedantic  -DCNEARTREE_SAFE_TRIANG=1
 else
-CFLAGS  = -g -O2 -Wall -DUSE_MINGW_RAND
+CFLAGS  = -g -O2 -Wall -DUSE_MINGW_RAND=1 -DCNEARTREE_SAFE_TRIANG=1
 endif
 
 #
@@ -83,8 +83,10 @@ SRC      = $(ROOT)
 INC      = $(ROOT)
 EXAMPLES = $(ROOT)
 TESTDATA = $(ROOT)
-INSTALLDIR = /usr/local
-#INSTALLDIR  = $(HOME)
+ifndef INSTALL_PREFIX
+INSTALL_PREFIX = /usr/local
+#INSTALL_PREFIX  = $(HOME)
+endif
 
 #
 # Include directories
@@ -108,11 +110,11 @@ CLIBRARIES = $(CVECTOR_LIBLOC) -lCVector -lm
 
 COMPILE_COMMAND        =  $(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(INCLUDES) $(WARNINGS) -c
 CPPCOMPILE_COMMAND     =  $(LIBTOOL) --mode=compile $(CXX) $(CFLAGS) $(INCLUDES) $(WARNINGS) -c
-LIBRARY_LINK_COMMAND   =  $(LIBTOOL) --mode=link  $(CC) -version-info $(VERSION) -release $(RELEASE) -no-undefined -rpath $(INSTALLDIR)/lib
+LIBRARY_LINK_COMMAND   =  $(LIBTOOL) --mode=link  $(CC) -version-info $(VERSION) -release $(RELEASE) -no-undefined -rpath $(INSTALL_PREFIX)/lib
 BUILD_COMMAND_LOCAL    =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) $(INCLUDES)
 CPPBUILD_COMMAND_LOCAL =  $(LIBTOOL) --mode=link $(CXX) -no-undefined $(CFLAGS) $(INCLUDES)
-BUILD_COMMAND_DYNAMIC  =  $(LIBTOOL) --mode=link $(CC) -no-undefined $(CFLAGS) -shared -I$(INSTALLDIR)/include
-BUILD_COMMAND_STATIC   =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) -static-libtool-libs -I$(INSTALLDIR)/include
+BUILD_COMMAND_DYNAMIC  =  $(LIBTOOL) --mode=link $(CC) -no-undefined $(CFLAGS) -shared -I$(INSTALL_PREFIX)/include
+BUILD_COMMAND_STATIC   =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) -static-libtool-libs -I$(INSTALL_PREFIX)/include
 INSTALL_COMMAND        =  $(LIBTOOL) --mode=install cp
 INSTALL_FINISH_COMMAND =  $(LIBTOOL) --mode=finish
 
@@ -189,7 +191,7 @@ endif
 	@echo ' '
 	@echo ' The current values are :'
 	@echo ' '
-	@echo '   $(INSTALLDIR) '	
+	@echo '   $(INSTALL_PREFIX) '	
 	@echo '   $(INSTALL_COMMAND) '	
 	@echo '   $(INSTALL_FINISH) '	
 	@echo ' '
@@ -220,23 +222,23 @@ all:	$(LIB) $(BIN) $(SOURCE) $(HEADERS) \
 		$(LIB)/libCNearTree.$(LIB_EXT) \
 		$(BIN)/CPPMain $(BIN)/CMain $(BIN)/CPPNearTreeTest $(BIN)/CNearTreeTest
 		
-install:  all $(INSTALLDIR) $(INSTALLDIR)/lib $(INSTALLDIR)/include \
+install:  all $(INSTALL_PREFIX) $(INSTALL_PREFIX)/lib $(INSTALL_PREFIX)/include \
           $(INC) $(LIB)/libCNearTree.$(LIB_EXT)  $(INC)/TNear.h $(INC)/CNearTree.h
-		  $(INSTALL_COMMAND) $(LIB)/libCNearTree.$(LIB_EXT) $(INSTALLDIR)/lib/libCNearTree.$(LIB_EXT)
-		  $(INSTALL_FINISH_COMMAND) $(INSTALLDIR)/lib/libCNearTree.$(LIB_EXT)
-		  -cp $(INSTALLDIR)/include/TNear.h $(INSTALLDIR)/include/TNear_old.h
-		  -cp $(INSTALLDIR)/include/CNearTree.h $(INSTALLDIR)/include/CNearTree_old.h
-		  cp $(INC)/TNear.h $(INSTALLDIR)/include/TNear.h
-		  cp $(INC)/CNearTree.h $(INSTALLDIR)/include/CNearTree.h
-		  chmod 644 $(INSTALLDIR)/include/TNear.h
-		  chmod 644 $(INSTALLDIR)/include/CNearTree.h
+		  $(INSTALL_COMMAND) $(LIB)/libCNearTree.$(LIB_EXT) $(INSTALL_PREFIX)/lib/libCNearTree.$(LIB_EXT)
+		  $(INSTALL_FINISH_COMMAND) $(INSTALL_PREFIX)/lib/libCNearTree.$(LIB_EXT)
+		  -cp $(INSTALL_PREFIX)/include/TNear.h $(INSTALL_PREFIX)/include/TNear_old.h
+		  -cp $(INSTALL_PREFIX)/include/CNearTree.h $(INSTALL_PREFIX)/include/CNearTree_old.h
+		  cp $(INC)/TNear.h $(INSTALL_PREFIX)/include/TNear.h
+		  cp $(INC)/CNearTree.h $(INSTALL_PREFIX)/include/CNearTree.h
+		  chmod 644 $(INSTALL_PREFIX)/include/TNear.h
+		  chmod 644 $(INSTALL_PREFIX)/include/CNearTree.h
 		  echo "Testing final install dynamic"
 		  $(BUILD_COMMAND_DYNAMIC) $(INCLUDES) $(EXAMPLES)/CNearTreeTest.c \
-		  -L$(INSTALLDIR)/lib -lCNearTree $(CLIBRARIES) -o $(BIN)/CNearTreeTest_dynamic
+		  -L$(INSTALL_PREFIX)/lib -lCNearTree $(CLIBRARIES) -o $(BIN)/CNearTreeTest_dynamic
 		  $(BIN)/CNearTreeTest_dynamic 
 		  echo "Testing final install static"
 		  $(BUILD_COMMAND_STATIC) $(INCLUDES) $(EXAMPLES)/CNearTreeTest.c \
-		  -L$(INSTALLDIR)/lib -lCNearTree $(CLIBRARIES) -o $(BIN)/CNearTreeTest_static
+		  -L$(INSTALL_PREFIX)/lib -lCNearTree $(CLIBRARIES) -o $(BIN)/CNearTreeTest_static
 		  $(BIN)/CNearTreeTest_static 
 			
 		  
@@ -244,17 +246,17 @@ install:  all $(INSTALLDIR) $(INSTALLDIR)/lib $(INSTALLDIR)/include \
 #
 # Directories
 #
-$(INSTALLDIR):
-	mkdir -p $(INSTALLDIR)
+$(INSTALL_PREFIX):
+	mkdir -p $(INSTALL_PREFIX)
 
-$(INSTALLDIR)/lib:  $(INSTALLDIR)
-	mkdir -p $(INSTALLDIR)/lib
+$(INSTALL_PREFIX)/lib:  $(INSTALL_PREFIX)
+	mkdir -p $(INSTALL_PREFIX)/lib
 
-$(INSTALLDIR)/bin:  $(INSTALLDIR)
-	mkdir -p $(INSTALLDIR)/bin
+$(INSTALL_PREFIX)/bin:  $(INSTALL_PREFIX)
+	mkdir -p $(INSTALL_PREFIX)/bin
 
-$(INSTALLDIR)/include:  $(INSTALLDIR)
-	mkdir -p $(INSTALLDIR)/include
+$(INSTALL_PREFIX)/include:  $(INSTALL_PREFIX)
+	mkdir -p $(INSTALL_PREFIX)/include
 	
 
 $(LIB):
@@ -324,6 +326,8 @@ clean:
 	@-rm -f *.$(OBJ_EXT)
 	@-rm -f *.c.*
 	@-rm -rf .libs
+	@-rm CMain.lst
+	@-rm CPPMain.lst
 
 #
 # Restore to distribution state
