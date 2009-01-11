@@ -25,9 +25,10 @@ NearTree -- function library efficiently solving the Nearest Neighbor Problem
 </table>
 <hr>
 <center>
-<h2>NearTree</h2>
-Release 1.0<br />
-8 January 2009
+<h2 align=center>NearTree</h2>
+Release 1.0.1<br />
+<font size="-1">
+11 January 2009<br />
 &#169; Copyright 2001, 2008, 2009 Larry Andrews.  All rights reserved
 <br />
 based on<br />
@@ -36,8 +37,10 @@ C/C++ Users Journal, Volume 19 ,  Issue 11  (November 2001), 40 - 49  (2001),
 ISSN:1075-2838,<br />
 <a href="http://www.ddj.com/architect/184401449" style="text-decoration:none">www.ddj.com/architect/184401449</a>
 <p>
-Revised 12 Dec 2008, 8 January 2009 for sourceforge release, Larry Andrews and Herbert J. Bernstein
-</h2>
+Revised 12 Dec 2008, for sourceforge release, Larry Andrews and Herbert J. Bernstein<br />
+8 Jan 2009 Release 1.0 LCA and HJB<br />
+11 Jan 2009 Release 1.0.1 LCA and HJB
+</font>
 <P>
 
 <h4>YOU MAY REDISTRIBUTE NearTree UNDER THE TERMS OF THE <a href=lgpl.txt style="text-decoration:none">LGPL</a></h4>
@@ -70,11 +73,23 @@ MA  02110-1301  USA
 This is a release of an API for finding nearest neighbors among points in spaces of
 arbtrary dimensions.  This release provides a C++ template, TNear.h, and a
 C library, CNearTree.c, with example/test programs.
+<font size="-1">
+<P>This is a minor update to the 1.0 release of 8 January 2009 to deal with the
+following issues:
+<ul>
+<li>Adapt the API for building under MINGW
+<li>Provide code to deal with compiler misoptimizations of the triangle inequality
+on some systems
+</ul>
+</font>
+<P>
+<hr>
+<h4>Contents</h4>
 <P>
 <ul>
   <li><a href="#Installation">Installation</a>
-  <li><a href="#Tnear.h">The C++ template, TNear.h</a>
-  <li><a href="#CNearTree.c">The C NearTree API CNearTree.c</a>
+  <li><a href="#Tnear.h">The C++ template: TNear.h</a>
+  <li><a href="#CNearTree.c">The C NearTree API: CNearTree.c</a>
 </ul>
 <hr>
 <hr>
@@ -99,28 +114,30 @@ which should give the following information:
  
  The current C++ and C compile commands are:
  
-   libtool --mode=compile g++ -g -O2  -Wall -ansi -pedantic -I.   -c
-   libtool --mode=compile gcc -g -O2  -Wall -ansi -pedantic -I.   -c
+   libtool --mode=compile g++ -g -O2  -Wall -ansi -pedantic  \
+      -DCNEARTREE_SAFE_TRIANG=1 -I.   -c
+   libtool --mode=compile gcc -g -O2  -Wall -ansi -pedantic  \
+      -DCNEARTREE_SAFE_TRIANG=1 -I.   -c
  
  The C API, CNearTree.c, depends on the sourceforge project CVector 
  You are currently setup to use the system defaults for CVector
  If that is not correct, define the variable CVECTOR_INCLUDE 
- 
-   libtool --mode=compile g++ -g -O2  -Wall -ansi -pedantic -I.   -c
-   libtool --mode=compile gcc -g -O2  -Wall -ansi -pedantic -I.   -c
- 
+
  The current library link command is:
  
-   libtool --mode=link  gcc -version-info 1:0:1 -release 1.0 -rpath /usr/local/lib
+   libtool --mode=link  gcc -version-info 1:0:1 -release 1.0.1 \
+     -no-undefined -rpath /usr/local/lib
  
  The current C++ and C library local, and C dynamic and static build commands are:
  
-   libtool --mode=link g++ -g -O2  -Wall -ansi -pedantic -I. 
-   libtool --mode=link gcc -g -O2  -Wall -ansi -pedantic -I.  -L./lib
-   libtool --mode=link gcc -g -O2  -Wall -ansi -pedantic -dynamic \
-      -I /usr/local/include -L/usr/local/lib
-   libtool --mode=link gcc -g -O2  -Wall -ansi -pedantic -static \
-      -I /usr/local/include -L/usr/local/lib
+   libtool --mode=link g++ -no-undefined -g -O2  -Wall -ansi -pedantic \
+      -DCNEARTREE_SAFE_TRIANG=1 -I. 
+   libtool --mode=link gcc -g -O2  -Wall -ansi -pedantic \
+      -DCNEARTREE_SAFE_TRIANG=1 -I. 
+   libtool --mode=link gcc -no-undefined -g -O2  -Wall -ansi -pedantic \
+      -DCNEARTREE_SAFE_TRIANG=1 -shared -I/usr/local/include
+   libtool --mode=link gcc -g -O2  -Wall -ansi -pedantic  \
+      -DCNEARTREE_SAFE_TRIANG=1 -static-libtool-libs -I/usr/local/include
  
  Before installing the NearTree library and example programs, check
  that the install directory and install commands are correct:
@@ -153,7 +170,8 @@ which should give the following information:
 <p>
 If these settings need to be changed, edit Makefile.  On some systems, e.g. Mac OS X, the default
 libtool is not appropriate.  In that case you should install a recent version of libtool.  The
-CVector kit has been tested with libtool versions 1.3.5 and 1.5.4.  If the system libtool is
+CVector kit has been tested with libtool versions 1.3.5 and 1.5.4.  For MINGW, libtool version 2.2.6
+and gcc version 4 are needed to work with shared libraries (DLLs).   If the system libtool is
 not to be used, define the variable LIBTOOL to be the path to the libtool executable, e.g.
 in bash
 <p>
@@ -165,17 +183,37 @@ LIBTOOL = $(HOME)/bin/libtool
 <p>
 If you need to include local header files using #include &quot;...&quot; instead of #include &lt;...&gt;,
 define the variable USE_LOCAL_HEADERS
+<p>
+There is an optimization error in some compilers that miscompiles the triangle
+inequality.  The default in this API is to do the triangle inequality three
+different ways under the control of CNEARTREE_SAFE_TRIANG
+<p>
+<pre><tt>
+#ifdef CNEARTREE_SAFE_TRIANG
+#define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0) \
+                      || ((b)-((a)-(c)) >= 0) \
+                      || ((c)-((a)-(b)) >= 0))    
+#else
+#define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0))
+#endif
+</tt></pre>
+<p>
+Problems with the unsafe definition of TRIANG have been seen in Linux under gcc version 4
+and in MS Window under VS 2003.  There is a slight performance hit from the triple test.
+If maximal speed is critical and misidentification of nearest points by relative distance
+errors of about 1 part in 10**15 is not a serious problem, the definition of 
+-DCNEARTREE_SAFE_TRIANG=1 can be removed from the definition of CFLAGS in the Makefile.
 
 <hr>
 <hr>
-<h4><a name="Tnear.h">The C++ template, TNear.h</a></h4>
+<h4><a name="Tnear.h">The C++ template: TNear.h</a></h4>
 <P>
 This is a revised release of
 <blockquote>
 template &lt;typename T&gt; class CNearTree;
 </blockquote>
 <P>
-Nearest Neighbor algorithm after Kalantari and McDonald,
+implementing the Nearest Neighbor algorithm after Kalantari and McDonald,
 (IEEE Transactions on Software Engineering, v. SE-9, pp.   631-634,1983)
 modified to use recursion instead of a double-linked tree
 and simplified so that it does a bit less checking for
@@ -290,9 +328,10 @@ So a complete program is:
 
 <hr>
 <hr>
-<h4><a name="CNearTree.c">The C NearTree API CNearTree.c</a></h4>
+<h4><a name="CNearTree.c">The C NearTree API: CNearTree.c</a></h4>
 <h4>Synopsis</h4>
 <P>
+<blockquote>
 <b>#include &lt;CNearTree.h&gt;</b>
 <P>
 
@@ -348,6 +387,7 @@ So a complete program is:
                                <b>void *</b> * <i>coordFarthest</i>,
                                <b>void *</b> * <i>objFarthest</i>,
                                <b>const</b> <b>void *</b> <i>coord</i> );
+</blockquote>
 <p>    
 
 The NearTree API works with coordinate vectors in an arbitrary number of
@@ -469,7 +509,22 @@ type punning warnings.
 <P>
 For more examples of the use of CNearTree.c, see <a href="main.c">main.c</a> and <a href="CNearTreeTest.c">CNearTreeTest.c</a>
 in the release kit.
-
+<hr>
+<hr>
+<font size="-1">
+Updated 11 Jan 2009<br />
+<script language="javascript" type="text/javascript">
+<!-- 
+      var name = "yaya@";
+      var domain = "bernstein-plus-sons";
+      var domext = ".com";
+      document.write ("<a href=\"mailto:" + name + domain + domext + "\">" + name + domain + domext+"</a>"); 
+// -->
+</script>
+<noscript>
+yaya&#64;bernstein-plus-sons&#46;com
+</noscript>
+</font>
 </font>
 </body>
 </html>
