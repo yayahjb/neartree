@@ -287,7 +287,7 @@ public:
 //    the return value is true only if a point was found
 //
 //=======================================================================
-   bool NearestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) 
+   bool NearestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) const
    {
       if( dRadius < 0.0 ) 
       {
@@ -300,7 +300,7 @@ public:
       else
       {
         double dSearchRadius = dRadius;
-        return ( Nearest ( dSearchRadius, tClosest, t ) );
+        return ( const_cast<CNearTree*>(this)->Nearest ( dSearchRadius, tClosest, t ) );
       }
    }  //  NearestNeighbor
 
@@ -329,7 +329,7 @@ public:
       else
       {
         double dSearchRadius = DBL_MIN;
-        return ( Farthest ( dSearchRadius, tFarthest, t ) );
+        return ( const_cast<CNearTree*>(this)->Farthest ( dSearchRadius, tFarthest, t ) );
       }
    }  //  FarthestNeighbor
 
@@ -351,7 +351,7 @@ public:
    {
       // clear the contents of the return vector so that things don't accidentally accumulate
       tClosest.clear( );
-      return ( InSphere( dRadius, tClosest, t ) );
+      return ( const_cast<CNearTree*>(this)->InSphere( dRadius, tClosest, t ) );
    }  //  FindInSphere
 
    private:
@@ -443,12 +443,12 @@ public:
 //    the return value is true only if a point was found within dRadius
 //
 //=======================================================================
-   bool Nearest ( double& dRadius,  T& tClosest,   const T& t )
+   bool Nearest ( double& dRadius,  T& tClosest,   const T& t ) const
    {
       std::vector <CNearTree<T>* > sStack;
       enum  { left, right, end } eDir;
       eDir = left; // examine the left nodes first
-      CNearTree* pt = this;
+      CNearTree* pt = const_cast<CNearTree*>(this);
       T* pClosest = 0;
       if (!(pt->m_ptLeft)) return false; // test for empty
       while ( ! ( eDir == end && sStack.empty( ) ) )
@@ -521,46 +521,68 @@ public:
 //             an empty tree)
 //
 //=======================================================================
-   bool Farthest ( double& dRadius,  T& tFarthest,   const T& t ) const
+   bool Farthest ( double& dRadius,  T& tFarthest,   const T& t )
    {
-      bool  bRet     = false;
-
-      // first test each of the left and right positions to see if
-      // one holds a point farther than the farthest so far discovered.
-      // the calling function is presumed initially to have set dRadius to a
-      // negative value before the recursive calls to FindFarthestNeighbor
-
-      double dTempRadiusLeft = DBL_MAX;
-      if (( m_ptLeft!=0  ) && ( (dTempRadiusLeft = ::fabs( double( t - *m_ptLeft )) ) >= dRadius ))
+      std::vector <CNearTree<T>* > sStack;
+      enum  { left, right, end } eDir;
+      eDir = left; // examine the left nodes first
+      CNearTree* pt = this;
+      T* pFarthest = 0;
+      if (!(pt->m_ptLeft)) return false; // test for empty
+      while ( ! ( eDir == end && sStack.empty( ) ) )
       {
-         dRadius   = dTempRadiusLeft;
-         tFarthest = *m_ptLeft;
-         bRet      = true;
+         if ( eDir == right )
+         {
+            const double dDR = ::fabs(double( t - *(pt->m_ptRight) ));
+            if ( dDR >= dRadius )
+            {
+               dRadius = dDR;
+               pFarthest = pt->m_ptRight;
+            }
+            if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight))
+            { // we did the left and now we finished the right, go down
+               pt = pt->m_pRightBranch;
+               eDir = left;
+            }
+            else
+            {
+               eDir = end;
+            }
+         }
+         if ( eDir == left )
+         {
+            const double dDL = ::fabs(double( t - *(pt->m_ptLeft) ));
+            if ( dDL >= dRadius )
+            {
+               dRadius = dDL;
+               pFarthest = pt->m_ptLeft;
+            }
+            if ( pt->m_ptRight != 0 ) // only stack if there's a right object
+            {
+               sStack.push_back( pt );
+            }
+            if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
+            { // we did the left, go down
+               pt = pt->m_pLeftBranch;
+            }
+            else
+            {
+               eDir = end;
+            }
       }
 
-      double dTempRadiusRight = DBL_MAX;
-      if (( m_ptRight!=0 ) && ( (dTempRadiusRight = ::fabs( double( t - *m_ptRight )) ) >= dRadius ))
-      {
-         dRadius   = dTempRadiusRight;
-         tFarthest = *m_ptRight;
-         bRet      = true;
+         if ( eDir == end && !sStack.empty( ) )
+         {
+            pt = sStack.back( );
+            sStack.pop_back( );
+            eDir = right;
+         }
       }
-      //
-      // Now we test to see if the branches below might hold an object
-      // farther than the best so far found. The triangle rule is used
-      // to test whether it's even necessary to descend.
-      //
-      if (( m_pLeftBranch  != 0 )  && (TRIANG(dRadius,m_dMaxLeft,::fabs( double( t - *m_ptLeft )))))
-      {
-         bRet |=  m_pLeftBranch->Farthest( dRadius, tFarthest, t );
-      }
-
-      if (( m_pRightBranch != 0 )  && (TRIANG(dRadius,m_dMaxRight,::fabs( double( t - *m_ptRight )))))
-      {
-         bRet |=  m_pRightBranch->Farthest( dRadius, tFarthest, t );
-      } 
-
-      return ( bRet );
+      while ( !sStack.empty( ) ) // for safety !!!
+         sStack.pop_back( );
+      if ( pFarthest != 0 )
+         tFarthest = *pFarthest;
+      return ( pFarthest != 0 );
    };   // Farthest
 
 }; // template class TNear
