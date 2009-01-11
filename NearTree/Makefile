@@ -40,14 +40,18 @@
 
 # Version string
 VERSION = 1:0:1
-RELEASE = 1.0
+RELEASE = 1.0.1
 
 
 #
 # Compiler and compilation flags
 #
 CC	= gcc
-CFLAGS  = -g -O2  -Wall -ansi -pedantic
+ifneq ($(MSYSTEM),MINGW32)
+CFLAGS  = -g -O2  -Wall -ansi -pedantic 
+else
+CFLAGS  = -g -O2 -Wall -DUSE_MINGW_RAND
+endif
 
 #
 # libtool path if system default is not suitable
@@ -63,10 +67,11 @@ endif
 #USE_LOCAL_HEADERS = 1
 
 #
-# Uncomment the next line if CVector is installed locally in $(HOME)/include
+# Uncomment the next two lines if CVector is installed locally in $(HOME)/include
 # and $(HOME)/lib
 #
-#CVECTOR_INCLUDE = -I$(HOME)/include -L$(HOME)/lib
+CVECTOR_INCLUDE = -I$(HOME)/include 
+CVECTOR_LIBLOC = -L$(HOME)/lib
 
 #
 # Directories
@@ -99,15 +104,15 @@ CPPLIBRARIES = -lm
 #
 # C Libraries
 #
-CLIBRARIES = -lCNearTree -lCVector -lm
+CLIBRARIES = $(CVECTOR_LIBLOC) -lCVector -lm
 
 COMPILE_COMMAND        =  $(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(INCLUDES) $(WARNINGS) -c
 CPPCOMPILE_COMMAND     =  $(LIBTOOL) --mode=compile $(CXX) $(CFLAGS) $(INCLUDES) $(WARNINGS) -c
-LIBRARY_LINK_COMMAND   =  $(LIBTOOL) --mode=link  $(CC) -version-info $(VERSION) -release $(RELEASE) -rpath $(INSTALLDIR)/lib
-BUILD_COMMAND_LOCAL    =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) $(INCLUDES) -L$(LIB)
-CPPBUILD_COMMAND_LOCAL =  $(LIBTOOL) --mode=link $(CXX) $(CFLAGS) $(INCLUDES)
-BUILD_COMMAND_DYNAMIC  =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) -dynamic -I $(INSTALLDIR)/include -L$(INSTALLDIR)/lib
-BUILD_COMMAND_STATIC   =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) -static -I $(INSTALLDIR)/include -L$(INSTALLDIR)/lib
+LIBRARY_LINK_COMMAND   =  $(LIBTOOL) --mode=link  $(CC) -version-info $(VERSION) -release $(RELEASE) -no-undefined -rpath $(INSTALLDIR)/lib
+BUILD_COMMAND_LOCAL    =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) $(INCLUDES)
+CPPBUILD_COMMAND_LOCAL =  $(LIBTOOL) --mode=link $(CXX) -no-undefined $(CFLAGS) $(INCLUDES)
+BUILD_COMMAND_DYNAMIC  =  $(LIBTOOL) --mode=link $(CC) -no-undefined $(CFLAGS) -shared -I$(INSTALLDIR)/include
+BUILD_COMMAND_STATIC   =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) -static-libtool-libs -I$(INSTALLDIR)/include
 INSTALL_COMMAND        =  $(LIBTOOL) --mode=install cp
 INSTALL_FINISH_COMMAND =  $(LIBTOOL) --mode=finish
 
@@ -226,12 +231,12 @@ install:  all $(INSTALLDIR) $(INSTALLDIR)/lib $(INSTALLDIR)/include \
 		  chmod 644 $(INSTALLDIR)/include/TNear.h
 		  chmod 644 $(INSTALLDIR)/include/CNearTree.h
 		  echo "Testing final install dynamic"
-		  $(BUILD_COMMAND_DYNAMIC)  $(EXAMPLES)/CNearTreeTest.c \
-		  $(CLIBRARIES) -o $(BIN)/CNearTreeTest_dynamic
+		  $(BUILD_COMMAND_DYNAMIC) $(INCLUDES) $(EXAMPLES)/CNearTreeTest.c \
+		  -L$(INSTALLDIR)/lib -lCNearTree $(CLIBRARIES) -o $(BIN)/CNearTreeTest_dynamic
 		  $(BIN)/CNearTreeTest_dynamic 
 		  echo "Testing final install static"
-		  $(BUILD_COMMAND_STATIC) $(EXAMPLES)/CNearTreeTest.c \
-		  $(CLIBRARIES) -o $(BIN)/CNearTreeTest_static
+		  $(BUILD_COMMAND_STATIC) $(INCLUDES) $(EXAMPLES)/CNearTreeTest.c \
+		  -L$(INSTALLDIR)/lib -lCNearTree $(CLIBRARIES) -o $(BIN)/CNearTreeTest_static
 		  $(BIN)/CNearTreeTest_static 
 			
 		  
@@ -263,7 +268,8 @@ $(BIN):
 #
 $(LIB)/libCNearTree.$(LIB_EXT): $(SRC)/CNearTree.c $(INC)/CNearTree.h $(LIB) $(COMMONDEP)
 	$(COMPILE_COMMAND) -c $(SRC)/CNearTree.c
-	$(LIBRARY_LINK_COMMAND) -o $(LIB)/libCNearTree.$(LIB_EXT) CNearTree.$(OBJ_EXT) 
+	$(LIBRARY_LINK_COMMAND) -o $(LIB)/libCNearTree.$(LIB_EXT) CNearTree.$(OBJ_EXT)  $(INCLUDES) \
+	$(CLIBRARIES)
 
 #
 #  example programs
@@ -277,11 +283,11 @@ $(BIN)/CPPNearTreeTest: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)
 		      -o $@
 			  
 $(BIN)/CMain: $(INC)/CNearTree.h $(EXAMPLES)/main.c $(SRC)/CNearTree.c $(BIN) $(LIB)/libCNearTree.$(LIB_EXT)
-	$(BUILD_COMMAND_LOCAL) $(EXAMPLES)/main.c $(SRC)/CNearTree.c $(LIB)/libCNearTree.$(LIB_EXT) -lCVector -lm \
+	$(BUILD_COMMAND_LOCAL) $(EXAMPLES)/main.c $(SRC)/CNearTree.c $(LIB)/libCNearTree.$(LIB_EXT) $(CLIBRARIES) \
 		      -o $@
 
 $(BIN)/CNearTreeTest: $(INC)/CNearTree.h $(EXAMPLES)/CNearTreeTest.c $(SRC)/CNearTree.c $(BIN) $(LIB)/libCNearTree.$(LIB_EXT)
-	$(BUILD_COMMAND_LOCAL) $(EXAMPLES)/CNearTreeTest.c $(SRC)/CNearTree.c $(LIB)/libCNearTree.$(LIB_EXT) -lCVector -lm \
+	$(BUILD_COMMAND_LOCAL) $(EXAMPLES)/CNearTreeTest.c $(SRC)/CNearTree.c $(LIB)/libCNearTree.$(LIB_EXT) $(CLIBRARIES) \
 		      -o $@
 
 
@@ -294,8 +300,13 @@ tests:		$(LIB) $(BIN) $(BIN)/CPPMain $(BIN)/CPPNearTreeTest \
 			$(BIN)/CMain 3458923 > $(TESTDATA)/CMain.lst
 			$(BIN)/CPPNearTreeTest
 			$(BIN)/CNearTreeTest
+ifneq ($(MSYSTEM),MINGW32)
 			diff -b -c $(TESTDATA)/CPPMain_orig.lst $(TESTDATA)/CPPMain.lst
 			diff -b -c $(TESTDATA)/CMain_orig.lst $(TESTDATA)/CMain.lst
+else
+			diff -b -c $(TESTDATA)/CPPMain_MINGW_orig.lst $(TESTDATA)/CPPMain.lst
+			diff -b -c $(TESTDATA)/CMain_MINGW_orig.lst $(TESTDATA)/CMain.lst
+endif
 			
 #
 # Remove all non-source files
@@ -311,6 +322,8 @@ clean:
 	@-rm -f core 
 	@-rm -f *.o
 	@-rm -f *.$(OBJ_EXT)
+	@-rm -f *.c.*
+	@-rm -rf .libs
 
 #
 # Restore to distribution state

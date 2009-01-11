@@ -1,10 +1,5 @@
-   +---------------------------------------------------------------------+
-   |      NearTree      |      CVector      |    SourceForge.net Logo    |
-   +---------------------------------------------------------------------+
 
-     ----------------------------------------------------------------------
-
-NearTree
+                                   NearTree
 
                                   Release 1.0
 8 January 2009 (c) Copyright 2001, 2008, 2009 Larry Andrews. All rights reserved
@@ -82,9 +77,11 @@ NearTree
  
   The current library link command is:
  
-    libtool --mode=link  gcc -version-info 1:0:1 -release 1.0 -rpath /usr/local/lib
+    libtool --mode=link  gcc -version-info 1:0:1 -release 1.0 -rpath \
+        /usr/local/lib
  
-  The current C++ and C library local, and C dynamic and static build commands are:
+  The current C++ and C library local, and C dynamic and static build 
+  commands are:
  
     libtool --mode=link g++ -g -O2  -Wall -ansi -pedantic -I.
     libtool --mode=link gcc -g -O2  -Wall -ansi -pedantic -I.  -L./lib
