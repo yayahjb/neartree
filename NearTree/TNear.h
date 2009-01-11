@@ -112,7 +112,7 @@
 //   CNearTree< double > dT;
 //   double dNear;
 //   dT.Insert( 1.5 );
-//   if ( dT.NearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",dRad );
+//   if ( dT.NearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",double(dNear-2.0) );
 // }
 //
 // and it should print 0.5 (that's how for 2.0 is from 1.5)
@@ -128,6 +128,15 @@
 #include <float.h>
 #include <math.h>
 #include <vector>
+
+#ifdef CNEARTREE_SAFE_TRIANG
+#define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0) \
+|| ((b)-((a)-(c)) >= 0) \
+|| ((c)-((a)-(b)) >= 0))    
+#else
+#define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0))
+#endif
+
 
 template <typename T> class CNearTree
 {
@@ -377,7 +386,7 @@ public:
                     ++lReturn;
                     tClosest.push_back( *pt->m_ptRight);
                 }
-                if ( pt->m_pRightBranch != 0 && pt->m_dMaxRight+dRadius >= dDR )
+                if ( pt->m_pRightBranch != 0 && (TRIANG(dDR,pt->m_dMaxRight,dRadius)))
                 { // we did the left and now we finished the right, go down
                     pt = pt->m_pRightBranch;
                     eDir = left;
@@ -399,7 +408,7 @@ public:
                 {
                     sStack.push_back( pt );
                 }
-                if ( pt->m_pLeftBranch != 0 &&  pt->m_dMaxLeft+dRadius >= dDL )
+                if ( pt->m_pLeftBranch != 0 && (TRIANG(dDL,pt->m_dMaxLeft,dRadius)))
                 { // we did the left, go down
                     pt = pt->m_pLeftBranch;
                 }
@@ -452,7 +461,7 @@ public:
                dRadius = dDR;
                pClosest = pt->m_ptRight;
             }
-            if ( pt->m_pRightBranch != 0 && pt->m_dMaxRight+dRadius >= dDR )
+            if ( pt->m_pRightBranch != 0 && (TRIANG(dDR,pt->m_dMaxRight,dRadius)))
             { // we did the left and now we finished the right, go down
                pt = pt->m_pRightBranch;
                eDir = left;
@@ -474,7 +483,7 @@ public:
             {
                sStack.push_back( pt );
             }
-            if ( pt->m_pLeftBranch != 0 &&  pt->m_dMaxLeft+dRadius >= dDL )
+            if ( pt->m_pLeftBranch != 0 && (TRIANG(dDL,pt->m_dMaxLeft,dRadius)))
             { // we did the left, go down
                pt = pt->m_pLeftBranch;
             }
@@ -541,12 +550,12 @@ public:
       // farther than the best so far found. The triangle rule is used
       // to test whether it's even necessary to descend.
       //
-      if (( m_pLeftBranch  != 0 )  && (( dRadius - m_dMaxLeft  ) <= ::fabs( double( t - *m_ptLeft  ))))
+      if (( m_pLeftBranch  != 0 )  && (TRIANG(dRadius,m_dMaxLeft,::fabs( double( t - *m_ptLeft )))))
       {
          bRet |=  m_pLeftBranch->Farthest( dRadius, tFarthest, t );
       }
 
-      if (( m_pRightBranch != 0 )  && (( dRadius - m_dMaxRight ) <= ::fabs( double( t - *m_ptRight ))))
+      if (( m_pRightBranch != 0 )  && (TRIANG(dRadius,m_dMaxRight,::fabs( double( t - *m_ptRight )))))
       {
          bRet |=  m_pRightBranch->Farthest( dRadius, tFarthest, t );
       } 

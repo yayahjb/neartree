@@ -66,6 +66,14 @@ extern "C" {
 #include "CNearTree.h"
 #endif
 #include <math.h>
+    
+#ifdef CNEARTREE_SAFE_TRIANG
+#define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0) \
+                      || ((b)-((a)-(c)) >= 0) \
+                      || ((c)-((a)-(b)) >= 0))    
+#else
+#define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0))
+#endif
 
 #define max2(x,y) ((x)>=(y)?(x):(y))    
     
@@ -630,7 +638,7 @@ extern "C" {
                   }
                 }
                 if ((pt->m_flags&CNEARTREE_FLAG_RIGHT_CHILD)&& 
-                    (pt->m_dMaxRight+dRadius) > dDR) {
+                    (TRIANG(dDR,pt->m_dMaxRight,dRadius))){
                     /* we did the left and now we finished the right, go down */
                     pt = pt->m_pRightBranch;
                     eDir = left;
@@ -651,7 +659,7 @@ extern "C" {
                     CVectorAddElement(sStack,&pt);
                 }
                 if ((pt->m_flags&CNEARTREE_FLAG_LEFT_CHILD)&&
-                    (pt->m_dMaxLeft+dRadius) > dDL){
+                    (TRIANG(dDL,pt->m_dMaxLeft,dRadius))){
                     pt = pt->m_pLeftBranch;
                 } else {
                     eDir = end;
@@ -723,10 +731,8 @@ extern "C" {
                     pcoordClosest = pt->m_coordRight;
                 }
                 if ((pt->m_flags&CNEARTREE_FLAG_RIGHT_CHILD)&& 
-                    ((pt->m_dMaxRight+*dRadius) >= dDR
-                     || (*dRadius >= dDR-pt->m_dMaxRight)
-                     || (pt->m_dMaxRight >= dDR-*dRadius))) {
-                    /* we did the left and now we finished the right, go down */
+                    (TRIANG(dDR,pt->m_dMaxRight,*dRadius))) {
+                     /* we did the left and now we finished the right, go down */
                     pt = pt->m_pRightBranch;
                     eDir = left;
                 } else {
@@ -744,9 +750,7 @@ extern "C" {
                     CVectorAddElement(sStack,&pt);
                 }
                 if ((pt->m_flags&CNEARTREE_FLAG_LEFT_CHILD)&&
-                    ((pt->m_dMaxLeft+*dRadius) >= dDL
-                     || (*dRadius >= dDL-pt->m_dMaxLeft)
-                     || (pt->m_dMaxLeft >= dDL-*dRadius))) {
+                    (TRIANG(dDL,pt->m_dMaxLeft,*dRadius))) {
                     pt = pt->m_pLeftBranch;
                 } else {
                     eDir = end;
@@ -793,7 +797,8 @@ extern "C" {
                                void FAR * FAR * coordFarthest,
                                void FAR * FAR * objFarthest,
                                const void FAR * coord ) {
-        double   dTempRadius = DBL_MAX;
+        double   dTempRadiusL = DBL_MAX;
+        double   dTempRadiusR = DBL_MAX;
         int  bRet = 0;
                 
         if ( !treehandle || !coord ) return CNEARTREE_BAD_ARGUMENT;
@@ -805,17 +810,17 @@ extern "C" {
          negative value before the recursive calls to  CNearTreeFindFarthest */
         
         if ((treehandle->m_flags&CNEARTREE_FLAG_LEFT_DATA ) && 
-            (( dTempRadius = CNearTreeDist(treehandle, (void FAR *)coord,
+            (( dTempRadiusL = CNearTreeDist(treehandle, (void FAR *)coord,
                                              treehandle->m_coordLeft))>= *dRadius )) {
-            *dRadius  = dTempRadius;
+            *dRadius  = dTempRadiusL;
             *coordFarthest = treehandle->m_coordLeft;
             if ( objFarthest) *objFarthest = treehandle->m_ptobjLeft;
             bRet     =  1;
         }
         if ((treehandle->m_flags&CNEARTREE_FLAG_RIGHT_DATA ) && 
-            (( dTempRadius = CNearTreeDist(treehandle, (void FAR *)coord,
+            (( dTempRadiusR = CNearTreeDist(treehandle, (void FAR *)coord,
                                              treehandle->m_coordRight))>= *dRadius )) {            
-            *dRadius   = dTempRadius;
+            *dRadius   = dTempRadiusR;
             *coordFarthest = treehandle->m_coordRight;
             if (objFarthest) *objFarthest = treehandle->m_ptobjRight;
             bRet      = 1;
@@ -826,22 +831,14 @@ extern "C" {
          to test whether it's even necessary to descend.
          */
         if (( treehandle->m_pLeftBranch  != 0 )  && ( treehandle->m_dMaxLeft>=0. )
-            && (( (*dRadius) <= treehandle->m_dMaxLeft +
-                (dTempRadius = CNearTreeDist (treehandle, (void FAR *)coord, 
-                                 treehandle->m_coordLeft)))
-                || ((*dRadius) - dTempRadius <= treehandle->m_dMaxLeft)
-                || ((*dRadius) - treehandle->m_dMaxLeft <= dTempRadius )))
-        {
+            && (TRIANG(*dRadius,treehandle->m_dMaxLeft, dTempRadiusL)))
+         {
             if (!CNearTreeFindFarthest( treehandle->m_pLeftBranch,
                                        dRadius, coordFarthest, objFarthest, coord)) bRet = 1;
         }
         
         if (( treehandle->m_pRightBranch  != 0 ) && ( treehandle->m_dMaxRight>=0. )
-            && (( (*dRadius) <= treehandle->m_dMaxRight + 
-                (dTempRadius = CNearTreeDist ( treehandle, (void FAR *)coord,
-                                 treehandle->m_coordRight)))
-                || ((*dRadius) - dTempRadius <= treehandle->m_dMaxRight)
-                || ((*dRadius) - treehandle->m_dMaxRight <= dTempRadius)))
+            && (TRIANG(*dRadius,treehandle->m_dMaxRight, dTempRadiusR)))
         {
             if (!CNearTreeFindFarthest( treehandle->m_pRightBranch,
                                        dRadius, coordFarthest, objFarthest, coord)) bRet = 1;
