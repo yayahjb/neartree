@@ -359,38 +359,67 @@ public:
 //    the return value is the number of points found within dRadius of the probe
 //
 //=======================================================================
-   long InSphere ( const double& dRadius,  std::vector<  T >& tClosest,   const T& t ) const
-   {
-      long lReturn = 0;
-      // first test each of the left and right positions to see if
-      // one holds a point nearer than the search radius.
-      if (( m_ptLeft !=0 ) && (( ::fabs( double( t - *m_ptLeft  ))) <= dRadius ))
-      {
-         tClosest.push_back( *m_ptLeft );
-         lReturn++ ;
-      }
-      if (( m_ptRight!=0 ) && (( ::fabs( double( t - *m_ptRight ))) <= dRadius ))
-      {
-         tClosest.push_back( *m_ptRight );
-         lReturn++ ;
-      }
-      //
-      // Now we test to see if the branches below might hold an object
-      // nearer than the search radius. The triangle rule is used
-      // to test whether it's even necessary to descend.
-      //
-      if (( m_pLeftBranch  != 0 )  && (( dRadius + m_dMaxLeft  ) >= ::fabs( double( t - *m_ptLeft  ))))
-      {
-         lReturn += m_pLeftBranch->InSphere( dRadius, tClosest, t );
-      }
-
-      if (( m_pRightBranch != 0 )  && (( dRadius + m_dMaxRight ) >= ::fabs( double( t - *m_ptRight ))))
-      {
-         lReturn += m_pRightBranch->InSphere( dRadius, tClosest, t );
-      }
-
-      return ( lReturn );
-   }  //  InSphere
+    long InSphere ( const double& dRadius,  std::vector<  T >& tClosest,   const T& t ) const
+    {
+        std::vector <CNearTree<T>* > sStack;
+        long lReturn = 0;
+        enum  { left, right, end } eDir;
+        eDir = left; // examine the left nodes first
+        CNearTree* pt = const_cast<CNearTree*>(this);
+        if (!(pt->m_ptLeft)) return false; // test for empty
+        while ( ! ( eDir == end && sStack.empty( ) ) )
+        {
+            if ( eDir == right )
+            {
+                const double dDR = ::fabs(double( t - *(pt->m_ptRight) ));
+                if ( dDR <= dRadius )
+                {
+                    ++lReturn;
+                    tClosest.push_back( *pt->m_ptRight);
+                }
+                if ( pt->m_pRightBranch != 0 && pt->m_dMaxRight+dRadius >= dDR )
+                { // we did the left and now we finished the right, go down
+                    pt = pt->m_pRightBranch;
+                    eDir = left;
+                }
+                else
+                {
+                    eDir = end;
+                }
+            }
+            if ( eDir == left )
+            {
+                const double dDL = ::fabs(double( t - *(pt->m_ptLeft) ));
+                if ( dDL <= dRadius )
+                {
+                    ++lReturn;
+                    tClosest.push_back( *pt->m_ptLeft);
+                }
+                if ( pt->m_ptRight != 0 ) // only stack if there's a right object
+                {
+                    sStack.push_back( pt );
+                }
+                if ( pt->m_pLeftBranch != 0 &&  pt->m_dMaxLeft+dRadius >= dDL )
+                { // we did the left, go down
+                    pt = pt->m_pLeftBranch;
+                }
+                else
+                {
+                    eDir = end;
+                }
+            }
+            
+            if ( eDir == end && !sStack.empty( ) )
+            {
+                pt = sStack.back( );
+                sStack.pop_back( );
+                eDir = right;
+            }
+        }
+        while ( !sStack.empty( ) ) // for safety !!!
+            sStack.pop_back( );
+        return ( lReturn );
+    }  //  InSphere
 
 //=======================================================================
 //  bool Nearest ( double& dRadius,  T& tClosest,   const T& t ) const
