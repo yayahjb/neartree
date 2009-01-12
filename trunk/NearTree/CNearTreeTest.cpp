@@ -173,7 +173,7 @@ void testLinearTree( const int n )
      the largest value that was input. The returned values should be the
      first value entered into the tree. 
      */
-    int farthest;
+    int farthest=-1;
     const bool bFar = tree.FarthestNeighbor( farthest, 2*n );
     if( ! bFar || farthest != 1 )
     {
@@ -549,7 +549,7 @@ void testRandomTree( const int nRequestedRandoms )
             fprintf(stdout,  "NearestNeighbor failed in testRandomTree for min\n" );
         }
         
-        int farthest;
+        int farthest=-1;
         const bool bFar = tree.FarthestNeighbor( farthest, INT_MIN/2 );
         if( !bFar || farthest != nmax )
         {
@@ -568,7 +568,7 @@ void testRandomTree( const int nRequestedRandoms )
             fprintf(stdout,  "NearestNeighbor failed in testRandomTree for max\n" );
         }
         
-        int farthest;
+        int farthest=-1;
         const bool bFar = tree.FarthestNeighbor( farthest, INT_MAX/2 );
         if( !bFar || farthest != nmin )
         {
