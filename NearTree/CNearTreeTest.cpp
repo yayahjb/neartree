@@ -847,9 +847,11 @@ void testBackwardForward( void )
    {
       double closest;
       const int iReturn = tree.NearestNeighbor( 1000.0, closest, (double)i+0.25 );
-      if( ::fabs( closest-((double)i+0.25) ) > DBL_MIN )
+      if( iReturn==0 || ::fabs( closest-((double)i+0.25) ) > DBL_MIN )
       {
-         const int i19191 = 19191;
+          ++g_errorCount;
+           printf("testBackForward: NearestNeighbor failed to find %g, found %g instead\n", 
+                  (double)i+0.25, closest );      
       }
    }
 }
@@ -884,7 +886,7 @@ void testDelayedInsertion( void )
       if( lReturned != nmax )
       {
          ++g_errorCount;
-         printf( "CompleteDelayedInsert failed in testDelayedInsertion for nmax=%d, found %d points\n", nmax, lReturned );
+         printf( "CompleteDelayedInsert failed in testDelayedInsertion for nmax=%ld, found %ld points\n", nmax, lReturned );
       }
    }
 
@@ -911,7 +913,7 @@ void testDelayedInsertion( void )
       if( lReturned != nmax )
       {
          ++g_errorCount;
-         printf( "FindInSphere failed in testDelayedInsertion for nmax=%d, found %d points\n", nmax, lReturned );
+         printf( "FindInSphere failed in testDelayedInsertion for nmax=%ld, found %ld points\n", nmax, lReturned );
       }
    }
 
@@ -969,7 +971,6 @@ void testDelayedInsertion( void )
       }
 
       double farthest;
-      const double radius = 1000.0;
       const bool bReturned = tree.FarthestNeighbor( farthest, -100.0 );
       if( ! bReturned )
       {
