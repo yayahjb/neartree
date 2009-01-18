@@ -407,7 +407,8 @@ public:
          // bad case here, and that will not trigger the later loop.
          while( m_DelayedPointers[n] == 0 )
          {
-            n = (++n) % vectorSize;
+            ++n;
+            n = n% vectorSize;
          }
          Insert( m_DelayedInsertions[n] );
          m_DelayedPointers[n] = 0;         
@@ -452,7 +453,6 @@ public:
       enum  { left, right, end } eDir;
       eDir = left; // examine the left nodes first
       CNearTree* pt = const_cast<CNearTree*>(this);
-      T* pClosest = 0;
       if (!(pt->m_ptLeft)) return false; // test for empty
       while ( ! ( eDir == end && sStack.empty( ) ) )
       {
