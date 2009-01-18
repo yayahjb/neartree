@@ -353,6 +353,24 @@ public:
       return ( const_cast<CNearTree*>(this)->InSphere( dRadius, tClosest, t ) );
    }  //  FindInSphere
 
+    
+//=======================================================================
+//  void DelayedInsert ( const T& t )
+//
+//  Function to insert some "point" as an object into a CNearTree for
+//  later searching
+//
+//     t is an object of the templated type which is to be inserted into a
+//     Neartree
+//
+//  The function Insert immediately inserts the object into the tree. 
+//  DelayedInsert keeps the object in an internal store, but does not 
+//  immediately insert it. The object in the internal store are only inserted
+//  when CompleteDelayedInsert is called or when one of the search functions
+//  is invoked (they call CompleteDelayedInsert). When that is called, all
+//  of the stored objects are then inserted into the list in a way designed
+//  to give a relatively balanced tree even if the data are strongly sorted.
+//
 //=======================================================================
    void DelayedInsert( const T& t )
    {
@@ -360,6 +378,16 @@ public:
       m_DelayedPointers  .push_back( &m_DelayedInsertions.back( ) );
    };
 
+//=======================================================================
+//  void CompleteDelayedInsert( void )
+//
+//  When CompleteDelayedInsert is invoked, if there are any objects in the 
+//  internal store they are then inserted into the neartree. CompleteDelayedInsert
+//  randomly selects enough objects to half fill a well-balanced tree. That is,
+//  if there are n objects in the internal store, it randomly selects and inserts
+//  sqrt(n) objects. After that, the remaining objects are inserted in a linear
+//  sequence as they were entered.
+//
 //=======================================================================
    void CompleteDelayedInsert( void )
    {
@@ -374,6 +402,9 @@ public:
       for( size_t i=0; i<toRandomlyInsert; ++i )
       {
          size_t n = (size_t)((double)(vectorSize+1u) * (double)rand( ) / (double)RAND_MAX);
+         // Find the next pointer that hasn't already had its object "Insert"ed
+         // We can do this blindly since sqrt(n)<=n for all cases. n=1 would be the only 
+         // bad case here, and that will not trigger the later loop.
          while( m_DelayedPointers[n] == 0 )
          {
             n = (++n) % vectorSize;
@@ -391,7 +422,8 @@ public:
          }
       }
 
-      // now get rid of the temporary storage that was used for delaying insertions (fast way)
+      // now get rid of the temporary storage that was used for delayed 
+      // insertions (fast way, faster than clear() )
       std::vector<T*> m_DelayedPointersTemp;   
       std::vector<T>  m_DelayedInsertionsTemp;
       m_DelayedPointersTemp  .swap( m_DelayedPointers) ;
