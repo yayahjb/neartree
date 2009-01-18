@@ -87,11 +87,20 @@ extern "C" {
 #include "CVector.h"
 #endif    
     
+#ifdef USE_MINGW_RAND
+#define random(x) rand(x)
+#define srandom(x) srand(x)
+#endif
+    
+    
     /* function returns */
 #define CNEARTREE_SUCCESS       0
-#define CNEARTREE_MALLOC_FAILED -1
-#define CNEARTREE_BAD_ARGUMENT  -2
-#define CNEARTREE_NOT_FOUND     -4
+#define CNEARTREE_MALLOC_FAILED 1
+#define CNEARTREE_BAD_ARGUMENT  2
+#define CNEARTREE_NOT_FOUND     4
+#define CNEARTREE_FREE_FAILED   8
+#define CNEARTREE_CVECTOR_FAILED   16
+
     
     /* flags 
      0 for n data, n children
@@ -117,26 +126,36 @@ extern "C" {
 #define CNEARTREE_NORM            960         /* 0x03C0 */
 
     
-    typedef struct _CNearTree {
+    typedef struct _CNearTreeNode {
         void       FAR * m_coordLeft;    /* coords of left object stored in this node   */
         void       FAR * m_coordRight;   /* coords of right object stored in this node  */
         double           m_dMaxLeft;     /* longest distance from the left object
          to anything below it in the tree            */
         double           m_dMaxRight;    /* longest distance from the right object 
-         to anything below it in the tree            */
-        struct _CNearTree FAR * m_pLeftBranch;  
-        /* tree descending from the left object        */
-        struct _CNearTree FAR * m_pRightBranch; 
-        /* tree descending from the right object       */
+                                            to anything below it in the tree            */
+        struct _CNearTreeNode FAR * m_pLeftBranch;  
+                                         /* tree descending from the left object        */
+        struct _CNearTreeNode FAR * m_pRightBranch; 
+                                         /* tree descending from the right object       */
         void FAR *       m_ptobjLeft;    /* pointer to the left object                  */
         void FAR *       m_ptobjRight;   /* pointer to the right object                 */
-        size_t           m_dimension;    /* dimension of the coordinates                */
-        int              m_flags;        /* flags                                       */
-        /* NOTE:  in actual blocks the coordinates
-         will be stored here after the flags         */
+        int              m_iflags;       /* flags                                       */
+                                         /* NOTE:  in actual blocks the coordinates
+                                            will be stored here after the flags         */
+    } CNearTreeNode;
+    
+    
+    typedef CNearTreeNode FAR * CNearTreeNodeHandle;   
+    
+    typedef struct {
+        CNearTreeNodeHandle m_ptTree;    /* pointer to the actual tree                  */
+        size_t           m_szdimension;  /* dimension of the coordinates                */
+        int              m_iflags;       /* flags                                       */
+        CVectorHandle    m_ptDelayCoords; /* pointer to the delay queue coords      */
+        CVectorHandle    m_ptDelayObjs;   /* pointer to the delay queue objects     */
     } CNearTree;
     
-    typedef CNearTree FAR * CNearTreeHandle;
+    typedef CNearTree     FAR * CNearTreeHandle;
     
     /*
      =======================================================================
@@ -166,16 +185,56 @@ extern "C" {
     /*
      =======================================================================
      double CNearTreeDist(CNearTreeHandle treehandle, void FAR * coord1, 
-                                      void FAR * coord2))
+                                      void FAR * coord2)
      
      function to return the distance (L1, L2 or L-infinity) between two 
      coordinate vectors according to the parameters of the given tree  
      
      =======================================================================
      */
+     double CNearTreeDist(CNearTreeHandle treehandle, void FAR * coord1, 
+                         void FAR * coord2);
+     
+     /*
+     =======================================================================
+     int CNearTreeSetNorm(CNearTreeHandle treehandle, int treenorm);
+     
+     function to set the norm to use used for this tree
+     
+     treenorm should be one of CNEARTREE_NORM_L1 for an L-1 norm
+                               CNEARTREE_NORM_L2 for an L-2 norm
+                               CNEARTREE_NORM_LINF for an L-infinity norm
+     
+     the function returns CNEARTREE_BAD_ARGUMENT for an invalid argument
+     CNEARTREE_SUCCESS (0) otherwise
+     =======================================================================
+     */
     
-     double CNearTreeDist(CNearTreeHandle treehandle,void FAR * coord1,
-                           void FAR * coord2);
+     int CNearTreeSetNorm(CNearTreeHandle treehandle, int treenorm);
+    
+
+    /*
+     =======================================================================
+     int CNearTreeNodeCreate ( CNearTreeHandle treehandle,  
+                               CNearTreeNodeHandle FAR * treenodehandle) 
+     
+     Create a CNearTreeNode
+     
+     returns a pointer to the newly allocated block of memory as a 
+     CNearTreeNodeHandle in *treenodehandle
+     
+     flags are inherited from the treehandle  
+     
+     creates an empty tree with no right or left node and with the dMax-below
+     set to negative values so that any match found will be stored since it will
+     greater than the negative value
+     
+     =======================================================================
+     */
+    
+    int CNearTreeNodeCreate ( CNearTreeHandle treehandle,  
+                              CNearTreeNodeHandle FAR * treenodehandle);
+    
     
     /*
      =======================================================================
@@ -243,9 +302,83 @@ extern "C" {
      =======================================================================
      */
  
-    int CNearTreeInsert( CNearTreeHandle treehandle,
+     int CNearTreeInsert( CNearTreeHandle treehandle,
                         const void FAR * coord, 
                         const void * obj );
+    
+ 
+    /*
+     =======================================================================
+     int CNearTreeNodeInsert ( CNearTreeHandle treehandle, 
+                               CNearTreeNodeHandle treenodehandle, 
+                               const void FAR * coord, 
+                               const void * obj )
+     
+     Function to insert some "point" as an object into a CNearTree for
+     later searching, starting at a given treenode
+     
+     coord is a coordinate vector for an object, obj, to be inserted into a
+     Neartree.  A static copy of the coordinates and a pointer to the
+     object are inserted
+     
+     Three possibilities exist: put the datum into the left
+     position (first test),into the right position, or else
+     into a node descending from the nearer of those positions
+     when they are both already used.
+     
+     return 0 for success, nonzero for an error
+     
+     =======================================================================
+     */
+    
+     int CNearTreeNodeInsert( CNearTreeHandle treehandle,
+                             CNearTreeNodeHandle treenodehandle,
+                             const void FAR * coord, 
+                             const void * obj );
+    
+    
+    
+    /*
+     =======================================================================
+     int CNearTreeDelayedInsert ( CNearTreeHandle treehandle, 
+     const void FAR * coord, 
+     const void * obj )
+     
+     Function to queue some "point" as an object for future insertion
+     into a CNearTree for later searching
+     
+     coord is a coordinate vector for an object, obj, to be inserted into a
+     Neartree.  A static copy of the coordinates and a pointer to the
+     object are queued for insertion.  The exact order of insertion
+     is not predetermined.  It will be partially randomized to help to
+     balance the tree.
+     
+     The insertions will be completed by a call to 
+     CNearTreeCompleteDelayedInsert(CNearTreeHandle treehandle) 
+     or by execution of any search.
+     
+     return 0 for success, nonzero for an error
+     
+     =======================================================================
+     */
+    
+     int CNearTreeDelayedInsert( CNearTreeHandle treehandle,
+                        const void FAR * coord, 
+                        const void * obj );
+    
+    /*
+     =======================================================================
+     int CNearTreeCompleteDelayedInsert ( CNearTreeHandle treehandle )
+     
+     Function to dequeue the "points" queued as an objects for future insertion
+     into a CNearTree for later searching
+      
+     return 0 for success, nonzero for an error
+     
+     =======================================================================
+     */
+    
+     int CNearTreeCompleteDelayedInsert( CNearTreeHandle treehandle );
     
     /*
      =======================================================================
