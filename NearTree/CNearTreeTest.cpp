@@ -40,12 +40,17 @@
 #include <float.h>
 #include <limits.h>
 #include <math.h>
-
-#define USE_LOCAL_HEADERS
+#include <stdio.h>
+#include <stdlib.h>
 #ifndef USE_LOCAL_HEADERS
 #include <TNear.h>
 #else
 #include "TNear.h"
+#endif
+
+#ifdef USE_MINGW_RAND
+#define random(x) rand(x)
+#define srandom(x) srand(x)
 #endif
 
 void testEmptyTree( void );
@@ -88,7 +93,7 @@ int main(int argc, char* argv[])
     
     if( g_errorCount == 0 )
     {
-        printf( "No errors were detected while testing CNearTree\n" );
+        fprintf(stdout,  "No errors were detected while testing CNearTree\n" );
     }
     
     return g_errorCount;
@@ -113,28 +118,28 @@ void testEmptyTree( void )
     if( ! bTreeEmpty )
     {
         ++g_errorCount;
-        printf( ".empty incorrect for empty tree\n" );
+        fprintf(stdout,  ".empty incorrect for empty tree\n" );
     }
     
     bTreeHasNearest  = tree.NearestNeighbor( 0.0, close, 1 );
     if( bTreeHasNearest )
     {
         ++g_errorCount;
-        printf( "NearestNeighbor incorrect for empty tree\n" );
+        fprintf(stdout,  "NearestNeighbor incorrect for empty tree\n" );
     }
     
     bTreeHasFarthest = tree.FarthestNeighbor( nFar, 0 );
     if( bTreeHasFarthest )
     {
         ++g_errorCount;
-        printf( "FarthestNeighbor incorrect for empty tree\n" );
+        fprintf(stdout,  "FarthestNeighbor incorrect for empty tree\n" );
     }
     
     lFoundPointsInSphere = tree.FindInSphere( 1000.0, v, 1 );
     if( lFoundPointsInSphere != 0 )
     {
         ++g_errorCount;
-        printf( "FindInSphere incorrect for empty tree\n" );
+        fprintf(stdout,  "FindInSphere incorrect for empty tree\n" );
     }
 }
 
@@ -164,7 +169,7 @@ void testLinearTree( const int n )
     if( ! bClose || closest != n )
     {
         ++g_errorCount;
-        printf( "NearestNeighbor failed in testLinearTree, got %d, should be %d\n", closest, n );
+        fprintf(stdout,  "NearestNeighbor failed in testLinearTree, got %d, should be %d\n", closest, n );
     }
     
     /*
@@ -172,12 +177,12 @@ void testLinearTree( const int n )
      the largest value that was input. The returned values should be the
      first value entered into the tree. 
      */
-    int farthest;
+    int farthest=-1;
     const bool bFar = tree.FarthestNeighbor( farthest, 2*n );
     if( ! bFar || farthest != 1 )
     {
         ++g_errorCount;
-        printf( "FarthestNeighbor failed in testLinearTree, got %d, should be %d\n", farthest, n );
+        fprintf(stdout,  "FarthestNeighbor failed in testLinearTree, got %d, should be %d\n", farthest, n );
     }
     
     /*
@@ -188,7 +193,7 @@ void testLinearTree( const int n )
     if( tree.FindInSphere( -100.0, v, 1 ) != 0 )
     {
         ++g_errorCount;
-        printf( "FindInSphere found points for negative radius\n" );
+        fprintf(stdout,  "FindInSphere found points for negative radius\n" );
     }
     v.clear( );
     
@@ -215,7 +220,7 @@ void testLinearTree( const int n )
    if( localErrorCount != 0 )
    {
             ++g_errorCount;
-      printf( "FindInSphere found too many points (as many as %ld) %ld times\n", localErrorMax, localErrorCount );
+      fprintf(stdout,  "FindInSphere found too many points (as many as %ld) %ld times\n", localErrorMax, localErrorCount );
     }
     v.clear( );
     
@@ -227,7 +232,7 @@ void testLinearTree( const int n )
     if( tree.FindInSphere( (double)(10*n), v, 0 ) != n )
     {
         ++g_errorCount;
-        printf( "FindInSphere did not find all the points, found %ld\n", tree.FindInSphere( 1000, v, 0 ) );
+        fprintf(stdout,  "FindInSphere did not find all the points, found %ld\n", tree.FindInSphere( 1000, v, 0 ) );
     }
     v.clear( );
     
@@ -262,7 +267,7 @@ void testFindFirstObject( void )
         if( tree.empty( ) )
         {
             ++g_errorCount;
-            printf( "testFindFirstObject incorrectly found empty tree for float\n" );
+            fprintf(stdout,  "testFindFirstObject incorrectly found empty tree for float\n" );
         }
         
         /*
@@ -274,7 +279,7 @@ void testFindFirstObject( void )
         if( ! bReturnNear || closest != fFinal )
         {
             ++g_errorCount;
-            printf( "testFindFirstObject Near failed for float, got %f\n", closest );
+            fprintf(stdout, "testFindFirstObject Near failed for float, got %f\n", closest );
         }
         
         /*
@@ -286,12 +291,12 @@ void testFindFirstObject( void )
         if( ! bReturnFar )
         {
             ++g_errorCount;
-            printf( "testFindFirstObject Far failed to any anything for floatn" );
+            fprintf(stdout, "testFindFirstObject Far failed to any anything for floatn" );
         }
         else if( farthest != fFinal )
         {
             ++g_errorCount;
-            printf( "testFindFirstObject Far failed for float, got %g\n", farthest );
+            fprintf(stdout, "testFindFirstObject Far failed for float, got %g\n", farthest );
         }
         
         /*
@@ -302,7 +307,7 @@ void testFindFirstObject( void )
         if( lFound != count )
         {
             ++g_errorCount;
-            printf( "testFindFirstObject: found wrong count for FindInSphere for float, should be%ld, got %ld\n", count, lFound );
+            fprintf(stdout,  "testFindFirstObject: found wrong count for FindInSphere for float, should be%ld, got %ld\n", count, lFound );
         }
     }
     
@@ -325,7 +330,7 @@ void testFindFirstObject( void )
         if( tree.empty( ) )
         {
             ++g_errorCount;
-            printf( "testFindFirstObject incorrectly found empty tree for double\n" );
+            fprintf(stdout,  "testFindFirstObject incorrectly found empty tree for double\n" );
         }
         
         /*
@@ -337,7 +342,7 @@ void testFindFirstObject( void )
         if( ! bReturnNear || closest != dFinal )
         {
             ++g_errorCount;
-            printf( "testFindFirstObject Near failed for double, got %f\n", closest );
+            fprintf(stdout,  "testFindFirstObject failed for double, got %f\n", closest );
         }
         
         /*
@@ -349,12 +354,12 @@ void testFindFirstObject( void )
         if( ! bReturn )
         {
             ++g_errorCount;
-            printf( "testFindFirstObject Far failed to find anything for double\n"  );
+            fprintf(stdout, "testFindFirstObject Far failed to find anything for double\n"  );
         }
         else if( farthest != dFinal )
         {
             ++g_errorCount;
-            printf( "testFindFirstObject Far failed for double, got %g\n", farthest );
+            fprintf(stdout, "testFindFirstObject Far failed for double, got %g\n", farthest );
         }
         
         /*
@@ -365,7 +370,7 @@ void testFindFirstObject( void )
         if( lFound != count )
         {
             ++g_errorCount;
-            printf( "testFindFirstObject: found wrong count for FindInSphere for double, should be%ld, got %ld\n", count, lFound );
+            fprintf(stdout,  "testFindFirstObject: found wrong count for FindInSphere for double, should be%ld, got %ld\n", count, lFound );
         }
     }
 }
@@ -400,7 +405,7 @@ void testFindLastObject( void )
         if( ! bReturn || closest != 1.0 )
         {
             ++g_errorCount;
-            printf( "testFindFirstObject failed for float, got %f\n", closest );
+            fprintf(stdout,  "testFindFirstObject failed for float, got %f\n", closest );
         }
     }
     
@@ -424,7 +429,7 @@ void testFindLastObject( void )
         if( ! bReturn || closest != 1.0 )
         {
             ++g_errorCount;
-            printf( "testFindFirstObject failed for float, got %f\n", closest );
+            fprintf(stdout,  "testFindFirstObject failed for float, got %f\n", closest );
         }
     }
     {
@@ -447,7 +452,7 @@ void testFindLastObject( void )
         if( ! bReturn || closest != 1.0 )
         {
             ++g_errorCount;
-            printf( "testFindFirstObject failed for float, got %f\n", closest );
+            fprintf(stdout,  "testFindFirstObject failed for float, got %f\n", closest );
         }
     }
     
@@ -471,7 +476,7 @@ void testFindLastObject( void )
         if( ! bReturn || closest != 1.0 )
         {
             ++g_errorCount;
-            printf( "testFindFirstObject failed for float, got %f\n", closest );
+            fprintf(stdout,  "testFindFirstObject failed for float, got %f\n", closest );
         }
     }
 }
@@ -497,7 +502,7 @@ void testFindInSphereFromBottom( void )
         if( lReturned != (long)i )
         {
             ++g_errorCount;
-            printf( "FindInSphere failed in testFindInSphereFromBottom for i=%d\n", i );
+            fprintf(stdout,  "FindInSphere failed in testFindInSphereFromBottom for i=%d\n", i );
         }
     }
 }
@@ -523,7 +528,7 @@ void testFindInSphereFromTop( void )
         if( lReturned != (long)i )
         {
             ++g_errorCount;
-            printf( "FindInSphere failed in testFindInSphereFromTop for i=%d\n", i );
+            fprintf(stdout,  "FindInSphere failed in testFindInSphereFromTop for i=%d\n", i );
         }
     }
 }
@@ -542,7 +547,7 @@ void testRandomTree( const int nRequestedRandoms )
     /* Build the tree with n random numbers. Remember the largest and smallest values. */
     for( int i=0; i<n; ++i )
     {
-        const int next = rand( )%MYRAND_MAX;
+        const int next = random( )%MYRAND_MAX;
         tree.Insert( next );
         if( next > nmax ) nmax = next;
         if( next < nmin ) nmin = next;
@@ -555,15 +560,15 @@ void testRandomTree( const int nRequestedRandoms )
         if( ! bNear || closest != nmin )
         {
             ++g_errorCount;
-            printf( "NearestNeighbor failed in testRandomTree for min\n" );
+            fprintf(stdout,  "NearestNeighbor failed in testRandomTree for min\n" );
         }
         
-        int farthest;
+        int farthest=-1;
         const bool bFar = tree.FarthestNeighbor( farthest, INT_MIN/2 );
         if( !bFar || farthest != nmax )
         {
             ++g_errorCount;
-            printf( "FarthestNeighbor failed in testRandomTree for min\n" );
+            fprintf(stdout,  "FarthestNeighbor failed in testRandomTree for min\n" );
         }
     }
     
@@ -574,15 +579,15 @@ void testRandomTree( const int nRequestedRandoms )
         if( ! bNear || closest != nmax )
         {
             ++g_errorCount;
-            printf( "NearestNeighbor failed in testRandomTree for max\n" );
+            fprintf(stdout,  "NearestNeighbor failed in testRandomTree for max\n" );
         }
         
-        int farthest;
+        int farthest=-1;
         const bool bFar = tree.FarthestNeighbor( farthest, INT_MAX/2 );
         if( !bFar || farthest != nmin )
         {
             ++g_errorCount;
-            printf( "FarthestNeighbor failed in testRandomTree for max\n" );
+            fprintf(stdout,  "FarthestNeighbor failed in testRandomTree for max\n" );
         }
     }
     
@@ -594,7 +599,7 @@ void testRandomTree( const int nRequestedRandoms )
         if( lReturn != n )
         {
             ++g_errorCount;
-            printf( "FindInSphere failed in testRandomTree, n=%d, lReturn=%ld\n", n, lReturn );
+            fprintf(stdout,  "FindInSphere failed in testRandomTree, n=%d, lReturn=%ld\n", n, lReturn );
         }
     }
     
@@ -606,7 +611,7 @@ void testRandomTree( const int nRequestedRandoms )
         if( lReturn != 0 )
         {
             ++g_errorCount;
-            printf( "FindInSphere failed in testRandomTree found points incorrectly, n=%d, lReturn=%ld\n", n, lReturn );
+            fprintf(stdout,  "FindInSphere failed in testRandomTree found points incorrectly, n=%d, lReturn=%ld\n", n, lReturn );
         }
     }
     
@@ -625,7 +630,7 @@ void testRandomTree( const int nRequestedRandoms )
             if( lReturn < lastFoundCount )
             {
                 ++g_errorCount;
-                printf( "FindInSphere in testRandomTree found DECREASING count on increasing radius for radius=%f\n", radius );
+                fprintf(stdout,  "FindInSphere in testRandomTree found DECREASING count on increasing radius for radius=%f\n", radius );
                 break;
             }
             else
@@ -639,7 +644,7 @@ void testRandomTree( const int nRequestedRandoms )
         if( lReturn != n )
         {
             ++g_errorCount;
-            printf( "FindInSphere in testRandomTree did not find all the points\n" );
+            fprintf(stdout,  "FindInSphere in testRandomTree did not find all the points\n" );
         }
     }
 }
@@ -745,7 +750,7 @@ void testBigVector(  )
         if( double(vSearch-v17max) > DBL_MIN )
         {
             ++g_errorCount;
-            printf( "in testBigVector, apparently FarthestNeighbor has failed\n" );
+            fprintf(stdout, "in testBigVector, apparently FarthestNeighbor has failed\n" );
         }
     }
     
@@ -774,7 +779,7 @@ void testBigVector(  )
         if( dmin == DBL_MAX ) 
         {
             ++g_errorCount;
-            printf( "testBigVector: apparently FindInSphere failed\n" );
+            fprintf(stdout,  "testBigVector: apparently FindInSphere failed\n" );
         }
         
         {
@@ -785,12 +790,12 @@ void testBigVector(  )
             if( iFound < 1 )
             {
                 ++g_errorCount;
-                printf( "testBigVector: FindInSphere found no points using zero radius\n" );
+                fprintf(stdout,  "testBigVector: FindInSphere found no points using zero radius\n" );
             }
             else if( iFound != 1 )
             {
                 ++g_errorCount;
-                printf( "testBigVector: FindInSphere found more than %ld points using zero radius\n", iFound );
+                fprintf(stdout,  "testBigVector: FindInSphere found more than %ld points using zero radius\n", iFound );
             }
         }
         
@@ -802,7 +807,7 @@ void testBigVector(  )
             if( iFound < 2 )
             {
                 ++g_errorCount;
-                printf( "testBigVector: FindInSphere found only 1 point\n" );
+                fprintf(stdout,  "testBigVector: FindInSphere found only 1 point\n" );
             }
         }
         
@@ -814,12 +819,12 @@ void testBigVector(  )
             if( iFound < 1 )
             {
                 ++g_errorCount;
-                printf( "testBigVector: FindInSphere found no points using %f radius\n", (double)(vCloseToNearCenter-vNearCenter)*0.9 );
+                fprintf(stdout,  "testBigVector: FindInSphere found no points using %f radius\n", (double)(vCloseToNearCenter-vNearCenter)*0.9 );
             }
             else if( iFound != 1 )
             {
                 ++g_errorCount;
-                printf( "testBigVector: FindInSphere found %ld points using %f radius\n", iFound, (double)(vCloseToNearCenter-vNearCenter)*0.9 );
+                fprintf(stdout,  "testBigVector: FindInSphere found %ld points using %f radius\n", iFound, (double)(vCloseToNearCenter-vNearCenter)*0.9 );
             }
         }
         
@@ -850,7 +855,7 @@ void testBackwardForward( void )
       if( iReturn==0 || ::fabs( closest-((double)i+0.25) ) > DBL_MIN )
       {
           ++g_errorCount;
-           printf("testBackForward: NearestNeighbor failed to find %g, found %g instead\n", 
+           fprintf(stdout,"testBackForward: NearestNeighbor failed to find %g, found %g instead\n", 
                   (double)i+0.25, closest );      
       }
    }
@@ -886,7 +891,7 @@ void testDelayedInsertion( void )
       if( lReturned != nmax )
       {
          ++g_errorCount;
-         printf( "CompleteDelayedInsert failed in testDelayedInsertion for nmax=%ld, found %ld points\n", nmax, lReturned );
+         fprintf(stdout, "CompleteDelayedInsert failed in testDelayedInsertion for nmax=%ld, found %ld points\n", nmax, lReturned );
       }
    }
 
@@ -913,7 +918,7 @@ void testDelayedInsertion( void )
       if( lReturned != nmax )
       {
          ++g_errorCount;
-         printf( "FindInSphere failed in testDelayedInsertion for nmax=%ld, found %ld points\n", nmax, lReturned );
+         fprintf(stdout, "FindInSphere failed in testDelayedInsertion for nmax=%ld, found %ld points\n", nmax, lReturned );
       }
    }
 
@@ -942,12 +947,12 @@ void testDelayedInsertion( void )
       if( ! bReturned )
       {
          ++g_errorCount;
-         printf( "NearestNeighbor failed in testDelayedInsertion \n" );
+         fprintf(stdout, "NearestNeighbor failed in testDelayedInsertion \n" );
       }
       else if( closest != fFinal )
       {
          ++g_errorCount;
-         printf( "NearestNeighbor failed to find the data in testDelayedInsertion\n" );
+         fprintf(stdout, "NearestNeighbor failed to find the data in testDelayedInsertion\n" );
       }
    }
 
@@ -975,12 +980,12 @@ void testDelayedInsertion( void )
       if( ! bReturned )
       {
          ++g_errorCount;
-         printf( "FarthestNeighbor failed in testDelayedInsertion \n" );
+         fprintf(stdout, "FarthestNeighbor failed in testDelayedInsertion \n" );
       }
       else if( farthest != fFinal )
       {
          ++g_errorCount;
-         printf( "FarthestNeighbor failed to find the data in testDelayedInsertion\n" );
+         fprintf(stdout, "FarthestNeighbor failed to find the data in testDelayedInsertion\n" );
       }
    }
 }
