@@ -150,9 +150,11 @@ extern "C" {
     typedef struct {
         CNearTreeNodeHandle m_ptTree;    /* pointer to the actual tree                  */
         size_t           m_szdimension;  /* dimension of the coordinates                */
+        size_t           m_szsize;       /* size of this tree                           */
+        size_t           m_szdepth;      /* depth of this tree                          */
         int              m_iflags;       /* flags                                       */
-        CVectorHandle    m_ptDelayCoords; /* pointer to the delay queue coords      */
-        CVectorHandle    m_ptDelayObjs;   /* pointer to the delay queue objects     */
+        CVectorHandle    m_ptDelayCoords; /* pointer to the delay queue coords          */
+        CVectorHandle    m_ptDelayObjs;   /* pointer to the delay queue objects         */
     } CNearTree;
     
     typedef CNearTree     FAR * CNearTreeHandle;
@@ -278,6 +280,50 @@ extern "C" {
     
     int CNearTreeFree(CNearTreeHandle FAR * treehandle);
     
+    /*
+     =======================================================================
+     int CNearTreeGetSize (CNearTreeHandle treehandle, size_t FAR * size)
+     
+     Return the number of objects in the tree in size
+     
+     =======================================================================
+     */
+    
+    int CNearTreeGetSize (CNearTreeHandle treehandle, size_t FAR * size);
+    
+    /*
+     =======================================================================
+     int CNearTreeGetDelayedSize (CNearTreeHandle treehandle, size_t FAR * size)
+     
+     Return the number of objects in the delay queue tree in size
+     
+     =======================================================================
+     */
+    
+    int CNearTreeGetDelayedSize (CNearTreeHandle treehandle, size_t FAR * size);
+    
+    /*
+     =======================================================================
+     int CNearTreeGetTotalSize (CNearTreeHandle treehandle, size_t FAR * size)
+     
+     Return the number of objects in both in the tree and in the delay queue tree in size
+     
+     =======================================================================
+     */
+    
+    int CNearTreeGetTotalSize (CNearTreeHandle treehandle, size_t FAR * size);
+    
+    
+    /*
+     =======================================================================
+     int CNearTreeGetDepth (CNearTreeHandle treehandle, size_t FAR * depth)
+     
+     Return the depth of the tree in depth
+     
+     =======================================================================
+     */
+    
+    int CNearTreeGetDepth (CNearTreeHandle treehandle, size_t FAR * depth);
     
     /*
      =======================================================================
@@ -309,10 +355,11 @@ extern "C" {
  
     /*
      =======================================================================
-     int CNearTreeNodeInsert ( CNearTreeHandle treehandle, 
+     int CNearTreeNodeInsert( CNearTreeHandle treehandle,
                                CNearTreeNodeHandle treenodehandle, 
                                const void FAR * coord, 
-                               const void * obj )
+                              const void * obj,
+                              size_t FAR * depth );
      
      Function to insert some "point" as an object into a CNearTree for
      later searching, starting at a given treenode
@@ -325,6 +372,8 @@ extern "C" {
      position (first test),into the right position, or else
      into a node descending from the nearer of those positions
      when they are both already used.
+ 
+     depth is used to keep track of the depth at which the insertion is done
      
      return 0 for success, nonzero for an error
      
@@ -334,8 +383,8 @@ extern "C" {
      int CNearTreeNodeInsert( CNearTreeHandle treehandle,
                              CNearTreeNodeHandle treenodehandle,
                              const void FAR * coord, 
-                             const void * obj );
-    
+                             const void * obj,
+                             size_t FAR * depth );
     
     
     /*

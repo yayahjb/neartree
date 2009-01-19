@@ -7,7 +7,10 @@
  *
  *  C Version created by Herbert J. Bernstein on 1/1/09
  *  with permission from Larry Andrews.
- *  Copyright 2008 Larry Andrews and Herbert J. Bernstein. 
+ *
+ *  Rev 18 Jan 2009, Tests of DelayedInsert
+ *
+ *  Copyright 2008, 2009 Larry Andrews and Herbert J. Bernstein. 
  *  All rights reserved.
  *
  */
@@ -63,10 +66,12 @@ void testLinearTree( const int n );
 void testFindFirstObject( void );
 void testFindLastObject( void );
 void testFindInSphereFromBottom( void );
+void testBackwardForward( void );
 void testFindInSphereFromTop( void );
 
 void testRandomTree( const int n );
-void testBigVector( );
+void testBigVector( void );
+void testDelayedInsertion( void );
 
 long g_errorCount;
 
@@ -93,7 +98,9 @@ int main(int argc, char** argv)
     testFindInSphereFromBottom( );
     testFindInSphereFromTop( );
     testRandomTree( 10000 );
+    testBackwardForward( );
     testBigVector( );
+    testDelayedInsertion( );
     
     if( g_errorCount == 0 )
     {
@@ -880,7 +887,7 @@ void testBigVector(  )
         /* make sure that each includes the other in sphere search */
         
         ConstVec17(vCenter, (double)(MYRAND_MAX/2) );
-        CVectorCreate(&vhand,sizeof(double *),10);
+        CVectorCreate(&vhand,sizeof(double FAR *),10);
 
         bResult = !CNearTreeNearestNeighbor( tree, 100000.0, &vvNearCenter, NULL, vCenter );
         vNearCenter = (double FAR *)vvNearCenter;
@@ -1017,6 +1024,321 @@ void testBigVector(  )
     }
 }
 
+/*=======================================================================*/
+void testBackwardForward( void )
+{
+    CNearTreeHandle tree;
+    const int nMax = 1000;
+    double data[1];
+    double probe[1];
+    double FAR * closest;
+    bool bResult;
+    bool bResult1, bResult2, bResult3, bResult4;
+    int i;
+    
+    bResult = !CNearTreeCreate(&tree,1,CNEARTREE_TYPE_DOUBLE);    
+    if (!bResult)
+    {
+        ++g_errorCount;
+        fprintf(stdout,"CNearTreeTest: testBackwardForward: CNearTreeCreate failed\n");
+    }
+    
+    for( i=0; i<nMax; ++i )
+    {
+        data[0]=(double)i;        bResult1 = ! CNearTreeInsert(tree,data,NULL); 
+        data[0]=(double)(nMax-i); bResult2 = ! CNearTreeInsert(tree,data,NULL); 
+        data[0]=(double)i + 0.25; bResult3 = ! CNearTreeInsert(tree,data,NULL); 
+        data[0]=(double)(nMax-i) + 0.75; 
+                                  bResult4 = ! CNearTreeInsert(tree,data,NULL);
+        if (!bResult1 || !bResult2 || !bResult3 || !bResult4) {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest: testBackwardForward: CNearTreeInserts failed for i = %d\n", i);
+        }
+    }
+    
+    for( i=100; i<300; ++i )
+    {   probe[0] = (double)i+0.25;
+        bResult =!CNearTreeNearestNeighbor(tree,1000.0,(void FAR *)&closest,NULL,probe);
+        if( !bResult || fabs( closest[0]-((double)i+0.25) ) > DBL_MIN )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest: testBackForward: NearestNeighbor failed to find %g, found %g instead\n", 
+                   (double)i+0.25, closest[0] );      
+        }
+    }
+
+    bResult = !CNearTreeFree(&tree);
+    if (!bResult)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testBackwardForward: CNearTreeFree has failed\n" );
+    }
+    
+    
+}
+
+/*=======================================================================*/
+void testDelayedInsertion( void )
+{
+    CNearTreeHandle tree;
+    CVectorHandle v;
+    const long nmax = 100;
+    double data[1];
+    double probe[1];
+    double radius;
+    double fFinal;
+    double FAR * closest;
+    double FAR * farthest;
+    size_t lReturned;
+    bool bResult, bResult1, bResult2;
+    int i;
+    
+    {
+        /* make sure that CompleteDelayInsert works - note there is no way in the
+           final test to differentiate that from FindInSphere completing the
+           flush. */
+        
+        bResult = !CNearTreeCreate(&tree,1,CNEARTREE_TYPE_DOUBLE);    
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CNearTreeCreate (first block) failed\n");
+        }
+        
+        for( i=1; i<=nmax; ++i )
+        {
+            if( (i%2) == 0 )
+            {
+                data[0]=(double)i;        bResult1 = ! CNearTreeInsert(tree,data,NULL); 
+                if (!bResult1) {
+                    ++g_errorCount;
+                    fprintf(stdout,"CNearTreeTest: testDelayedInsertion: CNearTreeInsert failed for i = %d\n", i);
+                }
+            }
+            else
+            {
+                data[0]=(double)i;        bResult2 = ! CNearTreeDelayedInsert(tree,data,NULL); 
+                if (!bResult2) {
+                    ++g_errorCount;
+                    fprintf(stdout,"CNearTreeTest: testDelayedInsertion: CNearTreeDelayedInsert failed for i = %d\n", i);
+                }
+            }
+        }
+        
+        bResult = !CVectorCreate(&v,sizeof(double FAR *),10);
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CVectorCreate failed\n");
+        }
+        radius = 1000.0;
+        bResult = !CNearTreeCompleteDelayedInsert(tree);
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CNearTreeCompleteDelayedInsert failed\n");
+        }
+        probe[0] = 0.9;
+        bResult = !CNearTreeFindInSphere(tree, radius,v,NULL,probe,1);
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CNearTreeFindInSphere failed\n");
+        } else {
+            lReturned = CVectorSize(v);
+            if( lReturned != nmax )
+            {
+                ++g_errorCount;
+                printf( "CNearTreeTest:  testDelayedInsertion: CNearTreeFindInSphere failed for nmax=%ld, found %lu points\n", nmax, (unsigned long)lReturned );
+            }
+        }
+        bResult = !CVectorFree(&v);
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest:  testDelayedInsertion: CVectorFree (first block) has failed\n" );
+        }
+        bResult = !CNearTreeFree(&tree);
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest: testBackwardForward: CNearTreeFree (first block) has failed\n" );
+        }
+        
+    }
+    
+    {
+        /* make sure that FindInSphere flushes the delayed data */
+        bResult = !CNearTreeCreate(&tree,1,CNEARTREE_TYPE_DOUBLE);    
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CNearTreeCreate (second block) failed\n");
+        }
+        
+        for( i=1; i<=nmax; ++i )
+        {
+            if( (i%2) == 0 )
+            {
+                data[0]=(double)i;        bResult1 = ! CNearTreeInsert(tree,data,NULL); 
+                if (!bResult1) {
+                    ++g_errorCount;
+                    fprintf(stdout,"CNearTreeTest: testDelayedInsertion: CNearTreeInsert (second block) failed for i = %d\n", i);
+                }
+            }
+            else
+            {
+                data[0]=(double)i;        bResult2 = ! CNearTreeDelayedInsert(tree,data,NULL); 
+                if (!bResult2) {
+                    ++g_errorCount;
+                    fprintf(stdout,"CNearTreeTest: testDelayedInsertion: CNearTreeDelayedInsert (second block) failed for i = %d\n", i);
+                }
+            }
+        }
+        
+        bResult = !CVectorCreate(&v,sizeof(double FAR *),10);
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CVectorCreate (second block) failed\n");
+        }
+        
+        radius = 1000.0;
+        probe[0] = 0.9;
+        bResult = !CNearTreeFindInSphere(tree, radius,v,NULL,probe,1);
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CNearTreeFindInSphere (second block) failed\n");
+        } else {
+            lReturned = CVectorSize(v);
+            if( lReturned != nmax )
+            {
+                ++g_errorCount;
+                printf( "CNearTreeTest:  testDelayedInsertion: CNearTreeFindInSphere (second block) failed for nmax=%ld, found %lu points\n", nmax, (unsigned long)lReturned );
+            }
+        }
+        bResult = !CVectorFree(&v);
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest:  testDelayedInsertion: CVectorFree (second block) has failed\n" );
+        }
+        bResult = !CNearTreeFree(&tree);
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest: testBackwardForward: CNearTreeFree (second block) has failed\n" );
+        }
+        
+    }
+    
+    {
+        /* make sure that NearestNeighbor flushes the delayed data */
+        fFinal = DBL_MAX;
+
+        bResult = !CNearTreeCreate(&tree,1,CNEARTREE_TYPE_DOUBLE);    
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CNearTreeCreate (third block) failed\n");
+        }
+        
+        for( i=1; i<=nmax; ++i )
+        {
+            if( (i%2) == 0 && i!=nmax) /* ensure that the last one is delayed */
+            {
+                data[0]=(double)i;        bResult1 = ! CNearTreeInsert(tree,data,NULL); 
+                if (!bResult1) {
+                    ++g_errorCount;
+                    fprintf(stdout,"CNearTreeTest: testDelayedInsertion: CNearTreeInsert failed for i = %d\n", i);
+                }
+            }
+            else
+            {
+                data[0]=(double)i;        bResult2 = ! CNearTreeDelayedInsert(tree,data,NULL); 
+                if (!bResult2) {
+                    ++g_errorCount;
+                    fprintf(stdout,"CNearTreeTest: testDelayedInsertion: CNearTreeDelayedInsert (third block) failed for i = %d\n", i);
+                }
+                fFinal = (double)i;
+            }
+        }
+        
+        radius = 0.1;
+        probe[0] = fFinal;
+        bResult = !CNearTreeNearestNeighbor( tree, radius, (void FAR *)&closest, NULL, probe );
+        if( ! bResult )
+        {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest: testDelayedInsertion: CNearTreeNearestNeighbor failed \n" );
+        }
+        else if( closest[0] != fFinal )
+        {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest: testDelayedInsertion: NearestNeighbor failed to find the data\n" );
+        }
+        bResult = !CNearTreeFree(&tree);
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest: testBackwardForward: CNearTreeFree (third block) has failed\n" );
+        }
+        
+    }
+    
+    {
+        /* make sure that FarthestNeighbor flushes the delayed data */
+        bResult = !CNearTreeCreate(&tree,1,CNEARTREE_TYPE_DOUBLE);    
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CNearTreeCreate (fourth block) failed\n");
+        }
+        
+        fFinal = DBL_MAX;
+        
+        for( i=1; i<=nmax; ++i )
+        {
+            if( (i%2) == 0 && i!=nmax) /* ensure that the last one is delayed */
+            {
+                data[0]=(double)i;        bResult1 = ! CNearTreeInsert(tree,data,NULL); 
+                if (!bResult1) {
+                    ++g_errorCount;
+                    fprintf(stdout,"CNearTreeTest: testDelayedInsertion: CNearTreeInsert (fourth block) failed for i = %d\n", i);
+         }
+    }
+            else
+            {
+                data[0]=(double)i;        bResult2 = ! CNearTreeDelayedInsert(tree,data,NULL); 
+                if (!bResult2) {
+                    ++g_errorCount;
+                    fprintf(stdout,"CNearTreeTest: testDelayedInsertion: CNearTreeDelayedInsert (fourth block) failed for i = %d\n", i);
+                }
+                fFinal = (double)i;
+            }
+}
+
+        probe[0] = -100;
+        bResult = !CNearTreeFarthestNeighbor( tree,  (void FAR *)&farthest, NULL, probe );
+        if( ! bResult )
+        {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest: testDelayedInsertion: CNearTreeFarthestNeighbor failed \n" );
+        } else if( farthest[0] != fFinal )
+        {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest: testDelayedInsertion: FarthestNeighbor failed to find the data\n" );
+        }
+        bResult = !CNearTreeFree(&tree);
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest: testBackwardForward: CNearTreeFree (third block) has failed\n" );
+        }
+        
+    }
+}
 
 
 

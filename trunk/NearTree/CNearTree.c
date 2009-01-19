@@ -410,6 +410,8 @@ extern "C" {
         (*treehandle)->m_iflags        = treetype;  /* no data, no children */
         (*treehandle)->m_iflags       |= treenorm;
         (*treehandle)->m_szdimension   = treedim;  /* number of ints or doubles    */
+        (*treehandle)->m_szsize        = 0;        /* number of nodes in the tree  */
+        (*treehandle)->m_szdepth       = 0;        /* depth of in the tree         */
         if( CNearTreeNodeCreate(*treehandle,&((*treehandle)->m_ptTree))) {
             FREE(*treehandle);
             return CNEARTREE_MALLOC_FAILED;
@@ -511,7 +513,86 @@ extern "C" {
         return (treehandle==NULL||(((treehandle->m_ptTree->m_iflags)&CNEARTREE_DATA_OR_CHILDREN)  == 0))?0:1;
     }
     
+    /*
+     =======================================================================
+     int CNearTreeGetSize (CNearTreeHandle treehandle, size_t FAR * size)
+     
+     Return the number of objects in the tree in size
+     
+     =======================================================================
+     */
     
+    int CNearTreeGetSize (CNearTreeHandle treehandle, size_t FAR * size)
+    {
+        if (!treehandle || !size ) return CNEARTREE_BAD_ARGUMENT;
+        
+        *size = treehandle->m_szsize;
+        
+        return CNEARTREE_SUCCESS;
+
+    }
+    
+    /*
+     =======================================================================
+     int CNearTreeGetDelayedSize (CNearTreeHandle treehandle, size_t FAR * size)
+     
+     Return the number of objects in the delay queue tree in size
+     
+     =======================================================================
+     */
+    
+    int CNearTreeGetDelayedSize (CNearTreeHandle treehandle, size_t FAR * size)
+    {
+        if (!treehandle || !size ) return CNEARTREE_BAD_ARGUMENT;
+        
+        *size = 0;
+        
+        if (treehandle->m_ptDelayCoords) *size = CVectorSize(treehandle->m_ptDelayCoords);
+        
+        return CNEARTREE_SUCCESS;
+
+    }
+    
+       /*
+     =======================================================================
+     int CNearTreeGetTotalSize (CNearTreeHandle treehandle, size_t FAR * size)
+     
+     Return the number of objects in both in the tree and in the delay queue tree in size
+     
+     =======================================================================
+     */
+    
+    int CNearTreeGetTotalSize (CNearTreeHandle treehandle, size_t FAR * size)
+    {
+        if (!treehandle || !size ) return CNEARTREE_BAD_ARGUMENT;
+        
+        *size = treehandle->m_szsize;;
+        
+        if (treehandle->m_ptDelayCoords) *size += CVectorSize(treehandle->m_ptDelayCoords);
+        
+        return CNEARTREE_SUCCESS;
+
+    }
+
+
+    /*
+     =======================================================================
+     int CNearTreeGetDepth (CNearTreeHandle treehandle, size_t FAR * depth)
+     
+     Return the depth of the tree in depth
+     
+     =======================================================================
+     */
+    
+    int CNearTreeGetDepth (CNearTreeHandle treehandle, size_t FAR * depth)
+    {
+        if (!treehandle || !depth ) return CNEARTREE_BAD_ARGUMENT;
+        
+        *depth = treehandle->m_szdepth;
+        
+        return CNEARTREE_SUCCESS;
+        
+    }
     
     /*
      =======================================================================
@@ -543,11 +624,26 @@ extern "C" {
         /* do a bit of precomputing if it is possible so that we can
          reduce the number of calls to sqrt */
         
+        size_t depth;
+        
+        int errorcode;
+        
         if ( !treehandle || !coord ) return CNEARTREE_BAD_ARGUMENT;
         
         if ( !(treehandle->m_ptTree) ) return CNEARTREE_BAD_ARGUMENT;
         
-        return CNearTreeNodeInsert( treehandle, treehandle->m_ptTree, coord, obj);
+        depth = 1;
+        
+        if ((errorcode = 
+             CNearTreeNodeInsert( treehandle, treehandle->m_ptTree, coord, obj, &depth)) == 0) {
+            
+            if (depth > treehandle->m_szdepth) treehandle->m_szdepth = depth;
+            
+            (treehandle->m_szsize)++;
+            
+        }
+        
+        return errorcode;
         
     }
     
@@ -557,7 +653,8 @@ extern "C" {
      int CNearTreeNodeInsert ( CNearTreeHandle treehandle,
      CNearTreeNodeHandle treenodehandle, 
      const void FAR * coord, 
-     const void * obj )
+     const void * obj,
+     size_t FAR * depth)
      
      Function to insert some "point" as an object into a a node if a CNearTree for
      later searching
@@ -573,6 +670,8 @@ extern "C" {
      into a node descending from the nearer of those positions
      when they are both already used.
      
+     depth is used to keep track of the depth at which the insertion is done
+     
      return 0 for success, nonzero for an error
      
      =======================================================================
@@ -581,7 +680,8 @@ extern "C" {
     int CNearTreeNodeInsert( CNearTreeHandle treehandle,
                             CNearTreeNodeHandle treenodehandle,
                             const void FAR * coord, 
-                            const void * obj ) {
+                            const void * obj,
+                            size_t FAR * depth) {
         
         /* do a bit of precomputing if it is possible so that we can
          reduce the number of calls to sqrt */
@@ -639,7 +739,8 @@ extern "C" {
             /* note that the next line assumes that m_dMaxRight is negative for a new node */
             if ( treenodehandle->m_dMaxRight < dTempRight ) 
                 treenodehandle->m_dMaxRight = dTempRight;
-            return CNearTreeNodeInsert(treehandle, treenodehandle->m_pRightBranch, coord, obj);
+            (*depth)++;
+            return CNearTreeNodeInsert(treehandle, treenodehandle->m_pRightBranch, coord, obj, depth);
         } else { /* ((double)(t - *m_tLeft) <= (double)(t - *m_tRight) ) */
             if (  !((treenodehandle->m_iflags)&CNEARTREE_FLAG_LEFT_CHILD) ) {
                 if ( (errorcode = CNearTreeNodeCreate(treehandle, &(treenodehandle->m_pLeftBranch)))) return errorcode;
@@ -649,7 +750,8 @@ extern "C" {
             /* note that the next line assumes that m_dMaxLeft is negative for a new node */
             if ( treenodehandle->m_dMaxLeft < dTempLeft ) 
                 treenodehandle->m_dMaxLeft  = dTempLeft;
-            return CNearTreeNodeInsert(treehandle,treenodehandle->m_pLeftBranch, coord, obj );
+            (*depth)++;
+            return CNearTreeNodeInsert(treehandle,treenodehandle->m_pLeftBranch, coord, obj, depth);
         }
         
     }
@@ -685,8 +787,6 @@ extern "C" {
         
         int treetype;
         
-        size_t ntsize;
-        
         size_t nvsize;
         
         size_t treedim;
@@ -698,17 +798,13 @@ extern "C" {
         treedim = treehandle->m_szdimension;
         
         if (treetype == CNEARTREE_TYPE_INTEGER) {
-            ntsize = (sizeof(CNearTree)+(sizeof(int)-1))/sizeof(int);
-            ntsize *= sizeof(int);
             nvsize = sizeof(int)*treedim;
         } else {
-            ntsize = (sizeof(CNearTree)+(sizeof(double)-1))/sizeof(double);
-            ntsize *= sizeof(double);
             nvsize = sizeof(double)*treedim;
         }
         
         if (!(treehandle->m_ptDelayCoords)) {
-            if (CVectorCreate(&(treehandle->m_ptDelayCoords),ntsize,1)) {
+            if (CVectorCreate(&(treehandle->m_ptDelayCoords),nvsize,1)) {
                 return CNEARTREE_MALLOC_FAILED;
             }
         }
@@ -759,6 +855,8 @@ extern "C" {
         
         int errorcode;
         
+        size_t depth;
+        
         if (!treehandle) return CNEARTREE_BAD_ARGUMENT;
         
         if (treehandle->m_ptDelayCoords == NULL && treehandle->m_ptDelayObjs == NULL ) 
@@ -786,17 +884,24 @@ extern "C" {
             kelement--;
             if (CVectorSetElement(treehandle->m_ptDelayObjs,&dummyobj,kelement)) errorcode |= CNEARTREE_CVECTOR_FAILED;
             if (CVectorGetElementptr(treehandle->m_ptDelayCoords,&coord,kelement)) errorcode |= CNEARTREE_CVECTOR_FAILED;
-            errorcode |= CNearTreeNodeInsert(treehandle,treehandle->m_ptTree,coord,obj);
+            depth = 1;
+            errorcode |= CNearTreeNodeInsert(treehandle,treehandle->m_ptTree,coord,obj,&depth);
+            if (depth > treehandle->m_szdepth) treehandle->m_szdepth = depth;
+            (treehandle->m_szsize)++;
         }
         
         for (ielement = 0; ielement < nqueued; ielement++) {
             if (CVectorGetElement(treehandle->m_ptDelayObjs,&obj,ielement)) return CNEARTREE_CVECTOR_FAILED;
             if (obj == dummyobj) continue;
-            if (CVectorGetElementptr(treehandle->m_ptDelayCoords,&coord,kelement)) errorcode |= CNEARTREE_CVECTOR_FAILED;
-            errorcode |= CNearTreeNodeInsert(treehandle,treehandle->m_ptTree,coord,obj);
+            if (CVectorGetElementptr(treehandle->m_ptDelayCoords,&coord,ielement)) errorcode |= CNEARTREE_CVECTOR_FAILED;
+            depth = 1;
+            errorcode |= CNearTreeNodeInsert(treehandle,treehandle->m_ptTree,coord,obj,&depth);
+            if (depth > treehandle->m_szdepth) treehandle->m_szdepth = depth;
+            (treehandle->m_szsize)++;
         }
         
         if (CVectorFree(&(treehandle->m_ptDelayObjs))) errorcode |= CNEARTREE_CVECTOR_FAILED;
+        if (CVectorSetFlags(treehandle->m_ptDelayCoords,0)) errorcode |= CNEARTREE_CVECTOR_FAILED;
         if (CVectorFree(&(treehandle->m_ptDelayCoords))) errorcode |= CNEARTREE_CVECTOR_FAILED;
         
         return (errorcode != 0)?errorcode:CNEARTREE_SUCCESS;

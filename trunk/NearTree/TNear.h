@@ -75,6 +75,16 @@
 //    void Insert( T& t )
 //       where t is an object of the type v
 //
+//    void DelayedInsert( T& t )
+//       where t is an object of the type v, acumulates the object t
+//       for insertion in random order before the first search
+//       or on execution of CompleteDelayedInsert(blocksize)
+//
+//    void CompleteDelayedInsert( void )
+//       forces actual insertion of objects queued by DelayedInsert
+//       using a partially randomized order of insertion
+//       to help balance the tree
+//
 //    bool NearestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) const
 //       dRadius is the largest radius within which to search; make it
 //          very large if you want to include every point that was loaded; dRadius
@@ -99,8 +109,6 @@
 //       t is the probe point, used to search in the group of points Insert'ed
 //       return value is the number of objects found within the search radius
 //
-//    void DelayedInsert( void )
-//    void CompleteDelayedInsert( void )
 //
 //    ~CNearTree( void )  // destructor
 //       invoked by  vTree.CNeartree<v>::~CNearTree
@@ -115,7 +123,7 @@
 //   CNearTree< double > dT;
 //   double dNear;
 //   dT.Insert( 1.5 );
-//   if ( dT.NearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",dRad );
+//   if ( dT.NearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",double(dNear-2.0) );
 // }
 //
 // and it should print 0.5 (that's how for 2.0 is from 1.5)
@@ -131,6 +139,16 @@
 #include <float.h>
 #include <math.h>
 #include <vector>
+
+#ifdef CNEARTREE_SAFE_TRIANG
+#define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0) \
+|| ((b)-((a)-(c)) >= 0) \
+|| ((c)-((a)-(b)) >= 0))    
+#else
+#define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0))
+#endif
+
+
 
 template <typename T> class CNearTree
 {
@@ -464,7 +482,7 @@ public:
                ++lReturn;
                tClosest.push_back( *pt->m_ptRight);
             }
-            if ( pt->m_pRightBranch != 0 && pt->m_dMaxRight+dRadius >= dDR )
+                if ( pt->m_pRightBranch != 0 && (TRIANG(dDR,pt->m_dMaxRight,dRadius)))
             { // we did the left and now we finished the right, go down
                pt = pt->m_pRightBranch;
                eDir = left;
@@ -486,7 +504,7 @@ public:
             {
                sStack.push_back( pt );
             }
-            if ( pt->m_pLeftBranch != 0 &&  pt->m_dMaxLeft+dRadius >= dDL )
+                if ( pt->m_pLeftBranch != 0 && (TRIANG(dDL,pt->m_dMaxLeft,dRadius)))
             { // we did the left, go down
                pt = pt->m_pLeftBranch;
             }
@@ -539,7 +557,7 @@ public:
                dRadius = dDR;
                pClosest = pt->m_ptRight;
             }
-            if ( pt->m_pRightBranch != 0 && pt->m_dMaxRight+dRadius >= dDR )
+            if ( pt->m_pRightBranch != 0 && (TRIANG(dDR,pt->m_dMaxRight,dRadius)))
             { // we did the left and now we finished the right, go down
                pt = pt->m_pRightBranch;
                eDir = left;
@@ -561,7 +579,7 @@ public:
             {
                sStack.push_back( pt );
             }
-            if ( pt->m_pLeftBranch != 0 &&  pt->m_dMaxLeft+dRadius >= dDL )
+            if ( pt->m_pLeftBranch != 0 && (TRIANG(dDL,pt->m_dMaxLeft,dRadius)))
             { // we did the left, go down
                pt = pt->m_pLeftBranch;
             }
@@ -617,7 +635,7 @@ public:
                dRadius = dDR;
                pFarthest = pt->m_ptRight;
             }
-            if ( pt->m_pRightBranch != 0 && dRadius-pt->m_dMaxRight <= dDR )
+            if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight))
             { // we did the left and now we finished the right, go down
                pt = pt->m_pRightBranch;
                eDir = left;
@@ -639,7 +657,7 @@ public:
             {
                sStack.push_back( pt );
             }
-            if ( pt->m_pLeftBranch != 0 &&  dRadius-pt->m_dMaxLeft <= dDL )
+            if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
             { // we did the left, go down
                pt = pt->m_pLeftBranch;
             }
