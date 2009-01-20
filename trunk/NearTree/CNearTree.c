@@ -74,7 +74,7 @@ extern "C" {
 #else
 #define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0))
 #endif
-
+    
 #define max2(x,y) ((x)>=(y)?(x):(y))    
     
     /*
@@ -279,7 +279,7 @@ extern "C" {
     /*
      =======================================================================
      int CNearTreeNodeCreate ( CNearTreeHandle treehandle,  
-     CNearTreeNodeHandle FAR * treenodehandle) 
+                               CNearTreeNodeHandle FAR * treenodehandle)     
      
      Create a CNearTreeNode
      
@@ -390,9 +390,13 @@ extern "C" {
         
         int treenorm;
         
+        int treeflip;
+        
         if (!treehandle) return CNEARTREE_BAD_ARGUMENT;
         
         treenorm = treetype & CNEARTREE_NORM;
+        
+        treeflip = treetype & CNEARTREE_FLIP;
         
         if (!treenorm) treenorm = CNEARTREE_NORM_UNKNOWN;
         
@@ -407,8 +411,9 @@ extern "C" {
             return CNEARTREE_MALLOC_FAILED;
         }
         
-        (*treehandle)->m_iflags        = treetype;  /* no data, no children */
-        (*treehandle)->m_iflags       |= treenorm;
+        (*treehandle)->m_iflags        = treetype; /* no data, no children         */
+        (*treehandle)->m_iflags       |= treenorm; /* record the chosen norm       */
+        (*treehandle)->m_iflags       |= treeflip; /* record whether to flip       */
         (*treehandle)->m_szdimension   = treedim;  /* number of ints or doubles    */
         (*treehandle)->m_szsize        = 0;        /* number of nodes in the tree  */
         (*treehandle)->m_szdepth       = 0;        /* depth of in the tree         */
@@ -531,7 +536,7 @@ extern "C" {
         return CNEARTREE_SUCCESS;
 
     }
-    
+
     /*
      =======================================================================
      int CNearTreeGetDelayedSize (CNearTreeHandle treehandle, size_t FAR * size)
@@ -689,6 +694,7 @@ extern "C" {
         double dTempRight =  0.;
         double dTempLeft  =  0.;
         int errorcode = 0;
+        size_t index;
         
         if ( !treehandle || !treenodehandle || !coord ) return CNEARTREE_BAD_ARGUMENT;
         
@@ -701,7 +707,6 @@ extern "C" {
         }
         
         if ( !((treenodehandle->m_iflags)&CNEARTREE_FLAG_LEFT_DATA) ) {
-            size_t index;
             if (treehandle->m_iflags&CNEARTREE_TYPE_DOUBLE) {
                 for (index=0; index<treehandle->m_szdimension; index++)  {
                     ((double *)(treenodehandle->m_coordLeft))[index]=((double *)coord)[index];    	
@@ -735,6 +740,26 @@ extern "C" {
                 if ( (errorcode = CNearTreeNodeCreate(treehandle, &(treenodehandle->m_pRightBranch)))) return errorcode;
                 treenodehandle->m_iflags |= CNEARTREE_FLAG_RIGHT_CHILD;
                 treenodehandle->m_dMaxRight = dTempRight;
+                if (((treehandle->m_iflags)&CNEARTREE_FLIP)&&!((treenodehandle->m_iflags)&CNEARTREE_FLAG_RIGHT_CHILD)
+                    && (CNearTreeDist(treehandle,treenodehandle->m_coordLeft,treenodehandle->m_coordRight))< dTempRight) {
+                        if ( treenodehandle->m_dMaxRight < dTempRight ) 
+                            treenodehandle->m_dMaxRight = dTempRight;
+                        depth++;
+                        errorcode = CNearTreeNodeInsert(treehandle, treenodehandle->m_pRightBranch, 
+                                                        treenodehandle->m_coordRight,  
+                                                        treenodehandle->m_ptobjRight, depth);
+                        treenodehandle->m_ptobjRight = (void *)obj;    
+                        if (treehandle->m_iflags&CNEARTREE_TYPE_DOUBLE) {
+                            for (index=0; index<treehandle->m_szdimension; index++)  {
+                                ((double *)treenodehandle->m_coordRight)[index]=((double *)coord)[index];    	
+                            }
+                        } else {
+                            for (index=0; index<treehandle->m_szdimension; index++)  {
+                                ((int *)treenodehandle->m_coordRight)[index]=((int *)coord)[index];    	
+                            }
+                        }
+                        return errorcode;
+                    }
             }
             /* note that the next line assumes that m_dMaxRight is negative for a new node */
             if ( treenodehandle->m_dMaxRight < dTempRight ) 
@@ -746,6 +771,26 @@ extern "C" {
                 if ( (errorcode = CNearTreeNodeCreate(treehandle, &(treenodehandle->m_pLeftBranch)))) return errorcode;
                 treenodehandle->m_iflags |= CNEARTREE_FLAG_LEFT_CHILD;
                 treenodehandle->m_dMaxLeft = dTempLeft;
+                if (((treehandle->m_iflags)&CNEARTREE_FLIP)&&!((treenodehandle->m_iflags)&CNEARTREE_FLAG_LEFT_CHILD)
+                    && (CNearTreeDist(treehandle,treenodehandle->m_coordLeft,treenodehandle->m_coordRight))< dTempLeft) {
+                        if ( treenodehandle->m_dMaxLeft < dTempLeft ) 
+                            treenodehandle->m_dMaxLeft = dTempLeft;
+                        depth++;
+                        errorcode = CNearTreeNodeInsert(treehandle, treenodehandle->m_pLeftBranch, 
+                                                        treenodehandle->m_coordLeft,  
+                                                        treenodehandle->m_ptobjLeft, depth);
+                        treenodehandle->m_ptobjLeft = (void *)obj;    
+                        if (treehandle->m_iflags&CNEARTREE_TYPE_DOUBLE) {
+                            for (index=0; index<treehandle->m_szdimension; index++)  {
+                                ((double *)treenodehandle->m_coordLeft)[index]=((double *)coord)[index];    	
+                            }
+                        } else {
+                            for (index=0; index<treehandle->m_szdimension; index++)  {
+                                ((int *)treenodehandle->m_coordLeft)[index]=((int *)coord)[index];    	
+                            }
+                        }
+                        return errorcode;
+                    }
             }
             /* note that the next line assumes that m_dMaxLeft is negative for a new node */
             if ( treenodehandle->m_dMaxLeft < dTempLeft ) 
