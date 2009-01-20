@@ -41,13 +41,6 @@
 #include "TNear.h"
 #include "v.h"
 
-#define MYRAND_MAX 31767
-
-#ifdef USE_MINGW_RAND
-#define random(x) rand(x)
-#define srandom(x) srand(x)
-#endif
-
 int main ( int argc, char* argv[] )
 {
     CNearTree <v> vTree;
@@ -58,7 +51,7 @@ int main ( int argc, char* argv[] )
     
     if (argc <= 1) {
         srandom( (unsigned int)time( NULL ) );  /* use the current time to seed the
-                                                random number generator */
+                                                   random number generator */
     } else {
         srandom((unsigned int)atoi(argv[1]));
     }

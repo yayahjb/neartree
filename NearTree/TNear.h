@@ -75,16 +75,6 @@
 //    void Insert( T& t )
 //       where t is an object of the type v
 //
-//    void DelayedInsert( T& t )
-//       where t is an object of the type v, acumulates the object t
-//       for insertion in random order before the first search
-//       or on execution of CompleteDelayedInsert(blocksize)
-//
-//    void CompleteDelayedInsert( void )
-//       forces actual insertion of objects queued by DelayedInsert
-//       using a partially randomized order of insertion
-//       to help balance the tree
-//
 //    bool NearestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) const
 //       dRadius is the largest radius within which to search; make it
 //          very large if you want to include every point that was loaded; dRadius
@@ -109,10 +99,23 @@
 //       t is the probe point, used to search in the group of points Insert'ed
 //       return value is the number of objects found within the search radius
 //
-//
 //    ~CNearTree( void )  // destructor
 //       invoked by  vTree.CNeartree<v>::~CNearTree
 //       for an object vTree of some type v
+//
+//    void DelayedInsert( void ) Holds objects in a queue for insertion later when CompleteDelayInsert
+//       is called or a search is called.
+//
+//    void CompleteDelayedInsert( void ) Calls Insert for all delayed objects. sqrt(n) are inserted
+//       by random choice. The rest are inserted in linear order as originally queued.
+//
+//    size_t GetDeferredSize( void ) Returns the number of delayed objects that have not
+//       yet been Insert'ed
+//
+//    size_t GetTotalSize( void ) Returns the number of objects that have been Insert'ed plus
+//       those DelayInsert'ed
+//
+//    size_t GetDepth( void ) Returns the maximum tree layers from the root
 
 // So a complete program is:
 //
@@ -135,6 +138,15 @@
 #if !defined(TNEAR_H_INCLUDED)
 #define TNEAR_H_INCLUDED
 
+#include <stdlib.h>
+#ifdef USE_MINGW_RAND
+#define random(x) rand(x)
+#define srandom(x) srand(x)
+#endif
+
+
+#define MYRAND_MAX  32767
+
 #include <limits.h>
 #include <float.h>
 #include <math.h>
@@ -153,31 +165,33 @@
 template <typename T> class CNearTree
 {
 
-   // Insert copies the input objects into a binary NEAR tree. When a node has
-   // two entries, a descending node is used or created. The current datum is
-   // put into the branch descending from the nearer of the two
-   // objects in the current node.
-
-   // NearestNeighbor retrieves the object nearest to some probe by descending
-   // the tree to search out the appropriate object. Speed is gained
-   // by pruning the tree if there can be no data below that are
-   // nearer than the best so far found.
-
-   // The tree is built in time O(n log n), and retrievals take place in
-   // time O(log n).
-
-
-    T *             m_ptLeft;            // left object (of type T) stored in this node
-    T *             m_ptRight;           // right object (of type T) stored in this node
-    double          m_dMaxLeft;          // longest distance from the left object to
-                                         // anything below it in the tree
-    double          m_dMaxRight;         // longest distance from the right object to
-                                         // anything below it in the tree
-    CNearTree *     m_pLeftBranch;       // tree descending from the left object
-    CNearTree *     m_pRightBranch;      // tree descending from the right object
-    std::vector<T*> m_DelayedPointers;   // objects queued for insertion, possibly in random order
-    std::vector<T>  m_DelayedInsertions; // objects queued for insertion, possibly in random order
-
+    // Insert copies the input objects into a binary NEAR tree. When a node has
+    // two entries, a descending node is used or created. The current datum is
+    // put into the branch descending from the nearer of the two
+    // objects in the current node.
+    
+    // NearestNeighbor retrieves the object nearest to some probe by descending
+    // the tree to search out the appropriate object. Speed is gained
+    // by pruning the tree if there can be no data below that are
+    // nearer than the best so far found.
+    
+    // The tree is built in time O(n log n), and retrievals take place in
+    // time O(log n).
+    
+    
+    T *               m_ptLeft;            // left object (of type T) stored in this node
+    T *               m_ptRight;           // right object (of type T) stored in this node
+    double            m_dMaxLeft;          // longest distance from the left object to
+                                           // anything below it in the tree
+    double            m_dMaxRight;         // longest distance from the right object to
+                                           // anything below it in the tree
+    CNearTree *       m_pLeftBranch;       // tree descending from the left object
+    CNearTree *       m_pRightBranch;      // tree descending from the right object
+    std::vector<long> m_DelayedIndices;    // objects queued for insertion, possibly in random order
+    std::vector<T>    m_DelayedInsertions; // objects queued for insertion, possibly in random order
+    size_t            m_DeepestDepth;      // maximum diameter of the tree
+    size_t            m_InsertedSize;      // objects actually inserted (queued ones are not counted)
+    
 public:
 
 
@@ -191,34 +205,39 @@ public:
 //
 //=======================================================================
 
-   CNearTree(void)  // constructor
-   {
-      m_ptLeft       = 0;
-      m_ptRight      = 0;
-      m_pLeftBranch  = 0;
-      m_pRightBranch = 0;
-      m_dMaxLeft     = DBL_MIN;
-      m_dMaxRight    = DBL_MIN;
-   }  //  CNearTree constructor
-
+    CNearTree(void)  // constructor
+    {
+        m_ptLeft            = 0;
+        m_ptRight           = 0;
+        m_pLeftBranch       = 0;
+        m_pRightBranch      = 0;
+        m_dMaxLeft          = DBL_MIN;
+        m_dMaxRight         = DBL_MIN;
+        m_DeepestDepth      = 0;
+        m_InsertedSize      = 0;
+        
+    }  //  CNearTree constructor
+    
 //=======================================================================
 //  ~CNearTree ( )
 //
 //  Destructor for class CNearTree
 //
 //=======================================================================
-
-   ~CNearTree(void)  // destructor
-   {
-      delete m_pLeftBranch  ;  m_pLeftBranch  =0;
-      delete m_pRightBranch ;  m_pRightBranch =0;
-      delete m_ptLeft       ;  m_ptLeft       =0;
-      delete m_ptRight      ;  m_ptRight      =0;
-
-      m_dMaxLeft     = DBL_MIN;
-      m_dMaxRight    = DBL_MIN;
-   }  //  ~CNearTree
-
+    
+    ~CNearTree(void)  // destructor
+    {
+        delete m_pLeftBranch  ;  m_pLeftBranch  =0;
+        delete m_pRightBranch ;  m_pRightBranch =0;
+        delete m_ptLeft       ;  m_ptLeft       =0;
+        delete m_ptRight      ;  m_ptRight      =0;
+        
+        m_dMaxLeft     = DBL_MIN;
+        m_dMaxRight    = DBL_MIN;
+        m_DeepestDepth      = 0;
+        m_InsertedSize      = 0;
+    }  //  ~CNearTree
+    
 //=======================================================================
 //  empty ( )
 //
@@ -228,7 +247,7 @@ public:
     
     bool empty( ) const
     {
-        return( m_ptLeft == 0 );
+        return( m_ptLeft == 0 && m_DelayedInsertions.empty( ) );
     }
     
 //=======================================================================
@@ -245,46 +264,14 @@ public:
 //  into a node descending from the nearer of those positions
 //  when they are both already used.
 //
-//=======================================================================
-   void Insert( const T& t )
-   {
-      // do a bit of precomputing if it is possible so that we can
-      // reduce the number of calls to operator 'double' as much as possible;
-      // 'double' might use square roots in some cases
-      double dTempRight =  0;
-      double dTempLeft  =  0;
-
-      if ( m_ptRight  != 0 )
-      {
-         dTempRight  = ::fabs( double( t - *m_ptRight ));
-         dTempLeft   = ::fabs( double( t - *m_ptLeft  ));
-      }
-
-      if ( m_ptLeft == 0 )
-      {
-         m_ptLeft = new T( t );
-      }
-      else if ( m_ptRight == 0 )
-      {
-         m_ptRight   = new T( t );
-      }
-      else if ( dTempLeft > dTempRight )
-      {
-         if ( m_pRightBranch == 0 ) m_pRightBranch = new CNearTree;
-         // note that the next line assumes that m_dMaxRight is negative for a new node
-         if ( m_dMaxRight < dTempRight ) m_dMaxRight = dTempRight;
-         m_pRightBranch->Insert( t );
-      }
-      else  // ((double)(t - *m_tLeft) <= (double)(t - *m_tRight) )
-      {
-         if ( m_pLeftBranch  == 0 ) m_pLeftBranch  = new CNearTree;
-         // note that the next line assumes that m_dMaxLeft is negative for a new node
-         if ( m_dMaxLeft < dTempLeft ) m_dMaxLeft  = dTempLeft;
-         m_pLeftBranch->Insert( t );
-      }
-
-   }  //  Insert
-
+    void Insert( const T& t )
+    {
+        size_t localDepth = 0;
+        Inserter( t, localDepth );
+        m_DeepestDepth = std::max( localDepth, m_DeepestDepth );
+        ++m_InsertedSize;
+    }
+    
 //=======================================================================
 //  bool NearestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) const
 //
@@ -301,24 +288,24 @@ public:
 //    the return value is true only if a point was found
 //
 //=======================================================================
-   bool NearestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) const
-   {
-      if( dRadius < 0.0 ) 
-      {
-         return( false );
-      }
-      else if( this->empty( ) )
-      {
-         return( false );
-      }
-      else
-      {
-         const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-         double dSearchRadius = dRadius;
-         return ( const_cast<CNearTree*>(this)->Nearest ( dSearchRadius, tClosest, t ) );
-      }
-   }  //  NearestNeighbor
-
+    bool NearestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) const
+    {
+        if( dRadius < 0.0 ) 
+        {
+            return( false );
+        }
+        else if( this->empty( ) )
+        {
+            return( false );
+        }
+        else
+        {
+            const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+            double dSearchRadius = dRadius;
+            return ( const_cast<CNearTree*>(this)->Nearest ( dSearchRadius, tClosest, t ) );
+        }
+    }  //  NearestNeighbor
+    
 //=======================================================================
 //  bool FarthestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) const
 //
@@ -335,20 +322,20 @@ public:
 //             an empty tree)
 //
 //=======================================================================
-   bool FarthestNeighbor ( T& tFarthest,   const T& t ) const
-   {
-      if( this->empty( ) )
-      {
-         return( false );
-      }
-      else
-      {
-         const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-         double dSearchRadius = DBL_MIN;
-         return ( const_cast<CNearTree*>(this)->Farthest ( dSearchRadius, tFarthest, t ) );
-      }
-   }  //  FarthestNeighbor
-
+    bool FarthestNeighbor ( T& tFarthest,   const T& t ) const
+    {
+        if( this->empty( ) )
+        {
+            return( false );
+        }
+        else
+        {
+            const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+            double dSearchRadius = DBL_MIN;
+            return ( const_cast<CNearTree*>(this)->Farthest ( dSearchRadius, tFarthest, t ) );
+        }
+    }  //  FarthestNeighbor
+    
 //=======================================================================
 //  long FindInSphere ( const double& dRadius,  std::vector<  T >& tClosest,   const T& t ) const
 //
@@ -363,14 +350,14 @@ public:
 //    return value is the number of points found within dRadius of the probe point
 //
 //=======================================================================
-   long FindInSphere ( const double& dRadius,  std::vector<  T >& tClosest,   const T& t ) const
-   {
-      // clear the contents of the return vector so that things don't accidentally accumulate
-      tClosest.clear( );
-         const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-      return ( const_cast<CNearTree*>(this)->InSphere( dRadius, tClosest, t ) );
-   }  //  FindInSphere
-
+    long FindInSphere ( const double& dRadius,  std::vector<  T >& tClosest,   const T& t ) const
+    {
+        // clear the contents of the return vector so that things don't accidentally accumulate
+        tClosest.clear( );
+        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+        return ( const_cast<CNearTree*>(this)->InSphere( dRadius, tClosest, t ) );
+    }  //  FindInSphere
+    
     
 //=======================================================================
 //  void DelayedInsert ( const T& t )
@@ -390,12 +377,12 @@ public:
 //  to give a relatively balanced tree even if the data are strongly sorted.
 //
 //=======================================================================
-   void DelayedInsert( const T& t )
-   {
-      m_DelayedInsertions.push_back( t );
-      m_DelayedPointers  .push_back( &m_DelayedInsertions.back( ) );
-   };
-
+    void DelayedInsert( const T& t )
+    {
+        m_DelayedInsertions.push_back( t );
+        m_DelayedIndices   .push_back( (long)m_DelayedInsertions.size( ) - 1 );
+    };
+    
 //=======================================================================
 //  void CompleteDelayedInsert( void )
 //
@@ -407,51 +394,142 @@ public:
 //  sequence as they were entered.
 //
 //=======================================================================
-   void CompleteDelayedInsert( void )
-   {
-      if( m_DelayedInsertions.empty( ) )
-      {
-         return;
-      }
-
-      // Insert a random selection of the objects
-      const size_t vectorSize = m_DelayedInsertions.size( );
-      const size_t toRandomlyInsert = (size_t)::sqrtl( vectorSize );
-      for( size_t i=0; i<toRandomlyInsert; ++i )
-      {
-         size_t n = (size_t)((double)(vectorSize+1u) * (double)rand( ) / (double)RAND_MAX);
-         // Find the next pointer that hasn't already had its object "Insert"ed
-         // We can do this blindly since sqrt(n)<=n for all cases. n=1 would be the only 
-         // bad case here, and that will not trigger the later loop.
-         while( m_DelayedPointers[n] == 0 )
-         {
-            ++n;
-            n = n% vectorSize;
-         }
-         Insert( m_DelayedInsertions[n] );
-         m_DelayedPointers[n] = 0;         
-      }
-
-      // finish by inserting all the remaining objects
-      for( size_t i=0; i<vectorSize; ++i )
-      {
-         if( m_DelayedPointers[i] != 0 )
-         {
-            Insert( m_DelayedInsertions[i] );
-         }
-      }
-
-      // now get rid of the temporary storage that was used for delayed 
-      // insertions (fast way, faster than clear() )
-      std::vector<T*> m_DelayedPointersTemp;   
-      std::vector<T>  m_DelayedInsertionsTemp;
-      m_DelayedPointersTemp  .swap( m_DelayedPointers) ;
-      m_DelayedInsertionsTemp.swap( m_DelayedInsertions );
-   };
-
-
-   private:
+    void CompleteDelayedInsert( void )
+    {
+        if( m_DelayedInsertions.empty( ) )
+        {
+            return;
+        }
+        
+        // Insert a random selection of the objects
+        const size_t vectorSize = m_DelayedInsertions.size( );
+        const size_t toRandomlyInsert = (size_t)::sqrtl( vectorSize );
+        for( size_t i=0; i<toRandomlyInsert; ++i )
+        {
+            size_t n = (size_t)((double)(vectorSize-1u) * (double)(random( )%MYRAND_MAX) / (double) MYRAND_MAX);
+            random( ); random( );
+            random( ); random( );
+            // Find the next pointer that hasn't already had its object "Insert"ed
+            // We can do this blindly since sqrt(n)<=n for all cases. n=1 would be the only 
+            // bad case here, and that will not trigger the later loop.
+            while( m_DelayedIndices[n] == -1 )
+            {
+                ++n;
+                n = n% vectorSize;
+            }
+            Insert( m_DelayedInsertions[n] );
+            m_DelayedIndices[n] = -1;         
+        }
+        
+        // finish by inserting all the remaining objects
+        for( size_t i=0; i<vectorSize; ++i )
+        {
+            if( m_DelayedIndices[i] != -1 )
+            {
+                Insert( m_DelayedInsertions[i] );
+            }
+        }
+        
+        // now get rid of the temporary storage that was used for delayed 
+        // insertions (fast way, faster than clear() )
+        std::vector<long> DelayedPointersTemp;   
+        std::vector<T>  DelayedInsertionsTemp;
+        DelayedPointersTemp  .swap( m_DelayedIndices );
+        DelayedInsertionsTemp.swap( m_DelayedInsertions );
+    };
+    
 //=======================================================================
+//  size_t GetDeferredSize(  void )
+//
+//  The number of objects currently queued for insertion.
+//
+//=======================================================================
+    size_t GetDeferredSize( void )
+    {
+        return( m_DelayedInsertions.size( ) );
+    };
+    
+//=======================================================================
+//  size_t GetTotalSize(  void )
+//
+//  The total number of objects that have been inserted plus those
+//  queued for insertion.
+//
+//=======================================================================
+    size_t GetTotalSize( void )
+    {
+        return( m_InsertedSize + m_DelayedInsertions.size( ) );
+    };
+
+//=======================================================================
+//  size_t GetDepth(  void )
+//
+//  The greatest depth of the tree (1-based) from the root.
+//
+//=======================================================================
+    size_t GetDepth(  void )
+    {
+        return( m_DeepestDepth );
+    };
+    
+private:
+//=======================================================================
+//  void Inserter ( const T& t( const T& t, size_t& localDepth )
+//
+//  Function to insert some "point" as an object into a CNearTree for
+//  later searching
+//
+//     t is an object of the templated type which is to be inserted into a
+//     Neartree
+//
+//     localDepth is the returned deepest tree level reached for the current insert
+//
+//  Three possibilities exist: put the datum into the left
+//  postion (first test),into the right position, or else
+//  into a node descending from the nearer of those positions
+//  when they are both already used.
+//
+//=======================================================================
+    void Inserter( const T& t, size_t& localDepth )
+    {
+        // do a bit of precomputing if it is possible so that we can
+        // reduce the number of calls to operator 'double' as much as possible;
+        // 'double' might use square roots in some cases
+        double dTempRight =  0;
+        double dTempLeft  =  0;
+        ++localDepth;
+        
+        if ( m_ptRight  != 0 )
+        {
+            dTempRight  = ::fabs( double( t - *m_ptRight ));
+            dTempLeft   = ::fabs( double( t - *m_ptLeft  ));
+        }
+        
+        if ( m_ptLeft == 0 )
+        {
+            m_ptLeft = new T( t );
+        }
+        else if ( m_ptRight == 0 )
+        {
+            m_ptRight   = new T( t );
+        }
+        else if ( dTempLeft > dTempRight )
+        {
+            if ( m_pRightBranch == 0 ) m_pRightBranch = new CNearTree;
+            // note that the next line assumes that m_dMaxRight is negative for a new node
+            if ( m_dMaxRight < dTempRight ) m_dMaxRight = dTempRight;
+            m_pRightBranch->Inserter( t, localDepth );
+        }
+        else  // ((double)(t - *m_tLeft) <= (double)(t - *m_tRight) )
+        {
+            if ( m_pLeftBranch  == 0 ) m_pLeftBranch  = new CNearTree;
+            // note that the next line assumes that m_dMaxLeft is negative for a new node
+            if ( m_dMaxLeft < dTempLeft ) m_dMaxLeft  = dTempLeft;
+            m_pLeftBranch->Inserter( t, localDepth );
+        }
+    }  //  Inserter
+
+   //=======================================================================
 //  long InSphere ( const double& dRadius,  std::vector<  T >& tClosest,   const T& t ) const
 //
 //  Private function to search a Neartree for the object closest to some probe point, t.
@@ -464,67 +542,67 @@ public:
 //    the return value is the number of points found within dRadius of the probe
 //
 //=======================================================================
-   long InSphere ( const double& dRadius,  std::vector<  T >& tClosest,   const T& t ) const
-   {
-      std::vector <CNearTree<T>* > sStack;
-      long lReturn = 0;
-      enum  { left, right, end } eDir;
-      eDir = left; // examine the left nodes first
-      CNearTree* pt = const_cast<CNearTree*>(this);
-      if (!(pt->m_ptLeft)) return false; // test for empty
-      while ( ! ( eDir == end && sStack.empty( ) ) )
-      {
-         if ( eDir == right )
-         {
-            const double dDR = ::fabs(double( t - *(pt->m_ptRight) ));
-            if ( dDR <= dRadius )
+    long InSphere ( const double& dRadius,  std::vector<  T >& tClosest,   const T& t ) const
+    {
+        std::vector <CNearTree<T>* > sStack;
+        long lReturn = 0;
+        enum  { left, right, end } eDir;
+        eDir = left; // examine the left nodes first
+        CNearTree* pt = const_cast<CNearTree*>(this);
+        if (!(pt->m_ptLeft)) return false; // test for empty
+        while ( ! ( eDir == end && sStack.empty( ) ) )
+        {
+            if ( eDir == right )
             {
-               ++lReturn;
-               tClosest.push_back( *pt->m_ptRight);
-            }
+                const double dDR = ::fabs(double( t - *(pt->m_ptRight) ));
+                if ( dDR <= dRadius )
+                {
+                    ++lReturn;
+                    tClosest.push_back( *pt->m_ptRight);
+                }
                 if ( pt->m_pRightBranch != 0 && (TRIANG(dDR,pt->m_dMaxRight,dRadius)))
-            { // we did the left and now we finished the right, go down
-               pt = pt->m_pRightBranch;
-               eDir = left;
+                { // we did the left and now we finished the right, go down
+                    pt = pt->m_pRightBranch;
+                    eDir = left;
+                }
+                else
+                {
+                    eDir = end;
+                }
             }
-            else
+            if ( eDir == left )
             {
-               eDir = end;
-            }
-         }
-         if ( eDir == left )
-         {
-            const double dDL = ::fabs(double( t - *(pt->m_ptLeft) ));
-            if ( dDL <= dRadius )
-            {
-               ++lReturn;
-               tClosest.push_back( *pt->m_ptLeft);
-            }
-            if ( pt->m_ptRight != 0 ) // only stack if there's a right object
-            {
-               sStack.push_back( pt );
-            }
+                const double dDL = ::fabs(double( t - *(pt->m_ptLeft) ));
+                if ( dDL <= dRadius )
+                {
+                    ++lReturn;
+                    tClosest.push_back( *pt->m_ptLeft);
+                }
+                if ( pt->m_ptRight != 0 ) // only stack if there's a right object
+                {
+                    sStack.push_back( pt );
+                }
                 if ( pt->m_pLeftBranch != 0 && (TRIANG(dDL,pt->m_dMaxLeft,dRadius)))
-            { // we did the left, go down
-               pt = pt->m_pLeftBranch;
+                { // we did the left, go down
+                    pt = pt->m_pLeftBranch;
+                }
+                else
+                {
+                    eDir = end;
+                }
             }
-            else
+            
+            if ( eDir == end && !sStack.empty( ) )
             {
-               eDir = end;
+                pt = sStack.back( );
+                sStack.pop_back( );
+                eDir = right;
             }
-         }
-
-         if ( eDir == end && !sStack.empty( ) )
-         {
-            pt = sStack.back( );
+        }
+        while ( !sStack.empty( ) ) // for safety !!!
             sStack.pop_back( );
-            eDir = right;
-         }
-      }
-      while ( !sStack.empty( ) ) // for safety !!!
-         sStack.pop_back( );
-      return ( lReturn );
-   }  //  InSphere
+        return ( lReturn );
+    }  //  InSphere
 
 //=======================================================================
 //  bool Nearest ( double& dRadius,  T& tClosest,   const T& t ) const
@@ -539,69 +617,69 @@ public:
 //    the return value is true only if a point was found within dRadius
 //
 //=======================================================================
-   bool Nearest ( double& dRadius,  T& tClosest,   const T& t ) const
-   {
-      std::vector <CNearTree<T>* > sStack;
-      enum  { left, right, end } eDir;
-      eDir = left; // examine the left nodes first
-      CNearTree* pt = const_cast<CNearTree*>(this);
-      T* pClosest = 0;
-      if (!(pt->m_ptLeft)) return false; // test for empty
-      while ( ! ( eDir == end && sStack.empty( ) ) )
-      {
-         if ( eDir == right )
-         {
-            const double dDR = ::fabs(double( t - *(pt->m_ptRight) ));
-            if ( dDR < dRadius )
+    bool Nearest ( double& dRadius,  T& tClosest,   const T& t ) const
+    {
+        std::vector <CNearTree<T>* > sStack;
+        enum  { left, right, end } eDir;
+        eDir = left; // examine the left nodes first
+        CNearTree* pt = const_cast<CNearTree*>(this);
+        T* pClosest = 0;
+        if (!(pt->m_ptLeft)) return false; // test for empty
+        while ( ! ( eDir == end && sStack.empty( ) ) )
+        {
+            if ( eDir == right )
             {
-               dRadius = dDR;
-               pClosest = pt->m_ptRight;
+                const double dDR = ::fabs(double( t - *(pt->m_ptRight) ));
+                if ( dDR < dRadius )
+                {
+                    dRadius = dDR;
+                    pClosest = pt->m_ptRight;
+                }
+                if ( pt->m_pRightBranch != 0 && (TRIANG(dDR,pt->m_dMaxRight,dRadius)))
+                { // we did the left and now we finished the right, go down
+                    pt = pt->m_pRightBranch;
+                    eDir = left;
+                }
+                else
+                {
+                    eDir = end;
+                }
             }
-            if ( pt->m_pRightBranch != 0 && (TRIANG(dDR,pt->m_dMaxRight,dRadius)))
-            { // we did the left and now we finished the right, go down
-               pt = pt->m_pRightBranch;
-               eDir = left;
-            }
-            else
+            if ( eDir == left )
             {
-               eDir = end;
+                const double dDL = ::fabs(double( t - *(pt->m_ptLeft) ));
+                if ( dDL < dRadius )
+                {
+                    dRadius = dDL;
+                    pClosest = pt->m_ptLeft;
+                }
+                if ( pt->m_ptRight != 0 ) // only stack if there's a right object
+                {
+                    sStack.push_back( pt );
+                }
+                if ( pt->m_pLeftBranch != 0 && (TRIANG(dDL,pt->m_dMaxLeft,dRadius)))
+                { // we did the left, go down
+                    pt = pt->m_pLeftBranch;
+                }
+                else
+                {
+                    eDir = end;
+                }
             }
-         }
-         if ( eDir == left )
-         {
-            const double dDL = ::fabs(double( t - *(pt->m_ptLeft) ));
-            if ( dDL < dRadius )
+            
+            if ( eDir == end && !sStack.empty( ) )
             {
-               dRadius = dDL;
-               pClosest = pt->m_ptLeft;
+                pt = sStack.back( );
+                sStack.pop_back( );
+                eDir = right;
             }
-            if ( pt->m_ptRight != 0 ) // only stack if there's a right object
-            {
-               sStack.push_back( pt );
-            }
-            if ( pt->m_pLeftBranch != 0 && (TRIANG(dDL,pt->m_dMaxLeft,dRadius)))
-            { // we did the left, go down
-               pt = pt->m_pLeftBranch;
-            }
-            else
-            {
-               eDir = end;
-            }
-         }
-
-         if ( eDir == end && !sStack.empty( ) )
-         {
-            pt = sStack.back( );
+        }
+        while ( !sStack.empty( ) ) // for safety !!!
             sStack.pop_back( );
-            eDir = right;
-         }
-      }
-      while ( !sStack.empty( ) ) // for safety !!!
-         sStack.pop_back( );
-      if ( pClosest != 0 )
-         tClosest = *pClosest;
-      return ( pClosest != 0 );
-   };   // Nearest
+        if ( pClosest != 0 )
+            tClosest = *pClosest;
+        return ( pClosest != 0 );
+    };   // Nearest
 
 //=======================================================================
 //  bool Farthest ( double& dRadius,  T& tFarthest,   const T& t ) const
@@ -617,69 +695,69 @@ public:
 //             an empty tree)
 //
 //=======================================================================
-   bool Farthest ( double& dRadius,  T& tFarthest,   const T& t )
-   {
-      std::vector <CNearTree<T>* > sStack;
-      enum  { left, right, end } eDir;
-      eDir = left; // examine the left nodes first
-      CNearTree* pt = this;
-      T* pFarthest = 0;
-      if (!(pt->m_ptLeft)) return false; // test for empty
-      while ( ! ( eDir == end && sStack.empty( ) ) )
-      {
-         if ( eDir == right )
-         {
-            const double dDR = ::fabs(double( t - *(pt->m_ptRight) ));
-            if ( dDR >= dRadius )
+    bool Farthest ( double& dRadius,  T& tFarthest,   const T& t )
+    {
+        std::vector <CNearTree<T>* > sStack;
+        enum  { left, right, end } eDir;
+        eDir = left; // examine the left nodes first
+        CNearTree* pt = this;
+        T* pFarthest = 0;
+        if (!(pt->m_ptLeft)) return false; // test for empty
+        while ( ! ( eDir == end && sStack.empty( ) ) )
+        {
+            if ( eDir == right )
             {
-               dRadius = dDR;
-               pFarthest = pt->m_ptRight;
+                const double dDR = ::fabs(double( t - *(pt->m_ptRight) ));
+                if ( dDR >= dRadius )
+                {
+                    dRadius = dDR;
+                    pFarthest = pt->m_ptRight;
+                }
+                if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight))
+                { // we did the left and now we finished the right, go down
+                    pt = pt->m_pRightBranch;
+                    eDir = left;
+                }
+                else
+                {
+                    eDir = end;
+                }
             }
-            if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight))
-            { // we did the left and now we finished the right, go down
-               pt = pt->m_pRightBranch;
-               eDir = left;
-            }
-            else
+            if ( eDir == left )
             {
-               eDir = end;
+                const double dDL = ::fabs(double( t - *(pt->m_ptLeft) ));
+                if ( dDL >= dRadius )
+                {
+                    dRadius = dDL;
+                    pFarthest = pt->m_ptLeft;
+                }
+                if ( pt->m_ptRight != 0 ) // only stack if there's a right object
+                {
+                    sStack.push_back( pt );
+                }
+                if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
+                { // we did the left, go down
+                    pt = pt->m_pLeftBranch;
+                }
+                else
+                {
+                    eDir = end;
+                }
             }
-         }
-         if ( eDir == left )
-         {
-            const double dDL = ::fabs(double( t - *(pt->m_ptLeft) ));
-            if ( dDL >= dRadius )
+            
+            if ( eDir == end && !sStack.empty( ) )
             {
-               dRadius = dDL;
-               pFarthest = pt->m_ptLeft;
+                pt = sStack.back( );
+                sStack.pop_back( );
+                eDir = right;
             }
-            if ( pt->m_ptRight != 0 ) // only stack if there's a right object
-            {
-               sStack.push_back( pt );
-            }
-            if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
-            { // we did the left, go down
-               pt = pt->m_pLeftBranch;
-            }
-            else
-            {
-               eDir = end;
-            }
-         }
-
-         if ( eDir == end && !sStack.empty( ) )
-         {
-            pt = sStack.back( );
+        }
+        while ( !sStack.empty( ) ) // for safety !!!
             sStack.pop_back( );
-            eDir = right;
-         }
-      }
-      while ( !sStack.empty( ) ) // for safety !!!
-         sStack.pop_back( );
-      if ( pFarthest != 0 )
-         tFarthest = *pFarthest;
-      return ( pFarthest != 0 );
-   };   // Farthest
+        if ( pFarthest != 0 )
+            tFarthest = *pFarthest;
+        return ( pFarthest != 0 );
+    };   // Farthest
 
 }; // template class TNear
 

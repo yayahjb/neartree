@@ -1,78 +1,69 @@
 
-Trial 0 from probe point {0.945321,0.945321,11.082}
- ***** nothing within 0.65 of {0.945321,0.945321,11.082}
- Farthest distance 17.6054 to {10,10,-1}
+Trial 0 from probe point {2.45918,2.45918,8.81123}
+ ***** nothing within 0.65 of {2.45918,2.45918,8.81123}
+ Farthest distance 14.491 to {10,10,-1}
  -------------------------------------------------------------
-Trial 1 from probe point {2.93858,2.93858,8.09212}
- Closest distance 0.126612 to {3,3,8}
- Farthest distance 13.5053 to {10,10,-1}
- Returned 1 items within 0.7 of {2.93858,2.93858,8.09212}
-	{3,3,8}
- -------------------------------------------------------------
-Trial 2 from probe point {2.18025,2.18025,9.22963}
- Closest distance 0.343086 to {2,2,9}
- Farthest distance 15.0646 to {10,10,-1}
- Returned 1 items within 0.75 of {2.18025,2.18025,9.22963}
-	{2,2,9}
- -------------------------------------------------------------
-Trial 3 from probe point {4.13448,4.13448,6.29828}
- Closest distance 0.353753 to {4,4,6}
- Farthest distance 11.0487 to {10,10,-1}
- Returned 2 items within 0.8 of {4.13448,4.13448,6.29828}
-	{4,4,6}
+Trial 1 from probe point {3.65246,3.65246,7.02132}
+ Closest distance 0.491965 to {4,4,7}
+ Farthest distance 12.0384 to {10,10,-1}
+ Returned 1 items within 0.7 of {3.65246,3.65246,7.02132}
 	{4,4,7}
  -------------------------------------------------------------
-Trial 4 from probe point {4.70772,4.70772,5.43843}
- Closest distance 0.60256 to {5,5,5}
- Farthest distance 10.3252 to {-1,-1,-1}
- Returned 2 items within 0.85 of {4.70772,4.70772,5.43843}
+Trial 2 from probe point {4.85366,4.85366,5.2195}
+ Closest distance 0.30168 to {5,5,5}
+ Farthest distance 10.3544 to {-1,-1,-1}
+ Returned 1 items within 0.75 of {4.85366,4.85366,5.2195}
 	{5,5,5}
-	{5,5,6}
  -------------------------------------------------------------
-Trial 5 from probe point {9.23002,9.23002,-1.34503}
- Closest distance 0.474195 to {9,9,-1}
- Farthest distance 18.3852 to {-1,-1,10}
- Returned 3 items within 0.9 of {9.23002,9.23002,-1.34503}
+Trial 3 from probe point {8.90255,8.90255,-0.853832}
+ Closest distance 0.200889 to {9,9,-1}
+ Farthest distance 17.718 to {-1,-1,10}
+ Returned 1 items within 0.8 of {8.90255,8.90255,-0.853832}
+	{9,9,-1}
+ -------------------------------------------------------------
+Trial 4 from probe point {1.33915,1.33915,10.4913}
+ Closest distance 0.686583 to {1,1,10}
+ Farthest distance 16.7949 to {10,10,-1}
+ Returned 1 items within 0.85 of {1.33915,1.33915,10.4913}
+	{1,1,10}
+ -------------------------------------------------------------
+Trial 5 from probe point {9.20316,9.20316,-1.30474}
+ Closest distance 0.418829 to {9,9,-1}
+ Farthest distance 18.3305 to {-1,-1,10}
+ Returned 3 items within 0.9 of {9.20316,9.20316,-1.30474}
 	{10,9,-1}
 	{9,9,-1}
 	{9,10,-1}
  -------------------------------------------------------------
-Trial 6 from probe point {7.78009,7.78009,0.829871}
- Closest distance 0.354497 to {8,8,1}
- Farthest distance 15.436 to {-1,-1,10}
- Returned 4 items within 0.95 of {7.78009,7.78009,0.829871}
-	{8,7,1}
-	{8,8,0}
-	{8,8,1}
-	{7,8,1}
+Trial 6 from probe point {9.45372,9.45372,-1.68058}
+ Closest distance 0.935365 to {9,9,-1}
+ Farthest distance 18.8413 to {-1,-1,10}
+ Returned 1 items within 0.95 of {9.45372,9.45372,-1.68058}
+	{9,9,-1}
  -------------------------------------------------------------
-Trial 7 from probe point {0.987188,0.987188,11.0192}
- ***** nothing within 1 of {0.987188,0.987188,11.0192}
- Farthest distance 17.5192 to {10,10,-1}
+Trial 7 from probe point {1.64556,1.64556,10.0317}
+ Closest distance 0.502256 to {2,2,10}
+ Farthest distance 16.1645 to {10,10,-1}
+ Returned 4 items within 1 of {1.64556,1.64556,10.0317}
+	{2,1,10}
+	{2,2,10}
+	{1,1,10}
+	{1,2,10}
  -------------------------------------------------------------
-Trial 8 from probe point {5.50162,5.50162,4.24757}
- Closest distance 0.747029 to {6,6,4}
- Farthest distance 10.8459 to {-1,-1,10}
- Returned 8 items within 1.05 of {5.50162,5.50162,4.24757}
-	{6,5,4}
-	{6,5,5}
-	{6,6,4}
-	{6,6,5}
-	{5,5,4}
-	{5,5,5}
-	{5,6,4}
-	{5,6,5}
- -------------------------------------------------------------
-Trial 9 from probe point {7.38502,7.38502,1.42247}
- Closest distance 0.689175 to {7,7,1}
- Farthest distance 14.6353 to {-1,-1,10}
- Returned 8 items within 1.1 of {7.38502,7.38502,1.42247}
-	{8,7,1}
-	{8,7,2}
-	{8,8,1}
-	{8,8,2}
-	{7,7,1}
+Trial 8 from probe point {6.54439,6.54439,2.68342}
+ Closest distance 0.717905 to {7,7,3}
+ Farthest distance 12.9371 to {-1,-1,10}
+ Returned 8 items within 1.05 of {6.54439,6.54439,2.68342}
+	{7,6,2}
+	{7,6,3}
 	{7,7,2}
-	{7,8,1}
-	{7,8,2}
+	{7,7,3}
+	{6,6,2}
+	{6,6,3}
+	{6,7,2}
+	{6,7,3}
+ -------------------------------------------------------------
+Trial 9 from probe point {0.775781,0.775781,11.3363}
+ ***** nothing within 1.1 of {0.775781,0.775781,11.3363}
+ Farthest distance 17.9543 to {10,10,-1}
  -------------------------------------------------------------
