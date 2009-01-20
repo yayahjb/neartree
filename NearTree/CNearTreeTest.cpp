@@ -1000,7 +1000,7 @@ void testBigVector(  )
     const size_t insertedSize = tree.GetTotalSize( );
     if (depth > (insertedSize+1)/4)  {
         ++g_errorCount;
-        fprintf(stdout, "testBigVector:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (insigned long)(insertedSize+1)/4 );
+        fprintf(stdout, "testBigVector:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (unsigned long)(insertedSize+1)/4 );
     }
     
 }
