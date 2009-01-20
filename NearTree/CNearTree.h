@@ -124,13 +124,15 @@ extern "C" {
 #define CNEARTREE_NORM_LINF       512         /* 0x0200 */
     
 #define CNEARTREE_NORM            960         /* 0x03C0 */
+    
+#define CNEARTREE_FLIP           1024         /* 0x0400 */
 
     
     typedef struct _CNearTreeNode {
         void       FAR * m_coordLeft;    /* coords of left object stored in this node   */
         void       FAR * m_coordRight;   /* coords of right object stored in this node  */
         double           m_dMaxLeft;     /* longest distance from the left object
-         to anything below it in the tree            */
+                                            to anything below it in the tree            */
         double           m_dMaxRight;    /* longest distance from the right object 
                                             to anything below it in the tree            */
         struct _CNearTreeNode FAR * m_pLeftBranch;  
@@ -356,8 +358,8 @@ extern "C" {
     /*
      =======================================================================
      int CNearTreeNodeInsert( CNearTreeHandle treehandle,
-                               CNearTreeNodeHandle treenodehandle, 
-                               const void FAR * coord, 
+                              CNearTreeNodeHandle treenodehandle,
+                              const void FAR * coord, 
                               const void * obj,
                               size_t FAR * depth );
      
@@ -374,7 +376,7 @@ extern "C" {
      when they are both already used.
  
      depth is used to keep track of the depth at which the insertion is done
-     
+
      return 0 for success, nonzero for an error
      
      =======================================================================

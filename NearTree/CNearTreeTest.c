@@ -74,6 +74,7 @@ void testBigVector( void );
 void testDelayedInsertion( void );
 
 long g_errorCount;
+int dbgflg;
 
 #define bool int    /* for older C compilers */
 
@@ -83,6 +84,13 @@ long g_errorCount;
 int main(int argc, char** argv)
 {
     int i;
+    dbgflg = 0;
+    
+    if (argc > 1 && !strncmp(argv[1],"--debug",7)) {
+        dbgflg = 1;
+    }
+    
+    if (dbgflg) fprintf(stderr,"Debug enabled\n");
     
     /* test the interface with an empty tree */
     testEmptyTree( );
@@ -457,14 +465,16 @@ void testFindFirstObject( void )
 /*=======================================================================*/
 void testFindLastObject( void )
 {
-    double fFinal = DBL_MAX;
+    double fFinal;
     CNearTreeHandle tree;
     bool bReturn, bResult;
-    long count = 0;
     double f[1];
     double FAR * closest;
     void FAR * vclosest;
+    int count;
     
+    count = 0;
+    fFinal = DBL_MAX;
     bReturn = !CNearTreeCreate(&tree,1,CNEARTREE_TYPE_DOUBLE);
     if (!bReturn)
     {
@@ -480,6 +490,17 @@ void testFindLastObject( void )
         fFinal = f[0];
         f[0] /= 2.0;
         ++count;
+    }
+
+    if (dbgflg) {
+        size_t depth, size;
+        bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
+        if (bResult) {
+            fprintf(stderr,"CNearTreeTest:  testFindLastObject: depth=%lu, size=%lu\n",
+                    (unsigned long)depth,(unsigned long)size);
+        } else {
+            fprintf(stderr,"CNearTreeTest:  testFindLastObject: get size and depth failed\n");
+        }
     }
     
     
@@ -507,6 +528,63 @@ void testFindLastObject( void )
         ++g_errorCount;
         fprintf(stdout, "CNearTreeTest: testFindLastObject: CNearTreeFree has failed\n" );
     }
+  
+    count = 0;
+    fFinal = DBL_MAX;
+    bReturn = !CNearTreeCreate(&tree,1,CNEARTREE_TYPE_DOUBLE|CNEARTREE_FLIP);
+    if (!bReturn)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testFindLastObject: CNearTreeCreate with flip failed\n" );
+    }
+    
+    f[0] = 1.0;
+    /* generate an unbalanced tree*/
+    while( f[0] > 2.0*sqrt(DBL_MIN) )
+    {
+        bReturn = !CNearTreeInsert(tree,f, NULL);
+        fFinal = f[0];
+        f[0] /= 2.0;
+        ++count;
+    }
+
+    if (dbgflg) {
+        size_t depth, size;
+        bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
+        if (bResult) {
+            fprintf(stderr,"CNearTreeTest:  testFindLastObject: with flip depth=%lu, size=%lu\n",
+                    (unsigned long)depth,(unsigned long)size);
+        } else {
+            fprintf(stderr,"CNearTreeTest:  testFindLastObject: with flip get size and depth failed\n");
+        }
+    }
+    
+    
+    f[0] = 11.0;
+    bReturn = !CNearTreeNearestNeighbor(tree, 100.0, &vclosest, NULL, f);
+    closest = (double FAR *)vclosest;
+    if( ! bReturn || closest[0] != 1.0 )
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testFindLastObject: CNearTreeNearestNeighbor with flip failed for double, got %g\n", closest[0] );
+    }
+    
+    f[0] = -11.0;
+    bReturn = !CNearTreeFarthestNeighbor(tree, &vclosest, NULL, f);
+    closest = (double FAR *)vclosest;
+    if( ! bReturn || closest[0] != 1.0 )
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testFindLastObject: CNearTreeFarthestNeighbor with flip failed for double, got %g\n", closest[0] );
+    }
+    
+    bResult = !CNearTreeFree(&tree);
+    if (!bResult)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testFindLastObject: CNearTreeFree with flip has failed\n" );
+    }
+    
     
 }
 
@@ -618,18 +696,21 @@ void testRandomTree( const int nRequestedRandoms )
     const int n = nRequestedRandoms;
     CNearTreeHandle tree;
     CVectorHandle v;
-    int nmax = INT_MIN;
-    int nmin = INT_MAX;
+    int nmax;
+    int nmin;
     int i;
     int next[1];
     int FAR * closest;
     void FAR * vclosest;
     int FAR * farthest;
     void FAR * vfarthest;
-    bool bReturn, bNear, bFar;
+    bool bReturn, bNear, bFar, bResult;
     double radius;
     size_t lReturn;
     
+    nmax = INT_MIN;
+    nmin = INT_MAX;
+
     bReturn = !CNearTreeCreate(&tree,1,CNEARTREE_TYPE_INTEGER);
     if (!bReturn)
         fprintf(stdout, "CNearTreeTest: testRandomTree: CNearTreeCreate failed\n" );
@@ -642,6 +723,17 @@ void testRandomTree( const int nRequestedRandoms )
         bReturn = !CNearTreeInsert(tree,next,NULL);
         if( next[0] > nmax ) nmax = next[0];
         if( next[0] < nmin ) nmin = next[0];
+    }
+
+    if (dbgflg) {
+        size_t depth, size;
+        bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
+        if (bResult) {
+            fprintf(stderr,"CNearTreeTest:  testRandomTree: depth=%lu, size=%lu\n",
+                    (unsigned long)depth,(unsigned long)size);
+        } else {
+            fprintf(stderr,"CNearTreeTest:  testRandomTree: get size and depth failed\n");
+        }
     }
     
     {
@@ -749,9 +841,147 @@ void testRandomTree( const int nRequestedRandoms )
         if( lReturn != (size_t)n )
         {
             ++g_errorCount;
-            fprintf(stdout, "FindInSphere in testRandomTree did not find all the points\n" );
+            fprintf(stdout, "CNearTreeTest: testRandomTree: FindInSphere did not find all the points\n" );
         }
     }
+
+    nmax = INT_MIN;
+    nmin = INT_MAX;
+
+    bReturn = !CNearTreeCreate(&tree,1,CNEARTREE_TYPE_INTEGER|CNEARTREE_FLIP);
+    if (!bReturn)
+        fprintf(stdout, "CNearTreeTest: testRandomTree: CNearTreeCreate with flip failed\n" );
+    
+    
+    /* Build the tree with n random numbers. Remember the largest and smallest values. */
+    for( i=0; i<n; ++i )
+    {
+        next[0] = random( )%MYRAND_MAX;
+        bReturn = !CNearTreeInsert(tree,next,NULL);
+        if( next[0] > nmax ) nmax = next[0];
+        if( next[0] < nmin ) nmin = next[0];
+    }
+ 
+    if (dbgflg) {
+        size_t depth, size;
+        bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
+        if (bResult) {
+            fprintf(stderr,"CNearTreeTest:  testRandomTree: with flip depth=%lu, size=%lu\n",
+                    (unsigned long)depth,(unsigned long)size);
+        } else {
+            fprintf(stderr,"CNearTreeTest:  testRandomTree: with flip get size and depth failed\n");
+        }
+    }
+    
+    {
+        /*verify that the correct extremal point is detected (from below)*/
+        next[0] = INT_MIN/2;
+        bNear = !CNearTreeNearestNeighbor(tree, (double)LONG_MAX, &vclosest, NULL, next);
+        closest = (int FAR *)vclosest;
+        if( ! bNear || closest[0] != nmin )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest: testRandomTree: NearestNeighbor with flip failed in testRandomTree for min\n" );
+        }
+        
+        next[0] = INT_MIN/2;
+        bFar = !CNearTreeFarthestNeighbor(tree, &vfarthest, NULL, next);
+        farthest = (int FAR *)vfarthest;
+        if( !bFar || farthest[0] != nmax )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest: testRandomTree: FarthestNeighbor with flip failed in testRandomTree for min\n" );
+        }
+    }
+    
+    {
+        /*verify that the correct extremal point is detected (from above)*/
+        next[0] = INT_MAX/2;
+        bNear = !CNearTreeNearestNeighbor(tree, (double)LONG_MAX, &vclosest, NULL, next);
+        closest = (int FAR *)vclosest;
+        if( ! bNear || closest[0] != nmax )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest: testRandomTree: NearestNeighbor with flip failed for max\n" );
+        }
+        
+        next[0] = INT_MAX/2;
+        bFar = !CNearTreeFarthestNeighbor(tree, &vfarthest, NULL, next);
+        farthest = (int FAR *)vfarthest;
+        if( !bFar || farthest[0] != nmin )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest: testRandomTree: FarthestNeighbor with flip failed for max\n" );
+        }
+    }
+    
+    {
+        /*verify that for very large radius, every point is detected (from below)*/
+        bReturn = !CVectorCreate(&v,sizeof(int FAR *), 10);
+        if (!bReturn)
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest: testRandomTree: CVectorCreate failed\n" );
+        }
+        radius = DBL_MAX;
+        next[0] = 1;
+        bReturn = !CNearTreeFindInSphere( tree, radius, v, NULL, next, 1);
+        lReturn = CVectorSize(v);
+        if( lReturn != (size_t)n )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest: testRandomTree: FindInSphere with flip failed, n=%d, lReturn=%lu\n", n, (long unsigned int)lReturn );
+        }
+    }
+    
+    {
+        /*verify that we find NO points if we are below the lowest and with too small radius*/
+        bReturn = !CVectorClear(v);
+        radius = .5;
+        next[0] = nmin-1;
+        bReturn = !CNearTreeFindInSphere( tree, radius, v, NULL, next, 1);
+        lReturn = CVectorSize(v);
+        if( lReturn != 0 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest: testRandomTree: FindInSphere with flip failed found points incorrectly, n=%d, lReturn=%lu\n", n, (long unsigned int)lReturn );
+        }
+    }
+    
+    {
+        /*test that the number of found points in a sphere is non-deceasing with increasing radius*/
+        int lastFoundCount = 0;
+        int cycleCount = 0;
+        bReturn = !CVectorClear(v);
+        
+        radius = 0.00001; /* start with a very small radius (remember these are int's) */
+        while( radius < 5*(nmax-nmin) )
+        {
+            ++cycleCount;
+            next[0] = nmin-1;
+            bReturn = !CNearTreeFindInSphere( tree, radius, v, NULL, next, 1);
+            lReturn = CVectorSize(v);
+            if( lReturn < (size_t)lastFoundCount )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "CNearTreeTest: testRandomTree: FindInSphere with flip found DECREASING count on increasing radius for radius=%g\n", radius );
+                break;
+            }
+            else
+            {
+                lastFoundCount = (int)lReturn;
+                radius *= 1.414;
+            }
+        }
+        
+        /* verify that all points were included in the final check (beyond all reasonable distances) */
+        if( lReturn != (size_t)n )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest: testRandomTree: FindInSphere with flip  did not find all the points\n" );
+        }
+    }
+    
 }
 
 /*  Utility routines for 17D double vectors */
@@ -1055,6 +1285,18 @@ void testBackwardForward( void )
             fprintf(stdout,"CNearTreeTest: testBackwardForward: CNearTreeInserts failed for i = %d\n", i);
         }
     }
+ 
+    if (dbgflg) {
+        size_t depth, size;
+        bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
+        if (bResult) {
+            fprintf(stderr,"CNearTreeTest:  testBackwardForward: depth=%lu, size=%lu\n",
+                    (unsigned long)depth,(unsigned long)size);
+        } else {
+            fprintf(stderr,"CNearTreeTest:  testBackwardForward: get size and depth failed\n");
+        }
+        
+    }
     
     for( i=100; i<300; ++i )
     {   probe[0] = (double)i+0.25;
@@ -1067,6 +1309,56 @@ void testBackwardForward( void )
         }
     }
 
+    bResult = !CNearTreeFree(&tree);
+    if (!bResult)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testBackwardForward: CNearTreeFree has failed\n" );
+    }
+    
+    bResult = !CNearTreeCreate(&tree,1,CNEARTREE_TYPE_DOUBLE|CNEARTREE_FLIP);    
+    if (!bResult)
+    {
+        ++g_errorCount;
+        fprintf(stdout,"CNearTreeTest: testBackwardForward: CNearTreeCreate failed\n");
+    }
+    
+    for( i=0; i<nMax; ++i )
+    {
+        data[0]=(double)i;        bResult1 = ! CNearTreeInsert(tree,data,NULL); 
+        data[0]=(double)(nMax-i); bResult2 = ! CNearTreeInsert(tree,data,NULL); 
+        data[0]=(double)i + 0.25; bResult3 = ! CNearTreeInsert(tree,data,NULL); 
+        data[0]=(double)(nMax-i) + 0.75; 
+        bResult4 = ! CNearTreeInsert(tree,data,NULL);
+        if (!bResult1 || !bResult2 || !bResult3 || !bResult4) {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest: testBackwardForward: CNearTreeInserts failed for i = %d\n", i);
+        }
+    }
+
+    if (dbgflg) {
+        size_t depth, size;
+        bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
+        if (bResult) {
+            fprintf(stderr,"CNearTreeTest:  testBackwardForward: with flip depth=%lu, size=%lu\n",
+                    (unsigned long)depth,(unsigned long)size);
+        } else {
+            fprintf(stderr,"CNearTreeTest:  testBackwardForward: with flip get size and depth failed\n");
+        }
+        
+    }
+    
+    for( i=100; i<300; ++i )
+    {   probe[0] = (double)i+0.25;
+        bResult =!CNearTreeNearestNeighbor(tree,1000.0,(void FAR *)&closest,NULL,probe);
+        if( !bResult || fabs( closest[0]-((double)i+0.25) ) > DBL_MIN )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest: testBackForward: NearestNeighbor failed to find %g, found %g instead\n", 
+                    (double)i+0.25, closest[0] );      
+        }
+    }
+    
     bResult = !CNearTreeFree(&tree);
     if (!bResult)
     {
@@ -1132,11 +1424,33 @@ void testDelayedInsertion( void )
             fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CVectorCreate failed\n");
         }
         radius = 1000.0;
+        if (dbgflg) {
+            size_t depth, size;
+            bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
+            if (bResult) {
+                fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: before CNearTreeCompleteDelayedInsert depth=%lu, size=%lu\n",
+                        (unsigned long)depth,(unsigned long)size);
+            } else {
+                fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: before CNearTreeCompleteDelayedInsert get size and depth failed\n");
+            }
+            
+        }
         bResult = !CNearTreeCompleteDelayedInsert(tree);
         if (!bResult)
         {
             ++g_errorCount;
             fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CNearTreeCompleteDelayedInsert failed\n");
+        }
+        if (dbgflg) {
+            size_t depth, size;
+            bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
+            if (bResult) {
+                fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: after CNearTreeCompleteDelayedInsert depth=%lu, size=%lu\n",
+                        (unsigned long)depth,(unsigned long)size);
+            } else {
+                fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: after CNearTreeCompleteDelayedInsert get size and depth failed\n");
+            }
+            
         }
         probe[0] = 0.9;
         bResult = !CNearTreeFindInSphere(tree, radius,v,NULL,probe,1);
@@ -1166,6 +1480,102 @@ void testDelayedInsertion( void )
         }
         
     }
+
+    {
+        /* make sure that CompleteDelayInsert works - note there is no way in the
+         final test to differentiate that from FindInSphere completing the
+         flush. */
+        
+        bResult = !CNearTreeCreate(&tree,1,CNEARTREE_TYPE_DOUBLE|CNEARTREE_FLIP);    
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CNearTreeCreate (first block) with flip failed\n");
+        }
+        
+        for( i=1; i<=nmax; ++i )
+        {
+            if( (i%2) == 0 )
+            {
+                data[0]=(double)i;        bResult1 = ! CNearTreeInsert(tree,data,NULL); 
+                if (!bResult1) {
+                    ++g_errorCount;
+                    fprintf(stdout,"CNearTreeTest: testDelayedInsertion: CNearTreeInsert with flip failed for i = %d\n", i);
+                }
+            }
+            else
+            {
+                data[0]=(double)i;        bResult2 = ! CNearTreeDelayedInsert(tree,data,NULL); 
+                if (!bResult2) {
+                    ++g_errorCount;
+                    fprintf(stdout,"CNearTreeTest: testDelayedInsertion: CNearTreeDelayedInsert with flip failed for i = %d\n", i);
+                }
+            }
+        }
+        
+        bResult = !CVectorCreate(&v,sizeof(double FAR *),10);
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CVectorCreate failed\n");
+        }
+        radius = 1000.0;
+        if (dbgflg) {
+            size_t depth, size;
+            bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
+            if (bResult) {
+                fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: before CNearTreeCompleteDelayedInsert with flip depth=%lu, size=%lu\n",
+                        (unsigned long)depth,(unsigned long)size);
+            } else {
+                fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: before CNearTreeCompleteDelayedInsert with flip get size and depth failed\n");
+            }
+            
+        }
+        bResult = !CNearTreeCompleteDelayedInsert(tree);
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CNearTreeCompleteDelayedInsert failed\n");
+        }
+        if (dbgflg) {
+            size_t depth, size;
+            bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
+            if (bResult) {
+                fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: after CNearTreeCompleteDelayedInsert depth=%lu, size=%lu\n",
+                        (unsigned long)depth,(unsigned long)size);
+            } else {
+                fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: after CNearTreeCompleteDelayedInsert get size and depth failed\n");
+            }
+        }
+        probe[0] = 0.9;
+        bResult = !CNearTreeFindInSphere(tree, radius,v,NULL,probe,1);
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CNearTreeFindInSphere failed\n");
+        } else {
+            lReturned = CVectorSize(v);
+            if( lReturned != nmax )
+            {
+                ++g_errorCount;
+                printf( "CNearTreeTest:  testDelayedInsertion: CNearTreeFindInSphere failed for nmax=%ld, found %lu points\n", nmax, (unsigned long)lReturned );
+            }
+        }
+        bResult = !CVectorFree(&v);
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest:  testDelayedInsertion: CVectorFree (first block) has failed\n" );
+        }
+        bResult = !CNearTreeFree(&tree);
+        if (!bResult)
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest: testBackwardForward: CNearTreeFree (first block) has failed\n" );
+        }
+        
+    }
+    
     
     {
         /* make sure that FindInSphere flushes the delayed data */
@@ -1306,8 +1716,8 @@ void testDelayedInsertion( void )
                 if (!bResult1) {
                     ++g_errorCount;
                     fprintf(stdout,"CNearTreeTest: testDelayedInsertion: CNearTreeInsert (fourth block) failed for i = %d\n", i);
-         }
-    }
+                }
+            }
             else
             {
                 data[0]=(double)i;        bResult2 = ! CNearTreeDelayedInsert(tree,data,NULL); 
@@ -1317,8 +1727,8 @@ void testDelayedInsertion( void )
                 }
                 fFinal = (double)i;
             }
-}
-
+        }
+        
         probe[0] = -100;
         bResult = !CNearTreeFarthestNeighbor( tree,  (void FAR *)&farthest, NULL, probe );
         if( ! bResult )
