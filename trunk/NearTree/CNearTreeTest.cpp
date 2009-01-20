@@ -703,7 +703,7 @@ void testRandomTree( const int nRequestedRandoms )
             fprintf(stdout, "testRandomTree: NearestNeighbor failed for min\n" );
         }
         
-        int farthest;
+        int farthest=INT_MIN;
         const bool bFar = tree.FarthestNeighbor( farthest, INT_MIN/2 );
         if( !bFar )
         {
@@ -1000,7 +1000,7 @@ void testBigVector(  )
     const size_t insertedSize = tree.GetTotalSize( );
     if (depth > (insertedSize+1)/4)  {
         ++g_errorCount;
-        fprintf(stdout, "testBigVector:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (insertedSize+1)/4 );
+        fprintf(stdout, "testBigVector:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (insigned long)(insertedSize+1)/4 );
     }
     
 }
