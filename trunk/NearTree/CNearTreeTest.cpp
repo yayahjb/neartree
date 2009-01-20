@@ -327,7 +327,7 @@ void testFindFirstObject( void )
         const size_t insertedSize = tree.GetTotalSize( );
         if (depth > (insertedSize+1)/2)  {
             ++g_errorCount;
-            fprintf(stdout, "testFindFirstObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (insertedSize+1)/2 );
+            fprintf(stdout, "testFindFirstObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (unsigned long)(insertedSize+1)/2 );
         }
         
         
@@ -404,7 +404,7 @@ void testFindFirstObject( void )
         const size_t insertedSize = tree.GetTotalSize( );
         if (depth > (insertedSize+1)/2)  {
             ++g_errorCount;
-            fprintf(stdout, "testFindFirstObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (insertedSize+1)/2 );
+            fprintf(stdout, "testFindFirstObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (unsigned long)(insertedSize+1)/2 );
         }
         
     }
@@ -451,7 +451,7 @@ void testFindLastObject( void )
         const size_t insertedSize = tree.GetTotalSize( );
         if (depth > (insertedSize+1)/2)  {
             ++g_errorCount;
-            fprintf(stdout, "testFindLastObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (insertedSize+1)/2 );
+            fprintf(stdout, "testFindLastObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (unsigned long)(insertedSize+1)/2 );
         }
         
     }
@@ -487,7 +487,7 @@ void testFindLastObject( void )
         const size_t insertedSize = tree.GetTotalSize( );
         if (depth > (insertedSize+1)/2)  {
             ++g_errorCount;
-            fprintf(stdout, "testFindLastObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (insertedSize+1)/2 );
+            fprintf(stdout, "testFindLastObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (unsigned long)(insertedSize+1)/2 );
         }
         
     }
@@ -524,7 +524,7 @@ void testFindLastObject( void )
         const size_t insertedSize = tree.GetTotalSize( ); 
         if (depth > (insertedSize+1)/2)  {
             ++g_errorCount;
-            fprintf(stdout, "testFindLastObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (insertedSize+1)/2 );
+            fprintf(stdout, "testFindLastObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (unsigned long)(insertedSize+1)/2 );
         }
         
     }
@@ -561,7 +561,7 @@ void testFindLastObject( void )
         const size_t insertedSize = tree.GetTotalSize( );
         if (depth > (insertedSize+1)/2)  {
             ++g_errorCount;
-            fprintf(stdout, "testFindLastObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (insertedSize+1)/2 );
+            fprintf(stdout, "testFindLastObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (unsigned long)(insertedSize+1)/2 );
         }
         
     }
@@ -807,7 +807,7 @@ void testRandomTree( const int nRequestedRandoms )
     const size_t insertedSize = tree.GetTotalSize( );
     if (depth > (insertedSize+1)/2)  {
         ++g_errorCount;
-        fprintf(stdout, "testRandomTree:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (insertedSize+1)/2 );
+        fprintf(stdout, "testRandomTree:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (unsigned long)(insertedSize+1)/2 );
     }
     
 }
@@ -1065,7 +1065,7 @@ void testDelayedInsertion( void )
         else if( depth >=nmax/2 )
         {
             ++g_errorCount;
-            fprintf(stdout, "testDelayedInsertion: tree depth is too large, %ld is greater than %ld\n", depth, nmax/2 );
+            fprintf(stdout, "testDelayedInsertion: tree depth is too large, %lu is greater than %ld\n", (unsigned long)depth, nmax/2 );
         }
     }
     
