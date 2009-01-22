@@ -341,7 +341,7 @@ void testFindFirstObject( void )
         /* build the double tree starting with 1.0 */
         double f = 1.0;
         /* generate an unbalanced tree*/
-        while( f > 0.0 )
+        while( f > 0.0 && f >= DBL_MIN)
         {
             tree.Insert( f );
             dFinal = f;
@@ -427,7 +427,7 @@ void testFindLastObject( void )
         
         float f = 1.0;
         /* generate an unbalanced tree*/
-        while( f > 0.0 )
+        while( f > 0.0  && f >= FLT_MIN )
         {
             tree.Insert( f );
             fFinal = f;
@@ -463,7 +463,7 @@ void testFindLastObject( void )
         
         double f = 1.0;
         /* generate an unbalanced tree*/
-        while( f > 0.0 )
+        while( f > 0.0 && f >= DBL_MIN)
         {
             tree.Insert( f );
             dFinal = f;
@@ -499,7 +499,7 @@ void testFindLastObject( void )
         
         float f = 1.0;
         /* generate an unbalanced tree*/
-        while( f > 0.0 )
+        while( f > 0.0 && f >= FLT_MIN)
         {
             tree.Insert( f );
             fFinal = f;
@@ -536,7 +536,7 @@ void testFindLastObject( void )
         
         double f = 1.0;
         /* generate an unbalanced tree*/
-        while( f > 0.0 )
+        while( f > 0.0 && f >= DBL_MIN)
         {
             tree.Insert( f );
             dFinal = f;
@@ -573,7 +573,7 @@ void testFindLastObject( void )
         
         double f = 1.0;
         /* generate an unbalanced tree*/
-        while( f > 0.0 )
+        while( f > 0.0 && f >= DBL_MIN)
         {
             dFinal = f;
             f /= 2.0;
