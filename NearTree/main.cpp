@@ -127,7 +127,5 @@ int main ( int argc, char* argv[] )
         std::cout << " -------------------------------------------------------------"<<std::endl;
     }  // for i
     
-    vTree.CNearTree<v>::~CNearTree( );
-    
     return ( EXIT_SUCCESS );
 }

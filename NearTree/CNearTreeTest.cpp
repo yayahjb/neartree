@@ -56,16 +56,22 @@ void testFindInSphereFromBottom( void );
 void testBackwardForward( void );
 void testFindInSphereFromTop( void );
 void testDelayedInsertion( void );
+void testIterators( void );
 
 void testRandomTree( const int n );
-void testBigVector( );
+void testBigVector( void );
 
 long g_errorCount;
 
+int debug;
 
 /*=======================================================================*/
 int main(int argc, char* argv[])
 {
+    
+    g_errorCount = 0;
+    debug = 0;
+    if (argc > 1 && !strcmp(argv[1],"--debug")) debug = 1;
     
     /* test the interface with an empty tree */
     testEmptyTree( );
@@ -84,6 +90,7 @@ int main(int argc, char* argv[])
     testBigVector( );
     testBackwardForward( );
     testDelayedInsertion( );
+    testIterators( );
     
     if( g_errorCount == 0 )
     {
@@ -112,28 +119,33 @@ void testEmptyTree( void )
     if( ! bTreeEmpty )
     {
         ++g_errorCount;
-        fprintf(stdout,  ".empty incorrect for empty tree\n" );
+        fprintf(stdout, "testEmptyTree: ..empty incorrect for empty tree\n" );
+    }
+    if( tree.size( ) != 0 )
+    {
+        ++g_errorCount;
+        fprintf(stdout, "testEmptyTree: .size incorrect for empty tree\n" );
     }
     
     bTreeHasNearest  = tree.NearestNeighbor( 0.0, close, 1 );
     if( bTreeHasNearest )
     {
         ++g_errorCount;
-        fprintf(stdout,  "NearestNeighbor incorrect for empty tree\n" );
+        fprintf(stdout, "testEmptyTree: .NearestNeighbor incorrect for empty tree\n" );
     }
     
     bTreeHasFarthest = tree.FarthestNeighbor( nFar, 0 );
     if( bTreeHasFarthest )
     {
         ++g_errorCount;
-        fprintf(stdout,  "FarthestNeighbor incorrect for empty tree\n" );
+        fprintf(stdout, "testEmptyTree: .FarthestNeighbor incorrect for empty tree\n" );
     }
     
     lFoundPointsInSphere = tree.FindInSphere( 1000.0, v, 1 );
     if( lFoundPointsInSphere != 0 )
     {
         ++g_errorCount;
-        fprintf(stdout,  "FindInSphere incorrect for empty tree\n" );
+        fprintf(stdout, "testEmptyTree: .FindInSphere incorrect for empty tree\n" );
     }
 }
 
@@ -164,7 +176,7 @@ void testLinearTree( const int n )
      last value entered into the tree. 
      */
     int closest=-1;   
-    const bool bClose = tree.NearestNeighbor( 22, closest, 2*n );
+    const bool bClose = tree.NearestNeighbor( 22.0, closest, 2*n );
     if( ! bClose )
     {
         ++g_errorCount;
@@ -241,7 +253,7 @@ void testLinearTree( const int n )
     if( tree.FindInSphere( (double)(10*n), v, 0 ) != n )
     {
         ++g_errorCount;
-        fprintf(stdout, "FindInSphere did not find all the points, found %ld\n", tree.FindInSphere( 1000, v, 0 ) );
+        fprintf(stdout, "FindInSphere did not find all the points, found %ld\n", tree.FindInSphere( (double)(10*n), v, 0 ) );
     }
     
     v.clear( );
@@ -279,10 +291,10 @@ void testFindFirstObject( void )
             fprintf(stdout, "testFindFirstObject incorrectly found empty tree for float\n" );
         }
         
-        /*
-         Search for the value closest to zero. It should be a very small, probably
-         denormalized number.
-         */
+        //   /*
+        //   Search for the value closest to zero. It should be a very small, probably
+        //   denormalized number.
+        //   */
         float closest = 0.0;
         const bool bReturnNear = tree.NearestNeighbor( 1.0e-10, closest, 0.0 );
         if( ! bReturnNear )
@@ -296,10 +308,10 @@ void testFindFirstObject( void )
             fprintf(stdout, "testFindFirstObject: Near failed for float, got %f\n", closest );
         }
         
-        /*
-         Search for the value farthest from a large number. It should be a
-         very small, probably denormalized number.
-         */
+        //   /*
+        //   Search for the value farthest from a large number. It should be a
+        //   very small, probably denormalized number.
+        //   */
         float farthest = -1000.0;
         const bool bReturnFar = tree.FarthestNeighbor( farthest, 100.0 );
         if( ! bReturnFar )
@@ -313,9 +325,9 @@ void testFindFirstObject( void )
             fprintf(stdout, "testFindFirstObject Far failed for float, got %g\n", farthest );
         }
         
-        /*
-         Determine if FindInSphere can find all of the input data.
-         */
+        //   /*
+        //   Determine if FindInSphere can find all of the input data.
+        //   */
         std::vector<float> v;
         const long lFound = tree.FindInSphere( 100.0, v, 1.0 );
         if( lFound != count )
@@ -323,16 +335,8 @@ void testFindFirstObject( void )
             ++g_errorCount;
             fprintf(stdout, "testFindFirstObject: found wrong count for FindInSphere for float, should be%ld, got %ld\n", count, lFound );
         }
-        const size_t depth = tree.GetDepth( );
-        const size_t insertedSize = tree.GetTotalSize( );
-        if (depth > (insertedSize+1)/2)  {
-            ++g_errorCount;
-            fprintf(stdout, "testFindFirstObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (unsigned long)(insertedSize+1)/2 );
         }
         
-        
-    }
-    
     {
         double dFinal = DBL_MAX; /* just initialization */
         CNearTree<double> tree;
@@ -399,14 +403,6 @@ void testFindFirstObject( void )
             ++g_errorCount;
             fprintf(stdout, "testFindFirstObject: found wrong count for FindInSphere for double, should be%ld, got %ld\n", count, lFound );
         }
-        
-        const size_t depth = tree.GetDepth( );
-        const size_t insertedSize = tree.GetTotalSize( );
-        if (depth > (insertedSize+1)/2)  {
-            ++g_errorCount;
-            fprintf(stdout, "testFindFirstObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (unsigned long)(insertedSize+1)/2 );
-        }
-        
     }
 }
 
@@ -421,18 +417,14 @@ void testFindFirstObject( void )
 void testFindLastObject( void )
 {
     {
-        double fFinal = FLT_MAX;
         CNearTree<float> tree;
-        long count = 0;
         
         float f = 1.0;
         /* generate an unbalanced tree*/
         while( f > 0.0  && f >= FLT_MIN )
         {
             tree.Insert( f );
-            fFinal = f;
             f /= 2.0;
-            ++count;
         }
         
         float closest = 0.0;
@@ -447,28 +439,17 @@ void testFindLastObject( void )
             ++g_errorCount;
             fprintf(stdout, "testFindLastObject: Near failed for float, got %g\n", closest );
         }
-        const size_t depth = tree.GetDepth( );
-        const size_t insertedSize = tree.GetTotalSize( );
-        if (depth > (insertedSize+1)/2)  {
-            ++g_errorCount;
-            fprintf(stdout, "testFindLastObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (unsigned long)(insertedSize+1)/2 );
-        }
-        
     }
     
     {
-        double dFinal = DBL_MAX;
         CNearTree<double> tree;
-        long count = 0;
         
         double f = 1.0;
         /* generate an unbalanced tree*/
         while( f > 0.0 && f >= DBL_MIN)
         {
             tree.Insert( f );
-            dFinal = f;
             f /= 2.0;
-            ++count;
         }
         
         double closest = 0.0;
@@ -483,28 +464,17 @@ void testFindLastObject( void )
             ++g_errorCount;
             fprintf(stdout, "testFindLastObject: Near failed for float, got %g\n", closest );
         }
-        const size_t depth = tree.GetDepth( );
-        const size_t insertedSize = tree.GetTotalSize( );
-        if (depth > (insertedSize+1)/2)  {
-            ++g_errorCount;
-            fprintf(stdout, "testFindLastObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (unsigned long)(insertedSize+1)/2 );
-        }
-        
     }
     
     {
-        double fFinal = FLT_MAX;
         CNearTree<float> tree;
-        long count = 0;
         
         float f = 1.0;
         /* generate an unbalanced tree*/
         while( f > 0.0 && f >= FLT_MIN)
         {
             tree.Insert( f );
-            fFinal = f;
             f /= 2.0;
-            ++count;
         }
         
         float closest = 0.0;
@@ -519,29 +489,17 @@ void testFindLastObject( void )
             ++g_errorCount;
             fprintf(stdout, "testFindLastObject: Far failed for float, got %f\n", closest );
         }
-        
-        const size_t depth = tree.GetDepth( );
-        const size_t insertedSize = tree.GetTotalSize( ); 
-        if (depth > (insertedSize+1)/2)  {
-            ++g_errorCount;
-            fprintf(stdout, "testFindLastObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (unsigned long)(insertedSize+1)/2 );
         }
         
-    }
-    
     {
-        double dFinal = DBL_MAX;
         CNearTree<double> tree;
-        long count = 0;
         
         double f = 1.0;
         /* generate an unbalanced tree*/
         while( f > 0.0 && f >= DBL_MIN)
         {
             tree.Insert( f );
-            dFinal = f;
             f /= 2.0;
-            ++count;
         }
         
         double closest = 0.0;
@@ -556,20 +514,11 @@ void testFindLastObject( void )
             ++g_errorCount;
             fprintf(stdout, "testFindLastObject: Far failed for float, got %f\n", closest );
         }
-        
-        const size_t depth = tree.GetDepth( );
-        const size_t insertedSize = tree.GetTotalSize( );
-        if (depth > (insertedSize+1)/2)  {
-            ++g_errorCount;
-            fprintf(stdout, "testFindLastObject:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (unsigned long)(insertedSize+1)/2 );
         }
         
-    }
-    
     {
         double dFinal = DBL_MAX;
         CNearTree<double> tree;
-        long count = 0;
         
         double f = 1.0;
         /* generate an unbalanced tree*/
@@ -579,7 +528,8 @@ void testFindLastObject( void )
             f /= 2.0;
         }
         
-        f = dFinal;
+        f = DBL_MIN;
+        int count = 0;
         while( f < 1.01 )
         {
             tree.Insert( f );
@@ -775,12 +725,10 @@ void testRandomTree( const int nRequestedRandoms )
         std::vector<int> v;
         long lReturn = 0;
         int lastFoundCount = 0;
-        int cycleCount = 0;
         
         double radius = 0.00001; /* start with a very small radius (remember these are int's) */
-        while( radius < 5*(nmax-nmin) )
+        while( radius < (double)(5*(nmax-nmin)) )
         {
-            ++cycleCount;
             lReturn = tree.FindInSphere( radius, v, nmin-1 );
             if( lReturn < lastFoundCount )
             {
@@ -802,16 +750,8 @@ void testRandomTree( const int nRequestedRandoms )
             fprintf(stdout, "FindInSphere in testRandomTree did not find all the points\n" );
         }
     }
-    
-    const size_t depth = tree.GetDepth( );
-    const size_t insertedSize = tree.GetTotalSize( );
-    if (depth > (insertedSize+1)/2)  {
-        ++g_errorCount;
-        fprintf(stdout, "testRandomTree:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (unsigned long)(insertedSize+1)/2 );
     }
     
-}
-
 /*=======================================================================*/
 /* make a 17-dimension vector class for testing */
 class vec17
@@ -827,7 +767,7 @@ class vec17
                 pd[i] = (double)(rand( )%MYRAND_MAX);
             }
         }
-        vec17( const double d )
+        explicit vec17( const double d )
         {
             dim = 17;
             for( int i=0; i<dim; ++i )
@@ -926,11 +866,11 @@ void testBigVector(  )
         vec17 vNearCenter;
         vec17 vCloseToNearCenter;
         tree.NearestNeighbor( 1000.0, vNearCenter, vCenter );
-        long iFoundNearCenter = tree.FindInSphere( 100.0, v, vNearCenter );
+        unsigned long iFoundNearCenter = (unsigned long)tree.FindInSphere( 100.0, v, vNearCenter );
         
         /* Brute force search for the point closest to the point closest to the center */
         double dmin = DBL_MAX;
-        for( int i=0; i<iFoundNearCenter; ++i )
+        for( unsigned long i=0; i<iFoundNearCenter; ++i )
         {
             if( vNearCenter != v[i] && double( vNearCenter-v[i] ) < dmin )
             {
@@ -995,16 +935,8 @@ void testBigVector(  )
         vec17 vExtreme;
         tree.FarthestNeighbor( vExtreme, vNearCenter );
     }
-    
-    const size_t depth = tree.GetDepth( );
-    const size_t insertedSize = tree.GetTotalSize( );
-    if (depth > (insertedSize+1)/4)  {
-        ++g_errorCount;
-        fprintf(stdout, "testBigVector:  tree depth is too large, %lu is greater than %lu\n", (unsigned long)depth, (unsigned long)(insertedSize+1)/4 );
     }
     
-}
-
 /*=======================================================================*/
 void testBackwardForward( void )
 {
@@ -1043,13 +975,11 @@ void testDelayedInsertion( void )
         // make sure that CompleteDelayedInsert flushes the delayed data
         const long nmax = 10001;
         CNearTree<double> tree;
-        double fFinal = DBL_MAX;
         
         for( int i=1; i<=nmax; ++i )
         {
             const double insertValue = (double)(i);
             tree.DelayedInsert( insertValue );
-            fFinal = insertValue;
         }
         
         tree.CompleteDelayedInsert( );
@@ -1057,7 +987,7 @@ void testDelayedInsertion( void )
         const size_t insertedSize = tree.GetTotalSize( );
         const size_t delayed = tree.GetDeferredSize( );
         
-        if( delayed != 0 || insertedSize != (size_t)nmax )
+        if( delayed != 0 || (long)insertedSize != nmax )
         {
             ++g_errorCount;
             fprintf(stdout, "testDelayedInsertion: CompleteDelayedInsert completion is incorrect\n" );
@@ -1151,16 +1081,8 @@ void testDelayedInsertion( void )
             }
         }
         
-        size_t depth = tree.GetDepth( );
-        size_t insertedSize = tree.GetTotalSize( );
-        size_t delayed = tree.GetDeferredSize( );
-        
         double farthest;
         const bool bReturned = tree.FarthestNeighbor( farthest, -100.0 );
-        
-        depth = tree.GetDepth( );
-        insertedSize = tree.GetTotalSize( );
-        delayed = tree.GetDeferredSize( );
         
         if( ! bReturned )
         {
@@ -1174,4 +1096,160 @@ void testDelayedInsertion( void )
         }
     }
     
+}
+
+/*=======================================================================*/
+void testIterators( void )
+{
+    CNearTree<int> tree;
+    CNearTree<int>::iterator itEmpty = tree.back( );
+    if( itEmpty != tree.end( ) )
+    {
+        ++g_errorCount;
+        fprintf(stdout, "testIterators: back failed for empty tree\n" );
+    }
+    
+    if( itEmpty != tree.end( ) )
+    {
+        ++g_errorCount;
+        fprintf(stdout, "testIterators: back failed for empty tree\n" );
+    }
+    
+    const int nMax = 1000;
+    
+    for( int i=0; i<nMax; ++i )
+    {
+        tree.Insert( (int)i );
+        if( i == 1 )
+        {
+            const CNearTree<int>::iterator itSingle = tree.back( );
+            if( (*itSingle) != 1 )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testIterators: size failed for size=2 tree\n" );
+            }
+        }
+    }
+    
+    {
+        CNearTree<int>::iterator it;
+        it = --tree.end( );
+        if( *it != nMax-1 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testIterators: test01 failed\n" );
+        }
+        
+        it = tree.begin( );
+        if( *it != 0 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testIterators: test02 failed\n" );
+        }
+        
+        it = it+1;
+        if( *it != 1 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testIterators: test03 failed\n" );
+        }
+        
+        it = it-1;
+        if( *it != 0 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testIterators: test04 failed\n" );
+        }
+        
+        const int i0 = *it;
+        if( i0 != 0 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testIterators: test05 failed\n" );
+        }
+        
+        ++it;
+        if( *it != 1 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testIterators: test06 failed\n" );
+        }
+        
+        --it;
+        if( *it != 0 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testIterators: test07 failed\n" );
+        }
+        
+        const CNearTree<int>::iterator itPlus = it++;
+        if( *it != 1 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testIterators: test08 failed\n" );
+        }
+        
+        it--;
+        if( i0 != 0 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testIterators: test09 failed\n" );
+        }
+        
+        ++it;
+        if( *it != 1 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testIterators: test10 failed\n" );
+        }
+    }
+    
+    {
+        CNearTree<int>::iterator it;
+        
+        const int searchValue = 14;
+        const CNearTree<int>::iterator itEnd = tree.end( );
+        it = tree.NearestNeighbor( 0.1, searchValue );
+        if( it == itEnd )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testIterators: NearestNeighbor failed with iterator\n" );
+        }
+        else if( *it != searchValue )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testIterators: NearestNeighbor found wrong value with iterator, %d\n", *it );
+        }
+        
+        it = tree.FarthestNeighbor( searchValue );
+        if( it == tree.end( ) )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testIterators:FarthestNeighbor failed with iterator\n" );
+        }
+        else if( *it != nMax-1 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testIterators: FarthestNeighbor found wrong value with iterator, %d\n", *it );
+        }
+    }
+    
+    {
+        vec17 v;
+        CNearTree<vec17> nt;
+        nt.Insert( v );
+        CNearTree<vec17>::iterator itv = nt.begin( );
+        const int n = itv->dim;
+        if( n != 17 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testIterators: operator-> got wrong value for dim, %d\n", n );
+        }
+        const double d = itv->pd[0];
+        if( d != v.pd[0] )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testIterators: operator-> got wrong value for pd[0], %g\n", d );
+        }
+    }
 }
