@@ -57,7 +57,7 @@
 // functionality for the template to work. For the built-in
 // numerics of C++, they are provided by the system.
 
-//    operator double( );   // conversion constructor from the templated class to double
+//    operator DistanceType( );   // conversion constructor from the templated class to DistanceType
 //                            (usually will return a "length")
 //    operator- ( );        // geometrical (vector) difference of two objects
 //    a copy constructor
@@ -72,31 +72,38 @@
 //       instantiated by something like:      CNearTree <v> vTree;
 //       for some type v
 //
-//    void Insert( T& t )
+//    void insert( T& t )
 //       where t is an object of the type v
 //
-//    bool NearestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) const
+//    bool NearestNeighbor ( const DistanceType dRadius,  T& tClosest,   const T& t ) const
 //       dRadius is the largest radius within which to search; make it
 //          very large if you want to include every point that was loaded; dRadius
 //          is returned as the closest distance to the probe (or the search radius
 //          if nothing is found)
 //       tClosest is returned as the object that was found closest to the probe
 //          point (if any were within radius dRadius of the probe)
-//       t is the probe point, used to search in the group of points Insert'ed
+//       t is the probe point, used to search in the group of points insert'ed
 //       return value is true if some object was found within the search radius, false otherwise
 //
 //    bool FarthestNeighbor ( T& tFarthest,   const T& t ) const
 //       tFarthest is returned as the object that was found farthest to the probe
 //          point
-//       t is the probe point, used to search in the group of points Insert'ed
+//       t is the probe point, used to search in the group of points insert'ed
 //       return value is true if some object was found, false otherwise
 //
-//    long FindInSphere ( const double& dRadius,  std::vector<  T >& tClosest,   const T& t ) const
+//    long FindInSphere ( const DistanceType dRadius,  std::vector<  T >& tClosest,   const T& t ) const
 //       dRadius is the radius within which to search; make it very large if you want to
 //           include every point that was loaded;
 //       tClosest is returned as the vector of objects that were found within a radius dRadius
 //          of the probe point
-//       t is the probe point, used to search in the group of points Insert'ed
+//       t is the probe point, used to search in the group of points insert'ed
+//       return value is the number of objects found within the search radius
+//
+//    long FindInSphere ( const DistanceType dRadius,  std::vector<  T >& tClosest,   const T& t ) const
+//       dRadius is the radius within which to search; make it very large if you want to
+//           include every point that was loaded;
+//       tClosest is returned CNearTree of the found objects
+//       t is the probe point, used to search in the group of points insert'ed
 //       return value is the number of objects found within the search radius
 //
 //    ~CNearTree( void )  // destructor
@@ -106,13 +113,13 @@
 //    void DelayedInsert( void ) Holds objects in a queue for insertion later when CompleteDelayInsert
 //       is called or a search is called.
 //
-//    void CompleteDelayedInsert( void ) Calls Insert for all delayed objects. sqrt(n) are inserted
+//    void CompleteDelayedInsert( void ) Calls insert for all delayed objects. sqrt(n) are inserted
 //       by random choice. The rest are inserted in linear order as originally queued.
 //
 //    size_t GetDeferredSize( void ) Returns the number of delayed objects that have not
-//       yet been Insert'ed
+//       yet been insert'ed
 //
-//    size_t GetTotalSize( void ) Returns the number of objects that have been Insert'ed plus
+//    size_t GetTotalSize( void ) Returns the number of objects that have been insert'ed plus
 //       those DelayInsert'ed
 //
 //    size_t size( void ) identical to GetTotalSize
@@ -121,7 +128,7 @@
 //
 //    bool empty( void )  returns true if the tree is empty
 //
-//    iterator NearestNeighbor( const double radius, const T& probe ); returns an iterator 
+//    iterator NearestNeighbor( const DistanceType radius, const T& probe ); returns an iterator 
 //       to the nearest point to the probe point or end() if there is none
 //
 //    iterator FarthestNeighbor( const T& probe ); returns an iterator 
@@ -135,8 +142,8 @@
 // {
 //   CNearTree< double > dT;
 //   double dNear;
-//   dT.Insert( 1.5 );
-//   if ( dT.NearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",double(dNear-2.0) );
+//   dT.insert( 1.5 );
+//   if ( dT.NearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",DistanceType(dNear-2.0) );
 // }
 //
 // and it should print 0.5 (that's how for 2.0 is from 1.5)
@@ -157,9 +164,9 @@
 
 #define MYRAND_MAX  32767
 
-#include <limits.h>
-#include <float.h>
-#include <math.h>
+#include <limits>  // Standard library limits
+//#include <float.h>
+#include <cmath>
 #include <vector>
 
 #ifdef CNEARTREE_SAFE_TRIANG
@@ -170,12 +177,43 @@
 #define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0))
 #endif
 
-
-
-template <typename T> class CNearTree
+namespace CNearTree_helpers 
 {
+}
 
-    // Insert copies the input objects into a binary NEAR tree. When a node has
+template <typename T, typename DistanceType=double, int distMinValue=-1 > class CNearTree
+{
+    //=======================================================================
+    //   NOTES:
+    //
+    //  This code cannot used as designed for unsigned types.
+    //
+    // The type of objects that can be stored in the tree is quite broad. The 
+    // biggest limitation is that the objects must reside in some sort of metric
+    // space and must obey the triangle rule. They must also be all of the same
+    // size because they are stored in an std::vector. If your application
+    // requires object of varying storage, then your best way to use this
+    // code is to store pointers and to write your own distance functions.
+    //
+    // The type of the objects to be stored is the only required template argument.
+    // The type of the variables (DistanceType) defaults to double. If your 
+    // applications is for an integer type and your distance measure is
+    // either L1 or L-infinity, then the type for DistanceType can be your 
+    // integer type. This has the potential for speeding the calculations by
+    // avoiding FP computation. 
+    //
+    // The template argument distMinValue must be something that your class will
+    // understand as a negative number. The default input is negative one. Internally,
+    // that is cast to DistanceType. Since most uses will be for DistanceType
+    // to be double, that is a simple conversion. Obviously, for integer types,
+    // there is no problem either. The need for this value is to have something
+    // internally that is recognizable as smaller than the smallest "distance"
+    // that can exist between any two objects in your type. For most users,
+    // there is no need to input anything other than the default, -1.
+    //
+    //=======================================================================
+
+    // insert copies the input objects into a binary NEAR tree. When a node has
     // two entries, a descending node is used or created. The current datum is
     // put into the branch descending from the nearer of the two
     // objects in the current node.
@@ -187,13 +225,57 @@ template <typename T> class CNearTree
     
     // The tree is built in time O(n log n), and retrievals take place in
     // time O(log n).
+
+    template <typename TT>
+    inline DistanceType DistanceBetween( const TT& t1, const TT& t2 ) const
+    {
+        DistanceType d=DistanceType(t1-t2);
+        return( d>0?d:-d );
+    }
+
+    inline DistanceType DistanceBetween( const double t1, const double t2 ) const
+    {
+        return( (DistanceType)fabs( t1-t2 ) );
+    }
+
+
+    //inline DistanceType DistanceBetween( const long double t1, const long double t2 ) const
+    //{
+    //    return(  (DistanceType)fabsl(t1-t2) );
+    //}
+
+    inline DistanceType DistanceBetween( const float t1, const float t2 ) const
+    {
+        return( (DistanceType)fabsf( t1-t2 ));
+    }
+
+    inline DistanceType DistanceBetween( const int t1, const int t2 ) const
+    {
+        return( (DistanceType)abs(t1-t2) );
+    }
+
+    inline DistanceType DistanceBetween( const long t1, const long t2 ) const
+    {
+        return( (DistanceType)labs(t1-t2) );
+    }
+
+    //inline DistanceType DistanceBetween( const long long t1, const long long t2 ) const
+    //{
+    //    return( llabs(t1-t2) );
+    //}
+
+    inline DistanceType DistanceBetween( const short t1, const short t2 ) const
+    {
+        return( (DistanceType)abs(t1-t2) );
+    }
     
     
+private:
     size_t            m_ptLeft;            // index of left object (of type T) stored in this node
     size_t            m_ptRight;           // index of right object (of type T) stored in this node
-    double            m_dMaxLeft;          // longest distance from the left object to
+    DistanceType      m_dMaxLeft;          // longest distance from the left object to
                                            // anything below it in the tree
-    double            m_dMaxRight;         // longest distance from the right object to
+    DistanceType      m_dMaxRight;         // longest distance from the right object to
                                            // anything below it in the tree
     CNearTree *       m_pLeftBranch;       // tree descending from the left object
     CNearTree *       m_pRightBranch;      // tree descending from the right object
@@ -220,11 +302,11 @@ public:
 //
 //=======================================================================
 
-   CNearTree(void) :  // constructor
+   CNearTree ( void ) :  // constructor
       m_ptLeft            ( ULONG_MAX ),
       m_ptRight           ( ULONG_MAX ),
-      m_dMaxLeft          ( DBL_MIN ),
-      m_dMaxRight         ( DBL_MIN ),
+       m_dMaxLeft          ( DistanceType( distMinValue ) ),
+       m_dMaxRight         ( DistanceType( distMinValue ) ),
       m_pLeftBranch       ( 0 ),
       m_pRightBranch      ( 0 ),
       m_DelayedIndices    ( 0 ),
@@ -243,16 +325,24 @@ public:
 //
 //=======================================================================
     
-    ~CNearTree(void)  // destructor
+    ~CNearTree ( void )  // destructor
     {
+        clear ( );
+    }  //  ~CNearTree
+    
+//=======================================================================
+    void clear ( void )
+    {
+        if ( m_pLeftBranch  ) m_pLeftBranch->clear( );
+        if ( m_pRightBranch ) m_pRightBranch->clear( );
         delete m_pLeftBranch  ;  m_pLeftBranch  =0;
         delete m_pRightBranch ;  m_pRightBranch =0;
         
-        m_dMaxLeft     = DBL_MIN;
-        m_dMaxRight    = DBL_MIN;
+        m_dMaxLeft     = DistanceType( distMinValue );
+        m_dMaxRight    = DistanceType( distMinValue );
         m_DeepestDepth      = 0;
         m_InsertedSize      = 0;
-    }  //  ~CNearTree
+    }
     
 //=======================================================================
 //  empty ( )
@@ -261,13 +351,13 @@ public:
 //
 //=======================================================================
     
-    bool empty( ) const
+    bool empty ( void ) const
     {
-        return( m_ptLeft == ULONG_MAX && m_DelayedInsertions.empty( ) );
+        return ( m_ptLeft == ULONG_MAX && m_DelayedInsertions.empty( ) );
     }
     
 //=======================================================================
-//  void Insert ( const T& t )
+//  void insert ( const T& t )
 //
 //  Function to insert some "point" as an object into a CNearTree for
 //  later searching
@@ -280,7 +370,8 @@ public:
 //  into a node descending from the nearer of those positions
 //  when they are both already used.
 //
-    void Insert( const T& t )
+//=======================================================================
+    void insert ( const T& t )
     {
         size_t localDepth = 0;
        Inserter( t, localDepth, m_ObjectStore );
@@ -289,7 +380,7 @@ public:
     }
     
 //=======================================================================
-//  iterator NearestNeighbor( const double radius, const T& t ) const
+//  iterator NearestNeighbor ( const DistanceType radius, const T& t ) const
 //
 //  Function to search a Neartree for the object closest to some probe point, t. This function
 //  is only here so that the function Nearest can be called without having the radius const.
@@ -304,23 +395,23 @@ public:
 //             or iterator::end if no point was found
 //
 //=======================================================================
-    iterator NearestNeighbor( const double radius, const T& t ) const
+    iterator NearestNeighbor ( const DistanceType radius, const T& t ) const
     {
        T closest;
        size_t index = ULONG_MAX;
-       double tempRadius = radius;
-       if( Nearest( tempRadius, closest, t, index ) )
-       {
-          return( iterator( (long)index, this ) );
+        DistanceType tempRadius = radius;
+        if ( Nearest( tempRadius, closest, t, index ) )
+        {
+            return ( iterator( (long)index, this ) );
        }
        else
        {
-          return( end( ) );
+            return ( end( ) );
        }
     }
 
 //=======================================================================
-//  bool NearestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) const
+//  bool NearestNeighbor ( const DistanceType dRadius,  T& tClosest,   const T& t ) const
 //
 //  Function to search a Neartree for the object closest to some probe point, t. This function
 //  is only here so that the function Nearest can be called without having the radius const.
@@ -335,20 +426,20 @@ public:
 //    the return value is true only if a point was found
 //
 //=======================================================================
-    bool NearestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) const
+    bool NearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const T& t ) const
     {
-        if( dRadius < 0.0 ) 
+        if ( dRadius < DistanceType(0) ) 
         {
-            return( false );
+            return ( false );
         }
-        else if( this->empty( ) )
+        else if ( this->empty( ) )
         {
-            return( false );
+            return ( false );
         }
         else
         {
             const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-            double dSearchRadius = dRadius;
+            DistanceType dSearchRadius = dRadius;
          size_t index = ULONG_MAX;
          return ( const_cast<CNearTree*>(this)->Nearest ( dSearchRadius, tClosest, t, index ) );
         }
@@ -356,7 +447,7 @@ public:
     
 
 //=======================================================================
-//  iterator FarthestNeighbor( const double radius, const T& t ) const
+//  iterator FarthestNeighbor ( const T& t ) const
 //
 //  Function to search a Neartree for the object farthest from some probe point, t. This function
 //  is only here so that the function Farthest can be called without having the radius const.
@@ -369,22 +460,22 @@ public:
 //             or iterator::end if no point was found
 //
 //=======================================================================
-    iterator FarthestNeighbor( const T& t ) const
+    iterator FarthestNeighbor ( const T& t ) const
     {
        T farthest;
        size_t index = ULONG_MAX;
-       double radius = DBL_MIN;
-       if( Farthest( radius, farthest, t, index ) )
-       {
-          return( iterator( (long)index, this ) );
+        DistanceType radius = DistanceType( distMinValue );
+        if ( Farthest( radius, farthest, t, index ) )
+        {
+            return ( iterator( (long)index, this ) );
        }
        else
        {
-          return( end( ) );
+            return ( end( ) );
        }
     }
 //=======================================================================
-//  bool FarthestNeighbor ( const double& dRadius,  T& tClosest,   const T& t ) const
+//  bool FarthestNeighbor ( T& tClosest, const T& t ) const
 //
 //  Function to search a Neartree for the object closest to some probe point, t. This function
 //  is only here so that the function FarthestNeighbor can be called without the user
@@ -399,21 +490,45 @@ public:
 //             an empty tree)
 //
 //=======================================================================
-    bool FarthestNeighbor ( T& tFarthest,   const T& t ) const
+    bool FarthestNeighbor ( T& tFarthest, const T& t ) const
     {
-        if( this->empty( ) )
+        if ( this->empty( ) )
         {
-            return( false );
+            return ( false );
         }
         else
         {
             const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-            double dSearchRadius = DBL_MIN;
+            DistanceType dSearchRadius = DistanceType( distMinValue );
          size_t index = ULONG_MAX;
          return ( const_cast<CNearTree*>(this)->Farthest ( dSearchRadius, tFarthest, t, index ) );
         }
     }  //  FarthestNeighbor
     
+//=======================================================================
+//  long FindInSphere ( const DistanceType dRadius, CNearTree< T >& tClosest, const T& t ) const
+//
+//  Function to search a Neartree for the set of objects closer to some probe point, t,
+//  than dRadius. This is here partly so that tClosest can be cleared before starting the work.
+//
+//    dRadius is the maximum search radius - any point farther than dRadius from the probe
+//             point will be ignored
+//    tClosest is a CNearTree of the object found within the specified radius
+//    t  is the probe point
+//    return value is the number of points found within dRadius of the probe point
+//
+//=======================================================================
+    long FindInSphere ( const DistanceType dRadius, CNearTree< T >& tClosest, const T& t ) const
+    {
+        // clear the contents of the return vector so that things don't accidentally accumulate
+        //tClosest.clear( );
+        tClosest.clear( );
+        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+        const long lReturn = const_cast<CNearTree*>(this)->InSphere( dRadius, tClosest, t );
+        tClosest.CompleteDelayedInsert( );  // make sure that the returned tree is done
+        return ( lReturn );
+    }  //  FindInSphere
+
 //=======================================================================
 //  long FindInSphere ( const double& dRadius,  std::vector<  T >& tClosest,   const T& t ) const
 //
@@ -433,9 +548,117 @@ public:
         // clear the contents of the return vector so that things don't accidentally accumulate
         tClosest.clear( );
         const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        return ( const_cast<CNearTree*>(this)->InSphere( dRadius, tClosest, t ) );
+        return ( InSphere( dRadius, tClosest, t ) );
     }  //  FindInSphere
     
+//=======================================================================
+//  long FindOutSphere ( CNearTree< T >& tFarthest, const DistanceType dRadius, const T& t ) const
+//
+//  Function to search a Neartree for the set of objects outside of the specified 
+//     radius from some probe point, t,
+//
+//    dRadius is the maximum search radius - any point farther than dRadius from the probe
+//             point will be ignored
+//    tFarthest is a CNearTree of the object found within the specified radius
+//    t  is the probe point
+//    return value is the number of points found within dRadius of the probe point
+//
+//=======================================================================
+    long FindOutSphere ( const DistanceType dRadius, CNearTree< T >& tFarthest, const T& t ) const
+    {
+        // clear the contents of the return vector so that things don't accidentally accumulate
+        // clear the contents of the return vector so that things don't accidentally accumulate
+        tFarthest.clear( );
+        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+        const long lReturn = const_cast<CNearTree*>(this)->OutSphere( dRadius, tFarthest, t );
+        tFarthest.CompleteDelayedInsert( );  // make sure that the returned tree is done
+        return ( lReturn );
+    }  //  FindOutSphere
+    
+//=======================================================================
+//  long FindOutSphere ( const double& dRadius,  std::vector<  T >& tFarthest,   const T& t ) const
+//
+//  Function to search a Neartree for the set of objects farther from some probe point, t,
+//  than dRadius. This is only here so that tFarthest can be cleared before starting the work.
+//
+//    dRadius is the maximum search radius - any point farther than dRadius from the probe
+//             point will be ignored
+//    tFarthest is a vector of objects of the templated type and is the returned set of nearest points
+//             to the probe point that can be found in the Neartree
+//    t  is the probe point
+//    return value is the number of points found within dRadius of the probe point
+//
+//=======================================================================
+    long FindOutSphere ( const double& dRadius,  std::vector<  T >& tFarthest,   const T& t ) const
+    {
+        // clear the contents of the return vector so that things don't accidentally accumulate
+        tFarthest.clear( );
+        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+        return ( OutSphere( dRadius, tFarthest, t ) );
+    }  //  FindOutSphere
+
+//=======================================================================
+//  long FindInAnnulus ( const DistanceType dRadius1, const DistanceType dRadius2, CNearTree< T >& tAnnular, const T& t ) const
+//
+//  Function to search a Neartree for the set of objects within a "spherical" annulus
+//
+//    dRadius1 is the minimum search radius - any point nearer than dRadius1 from the probe
+//             point will be ignored
+//    dRadius2 is the maximum search radius - any point farther than dRadius2 from the probe
+//             point will be ignored
+//    tAnnular is a CNearTree of the objects found within the specified annulus
+//    t  is the probe point
+//    return value is the number of points found within dRadius of the probe point
+//
+//=======================================================================
+    long FindInAnnulus ( 
+                       const DistanceType dRadius1, 
+                       const DistanceType dRadius2, 
+                       CNearTree< T >& tAnnular, 
+                       const T& t ) const
+    {
+
+        // Make sure that r1 < r2
+        if ( dRadius1 > dRadius2 ) return ( FindInAnnulus( dRadius2, dRadius1, tAnnular, t ) );
+
+        // clear the contents of the return vector so that things don't accidentally accumulate
+        tAnnular.clear( );
+        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+        const long lReturn = const_cast<CNearTree*>(this)->InAnnulus( dRadius1, dRadius2, tAnnular, t );
+        tAnnular.CompleteDelayedInsert( );
+        return ( lReturn );
+    };
+
+//=======================================================================
+//  long FindInAnnulus ( const DistanceType dRadius1, const DistanceType dRadius2, std::vector< T >& tAnnular, const T& t ) const
+//
+//  Function to search a Neartree for the set of objects within a "spherical" annulus
+//
+//    dRadius1 is the minimum search radius - any point nearer than dRadius1 from the probe
+//             point will be ignored
+//    dRadius2 is the maximum search radius - any point farther than dRadius2 from the probe
+//             point will be ignored
+//    tAnnular is a vector of the objects found within the specified annulus
+//    t  is the probe point
+//    return value is the number of points found within dRadius of the probe point
+//
+//=======================================================================
+    long FindInAnnulus ( 
+                       const DistanceType dRadius1, 
+                       const DistanceType dRadius2, 
+                       std::vector< T >& tAnnular, 
+                       const T& t ) const
+    {
+
+        // Make sure that r1 < r2
+        if ( dRadius1 > dRadius2 ) return ( FindInAnnulus( dRadius2, dRadius1, tAnnular, t ) );
+
+        // clear the contents of the return vector so that things don't accidentally accumulate
+        tAnnular.clear( );
+        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+        const long lReturn = const_cast<CNearTree*>(this)->InAnnulus( dRadius1, dRadius2, tAnnular, t );
+        return ( lReturn );
+    }  //  FindInAnnulus
     
 //=======================================================================
 //  void DelayedInsert ( const T& t )
@@ -446,7 +669,7 @@ public:
 //     t is an object of the templated type which is to be inserted into a
 //     Neartree
 //
-//  The function Insert immediately inserts the object into the tree. 
+//  The function insert immediately inserts the object into the tree. 
 //  DelayedInsert keeps the object in an internal store, but does not 
 //  immediately insert it. The object in the internal store are only inserted
 //  when CompleteDelayedInsert is called or when one of the search functions
@@ -455,14 +678,14 @@ public:
 //  to give a relatively balanced tree even if the data are strongly sorted.
 //
 //=======================================================================
-    void DelayedInsert( const T& t )
+    void DelayedInsert ( const T& t )
     {
         m_DelayedInsertions.push_back( t );
         m_DelayedIndices   .push_back( (long)m_DelayedInsertions.size( ) - 1 );
     };
     
 //=======================================================================
-//  void CompleteDelayedInsert( void )
+//  void CompleteDelayedInsert ( void )
 //
 //  When CompleteDelayedInsert is invoked, if there are any objects in the 
 //  internal store they are then inserted into the neartree. CompleteDelayedInsert
@@ -472,39 +695,39 @@ public:
 //  sequence as they were entered.
 //
 //=======================================================================
-    void CompleteDelayedInsert( void )
+    void CompleteDelayedInsert ( void )
     {
-        if( m_DelayedInsertions.empty( ) )
+        if ( m_DelayedInsertions.empty( ) )
         {
             return;
         }
         
-        // Insert a random selection of the objects
+        // insert a random selection of the objects
         const size_t vectorSize = m_DelayedInsertions.size( );
       const size_t toRandomlyInsert = (size_t)::sqrt( (double)vectorSize );
-        for( size_t i=0; i<toRandomlyInsert; ++i )
+        for ( size_t i=0; i<toRandomlyInsert; ++i )
         {
-            size_t n = (size_t)((double)(vectorSize-1u) * (double)(random( )%MYRAND_MAX) / (double) MYRAND_MAX);
+            size_t n = (size_t)((double)(vectorSize-1u) * (DistanceType)(random( )%MYRAND_MAX) / (double) MYRAND_MAX);
             random( ); random( );
             random( ); random( );
-            // Find the next pointer that hasn't already had its object "Insert"ed
+            // Find the next pointer that hasn't already had its object "insert"ed
             // We can do this blindly since sqrt(n)<=n for all cases. n=1 would be the only 
             // bad case here, and that will not trigger the later loop.
-            while( m_DelayedIndices[n] == -1 )
+            while ( m_DelayedIndices[n] == -1 )
             {
                 ++n;
                 n = n% vectorSize;
             }
-            Insert( m_DelayedInsertions[n] );
+            insert( m_DelayedInsertions[n] );
             m_DelayedIndices[n] = -1;         
         }
         
         // finish by inserting all the remaining objects
-        for( size_t i=0; i<vectorSize; ++i )
+        for ( size_t i=0; i<vectorSize; ++i )
         {
-            if( m_DelayedIndices[i] != -1 )
+            if ( m_DelayedIndices[i] != -1 )
             {
-                Insert( m_DelayedInsertions[i] );
+                insert( m_DelayedInsertions[i] );
             }
         }
         
@@ -517,50 +740,61 @@ public:
     };
     
 //=======================================================================
-//  size_t GetDeferredSize(  void )
+//  size_t GetDeferredSize (  void )
 //
 //  The number of objects currently queued for insertion.
 //
 //=======================================================================
-   size_t GetDeferredSize( void ) const
+    size_t GetDeferredSize ( void ) const
     {
-        return( m_DelayedInsertions.size( ) );
+        return ( m_DelayedInsertions.size( ) );
     };
     
 //=======================================================================
-//  size_t GetTotalSize(  void )
+//  size_t GetTotalSize (  void )
 //
 //  The total number of objects that have been inserted plus those
 //  queued for insertion.
 //
 //=======================================================================
-   size_t GetTotalSize( void ) const
+    size_t GetTotalSize ( void ) const
     {
-        return( m_InsertedSize + m_DelayedInsertions.size( ) );
+        return ( m_InsertedSize + m_DelayedInsertions.size( ) );
     };
 
 //=======================================================================
-//  size_t size(  void )
+//  size_t size ( void )
 //
 //  The total number of objects that have been inserted plus those
 //  queued for insertion.
 //
 //=======================================================================
-   size_t size( void ) const
-   {
-      return( GetTotalSize( ) );
+    size_t size ( void ) const
+    {
+        return ( GetTotalSize( ) );
    };
 
 //=======================================================================
-//  size_t GetDepth(  void ) const
+//  size_t GetDepth ( void ) const
 //
 //  The greatest depth of the tree (1-based) from the root.
 //
 //=======================================================================
-   size_t GetDepth( void ) const
+    size_t GetDepth ( void ) const
     {
-        return( m_DeepestDepth );
+        return ( m_DeepestDepth );
     };
+
+//=======================================================================
+//  operator std::vector<T, DistanceType> ( void ) const
+//
+//  Utility function to copy the data object to a user's vector.
+//
+//=======================================================================
+    operator std::vector<T> ( void ) const
+    {
+        return ( m_ObjectStore );
+    }
     
 private:
 //=======================================================================
@@ -580,19 +814,21 @@ private:
 //  when they are both already used.
 //
 //=======================================================================
-   void Inserter( const T& t, size_t& localDepth, std::vector<T>& ObjectStore )
+   void Inserter ( const T& t, size_t& localDepth, std::vector<T>& ObjectStore )
     {
         // do a bit of precomputing if it is possible so that we can
-        // reduce the number of calls to operator 'double' as much as possible;
-        // 'double' might use square roots in some cases
-        double dTempRight =  0;
-        double dTempLeft  =  0;
+        // reduce the number of calls to operator 'DistanceType' as much as possible;
+        // 'DistanceType' might use square roots in some cases
+        DistanceType dTempRight =  DistanceType(0);
+        DistanceType dTempLeft  =  DistanceType(0);
         ++localDepth;
         
       if ( m_ptRight  != ULONG_MAX )
       {
-         dTempRight  = ::fabs( double( t - ObjectStore[m_ptRight] ));
-         dTempLeft   = ::fabs( double( t - ObjectStore[m_ptLeft]  ));
+            //dTempRight  = ::abs( DistanceType( t - ObjectStore[m_ptRight] ));
+            //dTempLeft   = ::abs( DistanceType( t - ObjectStore[m_ptLeft]  ));
+            dTempRight  = DistanceBetween( t, ObjectStore[m_ptRight] );
+            dTempLeft   = DistanceBetween( t, ObjectStore[m_ptLeft]  );
         }
         
       if ( m_ptLeft == ULONG_MAX )
@@ -612,7 +848,7 @@ private:
             if ( m_dMaxRight < dTempRight ) m_dMaxRight = dTempRight;
          m_pRightBranch->Inserter( t, localDepth, ObjectStore );
         }
-        else  // ((double)(t - *m_tLeft) <= (double)(t - *m_tRight) )
+        else  // ((DistanceType)(t - *m_tLeft) <= (DistanceType)(t - *m_tRight) )
         {
             if ( m_pLeftBranch  == 0 ) m_pLeftBranch  = new CNearTree;
             // note that the next line assumes that m_dMaxLeft is negative for a new node
@@ -621,7 +857,82 @@ private:
         }
     }  //  Inserter
 
+//  InSphere//=======================================================================
+//  long InSphere ( const DistanceType dRadius,  CNearTree<  T >& tClosest,   const T& t ) const
+//
+//  Private function to search a Neartree for the objects inside of the specified radius
+//     from the probe point
+//  This function is only called by FindInSphere.
+//
+//    dRadius is the search radius
+//    tClosest is a CNearTree of objects of the templated type found within dRadius of the
+//         probe point
+//    t  is the probe point
+//    the return value is the number of points found within dRadius of the probe
+//
    //=======================================================================
+    long InSphere ( const DistanceType dRadius, CNearTree< T >& tClosest, const T& t ) const
+    {
+        std::vector <CNearTree<T, DistanceType>* > sStack;
+        long lReturn = 0;
+        enum  { left, right, end } eDir;
+        eDir = left; // examine the left nodes first
+        CNearTree* pt = const_cast<CNearTree*>(this);
+        if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
+        while ( ! ( eDir == end && sStack.empty( ) ) )
+        {
+            if ( eDir == right )
+            {
+                const DistanceType dDR =  DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
+                if ( dDR <= dRadius )
+                {
+                    ++lReturn;
+                    tClosest.DelayedInsert( m_ObjectStore[pt->m_ptRight] );
+                }
+                if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
+                { // we did the left and now we finished the right, go down
+                    pt = pt->m_pRightBranch;
+                    eDir = left;
+                }
+                else
+                {
+                    eDir = end;
+                }
+            }
+            if ( eDir == left )
+            {
+                const DistanceType dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]  );
+                if ( dDL <= dRadius )
+                {
+                    ++lReturn;
+                    tClosest.DelayedInsert( m_ObjectStore[pt->m_ptLeft] );
+                }
+                if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
+                {
+                    sStack.push_back( pt );
+                }
+                if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,pt->m_dMaxLeft,dRadius) )
+                { // we did the left, go down
+                    pt = pt->m_pLeftBranch;
+                }
+                else
+                {
+                    eDir = end;
+                }
+            }
+
+            if ( eDir == end && !sStack.empty( ) )
+            {
+                pt = sStack.back( );
+                sStack.pop_back( );
+                eDir = right;
+            }
+        }
+
+        return ( lReturn );
+    }  //  InSphere
+
+//=======================================================================
 //  long InSphere ( const double& dRadius,  std::vector<  T >& tClosest,   const T& t ) const
 //
 //  Private function to search a Neartree for the object closest to some probe point, t.
@@ -646,7 +957,7 @@ private:
         {
             if ( eDir == right )
             {
-            const double dDR = ::fabs(double( t - m_ObjectStore[pt->m_ptRight] ));
+                const DistanceType dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
                 if ( dDR <= dRadius )
                 {
                     ++lReturn;
@@ -664,7 +975,7 @@ private:
             }
             if ( eDir == left )
             {
-            const double dDL = ::fabs(double( t - m_ObjectStore[pt->m_ptLeft]) );
+                const DistanceType dDL = DistanceBetween( t , m_ObjectStore[pt->m_ptLeft] );
                 if ( dDL <= dRadius )
                 {
                     ++lReturn;
@@ -695,38 +1006,39 @@ private:
         return ( lReturn );
     }  //  InSphere
 
-//=======================================================================
-//  bool Nearest ( double& dRadius,  T& tClosest,   const T& t ) const
+//  OutSphere//=======================================================================
+//  long OutSphere ( const DistanceType dRadius,  CNearTree<  T >& tFarthest,   const T& t ) const
 //
-//  Private function to search a Neartree for the object closest to some probe point, t.
-//  This function is only called by NearestNeighbor.
+//  Private function to search a Neartree for the objects outside of the specified radius
+//     from the probe point
+//  This function is only called by FindOutSphere.
 //
-//    dRadius is the smallest currently known distance of an object from the probe point.
-//    tClosest is an object of the templated type and is the returned closest point
-//             to the probe point that can be found in the Neartree
+//    dRadius is the search radius
+//    tFarthest is a CNearTree of objects of the templated type found within dRadius of the
+//         probe point
 //    t  is the probe point
-//    the return value is true only if a point was found within dRadius
+//    the return value is the number of points found within dRadius of the probe
 //
 //=======================================================================
-   bool Nearest ( double& dRadius, T& tClosest, const T& t, size_t& pClosest ) const
+    long OutSphere ( const DistanceType dRadius, CNearTree< T >& tFarthest, const T& t ) const
     {
-        std::vector <CNearTree<T>* > sStack;
+        std::vector <CNearTree<T, DistanceType>* > sStack;
+        long lReturn = 0;
         enum  { left, right, end } eDir;
         eDir = left; // examine the left nodes first
         CNearTree* pt = const_cast<CNearTree*>(this);
-      pClosest = ULONG_MAX;
-      if ( pt->m_ptLeft == ULONG_MAX) return false; // test for empty
+        if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
         while ( ! ( eDir == end && sStack.empty( ) ) )
         {
             if ( eDir == right )
             {
-            const double dDR = ::fabs(double( t - m_ObjectStore[pt->m_ptRight] ));
-                if ( dDR < dRadius )
+                const DistanceType dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
+                if ( dDR >= dRadius )
                 {
-                    dRadius = dDR;
-                    pClosest = pt->m_ptRight;
+                    ++lReturn;
+                    tFarthest.DelayedInsert( m_ObjectStore[pt->m_ptRight] );
                 }
-                if ( pt->m_pRightBranch != 0 && (TRIANG(dDR,pt->m_dMaxRight,dRadius)))
+                if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
                 { // we did the left and now we finished the right, go down
                     pt = pt->m_pRightBranch;
                     eDir = left;
@@ -738,8 +1050,310 @@ private:
             }
             if ( eDir == left )
             {
-            const double dDL = ::fabs(double( t - m_ObjectStore[pt->m_ptLeft] ));
-                if ( dDL < dRadius )
+                const DistanceType dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]  );
+                if ( dDL >= dRadius )
+                {
+                    ++lReturn;
+                    tFarthest.DelayedInsert( m_ObjectStore[pt->m_ptLeft] );
+                }
+                if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
+                {
+                    sStack.push_back( pt );
+                }
+                if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
+                { // we did the left, go down
+                    pt = pt->m_pLeftBranch;
+                }
+                else
+                {
+                    eDir = end;
+                }
+            }
+
+            if ( eDir == end && !sStack.empty( ) )
+            {
+                pt = sStack.back( );
+                sStack.pop_back( );
+                eDir = right;
+            }
+        }
+
+        return ( lReturn );
+    }  //  OutSphere
+
+//  OutSphere//=======================================================================
+//  long OutSphere ( const DistanceType dRadius,  std::vector<  T >& tFarthest,   const T& t ) const
+//
+//  Private function to search a Neartree for the objects outside of the specified radius
+//     from the probe point
+//  This function is only called by FindOutSphere.
+//
+//    dRadius is the search radius
+//    tFarthest is a vector of objects of the templated type found within dRadius of the
+//         probe point
+//    t  is the probe point
+//    the return value is the number of points found within dRadius of the probe
+//
+//=======================================================================
+    long OutSphere ( const DistanceType dRadius, std::vector< T >& tFarthest, const T& t ) const
+    {
+        std::vector <CNearTree<T, DistanceType>* > sStack;
+        long lReturn = 0;
+        enum  { left, right, end } eDir;
+        eDir = left; // examine the left nodes first
+        CNearTree* pt = const_cast<CNearTree*>(this);
+        if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
+        while ( ! ( eDir == end && sStack.empty( ) ) )
+        {
+            if ( eDir == right )
+            {
+                const DistanceType dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
+                if ( dDR >= dRadius )
+                {
+                    ++lReturn;
+                    tFarthest.push_back( m_ObjectStore[pt->m_ptRight] );
+                }
+                if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
+                { // we did the left and now we finished the right, go down
+                    pt = pt->m_pRightBranch;
+                    eDir = left;
+                }
+                else
+                {
+                    eDir = end;
+                }
+            }
+            if ( eDir == left )
+            {
+                const DistanceType dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]  );
+                if ( dDL >= dRadius )
+                {
+                    ++lReturn;
+                    tFarthest.push_back( m_ObjectStore[pt->m_ptLeft] );
+                }
+                if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
+                {
+                    sStack.push_back( pt );
+                }
+                if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
+                { // we did the left, go down
+                    pt = pt->m_pLeftBranch;
+                }
+                else
+                {
+                    eDir = end;
+                }
+            }
+
+            if ( eDir == end && !sStack.empty( ) )
+            {
+                pt = sStack.back( );
+                sStack.pop_back( );
+                eDir = right;
+            }
+        }
+
+        return ( lReturn );
+    }  //  OutSphere
+
+//=======================================================================
+//  long InAnnulus ( const DistanceType dRadius1, const DistanceType dRadius2, CNearTree< T >& tAnnular,   const T& t ) const
+//
+//  Private function to search a Neartree for the objects within a specified annulus from probe point
+//  This function is only called by FindInAnnulus.
+//
+//    dRadius1, dRadius2 specifies the range of the annulus
+//    tAnnular is a NearTree of objects of the templated type found between the two radii
+//    t  is the probe point
+//    the return value is the number of points found within dRadius of the probe
+//
+//=======================================================================
+    long InAnnulus ( 
+                  const DistanceType dRadius1, 
+                  const DistanceType dRadius2, 
+                  CNearTree< T >& tAnnular, 
+                  const T& t ) const
+    {
+        std::vector <CNearTree<T>* > sStack;
+        long lReturn = 0;
+        enum  { left, right, end } eDir;
+        eDir = left; // examine the left nodes first
+        CNearTree* pt = const_cast<CNearTree*>(this);
+        if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
+        while ( ! ( eDir == end && sStack.empty( ) ) )
+        {
+            if ( eDir == right )
+            {
+                const DistanceType dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
+                if ( dDR <= dRadius2 && dDR >= dRadius1 )
+                {
+                    ++lReturn;
+                    tAnnular.DelayedInsert( m_ObjectStore[pt->m_ptRight] );
+                }
+                if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius1) && TRIANG(dDR,pt->m_dMaxRight,dRadius2) )
+                { // we did the left and now we finished the right, go down
+                    pt = pt->m_pRightBranch;
+                    eDir = left;
+                }
+                else
+                {
+                    eDir = end;
+                }
+            }
+            if ( eDir == left )
+            {
+                const DistanceType dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]  );
+                if ( dDL <= dRadius2 && dDL >= dRadius1 )
+                {
+                    ++lReturn;
+                    tAnnular.DelayedInsert( m_ObjectStore[pt->m_ptLeft] );
+                }
+                if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
+                {
+                    sStack.push_back( pt );
+                }
+                if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,pt->m_dMaxLeft,dRadius1) && TRIANG(dDL,pt->m_dMaxLeft,dRadius2) )
+                { // we did the left, go down
+                    pt = pt->m_pLeftBranch;
+                }
+                else
+                {
+                    eDir = end;
+                }
+            }
+
+            if ( eDir == end && !sStack.empty( ) )
+            {
+                pt = sStack.back( );
+                sStack.pop_back( );
+                eDir = right;
+            }
+        }
+
+        return ( lReturn );
+    }  //  InAnnulus
+
+//=======================================================================
+//  long InAnnulus ( const DistanceType dRadius1, const DistanceType dRadius2, std::vector< T >& tAnnular,   const T& t ) const
+//
+//  Private function to search a Neartree for the objects within a specified annulus from probe point
+//  This function is only called by FindInAnnulus.
+//
+//    dRadius1, dRadius2 specifies the range of the annulus
+//    tAnnular is a vector of objects of the templated type found between the two radii
+//    t  is the probe point
+//    the return value is the number of points found within dRadius of the probe
+//
+//=======================================================================
+    long InAnnulus ( 
+                  const DistanceType dRadius1, 
+                  const DistanceType dRadius2, 
+                  std::vector< T >& tAnnular, 
+                  const T& t ) const
+    {
+        std::vector <CNearTree<T>* > sStack;
+        long lReturn = 0;
+        enum  { left, right, end } eDir;
+        eDir = left; // examine the left nodes first
+        CNearTree* pt = const_cast<CNearTree*>(this);
+        if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
+        while ( ! ( eDir == end && sStack.empty( ) ) )
+        {
+            if ( eDir == right )
+            {
+                const DistanceType dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
+                if ( dDR <= dRadius2 && dDR >= dRadius1 )
+                {
+                    ++lReturn;
+                    tAnnular.push_back( m_ObjectStore[pt->m_ptRight] );
+                }
+                if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius1) && TRIANG(dDR,pt->m_dMaxRight,dRadius2) )
+                { // we did the left and now we finished the right, go down
+                    pt = pt->m_pRightBranch;
+                    eDir = left;
+                }
+                else
+                {
+                    eDir = end;
+                }
+            }
+            if ( eDir == left )
+            {
+                const DistanceType dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]  );
+                if ( dDL <= dRadius2 && dDL >= dRadius1 )
+                {
+                    ++lReturn;
+                    tAnnular.push_back( m_ObjectStore[pt->m_ptLeft] );
+                }
+                if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
+                {
+                    sStack.push_back( pt );
+                }
+                if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,pt->m_dMaxLeft,dRadius1) && TRIANG(dDL,pt->m_dMaxLeft,dRadius2) )
+                { // we did the left, go down
+                    pt = pt->m_pLeftBranch;
+                }
+                else
+                {
+                    eDir = end;
+                }
+            }
+
+            if ( eDir == end && !sStack.empty( ) )
+            {
+                pt = sStack.back( );
+                sStack.pop_back( );
+                eDir = right;
+            }
+        }
+
+        return ( lReturn );
+    }  //  InAnnulus
+//=======================================================================
+//  bool Nearest ( DistanceType dRadius,  T& tClosest,   const T& t ) const
+//
+//  Private function to search a Neartree for the object closest to some probe point, t.
+//  This function is only called by NearestNeighbor.
+//
+//    dRadius is the smallest currently known distance of an object from the probe point.
+//    tClosest is an object of the templated type and is the returned closest point
+//             to the probe point that can be found in the Neartree
+//    t  is the probe point
+//    the return value is true only if a point was found within dRadius
+//
+//=======================================================================
+    bool Nearest ( DistanceType dRadius, T& tClosest, const T& t, size_t& pClosest ) const
+    {
+        std::vector <CNearTree<T,DistanceType>* > sStack;
+        enum  { left, right, end } eDir;
+        eDir = left; // examine the left nodes first
+        CNearTree* pt = const_cast<CNearTree*>(this);
+      pClosest = ULONG_MAX;
+      if ( pt->m_ptLeft == ULONG_MAX) return false; // test for empty
+        while ( ! ( eDir == end && sStack.empty( ) ) )
+        {
+            if ( eDir == right )
+            {
+                const DistanceType dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
+                if ( dDR <= dRadius )
+                {
+                    dRadius = dDR;
+                    pClosest = pt->m_ptRight;
+                }
+                if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius))
+                { // we did the left and now we finished the right, go down
+                    pt = pt->m_pRightBranch;
+                    eDir = left;
+                }
+                else
+                {
+                    eDir = end;
+                }
+            }
+            if ( eDir == left )
+            {
+                const DistanceType dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]  );
+                if ( dDL <= dRadius )
                 {
                     dRadius = dDL;
                     pClosest = pt->m_ptLeft;
@@ -748,7 +1362,7 @@ private:
                 {
                     sStack.push_back( pt );
                 }
-                if ( pt->m_pLeftBranch != 0 && (TRIANG(dDL,pt->m_dMaxLeft,dRadius)))
+                if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,pt->m_dMaxLeft,dRadius))
                 { // we did the left, go down
                     pt = pt->m_pLeftBranch;
                 }
@@ -773,7 +1387,7 @@ private:
     };   // Nearest
 
 //=======================================================================
-//  bool Farthest ( double& dRadius,  T& tFarthest,   const T& t ) const
+//  bool Farthest ( DistanceType dRadius,  T& tFarthest,   const T& t ) const
 //
 //  Private function to search a Neartree for the object farthest from some probe point, t.
 //  This function is only called by FarthestNeighbor.
@@ -786,7 +1400,7 @@ private:
 //             an empty tree)
 //
 //=======================================================================
-   bool Farthest ( double& dRadius,  T& tFarthest,   const T& t, size_t& pFarthest ) const
+    bool Farthest ( DistanceType dRadius,  T& tFarthest,   const T& t, size_t& pFarthest ) const
     {
         std::vector <CNearTree<T>* > sStack;
         enum  { left, right, end } eDir;
@@ -798,7 +1412,7 @@ private:
         {
             if ( eDir == right )
             {
-            const double dDR = ::fabs(double( t - m_ObjectStore[pt->m_ptRight]) );
+                const DistanceType dDR = DistanceBetween( t , m_ObjectStore[pt->m_ptRight] );
                 if ( dDR >= dRadius )
                 {
                     dRadius = dDR;
@@ -816,7 +1430,7 @@ private:
             }
             if ( eDir == left )
             {
-            const double dDL = ::fabs(double( t - m_ObjectStore[pt->m_ptLeft] ) );
+                const DistanceType dDL = DistanceBetween( t , m_ObjectStore[pt->m_ptLeft] );
                 if ( dDL >= dRadius )
                 {
                     dRadius = dDL;
@@ -851,42 +1465,55 @@ private:
     };   // Farthest
 
    public:
-         iterator begin( void ) const { return( iterator( 0, this ) ); };
-         iterator end  ( void ) const { return( iterator(m_ObjectStore.empty()?1:(long)m_ObjectStore.size( ), this ) ); };
-         iterator back ( void ) const { return( iterator( (m_ObjectStore.empty())? 1 :(long)m_ObjectStore.size( )-1, this ) ); };
-         T operator[] ( const size_t position ) const { return( m_ObjectStore[position] ); };
+    iterator begin ( void ) const { return ( iterator( 0, this ) ); };
+    iterator end   ( void ) const { return ( iterator(m_ObjectStore.empty( )?1:(long)m_ObjectStore.size( ), this ) ); };
+    iterator back  ( void ) const { return ( iterator( (m_ObjectStore.empty( ))? 1 :(long)m_ObjectStore.size( )-1, this ) ); };
+
+    T at( const size_t n ) const { return ( m_ObjectStore[n] ); };
+    T operator[] ( const size_t position ) const { return ( m_ObjectStore[position] ); };
 
 
 
       //====================================================================================
+    // class iterator
+    //
+    // nested class within CNearTree
+    //====================================================================================
       class iterator
       {
-         friend class CNearTree<T>;
+        friend class CNearTree<T, DistanceType>;
+    private:
          long position;
-         const CNearTree<T>* parent;
+        const CNearTree<T, DistanceType>* parent;
+
       public:
          iterator( void ) { }; // constructor
-         explicit iterator( const long s ) : position(s), parent((CNearTree<T>*)this) { }; // constructor
-         explicit iterator( const int  s ) : position(s), parent((CNearTree<T>*)this) { }; // constructor
+        explicit iterator ( const long s ) : position(s), parent((CNearTree<T, DistanceType>*)this) { }; // constructor
+        explicit iterator ( const int  s ) : position(s), parent((CNearTree<T, DistanceType>*)this) { }; // constructor
 
-         iterator& operator=  ( const iterator& s )      { position = s.position; parent = s.parent; return( *this ); };
-         iterator  operator++ ( const int n )            { iterator it(*this); position+=1+n; return( it ); };
-         iterator  operator-- ( const int n )            { iterator it(*this); position-=1+n; return( it ); };
-         iterator& operator++ ( void )                   { ++position; return( *this ); };
-         iterator& operator-- ( void )                   { --position; return( *this ); };
-         iterator  operator+  ( const long n ) const     { iterator it( position+n, parent); return( it ); };
-         iterator  operator-  ( const long n ) const     { iterator it( position-n, parent); return( it ); };
-         iterator& operator+= ( const long n )           { position += n; return( *this ); };
-         iterator& operator-= ( const long n )           { position -= n; return( *this ); };
-         T         operator*  ( void )         const     { return( parent->m_ObjectStore[position] ); };
-         T*        operator-> ( void )         const     { return( &(const_cast<CNearTree<T>*>(parent)->m_ObjectStore[position]) ); };
+        iterator& operator=  ( const iterator& s )      { position = s.position; parent = s.parent; return ( *this ); };
+        iterator  operator++ ( const int n )            { iterator it(*this); position+=1+n; return ( it ); };
+        iterator  operator-- ( const int n )            { iterator it(*this); position-=1+n; return ( it ); };
+        iterator& operator++ ( void )                   { ++position; return ( *this ); };
+        iterator& operator-- ( void )                   { --position; return ( *this ); };
+        iterator  operator+  ( const long n ) const     { iterator it( position+n, parent); return ( it ); };
+        iterator  operator-  ( const long n ) const     { iterator it( position-n, parent); return ( it ); };
+        iterator& operator+= ( const long n )           { position += n; return ( *this ); };
+        iterator& operator-= ( const long n )           { position -= n; return ( *this ); };
+        T         operator*  ( void )         const     { return ( parent->m_ObjectStore[position] ); };
 
-         bool      operator== ( const iterator t ) const { return( t.position==(parent->m_ObjectStore.empty()?1:position) && t.parent==parent ); };
-         bool      operator!= ( const iterator t ) const { return( ! (*this==t )); };
+        bool      operator== ( const iterator t ) const { return ( t.position==(parent->m_ObjectStore.empty( )?1:position) && t.parent==parent ); };
+        bool      operator!= ( const iterator t ) const { return ( ! (*this==t )); };
+
+        const T * const operator-> ( void )   const     { return ( &(const_cast<CNearTree<T, DistanceType>*>(parent)->m_ObjectStore[position]) ); };
 
       private:
-         iterator( const long s, const CNearTree<T>* nt ) { position = s; parent = nt; }; // constructor
+        iterator ( const long s, const CNearTree<T, DistanceType>* nt ) { position = s; parent = nt; }; // constructor
+
       }; // class iterator
+    //====================================================================================
+    // end of nested class "iterator"
+    //====================================================================================
 
 
 
