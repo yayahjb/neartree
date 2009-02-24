@@ -1955,7 +1955,7 @@ void testBigIntVec( void )
         if( iFoundNearCenter < 2 )
         {
             ++g_errorCount;
-            fprintf(stdout, "testBigIntVector: FindInSphere found %d points, instead of 2\n", iFoundNearCenter );
+            fprintf(stdout, "testBigIntVector: FindInSphere found %lu points, instead of 2\n", iFoundNearCenter );
         }
         
         /* Brute force search for the point closest to the point closest to the center */
