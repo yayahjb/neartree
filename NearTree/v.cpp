@@ -106,3 +106,9 @@ v::operator double( ) const
    // return ( fabs(m_dvec[0])>=fabs(m_dvec[1]) && fabs(m_dvec[0])>=fabs(m_dvec[2]) ? fabs(m_dvec[0]) : fabs(m_dvec[1])>=fabs(m_dvec[2]) ? fabs(m_dvec[1]) : fabs(m_dvec[2]) );
    // Hamming measure (if this is a difference vector) return ( (m_dvec[0]==0 ? 0 : 1) + (m_dvec[1]==0 ? 0 : 1) + (m_dvec[2]==0 ? 0 : 1) )
 }
+
+double v::Norm( void ) const
+{
+	return( sqrt( m_dvec[0]*m_dvec[0] + m_dvec[1]*m_dvec[1] + m_dvec[2]*m_dvec[2] ) );
+
+}

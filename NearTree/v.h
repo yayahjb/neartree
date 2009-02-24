@@ -58,6 +58,7 @@ public:
    v  ( const double& da );
    v  ( );
    ~v ( );
+   double Norm( void ) const;
 
 friend std::ostream& operator <<( std::ostream& os, const v& v );
 

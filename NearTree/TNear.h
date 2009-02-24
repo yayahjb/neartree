@@ -262,6 +262,7 @@
 #include <list>
 #include <set>
 #include <vector>
+#include <cmath>
 
 #ifdef CNEARTREE_SAFE_TRIANG
 #define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0) \

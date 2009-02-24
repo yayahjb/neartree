@@ -37,6 +37,7 @@
 #include <limits.h>
 #include <time.h>
 #include <vector>
+#include <float.h>
 
 #include "TNear.h"
 #include "v.h"
@@ -64,7 +65,7 @@ int main ( int argc, char* argv[] )
         {
             for ( i= lMaxRow ; i>=-1;  i-- ) 
             {
-                vTree.Insert( v((double)i, (double)j, (double)k) );
+                vTree.insert( v((double)i, (double)j, (double)k) );
             }  // for i
         }     // for j
     }        // for k
