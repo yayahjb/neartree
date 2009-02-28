@@ -126,11 +126,15 @@ extern "C" {
 #define CNEARTREE_NORM            960         /* 0x03C0 */
     
 #define CNEARTREE_FLIP           1024         /* 0x0400 */
+#define CNEARTREE_DEFER_ALL      2048         /* 0x0800 */
 
     
+    
     typedef struct _CNearTreeNode {
-        void       FAR * m_coordLeft;    /* coords of left object stored in this node   */
-        void       FAR * m_coordRight;   /* coords of right object stored in this node  */
+        size_t           m_indexLeft;    /* index of left coords in m_CoordStore  
+                                            and of left object in m_ObjectStore     */
+        size_t           m_indexRight;   /* index of right coords in m_CoordStore 
+                                            and of right object in m_ObjectStore     */
         double           m_dMaxLeft;     /* longest distance from the left object
                                             to anything below it in the tree            */
         double           m_dMaxRight;    /* longest distance from the right object 
@@ -139,24 +143,21 @@ extern "C" {
                                          /* tree descending from the left object        */
         struct _CNearTreeNode FAR * m_pRightBranch; 
                                          /* tree descending from the right object       */
-        void FAR *       m_ptobjLeft;    /* pointer to the left object                  */
-        void FAR *       m_ptobjRight;   /* pointer to the right object                 */
         int              m_iflags;       /* flags                                       */
-                                         /* NOTE:  in actual blocks the coordinates
-                                            will be stored here after the flags         */
     } CNearTreeNode;
     
     
     typedef CNearTreeNode FAR * CNearTreeNodeHandle;   
     
     typedef struct {
-        CNearTreeNodeHandle m_ptTree;    /* pointer to the actual tree                  */
-        size_t           m_szdimension;  /* dimension of the coordinates                */
-        size_t           m_szsize;       /* size of this tree                           */
-        size_t           m_szdepth;      /* depth of this tree                          */
-        int              m_iflags;       /* flags                                       */
-        CVectorHandle    m_ptDelayCoords; /* pointer to the delay queue coords          */
-        CVectorHandle    m_ptDelayObjs;   /* pointer to the delay queue objects         */
+        CNearTreeNodeHandle m_ptTree;     /* pointer to the actual tree                  */
+        size_t           m_szdimension;   /* dimension of the coordinates                */
+        size_t           m_szsize;        /* size of this tree                           */
+        size_t           m_szdepth;       /* depth of this tree                          */
+        int              m_iflags;        /* flags                                       */
+        CVectorHandle    m_ObjectStore;   /* all inserted objects                        */
+        CVectorHandle    m_CoordStore;    /* all inserted coordinates                    */
+        CVectorHandle    m_DelayedIndices;/* objects queued for insertion                */
     } CNearTree;
     
     typedef CNearTree     FAR * CNearTreeHandle;
@@ -309,13 +310,12 @@ extern "C" {
      int CNearTreeGetTotalSize (CNearTreeHandle treehandle, size_t FAR * size)
      
      Return the number of objects in both in the tree and in the delay queue tree in size
+     Identical to CNearTreeGetSize, retained to support older code
      
      =======================================================================
      */
     
-    int CNearTreeGetTotalSize (CNearTreeHandle treehandle, size_t FAR * size);
-    
-    
+#define CNearTreeGetTotalSize(treehandle,size) CNearTreeGetSize(treehandle,size)
     /*
      =======================================================================
      int CNearTreeGetDepth (CNearTreeHandle treehandle, size_t FAR * depth)
@@ -359,8 +359,7 @@ extern "C" {
      =======================================================================
      int CNearTreeNodeInsert( CNearTreeHandle treehandle,
                               CNearTreeNodeHandle treenodehandle,
-                              const void FAR * coord, 
-                              const void * obj,
+                              const size_t index,
                               size_t FAR * depth );
      
      Function to insert some "point" as an object into a CNearTree for
@@ -384,8 +383,7 @@ extern "C" {
     
      int CNearTreeNodeInsert( CNearTreeHandle treehandle,
                              CNearTreeNodeHandle treenodehandle,
-                             const void FAR * coord, 
-                             const void * obj,
+                             const size_t index, 
                              size_t FAR * depth );
     
     
