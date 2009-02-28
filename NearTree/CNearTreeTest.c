@@ -401,7 +401,13 @@ void testFindFirstObject( void )
     f[0] = 0.0;
     bReturnNear = !CNearTreeNearestNeighbor(tree, 1.0e-10, &vclosest, NULL, f);
     closest = (double FAR *)vclosest;
-    if( ! bReturnNear || closest[0] != fFinal )
+    if( ! bReturnNear )
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testFindFirstObject: failed for double\n" );
+    }
+    
+    if( bReturnNear && closest[0] != fFinal )
     {
         ++g_errorCount;
         fprintf(stdout, "CNearTreeTest: testFindFirstObject: failed for double, got %g\n", closest[0] );
