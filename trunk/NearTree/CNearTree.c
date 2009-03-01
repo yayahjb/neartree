@@ -685,6 +685,8 @@ extern "C" {
         double dTempLeft  =  0.;
         int errorcode = 0;
         void FAR * coord;
+        void FAR * coordLeft;
+        void FAR * coordRight;
         const void FAR * obj;
         
         
@@ -693,14 +695,17 @@ extern "C" {
         
         obj = CVectorElementAt(treehandle->m_ObjectStore,index);
         coord = CVectorElementAt(treehandle->m_CoordStore,index);
+        coordLeft = NULL;
+        coordRight = NULL;
         
         if ( (treenodehandle->m_iflags)&CNEARTREE_FLAG_RIGHT_DATA ) {
-            dTempRight = CNearTreeDist(treehandle, 
-                        (void FAR *)coord,CVectorElementAt(treehandle->m_ObjectStore,treenodehandle->m_indexRight));
+            coordRight = CVectorElementAt(treehandle->m_CoordStore,treenodehandle->m_indexRight);
+            dTempRight = CNearTreeDist(treehandle, coord, coordRight);
         }
         
         if ( (treenodehandle->m_iflags)&CNEARTREE_FLAG_LEFT_DATA ) {
-            dTempLeft = CNearTreeDist(treehandle, (void FAR *)coord,CVectorElementAt(treehandle->m_ObjectStore,treenodehandle->m_indexLeft));
+            coordLeft = CVectorElementAt(treehandle->m_CoordStore,treenodehandle->m_indexLeft);
+            dTempLeft = CNearTreeDist(treehandle, coord, coordLeft);
         }
         
         if ( !((treenodehandle->m_iflags)&CNEARTREE_FLAG_LEFT_DATA) ) {
@@ -720,8 +725,8 @@ extern "C" {
                 treenodehandle->m_dMaxRight = dTempRight;
                 if (((treehandle->m_iflags)&CNEARTREE_FLIP)&&!((treenodehandle->m_iflags)&CNEARTREE_FLAG_RIGHT_CHILD)
                     && (CNearTreeDist(treehandle,
-                        CVectorElementAt(treehandle->m_ObjectStore,treenodehandle->m_indexLeft),
-                        CVectorElementAt(treehandle->m_ObjectStore,treenodehandle->m_indexRight)))< dTempRight) {
+                        CVectorElementAt(treehandle->m_CoordStore,treenodehandle->m_indexLeft),
+                        CVectorElementAt(treehandle->m_CoordStore,treenodehandle->m_indexRight)))< dTempRight) {
                         if ( treenodehandle->m_dMaxRight < dTempRight ) 
                             treenodehandle->m_dMaxRight = dTempRight;
                         depth++;
@@ -743,8 +748,8 @@ extern "C" {
                 treenodehandle->m_dMaxLeft = dTempLeft;
                 if (((treehandle->m_iflags)&CNEARTREE_FLIP)&&!((treenodehandle->m_iflags)&CNEARTREE_FLAG_LEFT_CHILD)
                     && (CNearTreeDist(treehandle,
-                        CVectorElementAt(treehandle->m_ObjectStore,treenodehandle->m_indexLeft),
-                        CVectorElementAt(treehandle->m_ObjectStore,treenodehandle->m_indexRight)))< dTempLeft) {
+                        CVectorElementAt(treehandle->m_CoordStore,treenodehandle->m_indexLeft),
+                        CVectorElementAt(treehandle->m_CoordStore,treenodehandle->m_indexRight)))< dTempLeft) {
                         if ( treenodehandle->m_dMaxLeft < dTempLeft ) 
                             treenodehandle->m_dMaxLeft = dTempLeft;
                         depth++;
@@ -948,6 +953,9 @@ extern "C" {
         
         double dSearchRadius = dRadius;
         if (!treehandle || ! coord ) return CNEARTREE_BAD_ARGUMENT;
+        if ( treehandle->m_DelayedIndices ) {
+            if (CNearTreeCompleteDelayedInsert(treehandle)!=CNEARTREE_SUCCESS) return CNEARTREE_BAD_ARGUMENT;
+        }        
         if (!(treehandle->m_ptTree->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) 
             return CNEARTREE_NOT_FOUND;
         return ( CNearTreeNearest ( treehandle, &dSearchRadius, coordClosest, objClosest, coord ) );
@@ -977,6 +985,9 @@ extern "C" {
                                    const void FAR * coord ) {
         double dSearchRadius = DBL_MIN;
         if ( !treehandle || !coord ) return CNEARTREE_BAD_ARGUMENT;
+        if ( treehandle->m_DelayedIndices ) {
+            if (CNearTreeCompleteDelayedInsert(treehandle)!=CNEARTREE_SUCCESS) return CNEARTREE_BAD_ARGUMENT;
+        }        
         if (!(treehandle->m_ptTree->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) 
             return CNEARTREE_NOT_FOUND;
         return ( CNearTreeFindFarthest ( treehandle, &dSearchRadius, coordFarthest, objFarthest, coord ) );
