@@ -595,6 +595,20 @@ extern "C" {
                                void FAR * FAR * objFarthest,
                                const void FAR * coord );
     
+    
+    /*
+     =======================================================================
+     The following macro is provided here to ensure operation with older
+     versions of CVector
+     =======================================================================
+     */
+#ifndef CVectorElementAt
+    /* CVectorElementAt -- return the element at the given index as a void pointer without checking
+     and without protection against relocation */
+    
+#define CVectorElementAt(vectorhandle,index) ((void FAR *)(((char *)((vectorhandle)->array))+(index)*(vectorhandle)->elementsize))
+#endif
+    
 #ifdef __cplusplus
     
 }
