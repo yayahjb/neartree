@@ -285,6 +285,33 @@ extern "C" {
     
     /*
      =======================================================================
+     int CNearTreeClear ( CNearTreeHandle treehandle )
+     
+     Clear a CNearTree
+     
+     Clears the NearTree with the handle *treehandle
+     
+     note that the objects referenced are not freed.
+     =======================================================================
+     */
+    
+    int CNearTreeClear ( CNearTreeHandle treehandle );
+        
+    
+    /*
+     =======================================================================
+     size_t CNearTreeSize (CNearTreeHandle treehandle)
+     
+     Macro to get Tree Size with no error checking
+     
+     =======================================================================
+     */
+    
+#define CNearTreeSize(treehandle) \
+(treehandle)?(((treehandle)->m_CoordStore)?(CVectorSize((treehandle)->m_CoordStore)):0):0
+    
+    /*
+     =======================================================================
      int CNearTreeGetSize (CNearTreeHandle treehandle, size_t FAR * size)
      
      Return the number of objects in the tree in size
@@ -331,7 +358,7 @@ extern "C" {
      =======================================================================
      int CNearTreeInsert ( CNearTreeHandle treehandle, 
                           const void FAR * coord, 
-                          const void * obj )
+                          const void FAR * obj )
      
      Function to insert some "point" as an object into a CNearTree for
      later searching
@@ -352,7 +379,7 @@ extern "C" {
  
      int CNearTreeInsert( CNearTreeHandle treehandle,
                         const void FAR * coord, 
-                        const void * obj );
+                        const void FAR * obj );
     
  
     /*
@@ -534,8 +561,161 @@ extern "C" {
                                CVectorHandle objClosest,
                                const void * coord,
                                int resetcount);
+ 
     /*
      =======================================================================
+     int CNearTreeFindTreeInSphere ( CNearTreeHandle treehandle, 
+                               const double FAR * dRadius,
+                               CNearTreeHandle foundClosest,
+                               const void FAR * coord,
+                               int resetcount)
+     
+     Function to search a Neartree for the set of objects closer to some probe point, coord,
+     than dRadius.
+     
+     dRadius is the maximum search radius - any point farther than dRadius from the probe
+     point will be ignored
+     foundClosest is an existing CNearTree to which the found points will be added
+     coord  is the probe point
+     resetcount should be non-zero to clear found closest on entry
+     return value is 0 if points were found
+     
+     =======================================================================
+     */
+    int CNearTreeFindTreeInSphere ( CNearTreeHandle treehandle,
+                                   const double dRadius,
+                                   CNearTreeHandle foundClosest,
+                                   const void FAR * coord,
+                                   int resetcount);
+        
+    /*
+     =======================================================================
+     int CNearTreeFindOutSphere ( CNearTreeHandle treehandle, 
+                                const double FAR * dRadius,
+                                CVectorHandle coordOutside,
+                                CVectorHandle objOutside,
+                                const void FAR * coord,
+                                int resetcount)
+     
+     Function to search a Neartree for the set of objects further from some probe point, coord,
+     than dRadius. 
+     
+     dRadius is the maximum search radius - any point closer than dRadius from the probe
+     point will be ignored
+
+     coordOutside is a vector of pointers to coordinate tuples and is the 
+     returned set of distant points from the probe point that can be found in the Neartree
+
+     objOutside is a vector of objects and is the returned set of distant points
+     from the probe point that can be found in the Neartree
+
+     coord  is the probe point
+
+     resetcount should be non-zero to clear objClosest on entry
+ 
+     return value is 0 if points were found
+     
+     =======================================================================
+     */
+    
+    int CNearTreeFindOutSphere ( CNearTreeHandle treehandle,
+                               const double dRadius,
+                               CVectorHandle coordOutside,
+                               CVectorHandle objOutside,
+                               const void * coord,
+                               int resetcount);
+ 
+    /*
+     =======================================================================
+     int CNearTreeFindTreeOutSphere ( CNearTreeHandle treehandle, 
+                               const double dRadius,
+                               CNearTreeHandle foundOutside,
+                               const void FAR * coord,
+                               int resetcount)
+     
+     Function to search a Neartree for the set of objects further from some probe point, coord,
+     than dRadius.
+     
+     dRadius is the maximum search radius - any point closer than dRadius from the probe
+     point will be ignored
+     foundOutside is an existing CNearTree to which the found points will be added
+     coord  is the probe point
+     resetcount should be non-zero to clear found closest on entry
+     return value is 0 if points were found
+     
+     =======================================================================
+     */
+    int CNearTreeFindTreeOutSphere ( CNearTreeHandle treehandle,
+                                   const double dRadius,
+                                   CNearTreeHandle foundOutside,
+                                   const void FAR * coord,
+                               int resetcount);
+        
+    /*
+     =======================================================================
+     int CNearTreeFindInAnnulus ( CNearTreeHandle treehandle, 
+     const double dRadiusInner,
+     const double dRadiusOuter,
+     CVectorHandle coordInRing,
+     CVectorHandle objInRing,
+     const void FAR * coord,
+     int resetcount)
+     
+     Function to search a Neartree for the set of objects closer to some probe point, coord,
+     than dRadiusOuter and further than dRadiusInner. 
+     
+     dRadiusInner is the minimum search radius - any point closer than dRadius from the probe
+     point will be ignored
+     dRadiusOuter is the maximum search radius - any point further than dRadius from the probe
+     point will be ignored
+     coordInRing is a vector of pointers to coordinate tuples of nearest points
+     objInRing is a vector of objects and is the returned set of nearest points
+     to the probe point that can be found in the Neartree
+     coord  is the probe point
+     resetcount should be non-zero to clear coordInRing and objInRing on entry
+     return value is 0 if points were found
+     
+     =======================================================================
+     */
+    int CNearTreeFindInAnnulus ( CNearTreeHandle treehandle,
+                                const double dRadiusInner,
+                                const double dRadiusOuter,
+                                CVectorHandle coordInRing,
+                                CVectorHandle objInRing,
+                                const void FAR * coord,
+                                int resetcount);
+    /*
+     =======================================================================
+     int CNearTreeFindTreeInAnnulus ( CNearTreeHandle treehandle, 
+     const double dRadiusInner,
+     const double dRadiusOuter,
+     CNearTreeHandle foundInRing,
+     const void FAR * coord,
+     int resetcount)
+     
+     Function to search a Neartree for the set of objects closer to some probe point, coord,
+     than dRadiusOuter and further than dRadiusInner. 
+     
+     dRadiusInner is the minimum search radius - any point closer than dRadius from the probe
+     point will be ignored
+     dRadiusOuter is the maximum search radius - any point further than dRadius from the probe
+     point will be ignored
+     foundInRing is an existing CNearTree to which the found points will be added
+     coord  is the probe point
+     resetcount should be non-zero to clear found InRing on entry
+     return value is 0 if points were found
+     
+     =======================================================================
+     */
+    int CNearTreeFindTreeInAnnulus ( CNearTreeHandle treehandle,
+                                    const double dRadiusInner,
+                                    const double dRadiusOuter,
+                                    CNearTreeHandle foundInRing,
+                                    const void FAR * coord,
+                                    int resetcount);
+    /*
+     =======================================================================
+ 
      int CNearTreeNearest ( CNearTreeHandle treehandle, 
                            double FAR *dRadius,  
                            void FAR * FAR * coordClosest,
@@ -595,19 +775,76 @@ extern "C" {
                                void FAR * FAR * objFarthest,
                                const void FAR * coord );
     
-    
     /*
      =======================================================================
      The following macro is provided here to ensure operation with older
      versions of CVector
      =======================================================================
      */
+    
 #ifndef CVectorElementAt
     /* CVectorElementAt -- return the element at the given index as a void pointer without checking
      and without protection against relocation */
     
 #define CVectorElementAt(vectorhandle,index) ((void FAR *)(((char *)((vectorhandle)->array))+(index)*(vectorhandle)->elementsize))
 #endif
+    
+    
+    /*
+     =======================================================================
+     int CNearTreeObjects ( CNearTreeHandle treehandle, CVectorHandle FAR * vectorhandle)
+     
+     Function to return the vector of objects in the tree.  This vector
+     is not guaranteed to be in the same order as the order of insertion
+     
+     vectorhandle -- a pointer to a CVectorHandle
+     
+     =======================================================================
+     */
+    
+    int CNearTreeObjects ( CNearTreeHandle treehandle, CVectorHandle FAR * vectorhandle);    
+    
+    /*
+     =======================================================================
+     int CNearTreeCoords ( CNearTreeHandle treehandle, CVectorHandle FAR * vectorhandle)
+     
+     Function to return the vector of coordinates in the tree.  This vector
+     is not guaranteed to be in the same order as the order of insertion
+     
+     vectorhandle -- a pointer to a CVectorHandle
+     
+     =======================================================================
+     */
+    
+    int CNearTreeCoords ( CNearTreeHandle treehandle, CVectorHandle FAR * vectorhandle);    
+    
+    /*
+     =======================================================================
+     void FAR * CNearTreeObjectAt ( CNearTreeHandle treehandle, size_t index)
+     
+     Function to return the an object pointer at the given index
+     
+     implemented as a macro
+     
+     =======================================================================
+     */
+    
+#define CNearTreeObjectAt(treehandle,index) CVectorElementAt(treehandle->m_ObjectStore,index)
+
+    /*
+     =======================================================================
+     void FAR * CNearTreeCoordAt ( CNearTreeHandle treehandle, size_t index)
+     
+     Function to return the a coordinate pointer at the given index
+     
+     implemented as a macro
+     
+     =======================================================================
+     */
+    
+#define CNearTreeCoordAt(treehandle,index) CVectorElementAt(treehandle->m_CoordStore,index)
+    
+    
     
 #ifdef __cplusplus
     
