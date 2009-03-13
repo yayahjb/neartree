@@ -42,6 +42,8 @@
 //  things like is the distance to the right less than the
 //  distance to the left; it was found that these checks made little
 //  to no difference in timing.
+//  Later revisions have replaced the use of recursion with a stack,
+//  except for the case of inserting data into the tree.
 
 
 // This template is used to contain a collection of objects. After the
@@ -205,11 +207,10 @@
 //     Random access iterators are provided for accessing the data in a CNearTree. The most important
 //     expected use is to retrieve the objects returned from one of the sphere search functions that
 //     return a CNearTree. However, they can be used with any CNearTree.
-//     They should function in a fashion essentially the same as STL iterators.
+//     They should function in a fashion essentially the same as STL iterators. There is no assurance
+//     that data will be returned in the order it was loaded, just that it is accessible.
 // =====================================================================================================
 //      iterator( void ) { }; // constructor
-//      explicit iterator ( const long s )
-//      explicit iterator ( const int  s )
 //
 //      iterator& operator=  ( const iterator& s )      
 //      iterator  operator++ ( const int n )            
@@ -238,7 +239,7 @@
 //   CNearTree< double > dT;
 //   double dNear;
 //   dT.insert( 1.5 );
-//   if ( dT.NearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",DistanceType(dNear-2.0) );
+//   if ( dT.FindNearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",DistanceType(dNear-2.0) );
 // }
 //
 // and it should print 0.5 (that's how for 2.0 is from 1.5)
@@ -262,7 +263,6 @@
 #include <list>
 #include <set>
 #include <vector>
-#include <cmath>
 
 #ifdef CNEARTREE_SAFE_TRIANG
 #define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0) \
@@ -510,7 +510,7 @@ public:
 //     NearTree
 //
 //  Three possibilities exist: put the datum into the left
-//  postion (first test),into the right position, or else
+//  position (first test),into the right position, or else
 //  into a node descending from the nearer of those positions
 //  when they are both already used.
 //
@@ -566,7 +566,7 @@ public:
 //
 //  Function to search a NearTree for the object closest to some probe point, t. This function
 //  is only here so that the function Nearest can be called without having the radius const.
-//  This was necessary because Nearest is recursive, but needs to keep the current radius.
+//  This was necessary because Nearest is recursive, but needs to keep the current smallest radius.
 //
 //    dRadius is the maximum search radius - any point farther than dRadius from the probe
 //             point will be ignored
@@ -603,7 +603,7 @@ public:
 //
 //  Function to search a NearTree for the object closest to some probe point, t. This function
 //  is only here so that the function Nearest can be called without having the radius const.
-//  This was necessary because Nearest is recursive, but needs to keep the current radius.
+//  This was necessary because Nearest is recursive, but needs to keep the current smallest radius.
 //
 //    dRadius is the maximum search radius - any point farther than dRadius from the probe
 //             point will be ignored
@@ -638,12 +638,12 @@ public:
 //
 //  Function to search a NearTree for the object farthest from some probe point, t. This function
 //  is only here so that the function Farthest can be called without having the radius const.
-//  This was necessary because Farthest is recursive, but needs to keep the current radius.
+//  This was necessary because Farthest is recursive, but needs to keep the current largest radius.
 //
 //    t  is the probe point
 //
 //    the return is an iterator to the templated type and is the returned farthest point
-//             to the probe point (t) that can be found in the NearTree
+//             from the probe point (t) that can be found in the NearTree
 //             or iterator::end if no point was found
 //
 //=======================================================================
@@ -668,9 +668,9 @@ public:
        }
     }
 //=======================================================================
-//  bool FarthestNeighbor ( T& tClosest, const T& t ) const
+//  bool FarthestNeighbor ( T& tFarthest, const T& t ) const
 //
-//  Function to search a NearTree for the object closest to some probe point, t. This function
+//  Function to search a NearTree for the object farthest from some probe point, t. This function
 //  is only here so that the function FarthestNeighbor can be called without the user
 //  having to input a search radius and so the search radius can be guaranteed to be
 //  negative at the start.
@@ -706,7 +706,7 @@ public:
 //
 //    dRadius is the maximum search radius - any point farther than dRadius from the probe
 //             point will be ignored
-//    tClosest is returned as a CNearTree of the object found within the specified radius
+//    tClosest is returned as a CNearTree of the objects found within the specified radius
 //    t  is the probe point
 //    return value is the number of points found within dRadius of the probe point
 //
@@ -766,9 +766,10 @@ public:
 //  Function to search a NearTree for the set of objects outside of the specified 
 //     radius from some probe point, t,
 //
-//    dRadius is the maximum search radius - any point farther than dRadius from the probe
+//    dRadius is the maximum search radius - any point nearer than dRadius from the probe
 //             point will be ignored
-//    tFarthest is returned as a CNearTree of the object found within the specified radius
+//    tFarthest is returned as a CNearTree of the object found outside the specified radius from 
+//             the probe point
 //    t  is the probe point
 //    return value is the number of points found within dRadius of the probe point
 //
@@ -798,10 +799,10 @@ public:
 //  Function to search a NearTree for the set of objects farther from some probe point, t,
 //  than dRadius. This is only here so that tFarthest can be cleared before starting the work.
 //
-//    dRadius is the maximum search radius - any point farther than dRadius from the probe
+//    dRadius is the maximum search radius - any point nearer than dRadius from the probe
 //             point will be ignored
-//    tFarthest is returned as a vector of objects of the templated type and is the returned set of nearest points
-//             to the probe point that can be found in the NearTree
+//    tFarthest is returned as a vector of objects of the templated type and is the returned set of points
+//             farther from the probe point than dRadius
 //    t  is the probe point
 //    return value is the number of points found within dRadius of the probe point
 //
@@ -979,6 +980,44 @@ public:
         std::vector<long> DelayedPointersTemp;   
         DelayedPointersTemp  .swap( m_DelayedIndices );
     };
+//=======================================================================
+//  void CompleteDelayedInsertRandom ( void )
+//
+//  When CompleteDelayedInsertRandom is invoked, if there are any objects in the 
+//  delayed store they are then inserted into the neartree. CompleteDelayedInsertRandom
+//  randomly selects all objects and inserts them.
+//
+//=======================================================================
+    void CompleteDelayedInsertRandom ( void )
+    {
+        if ( m_DelayedIndices.empty( ) )
+        {
+            return;
+        }
+
+        // insert a random selection of the objects
+        const size_t vectorSize = m_DelayedIndices.size( );
+        for ( size_t i=0; i<m_DelayedIndices.size( ); ++i )
+        {
+            size_t n = (size_t)((double)(vectorSize-1u) * (DistanceType)(random( )%MYRAND_MAX) / (double) MYRAND_MAX);
+            random( ); random( );
+            // Find the next pointer that hasn't already had its object "insert"ed
+            // We can do this blindly since sqrt(n)<=n for all cases. n=1 would be the only 
+            // bad case here, and that will not trigger the later loop.
+            while ( m_DelayedIndices[n] == -1 )
+            {
+                ++n;
+                n = n% vectorSize;
+            }
+            insertDelayed( (long)m_DelayedIndices[n] );
+            m_DelayedIndices[n] = -1;         
+        }
+
+        // now get rid of the temporary storage that was used for delayed 
+        // insertions (fast way, faster than clear() )
+        std::vector<long> DelayedPointersTemp;   
+        DelayedPointersTemp.swap( m_DelayedIndices );
+    };
     
 //=======================================================================
 //  size_t GetDeferredSize (  void )
@@ -1040,8 +1079,8 @@ public:
     
 public:
     iterator begin ( void ) const { return ( iterator( 0, this ) ); };
-    iterator end   ( void ) const { return ( iterator(m_ObjectStore.empty( )?1:(long)m_ObjectStore.size( ), this ) ); };
-    iterator back  ( void ) const { return ( iterator( (m_ObjectStore.empty( ))? 1 :(long)m_ObjectStore.size( )-1, this ) ); };
+    iterator end   ( void ) const { return ( iterator( m_ObjectStore.empty( )? 0 :(long)m_ObjectStore.size( )  , this ) ); };
+    iterator back  ( void ) const { return ( iterator( m_ObjectStore.empty( )? 0 :(long)m_ObjectStore.size( )-1, this ) ); };
 
     T at( const size_t n ) const { return ( m_ObjectStore[n] ); };
     T operator[] ( const size_t position ) const { return ( m_ObjectStore[position] ); };
@@ -1148,7 +1187,7 @@ private:
 //     localDepth is the returned deepest tree level reached for the current insert
 //
 //  Three possibilities exist: put the datum into the left
-//  postion (first test),into the right position, or else
+    //  position (first test),into the right position, or else
 //  into a node descending from the nearer of those positions
 //  when they are both already used.
 //
@@ -1932,8 +1971,6 @@ public:
 
       public:
          iterator( void ) { }; // constructor
-        explicit iterator ( const long s ) : position(s), parent((CNearTree*)this) { }; // constructor
-        explicit iterator ( const int  s ) : position(s), parent((CNearTree*)this) { }; // constructor
 
         iterator& operator=  ( const iterator& s )       { position = s.position; parent = s.parent; return ( *this ); };
         iterator  operator++ ( const int n )             { iterator it(*this); position+=1+n; return ( it ); };
@@ -1946,13 +1983,13 @@ public:
         iterator& operator-= ( const long n )            { position -= n; return ( *this ); };
         T         operator*  ( void )         const      { return ( parent->m_ObjectStore[position] ); };
 
-        bool      operator== ( const iterator& t ) const { return ( t.position==(parent->m_ObjectStore.empty( )?1:position) && t.parent==parent ); };
+        bool      operator== ( const iterator& t ) const { return ( t.position==position && t.parent==parent ); };
         bool      operator!= ( const iterator& t ) const { return ( ! (*this==t )); };
 
-        const T * const operator-> ( void )   const      { return ( &(const_cast<CNearTree*>(parent)->m_ObjectStore[position]) ); };
+        const T*  const operator-> ( void )   const      { return ( &(const_cast<CNearTree*>(parent)->m_ObjectStore[position]) ); };
 
       private:
-        iterator ( const long s, const CNearTree* nt ) { position = s; parent = nt; }; // constructor
+        iterator ( const long s, const CNearTree* const nt ) { position = s; parent = nt; }; // constructor
 
       }; // class iterator
     //====================================================================================

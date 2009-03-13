@@ -59,6 +59,7 @@ void testBackwardForward( void );
 void testFindInSphereFromTop( void );
 void testOutSphere( void );
 void testDelayedInsertion( void );
+void testDelayedInsertionRandom( void );
 void testIterators( void );
 void testFindInAnnulus( void );
 void testMisc( void );
@@ -117,6 +118,8 @@ int main(int argc, char* argv[])
     fprintf( stdout, "testBackwardForward\n" );
     testDelayedInsertion( );
     fprintf( stdout, "testDelayedInsertion\n" );
+    testDelayedInsertionRandom( );
+    fprintf( stdout, "CompleteDelayedInsertRandom\n" );
     testIterators( );
     fprintf( stdout, "testIterators\n" );
     testIntegerReturn( );
@@ -316,9 +319,14 @@ void testLinearTree( const int n )
  Perform general tests using floating point numbers. Two test sets are
  included, one for float and one for double.
  The values are computed starting from some initial value, and
- each succeeding value is one half of the previous until zero is
+ each succeeding value is one half of the previous until "zero" is
  computed (the zero is NOT inserted into the tree). The tree will consist
  of only right branches and left leaves.
+
+ Experience showed that differing implementations of behaviors for denormalized
+ floating point numbers causes problems both with the tests and with the
+ building of the tree. So FLT_MIN and DBL_MIN have replaced zero as the
+ lower bounds.
  */
 /*=======================================================================*/
 void testFindFirstObject( void )
@@ -462,9 +470,14 @@ void testFindFirstObject( void )
 /*
  Perform general tests using floating point numbers.
  Build a tree of floats. The values are computed starting from some initial 
- value, and each succeeding value is one half of the previous until zero
+ value, and each succeeding value is one half of the previous until "zero"
  is computed (the zero is NOT inserted into the tree). The tree will consist
  of only right branches and left leaves.
+
+ Experience showed that differing implementations of behaviors for denormalized
+ floating point numbers causes problems both with the tests and with the
+ building of the tree. So FLT_MIN and DBL_MIN have replaced zero as the
+ lower bounds.
  */
 /*=======================================================================*/
 void testFindLastObject( void )
@@ -1250,12 +1263,14 @@ void testBackwardForward( void )
 }
 
 /*=======================================================================*/
+
+const long nmax = 10001;
+
 void testDelayedInsertion( void )
 {
     
     {
         // make sure that CompleteDelayedInsert flushes the delayed data
-        const long nmax = 10001;
         CNearTree<double> tree;
         
         for( int i=1; i<=nmax; ++i )
@@ -1279,14 +1294,15 @@ void testDelayedInsertion( void )
             ++g_errorCount;
             fprintf(stdout, "testDelayedInsertion: tree depth is too large, %lu is greater than %ld\n", (unsigned long)depth, nmax/2 );
         }
+        fprintf(stdout, "testDelayedInsertionRandom: tree depth is  %ld\n", (unsigned long)depth );
     }
     
     {
         // make sure that FindInSphere flushes the delayed data
-        const long nmax = 100;
+        const long nmax2 = 100;
         CNearTree<double> tree;
         
-        for( int i=1; i<=nmax; ++i )
+        for( int i=1; i<=nmax2; ++i )
         {
             if( (i%2) == 0 )
             {
@@ -1302,22 +1318,22 @@ void testDelayedInsertion( void )
         const double radius = 1000.0;
         const long lReturned = tree.FindInSphere( radius, sphereReturn, 0.9 );
         
-        if( lReturned != nmax )
+        if( lReturned != nmax2 )
         {
             ++g_errorCount;
-            fprintf(stdout, "testDelayedInsertion: FindInSphere failed for nmax=%ld, found %ld points\n", nmax, lReturned );
+            fprintf(stdout, "testDelayedInsertion: FindInSphere failed for nmax2=%ld, found %ld points\n", nmax2, lReturned );
         }
     }
     
     {
         // make sure that NearestNeighbor flushes the delayed data
-        const long nmax = 100;
+        const long nmax2 = 100;
         CNearTree<double> tree;
         double fFinal = DBL_MAX;
         
-        for( int i=1; i<=nmax; ++i )
+        for( int i=1; i<=nmax2; ++i )
         {
-            if( (i%2) == 0 && i!=nmax) // ensure that the last one is delayed
+            if( (i%2) == 0 && i!=nmax2) // ensure that the last one is delayed
             {
                 tree.insert( (double)i );
             }
@@ -1346,13 +1362,13 @@ void testDelayedInsertion( void )
     
     {
         // make sure that FarthestNeighbor flushes the delayed data
-        const long nmax = 100;
+        const long nmax2 = 100;
         CNearTree<double> tree;
         double fFinal = DBL_MAX;
         
-        for( int i=1; i<=nmax; ++i )
+        for( int i=1; i<=nmax2; ++i )
         {
-            if( (i%2) == 0 && i!=nmax) // ensure that the last one is delayed
+            if( (i%2) == 0 && i!=nmax2) // ensure that the last one is delayed
             {
                 tree.insert( (double)i );
             }
@@ -1380,6 +1396,39 @@ void testDelayedInsertion( void )
     
 }
 
+/*=======================================================================*/
+void testDelayedInsertionRandom( void )
+{
+    
+    {
+        // make sure that CompleteDelayedInsert flushes the delayed data
+        CNearTree<double> tree;
+        
+        for( int i=1; i<=nmax; ++i )
+        {
+            const double insertValue = (double)(i);
+            tree.DelayedInsert( insertValue );
+    }
+    
+        tree.CompleteDelayedInsertRandom( );
+        const size_t depth = tree.GetDepth( );
+        const size_t insertedSize = tree.GetTotalSize( );
+        const size_t delayed = tree.GetDeferredSize( );
+        
+        if( delayed != 0 || (long)insertedSize != nmax )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testDelayedInsertionRandom: CompleteDelayedInsertRandom completion is incorrect\n" );
+        }
+        else if( depth >= ::sqrtl( nmax/2 ) )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testDelayedInsertionRandom: tree depth is too large, %lu is greater than %ld\n", (unsigned long)depth, nmax/2 );
+        }
+        fprintf(stdout, "testDelayedInsertionRandom: tree depth is  %ld\n", (unsigned long)depth );
+}
+
+}
 /*=======================================================================*/
 void testIterators( void )
 {
@@ -1420,6 +1469,13 @@ void testIterators( void )
         {
             ++g_errorCount;
             fprintf(stdout, "testIterators: test01 failed\n" );
+        }
+        
+        CNearTree<int>::iterator itTest( it );
+        if( itTest != it )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testIterators: copy construction failed\n" );
         }
         
         it = tree.begin( );
@@ -1633,6 +1689,7 @@ void testFindInAnnulus( void )
     {
         CNearTree<int> tree;
         CNearTree<int>::iterator itEmpty = tree.back( ); // make sure back works
+        itEmpty = tree.back( );
 
         const int nMax = 1000;
 
@@ -1758,8 +1815,8 @@ void testIntegerReturn( void )
     {
         CNearTree<int, int> nt;
 
-        const int nmax = 20;
-        for( int i=0; i<nmax; ++i )
+        const int nmax2 = 20;
+        for( int i=0; i<nmax2; ++i )
         {
             nt.insert( i );
         }
@@ -1770,7 +1827,7 @@ void testIntegerReturn( void )
                 ++g_errorCount;
                 fprintf(stdout, "testIntegerReturn: NearestNeighbor failed\n" );
         }
-        else if( closest != nmax-1 )
+        else if( closest != nmax2-1 )
         {
                 ++g_errorCount;
                 fprintf(stdout, "testIntegerReturn: NearestNeighbor return wrong value, %d\n", closest );
@@ -1780,19 +1837,19 @@ void testIntegerReturn( void )
     {
         CNearTree<int, long> nt;
 
-        const int nmax = 20;
-        for( int i=-nmax; i<nmax; ++i )
+        const int nmax2 = 20;
+        for( int i=-nmax2; i<nmax2; ++i )
         {
             nt.insert( i );
         }
 
-        int closest=-nmax-1;
+        int closest=-nmax2-1;
         if( ! nt.NearestNeighbor( 1000, closest, 100 ) )
         {
                 ++g_errorCount;
                 fprintf(stdout, "testIntegerReturn: NearestNeighbor failed\n" );
         }
-        else if( closest != nmax-1 )
+        else if( closest != nmax2-1 )
         {
                 ++g_errorCount;
                 fprintf(stdout, "testIntegerReturn: NearestNeighbor return wrong value, %d\n", closest );
@@ -1810,26 +1867,31 @@ public:
     int dim;
     double length;  // just for a signature for debugging
     intVec17( ) :
-        dim(17)
+        dim(17),
+        length( 0.0 )
     {
         for( int i=0; i<dim; ++i )
         {
             pd[i] = random( )%MYRAND_MAX;
         }
         length = this->Norm( );
-    }
-    explicit intVec17( const int d )
+    };
+
+    explicit intVec17( const int d ) :
+        dim( 17 ),
+        length( 0.0 )
     {
-        dim = 17;
         for( int i=0; i<dim; ++i )
         {
             pd[i] = d;
         }
         length = this->Norm( );
-    }
+    };
+
     ~intVec17( void )
     {
-    }
+    };
+
     int Norm( void ) const
     {
         long dtemp = 0;
@@ -1838,7 +1900,7 @@ public:
             dtemp += abs(pd[i]);  // L1 measure here
         }
         return( dtemp );
-    } 
+    };
     
     intVec17 operator-( const intVec17& v ) const /* USERS: be sure to make both const */
     {
@@ -1849,7 +1911,7 @@ public:
         }
         vtemp.length = vtemp.Norm( );
         return( vtemp );
-    }
+    };
 }; // intVec17
 
 /*=======================================================================*/
@@ -1955,7 +2017,7 @@ void testBigIntVec( void )
         if( iFoundNearCenter < 2 )
         {
             ++g_errorCount;
-            fprintf(stdout, "testBigIntVector: FindInSphere found %lu points, instead of 2\n", iFoundNearCenter );
+            fprintf(stdout, "testBigIntVector: FindInSphere found %d points, instead of 2\n", iFoundNearCenter );
         }
         
         /* Brute force search for the point closest to the point closest to the center */
@@ -2151,5 +2213,16 @@ void testSTLContainerInput( void )
       }
    }
 
-} // testSTLContainerInput
+   {
+       // test begin/end
+       CNearTree<int> nt;
+       const CNearTree<int>::iterator itb = nt.begin( );
+       const CNearTree<int>::iterator ite = nt.end( );
+       if( itb != ite )
+       {
+          ++g_errorCount;
+          fprintf(stdout, "testSTLContainerInput:begin/end do not agree for empty tree\n" );
+      }
+   }
 
+} // testSTLContainerInput
