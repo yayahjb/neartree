@@ -828,6 +828,7 @@ void testFindInAnnulus( void )
     bool bReturn;
     double f[1];
     double FAR * nearest;
+    void FAR * vnearest;
     double radiusin, radiusout;
     size_t lReturned;
     int i;
@@ -879,7 +880,8 @@ void testFindInAnnulus( void )
         }
         
         f[0] = 0.;
-        bReturn = !CNearTreeNearestNeighbor(annulusReturn,1000.,(void FAR * FAR *)&nearest,NULL,f);
+        bReturn = !CNearTreeNearestNeighbor(annulusReturn,1000.,&vnearest,NULL,f);
+	nearest = (double FAR *)vnearest;
         if (!bReturn) {
             ++g_errorCount;
             fprintf(stdout, "testFindInAnnulus: no lowest value found\n" );
