@@ -1,7 +1,7 @@
                                     NearTree
 
-                                 Release 1.0.1
-                                11 January 2009
+                                  Release 2.0
+                                 21 March 2009
        (c) Copyright 2001, 2008, 2009 Larry Andrews. All rights reserved
                                     based on
          Larry Andrews, "A template for the nearest neighbor problem",
@@ -13,6 +13,7 @@
                                    Bernstein
                        8 Jan 2009 Release 1.0 LCA and HJB
                      11 Jan 2009 Release 1.0.1 LCA and HJB
+                     21 March 2009 Release 2.0 LCA and HJB
 
     YOU MAY REDISTRIBUTE NearTree UNDER THE TERMS OF THE LGPL
 
@@ -38,11 +39,26 @@
    spaces of arbtrary dimensions. This release provides a C++ template,
    TNear.h, and a C library, CNearTree.c, with example/test programs.
 
-   This is a minor update to the 1.0 release of 8 January 2009 to deal with
+   This is a major update to the 1.0 release of 8 January 2009 to deal with
    the following issues:
-     * Adapt the API for building under MINGW
-     * Provide code to deal with compiler misoptimizations of the triangle
-       inequality on some systems
+     * Replace use recursion with a stack, except in insertion logic
+     * Replace use of double with templated DistanceType (usually double)
+     * Provide constuctors to build NearTree from vectors, lists or sets
+     * Change "Insert" to "insert" for consistentcy with other containers
+     * Add access function "at" or array type references [], and provide
+       contents of a neartree as a vector
+     * Add iterator support
+     * Provide delayed insertion logic
+     * Functions added for searches outside of a sphere or in an annular
+       region
+
+   Our thanks to Nicolas Brodu for suggesting the more general handling of
+   the distance type.
+
+   Note: As Nicolas Brodu has noted, CNearTree is paticularly well-suited to
+   multi-threaded applications. However, if the same CNearTree is to be
+   searched in multiple threads, it is important to complete all insertions
+   and/or delayed insertions before parallel execution of parallel searches.
 
      ----------------------------------------------------------------------
 
@@ -60,11 +76,11 @@
 
    The NearTree package is available at
    www.sourceforge.net/projects/neartree. A source tarball is available at
-   downloads.sourceforge.net/neartree/NearTree-1.0.1.tar.gz. Later tarballs
+   downloads.sourceforge.net/neartree/NearTree-2.0.0.tar.gz. Later tarballs
    may be available.
 
    When the source tarball is dowloaded and unpacked, you should have a
-   directory NearTree-1.0.1. To see the current settings for a build execute
+   directory NearTree-2.0.0. To see the current settings for a build execute
 
    make
 
@@ -88,7 +104,7 @@
 
   The current library link command is:
  
-    libtool --mode=link  gcc -version-info 1:0:1 -release 1.0.1 \
+    libtool --mode=link  gcc -version-info 2:0:2 -release 2.0.0 \
       -no-undefined -rpath /usr/local/lib
  
   The current C++ and C library local, and C dynamic and static build commands are:
@@ -174,7 +190,8 @@
 
    This is a revised release of
 
-     template <typename T> class CNearTree;
+     template <typename T, typename DistanceType=double, int distMinValue=-1
+     > class CNearTree;
 
    implementing the Nearest Neighbor algorithm after Kalantari and McDonald,
    (IEEE Transactions on Software Engineering, v. SE-9, pp. 631-634,1983)
@@ -183,44 +200,87 @@
    right less than the distance to the left; it was found that these checks
    made little to no difference.
 
+   CNearTree is the root class for the neartree. The actual data of the tree
+   is stored in NearTreeNode objects descending from a CNearTree.
+
+   The types of objects that can be stored in the tree is quite broad. The
+   biggest limitation is that the objects must reside in some sort of metric
+   space and must obey the triangle rule. They must also be all of the same
+   size because they are stored in an std::vector. If your application
+   requires object of varying storage, then your best way to use this code is
+   to store pointers or handles and to write your own distance functions.
+
+   The type of the objects to be stored is the only required template
+   argument. The type of the distance measure (DistanceType) defaults to
+   double. If your application is for an integer type then the type for
+   DistanceType can be your integer type. This has the potential for speeding
+   the calculations by avoiding FP computation. Other general types can be
+   used if desired, but you may need to also input a value of distMinValue.
+
+   The template argument distMinValue must be something that your class will
+   understand as a negative number. The default input is negative one.
+   Internally, that is cast to DistanceType. Since most uses will be for
+   DistanceType to be double, that is a simple conversion. Obviously, for
+   integer types, there is no problem either. The need for this value is to
+   have something internally that is recognizable as smaller than the
+   smallest "distance" that can exist between any two objects in your type.
+   For most users, there is no need to input anything other than the default,
+   -1. -1 must be castable to DistanceType. It seems unlikely that anyone
+   would actually need this optional parameter, but it is here for
+   completeness.
+
+   It is a design decision that this class cannot work for unsigned types. It
+   is hard to see how to verify the triangle rule for unsigned types, and
+   distance computations become more complex. Sorry, unsigned types are left
+   as an exercise for the reader.
+
    The user of this class needs to provide at least the following
    functionality for the template to work. For the built-in numerics of C++,
    they are provided by the system.
 
-     operator double( ); // conversion constructor from the templated class 
-                         // to double (usually will return a "length")
-     operator- ( );      // geometrical (vector) difference of two objects
-                         // a copy constructor
-                         // a constructor would be nice
-                         // a destructor would be nice
+                      // conversion constructor from the templated class to      
+DistanceType Norm( ); DistanceType                                               
+                      // (usually will return a "length" of type double)         
+operator- ( );        // geometrical (vector) difference of two objects          
+                      // a copy constructor would be nice                        
+                      // a constructor would be nice                             
+                      // a destructor would be nice                              
 
    The provided interface is:
 
      #include <TNear.h>
 
      CNearTree( void )   // constructor
-        instantiated by something like:      CNearTree <v> vTree;
-        for some type v
-
+        instantiated by something like:      CNearTree <T> vTree;
+        for some type T
+       
+     CNearTree( const std::vector<T> )   // constructor
+     CNearTree( const std::list<T> )     // constructor
+     CNearTree( const std::set<T> )      // constructor
+    
      ~CNearTree( void )  // destructor
-        invoked by  vTree.CNeartree::~CNearTree
-        for an object vTree of some type v
 
-     bool empty( ) const
-        test for an empty NearTree
-
-     void Insert( T& t )
+     void Insert( const T& t )
         where t is an object of the type v
 
-     bool NearestNeighbor ( const double& dRadius,  T& tClosest,   
-                            const T& t ) const
+     void insert( const std::vector<T> )
+     void insert( const std::list<T> )
+     void insert( const std::set<T> )
+
+     bool NearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const T& t ) const
         dRadius is the largest radius within which to search; make it
            very large if you want to include every point that was loaded.
+           dRadius is returned as the closest distance to the probe (or the search radius
+           if nothing is found)
         tClosest is returned as the object that was found closest to the probe
            point (if any were within radius dRadius of the probe)
-        t is the probe point, used to search in the group of points Insert'ed
-        return value is true if some object was found within the search radius,
-           false otherwise.  If false is returned, tClosest is invalid (at best).
+        t is the probe point, used to search in the group of points insert'ed
+
+        return value is true if some object was found within the search radius, false otherwise.
+           If false is returned, tClosest is invalid (at best).
+
+     iterator NearestNeighbor ( const DistanceType & dRadius, const T& t ) const
+        returns an iterator to the nearest point to the probe point t or end() if there is none
 
      bool FarthestNeighbor ( T& tFarthest,   const T& t ) const
         tFarthest is returned as the object that was found farthest to the probe
@@ -229,23 +289,153 @@
         return value is true if some object was found, false otherwise
            If false is returned, tFarthest is invalid (at best).
 
-     long FindInSphere ( const double& dRadius,  std::vector<  T >& tClosest,
-                         const T& t ) const
-        dRadius is the radius within which to search; make it very large if 
-            you want to  include every point that was loaded;
-        tClosest is returned as the vector of objects that were found within a
-           radius dRadius of the probe point
+     iterator FarthestNeighbor ( T& const T& t ) const
+        returns an iterator to the nearest point to the probe pointt or end() if there is none
+
+     long FindInSphere ( const DistanceType& dRadius,  std::vector<  T >& tInside,   const T& t ) const
+        dRadius is the radius within which to search; make it very large if you want to
+            include every point that was loaded;
+        tInside is returned as the vector of objects that were found within a radius dRadius
+           of the probe point
         t is the probe point, used to search in the group of points Insert'ed
-        return value is the count of the number of points found within the 
-           search radius
+
+        return value is the count of the number of points found within the search radius
+
+     long FindInSphere ( const DistanceType& dRadius,  CNearTree<  T >& tInside,   const T& t ) const
+        dRadius is the radius within which to search; make it very large if you want to
+            include every point that was loaded;
+        tInside is returned as the CNearTree of objects that were found within a radius dRadius
+           of the probe point
+        t is the probe point, used to search in the group of points Insert'ed
+
+        return value is the count of the number of points found within the search radius
+
+     long FindOutSphere ( const DistanceType& dRadius,  std::vector<  T >& tOutside,   const T& t ) const
+        dRadius is the radius outside of which to search
+        tOutside is returned as the vector of objects that were found at or outside of radius dRadius
+           of the probe point
+        t is the probe point, used to search in the group of points Insert'ed
+
+        return value is the count of the number of points found within the search radius
+
+     long FindOutSphere ( const DistanceType& dRadius,  CNearTree<  T >& tOutside,   const T& t ) const
+        dRadius is the radius outside of which to search.
+        tClosest is returned as the CNearTree of objects that were found at or outside of a radius dRadius
+           of the probe point
+        t is the probe point, used to search in the group of points Insert'ed
+
+        return value is the count of the number of points found within the search radius
     
-     T InSphere ( const double& dRadius,  const T& t )
-       dRadius is the radius within which to search; make it very large if you
-           want to include every point that was loaded;
-       t is the probe point, used to search in the group of points Insert'ed
-       return value is an object of the type v which is closest within the 
-           sphere to the probe point t
-      
+     long FindInAnnulus ( const DistanceType& dRadius1, const DistanceType& dRadius2, std::vector<  T >& tInRing,   const T& t ) const
+        dRadius1 and  dRadius2 are the two radii between which to find data points
+        tInRing is returned as the vector of objects that were found at or outside of a radius dRadius1
+           and at or inside of radius dRadius2 of the probe point
+        t is the probe point, used to search in the group of points Insert'ed
+
+        return value is the count of the number of points found within the annulus
+
+     long FindInAnnulus ( const DistanceType& dRadius1, const DistanceType& dRadius2,  CNearTree<  T >& tInRing,   const T& t ) const
+        dRadius1 and  dRadius2 are the two radii between which to find data points
+        tInRing is returned as the CNearTree of objects that were found at or outside of a radius dRadius1
+           and at or inside of radius dRadius2 of the probe point
+        t is the probe point, used to search in the group of points Insert'ed
+
+        return value is the count of the number of points found within the annulus
+    
+
+     ----------------------------------------------------------------------
+
+
+ Access Functions:
+
+      T at ( const size_t n ) const
+         returns the n'th item of the internal data store
+
+      T operator[] ( const size_t n )
+         returns the n'th item of the internal data store
+
+      operator std::vector<T> ( void ) const
+         returns all of the inserted objects in the tree in a vector.
+          The returned vector contents are not guaranteed to be returned in the order loaded.
+
+      iterator begin ( void ) const
+         returns an iterator to the beginning of the internal data store
+
+      iterator end ( void ) const
+         returns an iterator to the end of the data store (one beyond the last item)
+
+      iterator back ( void ) const
+         returns an iterator to the last data item of the internal data store
+
+
+     ----------------------------------------------------------------------
+
+
+ Information and special operation functions:
+
+      void DelayedInsert ( const T& t )
+         places objects in a queue for insertion later when CompleteDelayInsert
+         is called or a search is called. The purpose is to distribute the objects a bit more
+         randomly. Excessively ordered objects leads to less than optimal trees.
+
+      void CompleteDelayedInsert ( void )
+         calls insert for all delayed objects. sqrt(n) of them are inserted by random choice.
+         The rest are inserted in linear order as originally queued. CompleteDelayedInsert
+         is invoked at the beginning of all searches, so the average user will never need
+         to call it.
+
+      size_t GetDeferredSize ( void )
+         returns the number of delayed objects that have not yet been insert'ed. This is
+         mainly for information about details of the tree.
+
+      size_t GetTotalSize ( void )
+         returns the number of objects that have been insert'ed plus those DelayInsert'ed
+
+      size_t size ( void )
+         identical to GetTotalSize
+
+      size_t GetDepth ( void )
+         returns the maximum tree layers from the root.  This is mainly for information about
+         details of the tree.
+
+      bool empty ( void )
+         returns true if the tree is empty, otherwise false
+        
+
+     ----------------------------------------------------------------------
+
+
+ Iterators:
+
+      Random access iterators are provided for accessing the data in a CNearTree. The most important
+      expected use is to retrieve the objects returned from one of the sphere search functions that
+      return a CNearTree. However, they can be used with any CNearTree.
+     
+      They should function in a fashion essentially the same as STL iterators. There is no assurance
+      that data will be returned in the order it was loaded, just that it is accessible.
+
+      iterator ( void ) { }; // constructor
+
+      iterator& operator=   ( const iterator& s )     
+      iterator  operator++  ( const int n )           
+      iterator  operator--  ( const int n )           
+      iterator& operator++  ( void )                  
+      iterator& operator--  ( void )                  
+      iterator  operator+   ( const long n ) const    
+      iterator  operator-   ( const long n ) const    
+      iterator& operator+=  ( const long n )          
+      iterator& operator-=  ( const long n )          
+      T         operator*   ( void )        const    
+
+      bool      operator==  ( const iterator& t ) const
+      bool      operator!=  ( const iterator& t ) const
+
+      const T * const operator->  ( void )   const
+
+
+     ----------------------------------------------------------------------
+
+  
 
    So a complete program is:
 
@@ -256,8 +446,7 @@
     CNearTree< double > dT;
     double dNear;
     dT.Insert( 1.5 );
-    if ( dT.NearestNeighbor( 10000.0,   dNear,  2.0 )) 
-      printf( "%f\n",double(dNear-2.0) );
+    if ( dT.NearestNeighbor( 10000.0,   dNear,  2.0 )) printf( "%f\n",double(dNear-2.0) );
   }
 
    and it should print 0.5 (that's how for 2.0 is from 1.5). For more
@@ -273,29 +462,72 @@
 
      #include <CNearTree.h>
 
-     double CNearTreeDist (CNearTreeHandle treehandle, void * coord1, void *
-     coord2);
+     double CNearTreeDist ( CNearTreeHandle treehandle, void * coord1, void *
+     coord2 );
 
-     int CNearTreeCreate (CNearTreeHandle * treehandle, size_t treedim, int
-     treetype);
+     int CNearTreeSetNorm ( CNearTreeHandle treehandle, int treenorm );
 
-     int CNearTreeFree(CNearTreeHandle * treehandle);
+     int CNearTreeNodeCreate ( CNearTreeHandle treehandle,
+     CNearTreeNodeHandle * treenodehandle )
+
+     int CNearTreeCreate ( CNearTreeHandle * treehandle, size_t treedim, int
+     treetype );
+
+     int CNearTreeFree ( CNearTreeHandle treehandle );
+
+     int CNearTreeClear ( CNearTreeHandle * treehandle );
+
+     int CNearTreeNodeFree ( CNearTreeNodeHandle * treenodehandle );
 
      int CNearTreeInsert( CNearTreeHandle treehandle, const void * coord,
      const void * obj );
 
-     int CNearTreeZeroIfEmpty (CNearTreeHandle treehandle);
+     int CNearTreeNodeInsert ( CNearTreeHandle treehandle,
+     CNearTreeNodeHandle treenodehandle, size_t index; size_t * depth );
 
-     int CNearTreeNearestNeighbor (CNearTreeHandle treehandle, const double
+     int CNearTreeDelayedInsert ( CNearTreeHandle treehandle, const void *
+     coord, const void * obj );
+
+     int CNearTreeCompleteDelayedInsert ( CNearTreeHandle treehandle ) int
+     CNearTreeZeroIfEmpty ( CNearTreeHandle treehandle );
+
+     int CNearTreeGetSize ( CNearTreeHandle treehandle, size_t * size );
+
+     int CNearTreeGetDelayedSize ( CNearTreeHandle treehandle, size_t * size
+     );
+
+     int CNearTreeGetDepth ( CNearTreeHandle treehandle, size_t * depth )
+
+     int CNearTreeNearestNeighbor ( CNearTreeHandle treehandle, const double
      dRadius, void * * coordClosest, void * * objClosest, const void * coord
      );
 
-     int CNearTreeFarthestNeighbor (CNearTreeHandle treehandle, void * *
+     int CNearTreeFarthestNeighbor ( CNearTreeHandle treehandle, void * *
      coordFarthest, void * * objFarthest, const void * coord );
 
      int CNearTreeFindInSphere ( CNearTreeHandle treehandle, const double
-     dRadius, CVectorHandle coords, CVectorHandle objs, const void * coord,
-     int resetcount);
+     dRadius, CVectorHandle coordInside, CVectorHandle objInside, const void
+     * coord, int resetcount );
+
+     int CNearTreeFindTreeInSphere ( CNearTreeHandle treehandle, const double
+     dRadius, CNearTreeHandle foundInside, const void * coord, int resetcount
+     )
+
+     int CNearTreeFindOutSphere ( CNearTreeHandle treehandle, const double
+     dRadius, CVectorHandle coordOutside, CVectorHandle objOutside, const
+     void * coord, int resetcount );
+
+     int CNearTreeFindTreeOutSphere ( CNearTreeHandle treehandle, const
+     double dRadius, CNearTreeHandle foundOutside, const void * coord, int
+     resetcount )
+
+     int CNearTreeFindInAnnulus ( CNearTreeHandle treehandle, const double
+     dRadiusInner, const double dRadiusOuter, CVectorHandle coordInRing,
+     CVectorHandle objInRing, const void * coord, int resetcount );
+
+     int CNearTreeFindTreeInAnnulus ( CNearTreeHandle treehandle, const
+     double dRadiusInner, const double dRadiusOuter, CNearTreeHandle
+     foundInRing, const void * coord, int resetcount )
 
      int CNearTreeNearest ( CNearTreeHandle treehandle, double * dRadius,
      void * * coordClosest, void * * objClosest, const void * coord );
@@ -304,27 +536,50 @@
      dRadius, void * * coordFarthest, void * * objFarthest, const void *
      coord );
 
+     int CNearTreeObjects ( CNearTreeHandle treehandle, CVectorHandle *
+     vectorhandle ); void * CNearTreeObjectAt ( CNearTreeHandle treehandle,
+     size_t index )
+
+     int CNearTreeCoords ( CNearTreeHandle treehandle, CVectorHandle *
+     vectorhandle ); void * CNearTreeCoordAt ( CNearTreeHandle treehandle,
+     size_t index )
+
    The NearTree API works with coordinate vectors in an arbitrary number of
    dimensions. Each neartree is accessed by a pointer of type CNearTreeHandle
-   which points to a struct of type CNearTree:
+   which points to a struct of type CNearTree, which points to a tree of
+   nodes of type CNearTreeNode:
 
-     typedef struct _CNearTree {
-         void           * m_coordLeft;    /* coords of left object stored in this node   */
-         void           * m_coordRight;   /* coords of right object stored in this node  */
+     typedef struct _CNearTreeNode {
+         size_t           m_indexLeft;    /* index of left coords in m_CoordStore 
+                                             and of left object in m_ObjectStore     */
+         size_t           m_indexRight;   /* index of right coords in m_CoordStore
+                                             and of right object in m_ObjectStore     */
          double           m_dMaxLeft;     /* longest distance from the left object
                                              to anything below it in the tree            */
          double           m_dMaxRight;    /* longest distance from the right object
                                              to anything below it in the tree            */
-         struct _CNearTree FAR * m_pLeftBranch; 
+         struct _CNearTreeNode * m_pLeftBranch; 
                                           /* tree descending from the left object        */
-         struct _CNearTree FAR * m_pRightBranch;
+         struct _CNearTreeNode * m_pRightBranch;
                                           /* tree descending from the right object       */
-         void FAR *       m_ptobjLeft;    /* pointer to the left object                  */
-         void FAR *       m_ptobjRight;   /* pointer to the right object                 */
-         size_t           m_dimension;    /* dimension of the coordinates                */
-         int              m_flags;        /* flags                                       */
-         /* NOTE:  in actual blocks the coordinates will be stored here after the flags         */
+         int              m_iflags;       /* flags                                       */
+     } CNearTreeNode;
+    
+    
+     typedef CNearTreeNode * CNearTreeNodeHandle;  
+    
+     typedef struct {
+         CNearTreeNodeHandle m_ptTree;     /* pointer to the actual tree                  */
+         size_t           m_szdimension;   /* dimension of the coordinates                */
+         size_t           m_szsize;        /* size of this tree                           */
+         size_t           m_szdepth;       /* depth of this tree                          */
+         int              m_iflags;        /* flags                                       */
+         CVectorHandle    m_ObjectStore;   /* all inserted objects                        */
+         CVectorHandle    m_CoordStore;    /* all inserted coordinates                    */
+         CVectorHandle    m_DelayedIndices;/* objects queued for insertion                */
      } CNearTree;
+    
+     typedef CNearTree     FAR * CNearTreeHandle;
 
 
    The internal operation of the API depends on the function CNearTreeDist
@@ -340,7 +595,12 @@
    the two predefined constants CNEARTREE_TYPE_DOUBLE for double or
    CNEARTREE_TYPE_INTEGER for integer, optionally ORed with
    CNEARTREE_NORM_L1, CNEARTREE_NORM_L2 or CNEARTREE_NORM_LINF for L1, L2 or
-   L-infinity norms. When first created, a neartree has no right or left node
+   L-infinity norms. If it is desired to automatically defer all inserts
+   until a the first search or a manual call to
+   CNearTreeCompleteDelayedInsert, the flag CNEARTREE_DEFER_ALL should be
+   ored with treetype. Alteratively, if minimal reorganization of the order
+   of the tree is desired on each insertion, CNEARTREE_FLIP should be ored
+   with treetype. When first created, a neartree has no right or left node
    and with the dMax-below set to negative values so that any match found
    will be stored since it will greater than the negative value. The tree is
    then populated by calls to CNearTreeInsert, with each call providing a
@@ -348,17 +608,28 @@
    the coordinate vector, but does not copy the object. The tree is populated
    in the order left, right and then the nearer child.
 
+   Optionally, the actual insertions may be delayed and then completed in the
+   first search or in an explicit CNearTreeCompleteDelayedInsert call.
+
    The neartree is searched for the nearest or farthest coordinate vector in
    the neartree to a given probe coordinate vector coord by
    CNearTreeNearestNeighbor and CNearTreeFarthestNeighbor, respectively. The
    given radius confines the search to a sphere around the probe. If more
    than a single extremal coordinate point is needed, CNearTreeFindInSphere
    can be used to obtain a CVector result vector of all the coordinate
-   vectors that satisfy the constraint. The vectors themselves are not copied
-   into the result vector. If the parameter resetcount is true (non zero) the
-   result vector is cleared before the search. A parallel CVector result
-   vector of the matching object pointers is returned if objs is not NULL.
-   The functions CNearTreeNearest and CNearTreeFindFarthest implement
+   vectors that satisfy the constraint of being within a specified radius, or
+   CNearTreeFindOutSphere can be used to obtain a CVector result vector of
+   all the coordinates that satisfy the constraint of being outside a
+   specified radius. CNearTreeFindIn Annulus can be used to obtain a CVector
+   result vector of all the coordinates that satisfy the constraint of being
+   between two specified radii from the probe. The vectors themselves are not
+   copied into the result vector. If the parameter resetcount is true (non
+   zero) the result vector is cleared before the search. A parallel CVector
+   result vector of the matching object pointers is returned if objs is not
+   NULL. Aternatives the forms CNearTreeFindTreeInSphere,
+   CNearTreeFindTreeOutSphere, CNearTreeFindTreeInAnnulus can be used to
+   obtain CNearTrees rather than CVectors of results. The functions
+   CNearTreeNearest and CNearTreeFindFarthest implement
    CNearTreeNearestNeighbor and CNearTreeFarthestNeighbor, respectively,
    adjusting the radius of the search while the search is in progress, and
    are not normally used by users
@@ -366,10 +637,14 @@
     Returns
 
    If CNearTreeDist fails, it returns -1. Except for CNearTreeDist, all the
-   functions in the API return 0 (CNEARTREE_SUCCESS) for success. If dynamic
-   memory allocation fails, CNEARTREE_MALLOC_FAILED is returned. If a call is
-   made with an improper argument, CNEARTREE_BAD_ARGUMENT is returned. If a
-   search fails to find anything, CNEARTREE_NOT_FOUND is returned.
+   functions in the API return 0 ( CNEARTREE_SUCCESS ) for success. If
+   dynamic memory allocation fails, CNEARTREE_MALLOC_FAILED is returned. If a
+   call is made with an improper argument, CNEARTREE_BAD_ARGUMENT is
+   returned. If a search fails to find anything, CNEARTREE_NOT_FOUND is
+   returned. If there is a failure in an attempt to free a CNearTree,
+   CNEARTREE_FREE_FAILED is returned. If any of the internal call to CVector
+   fail, CNEARTREE_CVECTOR_FAILED is returned. For convenience in debugging,
+   the formerly negative values of this returns are now positive.
 
     Examples
 
@@ -419,5 +694,5 @@
 
      ----------------------------------------------------------------------
 
-   Updated 11 Jan 2009
+   Updated 21 Mar 2009
    yaya@bernstein-plus-sons.com
