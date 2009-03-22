@@ -537,12 +537,14 @@ operator- ( );        // geometrical (vector) difference of two objects
      coord );
 
      int CNearTreeObjects ( CNearTreeHandle treehandle, CVectorHandle *
-     vectorhandle ); void * CNearTreeObjectAt ( CNearTreeHandle treehandle,
-     size_t index )
+     vectorhandle ); 
+
+     void * CNearTreeObjectAt ( CNearTreeHandle treehandle, size_t index );
 
      int CNearTreeCoords ( CNearTreeHandle treehandle, CVectorHandle *
-     vectorhandle ); void * CNearTreeCoordAt ( CNearTreeHandle treehandle,
-     size_t index )
+     vectorhandle ); 
+
+     void * CNearTreeCoordAt ( CNearTreeHandle treehandle, size_t index );
 
    The NearTree API works with coordinate vectors in an arbitrary number of
    dimensions. Each neartree is accessed by a pointer of type CNearTreeHandle
