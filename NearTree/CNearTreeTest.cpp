@@ -2205,7 +2205,7 @@ void test2Containers_InSphere( T1 t1, T2 t2 )
     if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
     {
         ++g_errorCount;
-        fprintf(stdout, "test2Containers_InSphere: size(t2)!=nFound\n", t2.size( ) );
+        fprintf(stdout, "test2Containers_InSphere: size(t2) %lu !=nFound\n", (unsigned long)t2.size( ) );
     }
 }  //  end test2Containers_InSphere
 
