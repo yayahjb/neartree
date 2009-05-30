@@ -719,7 +719,7 @@ operator- ( );        // geometrical (vector) difference of two objects
    CNearTreeImmediateInsert instead of CNearTreeInsert. For upwards
    compatability of the library for existing code, the deprecated
    CNearTreeDelayedInsert is provided as an deprecated alternate call to
-   CNearTreeInsert/b>.
+   CNearTreeInsert.
 
    The neartree is searched for the nearest or farthest coordinate vector in
    the neartree to a given probe coordinate vector coord by
