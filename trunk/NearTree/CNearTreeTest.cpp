@@ -5,6 +5,9 @@
 //*  test harness for the templated neartree implementation, TNear.h
 //*  Copyright 2008 Larry Andrews.  All rights reserved
 //*
+//*  Revised 30 May 2009, release with full containerization of C++
+//*                       version and KNear/Far in C++ and C, LCA + HJB
+
 
 //**********************************************************************
 //*                                                                    *
@@ -94,7 +97,7 @@ int main(int argc, char* argv[])
     for( int i=1; i<10; ++i )
     {
         testLinearTree( i );
-    fprintf( stdout, "testLinearTree %d\n", i );
+        fprintf( stdout, "testLinearTree %d\n", i );
     }
     testFindFirstObject( );
     fprintf( stdout, "testFindFirstObject\n" );
@@ -182,7 +185,7 @@ void testEmptyTree( void )
         fprintf(stdout, "testEmptyTree: .FarthestNeighbor incorrect for empty tree\n" );
     }
     
-
+    
     CNearTree<int> ntReturn;
     lFoundPointsInSphere = tree.FindInSphere( 1000.0, ntReturn, 1 );
     if( lFoundPointsInSphere != 0 )
@@ -190,7 +193,7 @@ void testEmptyTree( void )
         ++g_errorCount;
         fprintf(stdout, "testEmptyTree: .FindInSphere incorrect for empty tree\n" );
     }
-
+    
     tree.clear( );
 }  // end testEmptyTree
 
@@ -303,19 +306,19 @@ void testLinearTree( const int n )
         ++g_errorCount;
         fprintf(stdout, "FindInSphere did not find all the points, found %ld\n", tree.FindInSphere( (double)(10*n), ntReturn, 0 ) );
     }
-
+    
     /* test operator[ ] */
     for( size_t i=1; i<=(size_t)n; ++i )
     {
-       if( i != (size_t)tree[i-1] )
-    {
-        ++g_errorCount;
-        fprintf(stdout, "testLinearTree: found tree[i]!=i for tree[i-1]=%d, i=%ld\n", tree[i-1], (long)i );
-       }
+        if( i != (size_t)tree[i-1] )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testLinearTree: found tree[i]!=i for tree[i-1]=%d, i=%ld\n", tree[i-1], (long)i );
+        }
     }
     
     v.clear( );
-
+    
     tree.clear( );
 }  // end testLinearTree
 
@@ -326,7 +329,7 @@ void testLinearTree( const int n )
  each succeeding value is one half of the previous until "zero" is
  computed (the zero is NOT inserted into the tree). The tree will consist
  of only right branches and left leaves.
-
+ 
  Experience showed that differing implementations of behaviors for denormalized
  floating point numbers causes problems both with the tests and with the
  building of the tree. So FLT_MIN and DBL_MIN have replaced zero as the
@@ -401,8 +404,8 @@ void testFindFirstObject( void )
             ++g_errorCount;
             fprintf(stdout, "testFindFirstObject: found wrong count for FindInSphere for float, should be%ld, got %ld\n", count, lFound );
         }
-        }
-        
+    }
+    
     {
         double dFinal = DBL_MAX; /* just initialization */
         CNearTree<double> tree;
@@ -479,7 +482,7 @@ void testFindFirstObject( void )
  value, and each succeeding value is one half of the previous until "zero"
  is computed (the zero is NOT inserted into the tree). The tree will consist
  of only right branches and left leaves.
-
+ 
  Experience showed that differing implementations of behaviors for denormalized
  floating point numbers causes problems both with the tests and with the
  building of the tree. So FLT_MIN and DBL_MIN have replaced zero as the
@@ -561,8 +564,8 @@ void testFindLastObject( void )
             ++g_errorCount;
             fprintf(stdout, "testFindLastObject: Far failed for float, got %f\n", closest );
         }
-        }
-        
+    }
+    
     {
         CNearTree<double> tree;
         
@@ -586,8 +589,8 @@ void testFindLastObject( void )
             ++g_errorCount;
             fprintf(stdout, "testFindLastObject: Far failed for float, got %f\n", closest );
         }
-        }
-        
+    }
+    
     {
         CNearTree<double> tree;
         
@@ -874,7 +877,7 @@ void testRandomTree1( const int nRequestedRandoms )
         }
     }
 } // end testRandomTree1
-    
+
 /*
  Test CNearTree with a bunch of random numbers (integers).
  */
@@ -1009,7 +1012,7 @@ void testRandomTree2( const int nRequestedRandoms )
         }
     }
 }  // end testRandomTree2
-    
+
 /*=======================================================================*/
 /* make a 17-dimension vector class for testing */
 class vec17
@@ -1019,7 +1022,7 @@ class vec17
         int dim;
         double length;  // just for a signature for debugging
         vec17( ) :
-            dim(17), length(0)
+        dim(17), length(0)
         {
             for( int i=0; i<dim; ++i )
             {
@@ -1028,7 +1031,7 @@ class vec17
             length = Norm( );
         }
         explicit vec17( const double d ):
-            dim(17), length(0)
+        dim(17), length(0)
         {
             for( int i=0; i<dim; ++i )
             {
@@ -1037,7 +1040,7 @@ class vec17
             length = Norm( );
         }
         explicit vec17( const int n ):
-            dim(17), length(0)
+        dim(17), length(0)
         {
             for( int i=0; i<dim; ++i )
             {
@@ -1068,7 +1071,7 @@ class vec17
             }
             return( double(sqrt( dtemp )) );
         }
-
+        
         vec17& operator-= ( const vec17 ) { return ( *this ); }; // just to keep LINT happy
     };  // end vec17
 
@@ -1154,12 +1157,12 @@ void testBigVector(  )
                 vCloseToNearCenter = sphereReturn[i];
             }
         }
-
+        
         {
             //const double radius = ( vCloseToNearCenter - vNearCenter ).Norm( );
             const double radius = MYRAND_MAX*sqrt(17.0);
             unsigned long iSphereFoundNearCenter = (unsigned long)tree.FindInSphere( radius, sphereReturn, vNearCenter );
-
+            
             double searchRadius = radius/2;
             double delta        = searchRadius;
             int count = 0;
@@ -1168,16 +1171,16 @@ void testBigVector(  )
                 iSphereFoundNearCenter = (unsigned long)tree.FindInSphere( searchRadius, sphereReturn, vNearCenter );
                 if( iSphereFoundNearCenter > 2 )
                 {
-                   searchRadius = searchRadius - delta/2;
+                    searchRadius = searchRadius - delta/2;
                 }
                 else if( iSphereFoundNearCenter < 2 )
                 {
-                   searchRadius = searchRadius + delta/2;
+                    searchRadius = searchRadius + delta/2;
                 }
                 delta /= 2;
                 ++count;
             }  // end while
-
+            
             if( iSphereFoundNearCenter != 2 )
             {
                 ++g_errorCount;
@@ -1238,7 +1241,7 @@ void testBigVector(  )
         }
     }
 }  // testBigVector
-    
+
 /*=======================================================================*/
 void testBackwardForward( void )
 {
@@ -1415,8 +1418,8 @@ void testDelayedInsertionRandom( void )
         {
             const double insertValue = (double)(i);
             tree.insert( insertValue );
-    }
-    
+        }
+        
         tree.CompleteDelayedInsertRandom( );
         const size_t depth = tree.GetDepth( );
         const size_t insertedSize = tree.GetTotalSize( );
@@ -1433,8 +1436,8 @@ void testDelayedInsertionRandom( void )
             fprintf(stdout, "testDelayedInsertionRandom: tree depth is too large, %lu is greater than %ld\n", (unsigned long)depth, nmax/2 );
         }
         fprintf(stdout, "testDelayedInsertionRandom: tree depth is  %ld\n", (unsigned long)depth );
-}
-
+    }
+    
 }  // end testDelayedInsertionRandom
 
 /*=======================================================================*/
@@ -1583,78 +1586,78 @@ void testIterators( void )
     }
     
     {
-       // test InSphere
-       CNearTree<int> sphereTree;
-       const double radius = 5.0;
-       const long sizeReturned = tree.FindInSphere( radius, sphereTree, 50 );
-       CNearTree<int>::iterator itSphere = sphereTree.begin( );
-       const size_t sphereSizeIn = sphereTree.size( );
-
-       if( (long)sphereSizeIn != sizeReturned )
-       {
+        // test InSphere
+        CNearTree<int> sphereTree;
+        const double radius = 5.0;
+        const long sizeReturned = tree.FindInSphere( radius, sphereTree, 50 );
+        CNearTree<int>::iterator itSphere = sphereTree.begin( );
+        const size_t sphereSizeIn = sphereTree.size( );
+        
+        if( (long)sphereSizeIn != sizeReturned )
+        {
             ++g_errorCount;
             fprintf(stdout, "testIterators: FindInSphere and size found different values, %ld and %ld\n", sizeReturned, (long)sphereSizeIn );
-       }
-       const long sizeReturned2In = tree.FindInSphere( radius, sphereTree, 50 );
-
-       if( sizeReturned != sizeReturned2In )
-       {
+        }
+        const long sizeReturned2In = tree.FindInSphere( radius, sphereTree, 50 );
+        
+        if( sizeReturned != sizeReturned2In )
+        {
             ++g_errorCount;
             fprintf(stdout, "testIterators: 2nd FindInSphere found different value, %ld and %ld\n", sizeReturned, sizeReturned2In );
-       }
-
-       std::vector<int> sphereVector;
-       const long sizeReturnedV = tree.FindInSphere( radius, sphereVector, 50 );
-
-       if( (long)sphereSizeIn != sizeReturnedV )
-       {
+        }
+        
+        std::vector<int> sphereVector;
+        const long sizeReturnedV = tree.FindInSphere( radius, sphereVector, 50 );
+        
+        if( (long)sphereSizeIn != sizeReturnedV )
+        {
             ++g_errorCount;
             fprintf(stdout, "testIterators: FindInSphere for vector and size found different values, %ld and %ld\n", sizeReturned, (long)sphereSizeIn );
-       }
-
-       // test OutSphere
-       const long sizeReturnedOut = tree.FindOutSphere( radius, sphereTree, 50 );
-       itSphere = sphereTree.begin( );
-       const size_t sphereSizeOut = sphereTree.size( );
-
-       if( (long)sphereSizeOut != sizeReturnedOut )
-       {
+        }
+        
+        // test OutSphere
+        const long sizeReturnedOut = tree.FindOutSphere( radius, sphereTree, 50 );
+        itSphere = sphereTree.begin( );
+        const size_t sphereSizeOut = sphereTree.size( );
+        
+        if( (long)sphereSizeOut != sizeReturnedOut )
+        {
             ++g_errorCount;
             fprintf(stdout, "testIterators: FindOutSphere and size found different values, %ld and %ld\n", sizeReturned, (long)sphereSizeOut );
-       }
-       const long sizeReturned2Out = tree.FindOutSphere( radius, sphereTree, 50 );
-
-       if( sizeReturned2Out != sizeReturnedOut )
-       {
+        }
+        const long sizeReturned2Out = tree.FindOutSphere( radius, sphereTree, 50 );
+        
+        if( sizeReturned2Out != sizeReturnedOut )
+        {
             ++g_errorCount;
             fprintf(stdout, "testIterators: 2nd FindOutSphere found different value, %ld and %ld\n", sizeReturned, sizeReturned2Out );
-       }
-
-       if( sizeReturned2In+sizeReturned2Out != nMax+2 )
-       {
-           // because there are 2 ints on the boundary, the count should be nMax+2
+        }
+        
+        if( sizeReturned2In+sizeReturned2Out != nMax+2 )
+        {
+            // because there are 2 ints on the boundary, the count should be nMax+2
             ++g_errorCount;
             fprintf(stdout, "testIterators: total count from InSphere and OutSphere is wrong, %ld, should be%d\n",
-                sizeReturned2Out+sizeReturned2Out, nMax+2 );
-       }
-
-       sphereTree.insert( 999999 );
-       CNearTree<int>::iterator it = sphereTree.end( );
-       --it;
-
-       if( *(it) != 999999 )
-       {
+                    sizeReturned2Out+sizeReturned2Out, nMax+2 );
+        }
+        
+        sphereTree.insert( 999999 );
+        CNearTree<int>::iterator it = sphereTree.end( );
+        --it;
+        
+        if( *(it) != 999999 )
+        {
             ++g_errorCount;
             fprintf(stdout, "testIterators: Error after incrementing iterator at end(1)\n" );
-       }
-
-       it = --sphereTree.end( );
-       if( *(it) != 999999 )
-       {
+        }
+        
+        it = --sphereTree.end( );
+        if( *(it) != 999999 )
+        {
             ++g_errorCount;
             fprintf(stdout, "testIterators: Error after incrementing iterator at end(2)\n" );
-       }
-
+        }
+        
     }
     
     {
@@ -1663,14 +1666,14 @@ void testIterators( void )
         sphereReturn.insert( v );
         CNearTree<vec17>::iterator itv = sphereReturn.begin( );
         const int n = itv->dim;
-
+        
         if( n != 17 )
         {
             ++g_errorCount;
             fprintf(stdout, "testIterators: operator-> got wrong value for dim, %d\n", n );
         }
         const double d = itv->pd[0];
-
+        
         if( d != v.pd[0] )
         {
             ++g_errorCount;
@@ -1680,15 +1683,15 @@ void testIterators( void )
 }  // end testIterators
 
 /*=======================================================================*/
-    class v2
+class v2
     {
         int m,n;
     public:
         v2( const int mm, const int nn ) :
-            m(mm), n(nn)
+        m(mm), n(nn)
         {
         }
-
+        
         v2 operator- ( const v2& v ) const
         {
             return( v2( m-v.m, n-v.n ) );
@@ -1697,7 +1700,7 @@ void testIterators( void )
         {
             return( sqrt( (double)( n*n + m*m ) ) );  //  L2 measure
         }
-
+        
     }; // end of v2
 
 
@@ -1709,35 +1712,35 @@ void testFindInAnnulus( void )
         CNearTree<int> tree;
         CNearTree<int>::iterator itEmpty = tree.back( ); // make sure back works
         itEmpty = tree.back( );
-
+        
         const int nMax = 1000;
-
+        
         for( int i=0; i<nMax; ++i )
         {
             tree.insert( (int)i );
         }
         const double r1 = 100.1;
         const double r2 = 299.9;
-
+        
         {
-
+            
             CNearTree<int> annulusTree;
             const long lInAnnulus = tree.FindInAnnulus( r1, r2, annulusTree, 0 );
-
+            
             if( lInAnnulus != (299-101+1) )
             {
                 ++g_errorCount;
                 fprintf(stdout, "testFindInAnnulus: wrong number of objects found\n" );
             }
-
+            
             CNearTree<int>::iterator itNear = annulusTree.NearestNeighbor( 1000.0, 0 );
-
+            
             if( *itNear != 101 )
             {
                 ++g_errorCount;
                 fprintf(stdout, "testFindInAnnulus: lowest value (%d) is incorrect\n", *itNear );
             }
-
+            
             CNearTree<int>::iterator itFar = annulusTree.FarthestNeighbor( 0 );
             if( *itFar != 299 )
             {
@@ -1745,11 +1748,11 @@ void testFindInAnnulus( void )
                 fprintf(stdout, "testFindInAnnulus: highest value (%d) is incorrect\n", *itFar );
             }
         }
-
+        
         {
             std::vector<int> annulusvector;
             const long lInAnnulus = tree.FindInAnnulus( r1, r2, annulusvector, 0 );
-
+            
             if( lInAnnulus != (299-101+1) )
             {
                 ++g_errorCount;
@@ -1760,7 +1763,7 @@ void testFindInAnnulus( void )
     {
         // test annulus in the case of more than 1-D using CNearTree return
         CNearTree< v2 > tree;
-
+        
         for( int i=0; i<30; ++i )
         {
             for( int j=0; j<30; ++j )
@@ -1768,18 +1771,18 @@ void testFindInAnnulus( void )
                 tree.insert( v2(i,j) );
             }
         }
-
+        
         const double r1 = 4.0;
         const double r2 = 8.0;
-
+        
         const v2 probe( -1, -1 );
-
+        
         // use FindInAnnulus to find the points in the annulus
         CNearTree< v2 > annulusResult;
         const long searchFoundInAnnulus = tree.FindInAnnulus( r2, r1, annulusResult, probe );
-
+        
         // now count all the points in the annulus by brute force
-
+        
         int count = 0;
         const double radius = 0.001; // specify a very small radius so integer grid will only detect single points
         for( int i=0; i<30; ++i )
@@ -1794,14 +1797,14 @@ void testFindInAnnulus( void )
                 }
             }
         }
-
+        
         if( searchFoundInAnnulus != count )
         {
             ++g_errorCount;
             fprintf(stdout, "testFindInAnnulus: wrong number of points found in annulus by NearTree, %ld, direct count=%d\n", searchFoundInAnnulus, count );
         }
     }
-
+    
 }  // end testFindInAnnulus
 
 /*=======================================================================*/
@@ -1812,26 +1815,26 @@ void testMisc( void )
     {
         nt.insert( i );
     }
-
+    
     const std::vector<int> v = nt;
     if( v.size( ) != nt.size( ) )
     {
-            ++g_errorCount;
-            fprintf(stdout, "testMisc: wrong number of points %ld in vector\n", (long)v.size( ) );
+        ++g_errorCount;
+        fprintf(stdout, "testMisc: wrong number of points %ld in vector\n", (long)v.size( ) );
     }
-
+    
     const CNearTree<int, double, -3> nt1 = nt;
     if( nt1.size( ) != nt.size( ) )
     {
-            ++g_errorCount;
-            fprintf(stdout, "testMisc: wrong number of points %ld in CNearTree\n", (long)nt1.size( ) );
+        ++g_errorCount;
+        fprintf(stdout, "testMisc: wrong number of points %ld in CNearTree\n", (long)nt1.size( ) );
     }
-
+    
     const size_t indexToRetrieve = 3;
     if( nt.at( indexToRetrieve ) != (int)indexToRetrieve )
     {
-            ++g_errorCount;
-            fprintf(stdout, "testMisc: 'at' returned wrong value, %d\n",nt.at( 3 ) );
+        ++g_errorCount;
+        fprintf(stdout, "testMisc: 'at' returned wrong value, %d\n",nt.at( 3 ) );
     }
 }  //  end testMisc
 
@@ -1840,107 +1843,107 @@ void testIntegerReturn( void )
 {
     {
         CNearTree<int, int> nt;
-
+        
         const int nmax2 = 20;
         for( int i=0; i<nmax2; ++i )
         {
             nt.insert( i );
         }
-
+        
         int closest=-1;
         if( ! nt.NearestNeighbor( 1000, closest, 100 ) )
         {
-                ++g_errorCount;
-                fprintf(stdout, "testIntegerReturn: NearestNeighbor failed\n" );
+            ++g_errorCount;
+            fprintf(stdout, "testIntegerReturn: NearestNeighbor failed\n" );
         }
         else if( closest != nmax2-1 )
         {
-                ++g_errorCount;
-                fprintf(stdout, "testIntegerReturn: NearestNeighbor return wrong value, %d\n", closest );
+            ++g_errorCount;
+            fprintf(stdout, "testIntegerReturn: NearestNeighbor return wrong value, %d\n", closest );
         }
     }
-
+    
     {
         CNearTree<int, long> nt;
-
+        
         const int nmax2 = 20;
         for( int i=-nmax2; i<nmax2; ++i )
         {
             nt.insert( i );
         }
-
+        
         int closest=-nmax2-1;
         if( ! nt.NearestNeighbor( 1000, closest, 100 ) )
         {
-                ++g_errorCount;
-                fprintf(stdout, "testIntegerReturn: NearestNeighbor failed\n" );
+            ++g_errorCount;
+            fprintf(stdout, "testIntegerReturn: NearestNeighbor failed\n" );
         }
         else if( closest != nmax2-1 )
         {
-                ++g_errorCount;
-                fprintf(stdout, "testIntegerReturn: NearestNeighbor return wrong value, %d\n", closest );
+            ++g_errorCount;
+            fprintf(stdout, "testIntegerReturn: NearestNeighbor return wrong value, %d\n", closest );
         }
     }
 }  // end testIntegerReturn
 
-    
+
 /*=======================================================================*/
 /* make a 17-dimension all-integer vector class for testing */
 class intVec17
-{
-public:
-    int pd[17];
-    int dim;
-    double length;  // just for a signature for debugging
-    intVec17( ) :
+    {
+    public:
+        int pd[17];
+        int dim;
+        double length;  // just for a signature for debugging
+        intVec17( ) :
         dim(17),
         length( 0.0 )
-    {
-        for( int i=0; i<dim; ++i )
         {
-            pd[i] = random( )%MYRAND_MAX;
-        }
-        length = this->Norm( );
-    };
-
-    explicit intVec17( const int d ) :
+            for( int i=0; i<dim; ++i )
+            {
+                pd[i] = random( )%MYRAND_MAX;
+            }
+            length = this->Norm( );
+        };
+        
+        explicit intVec17( const int d ) :
         dim( 17 ),
         length( 0.0 )
-    {
-        for( int i=0; i<dim; ++i )
         {
-            pd[i] = d;
-        }
-        length = this->Norm( );
-    };
-
-    ~intVec17( void )
-    {
-    };
-
-    int Norm( void ) const
-    {
-        long dtemp = 0;
-        for( int i=0; i<dim; ++i )
+            for( int i=0; i<dim; ++i )
+            {
+                pd[i] = d;
+            }
+            length = this->Norm( );
+        };
+        
+        ~intVec17( void )
         {
+        };
+        
+        int Norm( void ) const
+        {
+            long dtemp = 0;
+            for( int i=0; i<dim; ++i )
+            {
                 dtemp += ABS(pd[i]);  // L1 measure here
-        }
-        return( dtemp );
-    };
-    
-    intVec17 operator-( const intVec17& v ) const /* USERS: be sure to make both const */
-    {
-        intVec17 vtemp;
-        for( int i=0; i<dim; ++i )
+            }
+            return( dtemp );
+        };
+        
+        intVec17 operator-( const intVec17& v ) const /* USERS: be sure to make both const */
         {
-            vtemp.pd[i] = pd[i] -v.pd[i];
-        }
-        vtemp.length = vtemp.Norm( );
-        return( vtemp );
-    };
-
-    intVec17& operator-= ( const intVec17 ) { return ( *this ); }; // just to keep LINT happy
-}; // intVec17
+            intVec17 vtemp;
+            for( int i=0; i<dim; ++i )
+            {
+                vtemp.pd[i] = pd[i] -v.pd[i];
+            }
+            vtemp.length = vtemp.Norm( );
+            return( vtemp );
+        };
+        
+        intVec17& operator-= ( const intVec17 ) { return ( *this ); }; // just to keep LINT happy
+    }; // intVec17
 
 /*=======================================================================*/
 
@@ -2011,19 +2014,19 @@ void testBigIntVec( void )
         intVec17 vNearCenter;
         intVec17 vCloseToNearCenter;
         const bool bFoundNear = tree.NearestNeighbor( (int)MYRAND_MAX*17, vNearCenter, vBox17Center );
-
+        
         if( ! bFoundNear )
         {
             ++g_errorCount;
             fprintf(stdout, "testBigIntVector: NearestNeighbor found no points\n" );
         }
-
+        
         CNearTree<intVec17, int, -2> sphereReturn;
         // really, the only way to get the next section perfectly right is to do a 
         // binary search until exactly 2 points are found. (or do a linear search thru the points)
         const int radius = 2*(int)(MYRAND_MAX/2*sqrt(17.)); // hand-tuned value
         unsigned long iFoundNearCenter = (unsigned long)tree.FindInSphere( radius, sphereReturn, vNearCenter );
-
+        
         int searchRadius = radius/2;
         int delta        = searchRadius;
         int count = 0;
@@ -2032,16 +2035,16 @@ void testBigIntVec( void )
             iFoundNearCenter = (unsigned long)tree.FindInSphere( searchRadius, sphereReturn, vNearCenter );
             if( iFoundNearCenter > 2 )
             {
-               searchRadius = searchRadius - delta/2;
+                searchRadius = searchRadius - delta/2;
             }
             else if( iFoundNearCenter < 2 )
             {
-               searchRadius = searchRadius + delta/2;
+                searchRadius = searchRadius + delta/2;
             }
             delta /= 2;
             ++count;
         }  // end while
-
+        
         if( iFoundNearCenter < 2 )
         {
             ++g_errorCount;
@@ -2058,7 +2061,7 @@ void testBigIntVec( void )
                 vCloseToNearCenter = sphereReturn[i];
             }
         }
-
+        
         {
             sphereReturn.clear( );
             const int radius2 = (int)( vCloseToNearCenter - vNearCenter ).Norm( );
@@ -2090,8 +2093,8 @@ void testBigIntVec( void )
             {
                 ++g_errorCount;
                 fprintf(stdout, "testBigIntVector: FindInSphere found more than %ld points using zero radius\n", iFound );
+            }
         }
-    }
         
         {
             /* Using minimal radius, check that at least 2 points are found when a point is searched
@@ -2121,7 +2124,7 @@ void testBigIntVec( void )
                 fprintf(stdout, "testBigIntVector: FindInSphere found %ld points using %f radius\n", iFound, (vCloseToNearCenter-vNearCenter).Norm( )*0.9 );
             }
         }
-         
+        
         {
             const intVec17 vOrigin( 0 );
             const intVec17 vTopCorner( MYRAND_MAX );
@@ -2146,7 +2149,7 @@ void testBigIntVec( void )
                 fprintf(stdout, "testBigIntVector: FarthestNeighbor from origin found wrong top point\n" );
             }
         }
-         
+        
         {
             const intVec17 vOrigin( 0 );
             const intVec17 vTopCorner( MYRAND_MAX );
@@ -2188,23 +2191,23 @@ void test2Containers_InSphere( T1 t1, T2 t2 )
 {
     t1.clear( );
     t2.clear( );
-
+    
     for( int i=0; i<10; ++i )
     {
         t1.insert( t1.end( ), i );
     }
-
+    
     CNearTree<int> nt(t1);
     nt.insert( t1 );
-
+    
     const unsigned long nFound = nt.FindInSphere( 1.1, t2, 5 );
-
+    
     if( nFound != 6 && nFound != 3 ) // sets do not allow duplicates
     {
         ++g_errorCount;
         fprintf(stdout, "test2Containers_InSphere: Found wrong # points %lu, expected 3 or 6\n", (unsigned long)nFound );
     }
-
+    
     if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
     {
         ++g_errorCount;
@@ -2225,23 +2228,23 @@ void test2Containers_OutSphere( T1 t1, T2 t2 )
 {
     t1.clear( );
     t2.clear( );
-
+    
     for( int i=0; i<10; ++i )
     {
         t1.insert( t1.end( ), i );
     }
-
+    
     CNearTree<int> nt(t1);
     nt.insert( t1 );
-
+    
     const unsigned long nFound = nt.FindOutSphere( 1.1, t2, 5 );
-
+    
     if( nFound != 14 && nFound != 7 ) // sets do not allow duplicates
     {
         ++g_errorCount;
         fprintf(stdout, "test2Containers_OutSphere: Found wrong # points %lu, expected 7 or 14\n", (unsigned long)nFound );
     }
-
+    
     if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
     {
         ++g_errorCount;
@@ -2262,22 +2265,22 @@ void test2Containers_InAnnulus( T1 t1, T2 t2 )
 {
     t1.clear( );
     t2.clear( );
-
+    
     for( int i=0; i<10; ++i )
     {
         t1.insert( t1.end( ), i );
     }
-
+    
     CNearTree<int> nt(t1);
     nt.insert( t1 );
     const unsigned long nFound = nt.FindInAnnulus( 1.1, 3.9, t2, 5 );
-
+    
     if( nFound != 8 && nFound != 4 )
     {
         ++g_errorCount;
         fprintf(stdout, "test2Containers_InAnnulus: Found wrong # points %lu, expected 8 or 4\n", (unsigned long)nFound );
     }
-
+    
     if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
     {
         ++g_errorCount;
@@ -2288,445 +2291,445 @@ void test2Containers_InAnnulus( T1 t1, T2 t2 )
 /*=======================================================================*/
 void testSTLContainerInput( void )
 {
-   std::vector<int> v;
-   std::list<int>   l;
-   std::set<int>    s;
-
-   for( int i=0; i<10; ++i )
-   {
-      v.push_back( i );
-      l.push_back( i );
-      s.insert( i );
-   }
-
-   {  // test the constructors
-      CNearTree<int> tv(v);
-      CNearTree<int> tl(l);
-      CNearTree<int> ts(s);
-
-      if( tv.size() != 10 )
-      {
-          ++g_errorCount;
-          fprintf(stdout, "testSTLContainerInput: vector constructor has wrong count\n" );
-      }
-
-      if( tl.size() != 10 )
-      {
-          ++g_errorCount;
-          fprintf(stdout, "testSTLContainerInput: list constructor has wrong count\n" );
-      }
-
-      if( ts.size() != 10 )
-      {
-          ++g_errorCount;
-          fprintf(stdout, "testSTLContainerInput: set constructor has wrong count\n" );
-      }
-   }
-
-   {  // test the inserters
-      CNearTree<int> tv;
-      CNearTree<int> tl;
-      CNearTree<int> ts;
-
-      tv.insert( v );
-      ts.insert( s );
-      tl.insert( l );
-
-      if( tv.size() != 10 )
-      {
-          ++g_errorCount;
-          fprintf(stdout, "testSTLContainerInput: vector insertion has wrong count\n" );
-      }
-
-      if( tl.size() != 10 )
-      {
-          ++g_errorCount;
-          fprintf(stdout, "testSTLContainerInput: list insertion has wrong count\n" );
-      }
-
-      if( ts.size() != 10 )
-      {
-          ++g_errorCount;
-          fprintf(stdout, "testSTLContainerInput: set insertion has wrong count\n" );
-      }
-   }
-
-   
-   {  // test the inserters
-      CNearTree<int> tv;
-      CNearTree<int> tl;
-      CNearTree<int> ts;
-
-      tv.insert( v );
-      ts.insert( s );
-      tl.insert( l );
-
-      CNearTree<int> t;
-      test2Containers_InSphere( t, t );
-      test2Containers_InSphere( t, v );
-      test2Containers_InSphere( t, l );
-      test2Containers_InSphere( t, s );
-      test2Containers_InSphere( v, t );
-      test2Containers_InSphere( v, v );
-      test2Containers_InSphere( v, l );
-      test2Containers_InSphere( v, s );
-      test2Containers_InSphere( l, t );
-      test2Containers_InSphere( l, v );
-      test2Containers_InSphere( l, l );
-      test2Containers_InSphere( l, s );
-      test2Containers_InSphere( s, t );
-      test2Containers_InSphere( s, v );
-      test2Containers_InSphere( s, l );
-      test2Containers_InSphere( s, s );
-
-      test2Containers_OutSphere( t, t );
-      test2Containers_OutSphere( t, v );
-      test2Containers_OutSphere( t, l );
-      test2Containers_OutSphere( t, s );
-      test2Containers_OutSphere( v, t );
-      test2Containers_OutSphere( v, v );
-      test2Containers_OutSphere( v, l );
-      test2Containers_OutSphere( v, s );
-      test2Containers_OutSphere( l, t );
-      test2Containers_OutSphere( l, v );
-      test2Containers_OutSphere( l, l );
-      test2Containers_OutSphere( l, s );
-      test2Containers_OutSphere( s, t );
-      test2Containers_OutSphere( s, v );
-      test2Containers_OutSphere( s, l );
-      test2Containers_OutSphere( s, s );
-
-      test2Containers_InAnnulus( t, t );
-      test2Containers_InAnnulus( t, v );
-      test2Containers_InAnnulus( t, l );
-      test2Containers_InAnnulus( t, s );
-      test2Containers_InAnnulus( v, t );
-      test2Containers_InAnnulus( v, v );
-      test2Containers_InAnnulus( v, l );
-      test2Containers_InAnnulus( v, s );
-      test2Containers_InAnnulus( l, t );
-      test2Containers_InAnnulus( l, v );
-      test2Containers_InAnnulus( l, l );
-      test2Containers_InAnnulus( l, s );
-      test2Containers_InAnnulus( s, t );
-      test2Containers_InAnnulus( s, v );
-      test2Containers_InAnnulus( s, l );
-      test2Containers_InAnnulus( s, s );
-
-   }
-
+    std::vector<int> v;
+    std::list<int>   l;
+    std::set<int>    s;
+    
+    for( int i=0; i<10; ++i )
+    {
+        v.push_back( i );
+        l.push_back( i );
+        s.insert( i );
+    }
+    
+    {  // test the constructors
+        CNearTree<int> tv(v);
+        CNearTree<int> tl(l);
+        CNearTree<int> ts(s);
+        
+        if( tv.size() != 10 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testSTLContainerInput: vector constructor has wrong count\n" );
+        }
+        
+        if( tl.size() != 10 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testSTLContainerInput: list constructor has wrong count\n" );
+        }
+        
+        if( ts.size() != 10 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testSTLContainerInput: set constructor has wrong count\n" );
+        }
+    }
+    
+    {  // test the inserters
+        CNearTree<int> tv;
+        CNearTree<int> tl;
+        CNearTree<int> ts;
+        
+        tv.insert( v );
+        ts.insert( s );
+        tl.insert( l );
+        
+        if( tv.size() != 10 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testSTLContainerInput: vector insertion has wrong count\n" );
+        }
+        
+        if( tl.size() != 10 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testSTLContainerInput: list insertion has wrong count\n" );
+        }
+        
+        if( ts.size() != 10 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testSTLContainerInput: set insertion has wrong count\n" );
+        }
+    }
+    
+    
+    {  // test the inserters
+        CNearTree<int> tv;
+        CNearTree<int> tl;
+        CNearTree<int> ts;
+        
+        tv.insert( v );
+        ts.insert( s );
+        tl.insert( l );
+        
+        CNearTree<int> t;
+        test2Containers_InSphere( t, t );
+        test2Containers_InSphere( t, v );
+        test2Containers_InSphere( t, l );
+        test2Containers_InSphere( t, s );
+        test2Containers_InSphere( v, t );
+        test2Containers_InSphere( v, v );
+        test2Containers_InSphere( v, l );
+        test2Containers_InSphere( v, s );
+        test2Containers_InSphere( l, t );
+        test2Containers_InSphere( l, v );
+        test2Containers_InSphere( l, l );
+        test2Containers_InSphere( l, s );
+        test2Containers_InSphere( s, t );
+        test2Containers_InSphere( s, v );
+        test2Containers_InSphere( s, l );
+        test2Containers_InSphere( s, s );
+        
+        test2Containers_OutSphere( t, t );
+        test2Containers_OutSphere( t, v );
+        test2Containers_OutSphere( t, l );
+        test2Containers_OutSphere( t, s );
+        test2Containers_OutSphere( v, t );
+        test2Containers_OutSphere( v, v );
+        test2Containers_OutSphere( v, l );
+        test2Containers_OutSphere( v, s );
+        test2Containers_OutSphere( l, t );
+        test2Containers_OutSphere( l, v );
+        test2Containers_OutSphere( l, l );
+        test2Containers_OutSphere( l, s );
+        test2Containers_OutSphere( s, t );
+        test2Containers_OutSphere( s, v );
+        test2Containers_OutSphere( s, l );
+        test2Containers_OutSphere( s, s );
+        
+        test2Containers_InAnnulus( t, t );
+        test2Containers_InAnnulus( t, v );
+        test2Containers_InAnnulus( t, l );
+        test2Containers_InAnnulus( t, s );
+        test2Containers_InAnnulus( v, t );
+        test2Containers_InAnnulus( v, v );
+        test2Containers_InAnnulus( v, l );
+        test2Containers_InAnnulus( v, s );
+        test2Containers_InAnnulus( l, t );
+        test2Containers_InAnnulus( l, v );
+        test2Containers_InAnnulus( l, l );
+        test2Containers_InAnnulus( l, s );
+        test2Containers_InAnnulus( s, t );
+        test2Containers_InAnnulus( s, v );
+        test2Containers_InAnnulus( s, l );
+        test2Containers_InAnnulus( s, s );
+        
+    }
+    
 } // testSTLContainerInput
 
 /*=======================================================================*/
 void testNearTreeInsertion ( void )
 /*=======================================================================*/
 {
-   CNearTree<int> nt1;
-   CNearTree<int> nt2;
-
-   int count = 0;
-
-   const int nInTree = 10;
-
-   for ( int i=0; i<nInTree; ++i )
-   {
-      nt1.insert( count++ );
-   }
-
-   for ( int i=0; i<nInTree; ++i )
-   {
-      nt2.insert( count++ );
-   }
-
-   /* 
-      insert a neartree
-   */
-   nt1.insert( nt2 );
-
-   if( nt1.size() != 2*nInTree )
-   {
-       ++g_errorCount;
-       fprintf( stdout, "testNearTreeInsertion: tree depth = %lu\n", (unsigned long)nt1.size( ) );
-   }
+    CNearTree<int> nt1;
+    CNearTree<int> nt2;
+    
+    int count = 0;
+    
+    const int nInTree = 10;
+    
+    for ( int i=0; i<nInTree; ++i )
+    {
+        nt1.insert( count++ );
+    }
+    
+    for ( int i=0; i<nInTree; ++i )
+    {
+        nt2.insert( count++ );
+    }
+    
+    /* 
+     insert a neartree
+     */
+    nt1.insert( nt2 );
+    
+    if( nt1.size() != 2*nInTree )
+    {
+        ++g_errorCount;
+        fprintf( stdout, "testNearTreeInsertion: tree depth = %lu\n", (unsigned long)nt1.size( ) );
+    }
 }  // end testNearTreeInsertion
 
 /*=======================================================================*/
 
 void testTiming ( void )
 {
-
-   //const int nInsert = 1000000;
-
-   //CNearTree<int> ntI;
-   //for( int i=0; i<nInsert; ++i )
-   //{
-   //   ntI.insert( rand( ) );
-   //}
-
-   //const int nRetrieve = 1000000;
-   //DWORD t0 = GetTickCount( );
-   //for( int i=0; i<nRetrieve; ++i )
-   //{
-   //   ntI.NearestNeighbor( 1000, rand( ) );
-   //}
-   //const DWORD timediffI = GetTickCount () - t0;
- 
-   //CNearTree<double> ntD;
-   //for( int i=0; i<nInsert; ++i )
-   //{
-   //   ntD.insert( (double)rand( ) );
-   //}
-
-   //t0 = GetTickCount( );
-   //for( int i=0; i<nRetrieve; ++i )
-   //{
-   //   ntD.NearestNeighbor( 1000.0, (double)rand( ) );
-   //}
-   //const DWORD timediffD = GetTickCount( ) - t0;
-
-   //fprintf( stdout, "timing for %d items in tree and %d retrievals, %ld, %ld\n", 
-   //   nInsert, nRetrieve, timediffI, timediffD );
-
+    
+    //const int nInsert = 1000000;
+    
+    //CNearTree<int> ntI;
+    //for( int i=0; i<nInsert; ++i )
+    //{
+    //   ntI.insert( rand( ) );
+    //}
+    
+    //const int nRetrieve = 1000000;
+    //DWORD t0 = GetTickCount( );
+    //for( int i=0; i<nRetrieve; ++i )
+    //{
+    //   ntI.NearestNeighbor( 1000, rand( ) );
+    //}
+    //const DWORD timediffI = GetTickCount () - t0;
+    
+    //CNearTree<double> ntD;
+    //for( int i=0; i<nInsert; ++i )
+    //{
+    //   ntD.insert( (double)rand( ) );
+    //}
+    
+    //t0 = GetTickCount( );
+    //for( int i=0; i<nRetrieve; ++i )
+    //{
+    //   ntD.NearestNeighbor( 1000.0, (double)rand( ) );
+    //}
+    //const DWORD timediffD = GetTickCount( ) - t0;
+    
+    //fprintf( stdout, "timing for %d items in tree and %d retrievals, %ld, %ld\n", 
+    //   nInsert, nRetrieve, timediffI, timediffD );
+    
 }  // end testTiming
 
 /*=======================================================================*/
 void testKNearFar( void )
 {
-   CNearTree<int> tree;
-   CNearTree<int> outTree;
-
-   {
-      const int searchPoint = 50;
-      const long nToFind0 = 0;
-      const double radius0 = 1000.0;
-
-      const size_t lFound0 = tree.FindK_NearestNeighbors( 
-                                                      nToFind0,
-                                                      radius0,
-                                                      outTree,
-                                                      searchPoint );
-      outTree.CompleteDelayedInsert( );
-      if( lFound0 != 0 )
-      {
-         ++g_errorCount;
-         fprintf(stdout, "testKNearFar, Near: found wrong count #0\n" );
-      }
-   }
-
-
-   for( int i=0; i<100; ++i )
-   {
-      tree.insert( i );
-   }
-
-   {
-      const int searchPoint = 50;
-      const long nToFind1 = 13;
-      const double radius1 = 1000.0;
-
-      const size_t lFound1 = tree.FindK_NearestNeighbors( 
-                                                      nToFind1,
-                                                      radius1,
-                                                      outTree,
-                                                      searchPoint );
-      outTree.CompleteDelayedInsert( );
-      if( lFound1 != 13 )
-      {
-         ++g_errorCount;
-         fprintf(stdout, "testKNearFar, Near: found wrong count #1\n" );
-      }
-   }
-
-   {
-      const int searchPoint = 98;
-      const long nToFind2 = 13;
-      const double radius2 = 3.5;
-      const size_t lFound2 = tree.FindK_NearestNeighbors( 
-                                                      nToFind2,
-                                                      radius2,
-                                                      outTree,
-                                                      searchPoint );
-      outTree.CompleteDelayedInsert( );
-      if( lFound2 != 5 )
-      {
-         ++g_errorCount;
-         fprintf(stdout, "testKNearFar, Near: found wrong count #2\n" );
-      }
-   }
-
-   {
-       const int searchPoint = 50;
-       const long nToFind3 = 7;
-       const double radius3 = 12;
-       const size_t lFound3 = tree.FindK_NearestNeighbors( 
-                                                       nToFind3,
-                                                       radius3,
-                                                       outTree,
-                                                       searchPoint );
-       outTree.CompleteDelayedInsert( );
-       if( lFound3 != 7u )
-       {
-           ++g_errorCount;
-           fprintf(stdout, "testKNearFar, Near: found wrong count #3\n" );
-       }
-   }
-
-   {
-     const int searchPoint = 2;
-     const long nToFind4 = 7;
-     const double radius4 = 12;
-     const size_t lFound4 = tree.FindK_NearestNeighbors( 
-                                                  nToFind4,
-                                                  radius4,
-                                                  outTree,
-                                                  searchPoint );
-     outTree.CompleteDelayedInsert( );
-     if( lFound4 != 7u )
-     {
-        ++g_errorCount;
-        fprintf(stdout, "testKNearFar, Near: found wrong count #4\n" );
-     }
-   }
-
-   {
-     const int searchPoint = 2;
-     const long nToFind5 = 7;
-     const double radius5 = 3.5;
-     std::vector<int> outVector;
-     const size_t lFound5 = tree.FindK_NearestNeighbors( 
-                                                  nToFind5,
-                                                  radius5,
-                                                  outVector,
-                                                  searchPoint );
-     if( lFound5 != 6u )
-     {
-        ++g_errorCount;
-        fprintf(stdout, "testKNearFar, Near: found wrong count #5\n" );
-     }
-   }
-
-   {
-     const int searchPoint = 2;
-     const long nToFind5 = 7;
-     const double radius5 = 3.5;
-     std::list<int> outList;
-     const size_t lFound6 = tree.FindK_NearestNeighbors( 
-                                                  nToFind5,
-                                                  radius5,
-                                                  outList,
-                                                  searchPoint );
-     if( lFound6 != 6u )
-     {
-        ++g_errorCount;
-        fprintf(stdout, "testKNearFar, Near: found wrong count #6\n" );
-     }
-   }
-
-   {
-      const int searchPoint = -1;
-      const long nToFind1 = 13;
-
-      const size_t lFound1 = tree.FindK_FarthestNeighbors( 
-                                                      nToFind1,
-                                                      outTree,
-                                                      searchPoint );
-      outTree.CompleteDelayedInsert( );
-      if( lFound1 != 13u )
-      {
-         ++g_errorCount;
-         fprintf(stdout, "testKNearFar, Far: found wrong count #1\n" );
-      }
-   }
-
-   {
-      const int searchPoint = 50;
-      const long nToFind2 = 13;
-      const size_t lFound2 = tree.FindK_FarthestNeighbors( 
-                                                      nToFind2,
-                                                      outTree,
-                                                      searchPoint );
-      outTree.CompleteDelayedInsert( );
-      if( lFound2 != 13 )
-      {
-         ++g_errorCount;
-         fprintf(stdout, "testKNearFar, Far: found wrong count #2\n" );
-      }
-   }
-
-   {
-      const int searchPoint = 150;
-      const long nToFind3 = 7;
-      const size_t lFound3 = tree.FindK_FarthestNeighbors( 
-                                                      nToFind3,
-                                                      outTree,
-                                                      searchPoint );
-      outTree.CompleteDelayedInsert( );
-      if( lFound3 != 7u )
-      {
-         ++g_errorCount;
-         fprintf(stdout, "testKNearFar, Far: found wrong count #3\n" );
-      }
-   }
-
-   {
-       const int searchPoint = 46;
-       const long nToFind4 = 12;
-       const size_t lFound4 = tree.FindK_FarthestNeighbors( 
-                                                       nToFind4,
-                                                       outTree,
-                                                       searchPoint );
-       outTree.CompleteDelayedInsert( );
-       if( lFound4 != 12u )
-       {
-           ++g_errorCount;
-           fprintf(stdout, "testKNearFar, Far: found wrong count #4\n" );
-       }
-   }
-
-   {
-       const int searchPoint = 2;
-       const long nToFind5 = 7;
-       std::vector<int> outVector;
-       const size_t lFound5 = tree.FindK_FarthestNeighbors( 
-                                                       nToFind5,
-                                                       outVector,
-                                                       searchPoint );
-       if( lFound5 != 7u )
-       {
-           ++g_errorCount;
-           fprintf(stdout, "testKNearFar, Far: found wrong count #5\n" );
-       }
-   }
-
-   {
-       const int searchPoint = 200;
-       const long nToFind6 = 7;
-       std::list<int> outList;
-       const size_t lFound6 = tree.FindK_FarthestNeighbors( 
-                                                       nToFind6,
-                                                       outList,
-                                                       searchPoint );
-       if( lFound6 != 7u )
-       {
-           ++g_errorCount;
-           fprintf(stdout, "testKNearFar, Far: found wrong count #6\n" );
-       }
-   }
-
-
-   {
-       const int searchPoint = 2;
-       const long nToFind7 = 7;
-       std::set<int> outSet;
-       const size_t lFound7 = tree.FindK_FarthestNeighbors( 
-                                                       nToFind7,
-                                                       outSet,
-                                                       searchPoint );
-       if( lFound7 != 7u )
-       {
-          ++g_errorCount;
-           fprintf(stdout, "testKNearFar, Far: found wrong count #7\n" );
-      }
-   }
-
+    CNearTree<int> tree;
+    CNearTree<int> outTree;
+    
+    {
+        const int searchPoint = 50;
+        const long nToFind0 = 0;
+        const double radius0 = 1000.0;
+        
+        const size_t lFound0 = tree.FindK_NearestNeighbors( 
+                                                           nToFind0,
+                                                           radius0,
+                                                           outTree,
+                                                           searchPoint );
+        outTree.CompleteDelayedInsert( );
+        if( lFound0 != 0 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Near: found wrong count #0\n" );
+        }
+    }
+    
+    
+    for( int i=0; i<100; ++i )
+    {
+        tree.insert( i );
+    }
+    
+    {
+        const int searchPoint = 50;
+        const long nToFind1 = 13;
+        const double radius1 = 1000.0;
+        
+        const size_t lFound1 = tree.FindK_NearestNeighbors( 
+                                                           nToFind1,
+                                                           radius1,
+                                                           outTree,
+                                                           searchPoint );
+        outTree.CompleteDelayedInsert( );
+        if( lFound1 != 13 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Near: found wrong count #1\n" );
+        }
+    }
+    
+    {
+        const int searchPoint = 98;
+        const long nToFind2 = 13;
+        const double radius2 = 3.5;
+        const size_t lFound2 = tree.FindK_NearestNeighbors( 
+                                                           nToFind2,
+                                                           radius2,
+                                                           outTree,
+                                                           searchPoint );
+        outTree.CompleteDelayedInsert( );
+        if( lFound2 != 5 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Near: found wrong count #2\n" );
+        }
+    }
+    
+    {
+        const int searchPoint = 50;
+        const long nToFind3 = 7;
+        const double radius3 = 12;
+        const size_t lFound3 = tree.FindK_NearestNeighbors( 
+                                                           nToFind3,
+                                                           radius3,
+                                                           outTree,
+                                                           searchPoint );
+        outTree.CompleteDelayedInsert( );
+        if( lFound3 != 7u )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Near: found wrong count #3\n" );
+        }
+    }
+    
+    {
+        const int searchPoint = 2;
+        const long nToFind4 = 7;
+        const double radius4 = 12;
+        const size_t lFound4 = tree.FindK_NearestNeighbors( 
+                                                           nToFind4,
+                                                           radius4,
+                                                           outTree,
+                                                           searchPoint );
+        outTree.CompleteDelayedInsert( );
+        if( lFound4 != 7u )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Near: found wrong count #4\n" );
+        }
+    }
+    
+    {
+        const int searchPoint = 2;
+        const long nToFind5 = 7;
+        const double radius5 = 3.5;
+        std::vector<int> outVector;
+        const size_t lFound5 = tree.FindK_NearestNeighbors( 
+                                                           nToFind5,
+                                                           radius5,
+                                                           outVector,
+                                                           searchPoint );
+        if( lFound5 != 6u )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Near: found wrong count #5\n" );
+        }
+    }
+    
+    {
+        const int searchPoint = 2;
+        const long nToFind5 = 7;
+        const double radius5 = 3.5;
+        std::list<int> outList;
+        const size_t lFound6 = tree.FindK_NearestNeighbors( 
+                                                           nToFind5,
+                                                           radius5,
+                                                           outList,
+                                                           searchPoint );
+        if( lFound6 != 6u )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Near: found wrong count #6\n" );
+        }
+    }
+    
+    {
+        const int searchPoint = -1;
+        const long nToFind1 = 13;
+        
+        const size_t lFound1 = tree.FindK_FarthestNeighbors( 
+                                                            nToFind1,
+                                                            outTree,
+                                                            searchPoint );
+        outTree.CompleteDelayedInsert( );
+        if( lFound1 != 13u )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Far: found wrong count #1\n" );
+        }
+    }
+    
+    {
+        const int searchPoint = 50;
+        const long nToFind2 = 13;
+        const size_t lFound2 = tree.FindK_FarthestNeighbors( 
+                                                            nToFind2,
+                                                            outTree,
+                                                            searchPoint );
+        outTree.CompleteDelayedInsert( );
+        if( lFound2 != 13 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Far: found wrong count #2\n" );
+        }
+    }
+    
+    {
+        const int searchPoint = 150;
+        const long nToFind3 = 7;
+        const size_t lFound3 = tree.FindK_FarthestNeighbors( 
+                                                            nToFind3,
+                                                            outTree,
+                                                            searchPoint );
+        outTree.CompleteDelayedInsert( );
+        if( lFound3 != 7u )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Far: found wrong count #3\n" );
+        }
+    }
+    
+    {
+        const int searchPoint = 46;
+        const long nToFind4 = 12;
+        const size_t lFound4 = tree.FindK_FarthestNeighbors( 
+                                                            nToFind4,
+                                                            outTree,
+                                                            searchPoint );
+        outTree.CompleteDelayedInsert( );
+        if( lFound4 != 12u )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Far: found wrong count #4\n" );
+        }
+    }
+    
+    {
+        const int searchPoint = 2;
+        const long nToFind5 = 7;
+        std::vector<int> outVector;
+        const size_t lFound5 = tree.FindK_FarthestNeighbors( 
+                                                            nToFind5,
+                                                            outVector,
+                                                            searchPoint );
+        if( lFound5 != 7u )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Far: found wrong count #5\n" );
+        }
+    }
+    
+    {
+        const int searchPoint = 200;
+        const long nToFind6 = 7;
+        std::list<int> outList;
+        const size_t lFound6 = tree.FindK_FarthestNeighbors( 
+                                                            nToFind6,
+                                                            outList,
+                                                            searchPoint );
+        if( lFound6 != 7u )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Far: found wrong count #6\n" );
+        }
+    }
+    
+    
+    {
+        const int searchPoint = 2;
+        const long nToFind7 = 7;
+        std::set<int> outSet;
+        const size_t lFound7 = tree.FindK_FarthestNeighbors( 
+                                                            nToFind7,
+                                                            outSet,
+                                                            searchPoint );
+        if( lFound7 != 7u )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Far: found wrong count #7\n" );
+        }
+    }
+    
 }  // end testKNearFar

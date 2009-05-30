@@ -10,6 +10,8 @@
 #  Copyright 2008 Larry Andrews and Herbert J. Bernstein. 
 #  All rights reserved.
 #
+#  Revised 30 May 2009, release with full containerization of C++
+#                       version and KNear/Far in C++ and C, LCA + HJB
 #
 
 
@@ -39,8 +41,8 @@
 #**********************************************************************/
 
 # Version string
-VERSION = 2:0:2
-RELEASE = 2.0.0
+VERSION = 2:1:2
+RELEASE = 2.1.0
 
 
 #

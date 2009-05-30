@@ -26,9 +26,9 @@ NearTree -- function library efficiently solving the Nearest Neighbor Problem
 <hr>
 <center>
 <h2 align=center>NearTree</h2>
-Release 2.0<br />
+Release 2.1<br />
 <font size="-1">
-21 March 2009<br />
+30 May 2009<br />
 &#169; Copyright 2001, 2008, 2009 Larry Andrews.  All rights reserved
 <br />
 based on<br />
@@ -40,7 +40,8 @@ ISSN:1075-2838,<br />
 Revised 12 Dec 2008, for sourceforge release, Larry Andrews and Herbert J. Bernstein<br />
 8 Jan 2009 Release 1.0 LCA and HJB<br />
 11 Jan 2009 Release 1.0.1 LCA and HJB<br />
-21 March 2009 Release 2.0 LCA and HJB
+21 March 2009 Release 2.0 LCA and HJB<br />
+30 May 2009 Release 2.1 LCA and HJB<br />
 </font>
 <P>
 
@@ -75,7 +76,15 @@ This is a release of an API for finding nearest neighbors among points in spaces
 arbtrary dimensions.  This release provides a C++ template, TNear.h, and a
 C library, CNearTree.c, with example/test programs.
 <font size="-1">
-<P>This is a major update to the 1.0 release of 8 January 2009 to deal with the
+<p>This is a minor update to the 2.0 release of 21 March 2009 to deal with the
+following issues:
+<ul>
+<li>Make delayed insertion the default
+<li>Complete the containerization of TNear.h
+<li>Add code for K-nearest/farthest in TNear.h and in CNearTree.c
+<li>Correct the InAnnulus search filter
+</ul>
+<P>Rlease 2.0 was a major update to the 1.0 release of 8 January 2009 to deal with the
 following issues:
 <ul>
 <li>Replace use recursion with a stack, except in insertion logic
@@ -97,7 +106,9 @@ distance type.
 <b>Note:</b>  As Nicolas Brodu has noted, CNearTree is paticularly well-suited
 to multi-threaded applications.  However, if the same CNearTree is to be searched
 in multiple threads, it is important to complete all insertions and/or delayed
-insertions before parallel execution of parallel searches.
+insertions before parallel execution of parallel searches.  Delayed insertions are
+completed at the beginning if all searches, so for normal use, this will not be
+a problem.
 <hr>
 <h4>Contents</h4>
 <P>
@@ -111,10 +122,10 @@ insertions before parallel execution of parallel searches.
 <h4><a name="Installation">Installation</a></h4>
 <p>
 The NearTree package is available at <a href="http://www.sourceforge.net/projects/neartree">www.sourceforge.net/projects/neartree</a>.
-A source tarball is available at <a href="http://downloads.sourceforge.net/neartree/NearTree-2.0.0.tar.gz">downloads.sourceforge.net/neartree/NearTree-2.0.0.tar.gz</a>.
+A source tarball is available at <a href="http://downloads.sourceforge.net/neartree/NearTree-2.1.0.tar.gz">downloads.sourceforge.net/neartree/NearTree-2.1.0.tar.gz</a>.
 Later tarballs may be available.
 <P>
-When the source tarball is dowloaded and unpacked, you should have a directory NearTree-2.0.0.  To see the current settings for a build
+When the source tarball is dowloaded and unpacked, you should have a directory NearTree-2.1.0.  To see the current settings for a build
 execute
 <p>
 make
@@ -230,11 +241,22 @@ template &lt;typename T, typename DistanceType=double, int distMinValue=-1 &gt; 
 <P>
 implementing the Nearest Neighbor algorithm after Kalantari and McDonald,
 (IEEE Transactions on Software Engineering, v. SE-9, pp.   631-634,1983)
-modified to use recursion instead of a double-linked tree
+modified to use recursion for insertions and recursion (original version) 
+or a stack (current version) for searches
+instead of a double-linked tree
 and simplified so that it does a bit less checking for
 things like is the distance to the right less than the
 distance to the left; it was found that these checks made little
 to no difference.
+<p>
+This template is used to contain a collection of objects. After the
+collection has been loaded into this structure, it can be quickly
+queried for which object is "closest" to some probe object of the
+same type. The major restriction on applicability of the near-tree
+is that the algorithm only works if the objects obey the triangle
+inequality. The triangle rule states that the length of any side of
+a triangle cannot exceed the sum of the lengths of the other two sides.
+
 <p>
 CNearTree is the root class for the neartree. The actual data of the
 tree is stored in NearTreeNode objects descending from a CNearTree.
@@ -273,7 +295,7 @@ are left as an exercise for the reader.
 
 The user of this class needs to provide at least the following
 functionality for the template to work. For the built-in
-numerics of C++, they are provided by the system.
+numerics of C++, they are provided here (or else you should create them).
 <p>
 <center>
 <table>
@@ -312,14 +334,37 @@ The provided interface is:
        instantiated by something like:      CNearTree &lt;T&gt; vTree;
        for some type T
        
-    <b>CNearTree</b>( <b>const std::vector&lt;T&gt;</b> )   // constructor
-    <b>CNearTree</b>( <b>const std::list&lt;T&gt;</b> )     // constructor
-    <b>CNearTree</b>( <b>const std::set&lt;T&gt;</b> )      // constructor
+    <b>CNearTree</b>( <b>const ContainerType&lt;T&gt;</b> )   // constructor from containers, e.g. ...
+
+    <b>CNearTree</b>( <b>const std::vector&lt;T&gt;</b> )     // constructor
+    <b>CNearTree</b>( <b>const std::list&lt;T&gt;</b> )       // constructor
+    <b>CNearTree</b>( <b>const std::set&lt;T&gt;</b> )        // constructor
     
     <b>~CNearTree</b>( <b>void</b> )  // destructor
 
     <b>void Insert</b>( <b>const T&amp;</b> <i>t</i> )
-       where t is an object of the type v
+       where t is an object of the type T
+
+            all inserts are delayed until a search is performed or
+            until an explicit call to CompleteDelayedInsertions
+            is called or a search is called. The purpose is to distribute 
+            the objects a bit more  randomly. Excessively ordered objects 
+            leads to less than optimal trees.
+      
+            Starting with the 2.1 release, places objects in a queue for 
+            insertion later when  CompleteDelayInsert is called.  In
+            earlier releasesm the default was immediate insertion.
+            
+            The following additional convenience insert template
+            allow insertion of containers of objects
+
+
+    <b>void Insert</b>( <b>ContainerType</b> )  
+            for containers, std::vector, ..., or CNearTree
+            all inserts are delayed until a search is performed or 
+            until an explicit call to CompleteDelayedInsertions.
+            examples follow ...
+
 
     <b>void insert</b>( <b>const std::vector&lt;T&gt;</b> )
     <b>void insert</b>( <b>const std::list&lt;T&gt;</b> )
@@ -335,7 +380,7 @@ The provided interface is:
        <i>t</i> is the probe point, used to search in the group of points insert'ed
 
        return value is true if some object was found within the search radius, false otherwise.
-          If false is returned, tClosest is invalid (at best).
+           If false is returned, tClosest is invalid (at best).
 
     <b>iterator NearestNeighbor</b> ( <b>const DistanceType &amp;</b> <i>dRadius</i>, <b>const T&amp;</b> <i>t</i> ) <b>const</b>
        returns an iterator to the nearest point to the probe point <i>t</i> or end() if there is none
@@ -350,10 +395,14 @@ The provided interface is:
     <b>iterator FarthestNeighbor</b> ( <b>T&amp;</b> <b>const T&amp;</b> <i>t</i> ) <b>const</b>
        returns an iterator to the nearest point to the probe point<i>t</i> or end() if there is none
 
-    <b>long FindInSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,  <b>std::vector&lt;  T &gt;&amp;</b> <i>tInside</i>,   <b>const T&amp;</b> t ) <b>const</b>
+
+    The following functions (FindInSphere, FindOutSphere, and FindInAnnulus) all return a container 
+    (ContainerType) that can be any standard library container (such as std::vector&lt; T &gt;) or CNearTree.
+
+    <b>long FindInSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,  <b>ContainerType&amp;</b> <i>tInside</i>,   <b>const T&amp;</b> t ) <b>const</b>
        <i>dRadius</i> is the radius within which to search; make it very large if you want to
            include every point that was loaded;
-       <i>tInside</i> is returned as the vector of objects that were found within a radius dRadius
+       <i>tInside</i> is returned as the container of objects that were found within a radius dRadius
           of the probe point
        <i>t</i> is the probe point, used to search in the group of points Insert'ed
 
@@ -368,9 +417,9 @@ The provided interface is:
 
        return value is the count of the number of points found within the search radius
 
-    <b>long FindOutSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,  <b>std::vector&lt;  T &gt;&amp;</b> <i>tOutside</i>,   <b>const T&amp;</b> t ) <b>const</b>
+    <b>long FindOutSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,  <b>ContainerType&amp;</b> <i>tOutside</i>,   <b>const T&amp;</b> t ) <b>const</b>
        <i>dRadius</i> is the radius outside of which to search
-       <i>tOutside</i> is returned as the vector of objects that were found at or outside of radius dRadius
+       <i>tOutside</i> is returned as the container of objects that were found at or outside of radius dRadius
           of the probe point
        <i>t</i> is the probe point, used to search in the group of points Insert'ed
 
@@ -384,9 +433,9 @@ The provided interface is:
 
        return value is the count of the number of points found within the search radius
     
-    <b>long FindInAnnulus</b> ( <b>const DistanceType&amp;</b> <i>dRadius1</i>, <b>const DistanceType&amp;</b> <i>dRadius2</i>, <b>std::vector&lt;  T &gt;&amp;</b> <i>tInRing</i>,   <b>const T&amp;</b> t ) <b>const</b>
+    <b>long FindInAnnulus</b> ( <b>const DistanceType&amp;</b> <i>dRadius1</i>, <b>const DistanceType&amp;</b> <i>dRadius2</i>, <b>ContainerType&amp;</b> <i>tInRing</i>,   <b>const T&amp;</b> t ) <b>const</b>
        <i>dRadius1</i> and  <i>dRadius2</i> are the two radii between which to find data points
-       <i>tInRing</i> is returned as the vector of objects that were found at or outside of a radius dRadius1
+       <i>tInRing</i> is returned as the container of objects that were found at or outside of a radius dRadius1
           and at or inside of radius dRadius2 of the probe point
        <i>t</i> is the probe point, used to search in the group of points Insert'ed
 
@@ -400,6 +449,36 @@ The provided interface is:
 
        return value is the count of the number of points found within the annulus
     
+    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>, <b>ContainerType&amp;</b> <i>tClosest</i>, <b>const T&amp;</b> t )
+       <i>k</i> is the maximum number of nearest neighbors to return. Finds this many if possible
+       <i>dRadius</i> within a sphere defined by dRadius, search for the k-nearest-neighbors
+       <i>tClosest</i> is returned ContainerType of the objects found within the sphere
+       <i>t</i> is the probe point, used to search in the group of points insert'ed
+
+       return value is the count of the number of points found within the sphere
+
+    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>, <b>CNearTree&lt;  T &gt;&amp;</b> <i>tClosest</i>, <b>const T&amp;</b> t )
+       <i>k</i> is the maximum number of nearest neighbors to return. Finds this many if possible
+       <i>dRadius</i> within a sphere defined by dRadius, search for the k-nearest-neighbors
+      <i>tClosest</i> is returned as the CNearTree of objects found within the sphere
+       <i>t</i> is the probe point, used to search in the group of points Insert'ed
+
+       return value is the count of the number of points found within the sphere
+
+    <b>long FindK_FarthestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>ContainerType&amp;</b> <i>tFarthest</i>, <b>const T&amp;</b> t )
+       <i>k</i> is the maximum number of farthest neighbors to return. Finds this many if possible
+       <i>tFarthest</i> is returned ContainerType of the objects found
+       <i>t</i> is the probe point, used to search in the group of points insert'ed
+
+       return value is the count of the number of points found within the sphere
+
+    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>CNearTree&lt;  T &gt;&amp;</b> <i>tFarthest</i>, <b>const T&amp;</b> t )
+       <i>k</i> is the maximum number of farthest neighbors to return. Finds this many if possible
+       <i>tFarthest</i> is returned as the CNearTree of objects found
+       <i>t</i> is the probe point, used to search in the group of points Insert'ed
+
+       return value is the count of the number of points found within the sphere
+   
 <hr>
 
 Access Functions:
@@ -410,9 +489,10 @@ Access Functions:
      <b>T operator[]</b> ( <b>const size_t</b> <i>n</i> )
         returns the n'th item of the internal data store
 
-     <b>operator std::vector&lt;T&gt;</b> ( <b>void</b> ) <b>const</b> 
-        returns all of the inserted objects in the tree in a vector. 
-         The returned vector contents are not guaranteed to be returned in the order loaded.
+     <b>operator ContainerType</b> ( <b>void</b> ) <b>const</b> 
+        returns all of the inserted objects in the tree in a container of type ContainerType.
+        ContainerType can be std::vector&lt;T&gt;, etc, or other containers.
+        The returned vector contents are not guaranteed to be returned in the order loaded.
 
      <b>iterator begin</b> ( <b>void</b> ) <b>const</b> 
         returns an iterator to the beginning of the internal data store
@@ -427,10 +507,9 @@ Access Functions:
 
 Information and special operation functions:
 
-     <b>void DelayedInsert</b> ( <b>const T&amp;</b> <i>t</i> ) 
-        places objects in a queue for insertion later when CompleteDelayInsert
-        is called or a search is called. The purpose is to distribute the objects a bit more 
-        randomly. Excessively ordered objects leads to less than optimal trees.
+     <b>void ImmediateInsert</b>( <b>void</b> ) Places objects immediately into the tree. The usual insert function
+         delays insertions, allowing them to be inserted into the tree in a more random order. The delay
+         can improve the structure of the tree and speed searches.
 
      <b>void CompleteDelayedInsert</b> ( <b>void</b> ) 
         calls insert for all delayed objects. sqrt(n) of them are inserted by random choice. 
@@ -464,7 +543,8 @@ Iterators:
      return a CNearTree. However, they can be used with any CNearTree.
      
      They should function in a fashion essentially the same as STL iterators. There is no assurance
-     that data will be returned in the order it was loaded, just that it is accessible.
+     that data will be returned in the order it was loaded, just that it is accessible.  The same set is 
+     provided for const_iterator.
 
      <b>iterator</b> ( <b>void</b> ) { }; // constructor
 
@@ -550,9 +630,13 @@ So a complete program is:
                         <b>size_t</b> <i>index</i>;
                         <b>size_t *</b> <i>depth</i> );
 <p>
-    <b>int</b> <b>CNearTreeDelayedInsert</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+    <b>int</b> <b>CNearTreeImmediateInsert</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
                         <b>const</b> <b>void *</b> <i>coord</i>, 
                         <b>const</b> <b>void *</b> <i>obj</i> );
+<p>
+    <b>int</b> <b>CNearTreeDelayedInsert</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+                        <b>const</b> <b>void *</b> <i>coord</i>, 
+                        <b>const</b> <b>void *</b> <i>obj</i> ); /* ***DEPRECATED*** */
 <p>
     <b>int</b> <b>CNearTreeCompleteDelayedInsert</b> ( <b>CNearTreeHandle</b> <i>treehandle</i> )
 
@@ -617,6 +701,36 @@ So a complete program is:
                                <b>const</b> <b>double</b> <i>dRadiusInner</i>,
                                <b>const</b> <b>double</b> <i>dRadiusOuter</i>,
                                <b>CNearTreeHandle</b> <i>foundInRing</i>,
+                               <b>const void *</b> <i>coord</i>,
+                               <b>int</b> <i>resetcount</i> )
+<p>          
+    <b>int</b> <b>CNearTreeFindKNearest</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+                               <b>const</b> <b>size_t</b> <i>k</i>,
+                               <b>const</b> <b>double</b> <i>dRadius</i>,
+                               <b>CVectorHandle</b> <i>coordClosest</i>,
+                               <b>CVectorHandle</b> <i>objClosest</i>,
+                               <b>const</b> <b>void *</b> <i>coord</i>,
+                               <b>int</b> <i>resetcount</i> );
+<p>                               
+    <b>int</b> <b>CNearTreeFindKTreeNearest</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+                               <b>const</b> <b>size_t</b> <i>k</i>,
+                               <b>const</b> <b>double</b> <i>dRadius</i>,
+                               <b>CNearTreeHandle</b> <i>foundClosest</i>,
+                               <b>const void *</b> <i>coord</i>,
+                               <b>int</b> <i>resetcount</i> )
+<p>          
+    <b>int</b> <b>CNearTreeFindKFarthest</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+                               <b>const</b> <b>size_t</b> <i>k</i>,
+                               <b>const</b> <b>double</b> <i>dRadius</i>,
+                               <b>CVectorHandle</b> <i>coordFarthest</i>,
+                               <b>CVectorHandle</b> <i>objFarthest</i>,
+                               <b>const</b> <b>void *</b> <i>coord</i>,
+                               <b>int</b> <i>resetcount</i> );
+<p>                               
+    <b>int</b> <b>CNearTreeFindKTreeFarthest</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+                               <b>const</b> <b>size_t</b> <i>k</i>,
+                               <b>const</b> <b>double</b> <i>dRadius</i>,
+                               <b>CNearTreeHandle</b> <i>foundFarthest</i>,
                                <b>const void *</b> <i>coord</i>,
                                <b>int</b> <i>resetcount</i> )
 <p> 
@@ -695,8 +809,11 @@ A neartree is created by  <b>CNearTreeCreate</b> and freed by <b>CNearTreeFree</
 <i>treedim</i> is the dimension of the coordinate vectors and <i>treetype</i>
 is one of the two predefined constants <b>CNEARTREE_TYPE_DOUBLE</b> for double
 or <b>CNEARTREE_TYPE_INTEGER</b> for integer, optionally ORed with CNEARTREE_NORM_L1,
-CNEARTREE_NORM_L2 or CNEARTREE_NORM_LINF for L1, L2 or L-infinity norms.  If
-it is desired to automatically defer all inserts until a the first search or
+CNEARTREE_NORM_L2 or CNEARTREE_NORM_LINF for L1, L2 or L-infinity norms.  Starting
+with release 2.1, all insertions are delayed by default, unless the insertions is
+done by a call to <b>CNearTreeImmediateInsert</b>.  If
+it is desired to automatically defer all inserts, even in calls to <b>CNearTreeImmediateInsert</b>,
+ until a the first search or
 a manual call to <b>CNearTreeCompleteDelayedInsert</b>, the flag CNEARTREE_DEFER_ALL
 should be ored with <i>treetype</i>.  Alteratively, if minimal reorganization of
 the order of the tree is desired on each insertion, <b>CNEARTREE_FLIP</b> should
@@ -706,11 +823,15 @@ set to negative values so that any match found will be stored since it will
 greater than the negative value.  The tree is then populated by calls to
 <b>CNearTreeInsert</b>, with each call providing a coordinate vector <i>coord</i>
 and an optional object pointer <i>obj</i>.  The API copies the coordinate vector,
-but does not copy the object.  The tree is populated in the order left, right
-and then the nearer child.
+but does not copy the object.  Later, when a search is requested or an explicit call
+to <b>CNearTreeCompleteDelayedInsert</b> is made, the tree is populated in the order left, right
+and then the nearer child, working from a randomized selection from the items queued
+for insertion.
 <p>
-Optionally, the actual insertions may be delayed and then completed in the first search
-or in an explicit <b>CNearTreeCompleteDelayedInsert</b> call.
+Optionally, the actual insertions may done immediately by calling <b>CNearTreeImmediateInsert</b>
+instead of <b>CNearTreeInsert</b>.  For upwards compatability of the library for existing
+code, the deprecated <b>CNearTreeDelayedInsert</b> is provided as an deprecated alternate
+call to <b>CNearTreeInsert/b>. 
 <p>
 The neartree is searched for the nearest or farthest coordinate vector in the neartree to a given
 probe coordinate vector <i>coord</i> by <b>CNearTreeNearestNeighbor</b> and 
@@ -722,13 +843,18 @@ radius, or <b>CNearTreeFindOutSphere</b> can be used to obtain a CVector result 
 of all the coordinates that satisfy the constraint of being outside a specified radius.
 <b>CNearTreeFindIn Annulus</b> can be used to obtain a CVector result vector of all the
 coordinates that satisfy the constraint of being between two specified radii from the probe.
+<b>CNearTreeFindKNearest</b> can be used to obtain a CVector result vector of the <i>k</i>
+coordinates closest to the probe point such that all results are within the specified
+radius of the probe point, or <b>CNearTreeFindKFarthest</b> to obtain a CVector result vector 
+of the <i>k</i> coordinates farthest to the probe point such that all results are at or outside the specified
+radius of the probe point.
 The vectors themselves
 are not copied into the result vector.  If the parameter <i>resetcount</i> is true (non
 zero) the result vector is cleared before the search.   A parallel CVector result vector
 of the matching object pointers is returned if <i>objs</i> is not NULL. 
 Aternatives the forms <b>CNearTreeFindTreeInSphere</b>, <b>CNearTreeFindTreeOutSphere</b>,
-<b>CNearTreeFindTreeInAnnulus</b> can be used to obtain CNearTrees rather than CVectors of
-results.  The functions
+<b>CNearTreeFindTreeInAnnulus</b>, <b>CNearTreeFindKTreeNearest</b>, <b>CNearTreeFindKTreeFarthest</b>
+can be used to obtain CNearTrees rather than CVectors of results.  The functions
 <b>CNearTreeNearest</b> and <b>CNearTreeFindFarthest</b> implement <b>CNearTreeNearestNeighbor</b> and 
 <b>CNearTreeFarthestNeighbor</b>, respectively, adjusting the radius of the search while
 the search is in progress, and are not normally used by users
@@ -799,7 +925,7 @@ in the release kit.
 <hr>
 <hr>
 <font size="-1">
-Updated 21 Mar 2009<br />
+Updated 30 May 2009<br />
 <script language="javascript" type="text/javascript">
 <!-- 
       var name = "yaya@";
