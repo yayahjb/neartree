@@ -457,7 +457,7 @@ void testFindFirstObject( void )
             ++g_errorCount;
             fprintf(stdout, "testFindFirstObject: Far failed to find anything for double\n"  );
         }
-        else if( farthest != dFinal )
+        else if( ABS(farthest-dFinal) > 100.*DBL_EPSILON )
         {
             ++g_errorCount;
             fprintf(stdout, "testFindFirstObject Far failed for double, got %g\n", farthest );
