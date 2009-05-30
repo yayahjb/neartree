@@ -696,21 +696,24 @@ operator- ( );        // geometrical (vector) difference of two objects
    CNEARTREE_NORM_L1, CNEARTREE_NORM_L2 or CNEARTREE_NORM_LINF for L1, L2 or
    L-infinity norms. Starting with release 2.1, all insertions are delayed by
    default, unless the insertions is done by a call to
-   CNearTreeImmediateInsert. If it is desired to automatically defer all
-   inserts, even in calls to CNearTreeImmediateInsert, until a the first
-   search or a manual call to CNearTreeCompleteDelayedInsert, the flag
-   CNEARTREE_DEFER_ALL should be ored with treetype. Alteratively, if minimal
-   reorganization of the order of the tree is desired on each insertion,
-   CNEARTREE_FLIP should be ored with treetype. When first created, a
-   neartree has no right or left node and with the dMax-below set to negative
-   values so that any match found will be stored since it will greater than
-   the negative value. The tree is then populated by calls to
-   CNearTreeInsert, with each call providing a coordinate vector coord and an
-   optional object pointer obj. The API copies the coordinate vector, but
-   does not copy the object. Later, when a search is requested or an explicit
-   call to CNearTreeCompleteDelayedInsert is made, the tree is populated in
-   the order left, right and then the nearer child, working from a randomized
-   selection from the items queued for insertion.
+   CNearTreeImmediateInsert. The insertions that have been queued are
+   completed by a call to CNearTreeCompleteDelayedInsert or by any search.
+   The insertions are actually done in a randomized order, either for an
+   initial block of sqrt(#queue) by default, or for the entire queue if the
+   flag CNEARTREE_DEFER_ALL is ored with treetype. In addition, if the flag
+   CNEARTREE_DEFER_ALL is set, all inserts will be deferred, even in calls to
+   CNearTreeImmediateInsert. Alteratively, if minimal reorganization of the
+   order of the tree is desired on each insertion, CNEARTREE_FLIP should be
+   ored with treetype. When first created, a neartree has no right or left
+   node and with the dMax-below set to negative values so that any match
+   found will be stored since it will greater than the negative value. The
+   tree is then populated by calls to CNearTreeInsert, with each call
+   providing a coordinate vector coord and an optional object pointer obj.
+   The API copies the coordinate vector, but does not copy the object. Later,
+   when a search is requested or an explicit call to
+   CNearTreeCompleteDelayedInsert is made, the tree is populated in the order
+   left, right and then the nearer child, working from a randomized selection
+   from the items queued for insertion.
 
    Optionally, the actual insertions may done immediately by calling
    CNearTreeImmediateInsert instead of CNearTreeInsert. For upwards
