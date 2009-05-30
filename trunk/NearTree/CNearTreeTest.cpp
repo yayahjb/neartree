@@ -50,6 +50,9 @@
 #include "TNear.h"
 #endif
 
+#define ABS(x) ((x)<0)?-(x):x
+
+
 void testEmptyTree( void );
 void testLinearTree( const int n );
 void testFindFirstObject( void );
@@ -365,7 +368,7 @@ void testFindFirstObject( void )
             ++g_errorCount;
             fprintf(stdout, "testFindFirstObject: Near failed to find anything\n" );
         }
-        else if( ::abs(closest - fFinal) > 0.0 )
+        else if( ABS(closest - fFinal) > FLT_EPSILON )
         {
             ++g_errorCount;
             fprintf(stdout, "testFindFirstObject: Near failed for float, got %f\n", closest );
@@ -382,7 +385,7 @@ void testFindFirstObject( void )
             ++g_errorCount;
             fprintf(stdout, "testFindFirstObject Far failed to any anything for floatn" );
         }
-        else if( ::abs(farthest - fFinal) > 0.0 )
+        else if( ABS(farthest - fFinal) > 100.*FLT_EPSILON )
         {
             ++g_errorCount;
             fprintf(stdout, "testFindFirstObject Far failed for float, got %g\n", farthest );
@@ -1058,12 +1061,12 @@ class vec17
         }
         double Norm( void ) const
         {
-            long double dtemp = 0.0;
+            double dtemp = 0.0;
             for( int i=0; i<dim; ++i )
             {
                 dtemp += pd[i]*pd[i];  //  L2 measure here
             }
-            return( double(::sqrtl( dtemp )) );
+            return( double(sqrt( dtemp )) );
         }
 
         vec17& operator-= ( const vec17 ) { return ( *this ); }; // just to keep LINT happy
@@ -1154,7 +1157,7 @@ void testBigVector(  )
 
         {
             //const double radius = ( vCloseToNearCenter - vNearCenter ).Norm( );
-            const double radius = MYRAND_MAX*::sqrt(17.0);
+            const double radius = MYRAND_MAX*sqrt(17.0);
             unsigned long iSphereFoundNearCenter = (unsigned long)tree.FindInSphere( radius, sphereReturn, vNearCenter );
 
             double searchRadius = radius/2;
@@ -1259,7 +1262,7 @@ void testBackwardForward( void )
             ++g_errorCount;
             fprintf(stdout, "testBackwardForward: NearestNeighbor failed to find anything\n" );
         }
-        else if( ::fabs( closest-((double)i+0.25) ) > DBL_MIN )
+        else if( ABS( closest-((double)i+0.25) ) > DBL_MIN )
         {
             fprintf(stdout, "testBackwardForward::NearestNeighbor failed, closest=%f\n", closest );
         }
@@ -1424,7 +1427,7 @@ void testDelayedInsertionRandom( void )
             ++g_errorCount;
             fprintf(stdout, "testDelayedInsertionRandom: CompleteDelayedInsertRandom completion is incorrect\n" );
         }
-        else if( depth >= ::sqrtl( nmax/2 ) )
+        else if( depth >= sqrt( nmax/2 ) )
         {
             ++g_errorCount;
             fprintf(stdout, "testDelayedInsertionRandom: tree depth is too large, %lu is greater than %ld\n", (unsigned long)depth, nmax/2 );
@@ -1692,7 +1695,7 @@ void testIterators( void )
         }
         double Norm( void ) const
         {
-            return( ::sqrt( (double)( n*n + m*m ) ) );  //  L2 measure
+            return( sqrt( (double)( n*n + m*m ) ) );  //  L2 measure
         }
 
     }; // end of v2
@@ -1920,7 +1923,7 @@ public:
         long dtemp = 0;
         for( int i=0; i<dim; ++i )
         {
-            dtemp += abs(pd[i]);  // L1 measure here
+                dtemp += ABS(pd[i]);  // L1 measure here
         }
         return( dtemp );
     };

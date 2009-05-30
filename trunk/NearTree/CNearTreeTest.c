@@ -76,6 +76,7 @@ void testMisc( void );
 void testRandomTree1( const int n );
 void testBigVector( void );
 void testDelayedInsertion( void );
+void testKNearFar( void );
 
 long g_errorCount;
 int dbgflg;
@@ -125,6 +126,8 @@ int main(int argc, char** argv)
     fprintf( stdout, "testBigVector\n" );
     testDelayedInsertion( );
     fprintf( stdout, "testDelayedInsertion\n" );
+    testKNearFar();
+    fprintf( stdout, "testKNearFar\n" );
     
     if( g_errorCount == 0 )
     {
@@ -1992,6 +1995,294 @@ void testDelayedInsertion( void )
         
     }
 }
+
+/*=======================================================================*/
+void testKNearFar( void )
+{
+    CNearTreeHandle tree;
+    CNearTreeHandle outTree;
+    CVectorHandle v;
+    bool bReturn;
+    int searchPoint[1];
+    double radius;
+    size_t lReturned;
+    int i;
+    
+    
+    bReturn = !CNearTreeCreate(&tree,1,CNEARTREE_TYPE_INTEGER);
+    if (!bReturn)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: CNearTreeCreate failed\n" );
+    }
+    
+    bReturn = !CNearTreeCreate(&outTree,1,CNEARTREE_TYPE_INTEGER);
+    if (!bReturn)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: CNearTreeCreate failed\n" );
+    }
+    
+    
+    bReturn = !CVectorCreate(&v,sizeof(double FAR *),10);
+    if (!bReturn)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: CVectorCreate failed\n" );
+    }
+    
+    searchPoint[0] = 50;
+    radius = 1000.;
+    bReturn = !CNearTreeFindKTreeNearest(tree,0,radius,outTree,searchPoint,1);
+    lReturned = CNearTreeSize(outTree);
+    if (lReturned != 0)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Near: found wrong count #0\n" );   	
+    }
+    
+    for( i=1; i<=100; ++i )
+    {
+        searchPoint[0] = i;
+        bReturn = !CNearTreeInsert(tree,searchPoint, NULL);
+        if (!bReturn)
+        {
+            ++g_errorCount;
+            fprintf(stdout, "CNearTreeTest: testKNearFar: CNearTreeInsert failed\n" );
+        }
+    }
+    
+    searchPoint[0] = 50;
+    radius = 3.5;
+    bReturn = !CNearTreeFindKTreeNearest(tree,13,radius,outTree,searchPoint,1);
+    lReturned = CNearTreeSize(outTree);
+    if (lReturned != 7)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Near: found wrong tree count #1\n" );   	
+    }
+    bReturn = !CNearTreeFindKNearest(tree,13,radius,v,NULL,searchPoint,1);
+    lReturned = CVectorSize(v);
+    if (lReturned != 7)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Near: found wrong vector count #1\n" );   	
+    }
+    
+    searchPoint[0] = 98;
+    radius = 3.5;
+    bReturn = !CNearTreeFindKTreeNearest(tree,13,radius,outTree,searchPoint,1);
+    lReturned = CNearTreeSize(outTree);
+    if (lReturned != 6)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Near: found wrong tree count #2\n" );   	
+    }
+    bReturn = !CNearTreeFindKNearest(tree,13,radius,v,NULL,searchPoint,1);
+    lReturned = CVectorSize(v);
+    if (lReturned != 6)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Near: found wrong vector count #2\n" );   	
+    }
+    
+    
+    searchPoint[0] = 50;
+    radius = 12.;
+    bReturn = !CNearTreeFindKTreeNearest(tree,7,radius,outTree,searchPoint,1);
+    lReturned = CNearTreeSize(outTree);
+    if (lReturned != 7)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Near: found wrong tree count #3\n" );   	
+    }
+    bReturn = !CNearTreeFindKNearest(tree,7,radius,v,NULL,searchPoint,1);
+    lReturned = CVectorSize(v);
+    if (lReturned != 7)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Near: found wrong vector count #3\n" );   	
+    }
+    
+    
+    searchPoint[0] = 2;
+    radius = 12.;
+    bReturn = !CNearTreeFindKTreeNearest(tree,7,radius,outTree,searchPoint,1);
+    lReturned = CNearTreeSize(outTree);
+    if (lReturned != 7)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Near: found wrong tree count #4\n" );   	
+    }
+    bReturn = !CNearTreeFindKNearest(tree,7,radius,v,NULL,searchPoint,1);
+    lReturned = CVectorSize(v);
+    if (lReturned != 7)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Near: found wrong vector count #4\n" );   	
+    }
+    
+    searchPoint[0] = 2;
+    radius = 3.5;
+    bReturn = !CNearTreeFindKTreeNearest(tree,7,radius,outTree,searchPoint,1);
+    lReturned = CNearTreeSize(outTree);
+    if (lReturned != 5)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Near: found wrong tree count #5\n" );   	
+    }
+    bReturn = !CNearTreeFindKNearest(tree,7,radius,v,NULL,searchPoint,1);
+    lReturned = CVectorSize(v);
+    if (lReturned != 5)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Near: found wrong vector count #5\n" );   	
+    }
+    
+    
+    searchPoint[0] = -1;
+    radius = 0.;
+    bReturn = !CNearTreeFindKTreeFarthest(tree,13,radius,outTree,searchPoint,1);
+    lReturned = CNearTreeSize(outTree);
+    if (lReturned != 13)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Far: found wrong tree count #1\n" );   	
+    }
+    bReturn = !CNearTreeFindKFarthest(tree,13,radius,v,NULL,searchPoint,1);
+    lReturned = CVectorSize(v);
+    if (lReturned != 13)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Far: found wrong vector count #1\n" );   	
+    }
+    
+    searchPoint[0] = 50;
+    radius = 0.;
+    bReturn = !CNearTreeFindKTreeFarthest(tree,13,radius,outTree,searchPoint,1);
+    lReturned = CNearTreeSize(outTree);
+    if (lReturned != 13)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Far: found wrong tree count #2\n" );   	
+    }
+    bReturn = !CNearTreeFindKFarthest(tree,13,radius,v,NULL,searchPoint,1);
+    lReturned = CVectorSize(v);
+    if (lReturned != 13)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Far: found wrong vector count #2\n" );   	
+    }
+    
+    searchPoint[0] = 150;
+    radius = 0.;
+    bReturn = !CNearTreeFindKTreeFarthest(tree,7,radius,outTree,searchPoint,1);
+    lReturned = CNearTreeSize(outTree);
+    if (lReturned != 7)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Far: found wrong tree count #3\n" );   	
+    }
+    bReturn = !CNearTreeFindKFarthest(tree,7,radius,v,NULL,searchPoint,1);
+    lReturned = CVectorSize(v);
+    if (lReturned != 7)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Far: found wrong vector count #3\n" );   	
+    }
+    
+    searchPoint[0] = 46;
+    radius = 0.;
+    bReturn = !CNearTreeFindKTreeFarthest(tree,12,radius,outTree,searchPoint,1);
+    lReturned = CNearTreeSize(outTree);
+    if (lReturned != 12)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Far: found wrong tree count #4\n" );   	
+    }
+    bReturn = !CNearTreeFindKFarthest(tree,12,radius,v,NULL,searchPoint,1);
+    lReturned = CVectorSize(v);
+    if (lReturned != 12)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Far: found wrong vector count #4\n" );   	
+    }
+    
+    
+    searchPoint[0] = 2;
+    radius = 0.;
+    bReturn = !CNearTreeFindKTreeFarthest(tree,7,radius,outTree,searchPoint,1);
+    lReturned = CNearTreeSize(outTree);
+    if (lReturned != 7)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Far: found wrong tree count #5\n" );   	
+    }
+    bReturn = !CNearTreeFindKFarthest(tree,7,radius,v,NULL,searchPoint,1);
+    lReturned = CVectorSize(v);
+    if (lReturned != 7)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Far: found wrong vector count #5\n" );   	
+    }
+    
+    searchPoint[0] = 200;
+    radius = 0.;
+    bReturn = !CNearTreeFindKTreeFarthest(tree,7,radius,outTree,searchPoint,1);
+    lReturned = CNearTreeSize(outTree);
+    if (lReturned != 7)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Far: found wrong tree count #6\n" );   	
+    }
+    bReturn = !CNearTreeFindKFarthest(tree,7,radius,v,NULL,searchPoint,1);
+    lReturned = CVectorSize(v);
+    if (lReturned != 7)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Far: found wrong vector count #6\n" );   	
+    }
+    
+    searchPoint[0] = 2;
+    radius = 95.;
+    bReturn = !CNearTreeFindKTreeFarthest(tree,7,radius,outTree,searchPoint,1);
+    lReturned = CNearTreeSize(outTree);
+    if (lReturned != 4)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Far: found wrong tree count #7\n" );   	
+    }
+    bReturn = !CNearTreeFindKFarthest(tree,7,radius,v,NULL,searchPoint,1);
+    lReturned = CVectorSize(v);
+    if (lReturned != 4)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: Far: found wrong vector count #7\n" );   	
+    }
+    
+    bReturn = !CVectorFree(&v);
+    if (!bReturn) {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: CVectorFree failed\n");
+    }
+    
+    bReturn = !CNearTreeFree(&outTree);
+    if (!bReturn) {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: CNearTreeFree failed\n");
+    }
+    
+    bReturn = !CNearTreeFree(&tree);
+    if (!bReturn) {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: testKNearFar: CNearTreeFree failed\n");
+    }
+    
+    
+    
+    
+}
+
 
 
 

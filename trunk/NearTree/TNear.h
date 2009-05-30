@@ -1653,7 +1653,7 @@ private:
                       {
                           tAnnular.insert( tAnnular.end( ), objectStore[pt->m_ptRight] );
                       }
-                      if ( pt->m_pRightBranch != 0 && (TRIANG(dDR,pt->m_dMaxRight,dRadius1) || TRIANG(dDR,pt->m_dMaxRight,dRadius2) ) )
+            if ( pt->m_pRightBranch != 0 && (TRIANG(dRadius1,dDR,pt->m_dMaxRight)) && (TRIANG(dDR,pt->m_dMaxRight,dRadius2) ) )
                 { // we did the left and now we finished the right, go down
                     pt = pt->m_pRightBranch;
                     eDir = left;
@@ -1674,7 +1674,7 @@ private:
                 {
                     sStack.push_back( pt );
                 }
-                      if ( pt->m_pLeftBranch != 0 && (TRIANG(dDL,pt->m_dMaxLeft,dRadius1) || TRIANG(dDL,pt->m_dMaxLeft,dRadius2) ) )
+            if ( pt->m_pLeftBranch != 0 && (TRIANG(dRadius1,dDL,pt->m_dMaxLeft)) && (TRIANG(dDL,pt->m_dMaxLeft,dRadius2)  ) )
                 { // we did the left, go down
                     pt = pt->m_pLeftBranch;
                 }
