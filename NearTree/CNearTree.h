@@ -775,6 +775,151 @@ extern "C" {
                                void FAR * FAR * objFarthest,
                                const void FAR * coord );
     
+    
+    /*
+     =======================================================================
+     int CNearTreeFindKNearest ( const size_t k,
+     CNearTreeHandle treehandle,
+     const double dRadius,
+     CVectorHandle coordClosest,
+     CVectorHandle objClosest,
+     const void * coord,
+     int resetcount);
+     
+     Function to search a Neartree for the set of objects closer to some probe point, coord,
+     than dRadius. 
+     
+     k is the maximum number of closest neighbors to return.  Finds this many if passible.
+     
+     dRadius is the maximum search radius - any point closer than dRadius to the probe
+     point will be ignored
+     
+     coordClosest is a vector of pointers to coordinate tuples and is the 
+     returned set of farthest points from the probe point that can be found in the Neartree
+     
+     objClosest is a vector of objects and is the returned set of farthest points
+     from the probe point that can be found in the Neartree
+     
+     coord  is the probe point
+     
+     resetcount should be non-zero to clear objClosest on entry
+     
+     return value is 0 if points were found
+     
+     =======================================================================
+     */
+    
+    int CNearTreeFindKNearest ( CNearTreeHandle treehandle,
+                               const size_t k,
+                               const double dRadius,
+                               CVectorHandle coordClosest,
+                               CVectorHandle objClosest,
+                               const void * coord,
+                               int resetcount);
+    
+    /*
+     =======================================================================
+     int CNearTreeFindKTreeNearest ( const size_t k,
+     CNearTreeHandle treehandle,
+     const double dRadius,
+     CNearTreeHandle foundNearest,
+     const void FAR * coord,
+     int resetcount);
+     
+     Function to search a Neartree for the set of k objects closer to some probe point, coord,
+     than dRadius.
+     
+     k is the maximum number of closest neighbors to return.  Finds this many if passible.
+     dRadius is the minimum search radius - any point closer than dRadius to the probe
+     point will be ignored
+     foundClosest is an existing CNearTree to which the found points will be added
+     coord  is the probe point
+     resetcount should be non-zero to clear foundClosest on entry
+     return value is 0 if points were found
+     
+     =======================================================================
+     */
+    int CNearTreeFindKTreeNearest ( CNearTreeHandle treehandle,
+                                   const size_t k,
+                                   const double dRadius,
+                                   CNearTreeHandle foundClosest,
+                                   const void FAR * coord,
+                                   int resetcount);
+    
+    
+    /*
+     =======================================================================
+     int CNearTreeFindKFarthest ( CNearTreeHandle treehandle,
+     const size_t k,
+     const double dRadius,
+     CVectorHandle coordFarthest,
+     CVectorHandle objFarthest,
+     const void * coord,
+     int resetcount);
+     
+     Function to search a Neartree for the set of objects farther from some probe point, coord,
+     than dRadius. 
+     
+     k is the maximum number of farthest neighbors to return.  Finds this many if passible.
+     
+     dRadius is the maximum search radius - any point farther than dRadius from the probe
+     point will be ignored
+     
+     coordFarthest is a vector of pointers to coordinate tuples and is the 
+     returned set of farthest points from the probe point that can be found in the Neartree
+     
+     objFarthest is a vector of objects and is the returned set of farthest points
+     from the probe point that can be found in the Neartree
+     
+     coord  is the probe point
+     
+     resetcount should be non-zero to clear objFarthest on entry
+     
+     return value is 0 if points were found
+     
+     =======================================================================
+     */
+    
+    int CNearTreeFindKFarthest ( CNearTreeHandle treehandle,
+                                const size_t k,
+                                const double dRadius,
+                                CVectorHandle coordFarthest,
+                                CVectorHandle objFarthest,
+                                const void * coord,
+                                int resetcount);
+    
+    /*
+     =======================================================================
+     int CNearTreeFindKTreeFarthest ( CNearTreeHandle treehandle,
+     const size_t k,
+     const double dRadius,
+     CNearTreeHandle foundFarthest,
+     const void FAR * coord,
+     int resetcount);
+     
+     Function to search a Neartree for the set of k objects farther from some probe point, coord,
+     than dRadius.
+     
+     k is the maximum number of farthest neighbors to return.  Finds this many if passible.
+     dRadius is the minimum search radius - any point farther than dRadius from the probe
+     point will be ignored
+     foundFarthest is an existing CNearTree to which the found points will be added
+     coord  is the probe point
+     resetcount should be non-zero to clear foundFarthest on entry
+     return value is 0 if points were found
+     
+     =======================================================================
+     */
+    int CNearTreeFindKTreeFarthest ( CNearTreeHandle treehandle,
+                                    const size_t k,
+                                    const double dRadius,
+                                    CNearTreeHandle foundFarthest,
+                                    const void FAR * coord,
+                                    int resetcount);
+    
+    
+    
+    
     /*
      =======================================================================
      The following macro is provided here to ensure operation with older
