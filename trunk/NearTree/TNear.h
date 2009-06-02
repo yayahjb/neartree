@@ -253,23 +253,14 @@
 
 #include <stdlib.h>
 
-#ifdef USE_MINGW_RAND
-#define srandom(iseed) srand(iseed)
-#define random(x) rand(x)
-#endif
 
 #include <cmath>
 
-#ifdef USE_RHRAND
 #ifndef USE_LOCAL_HEADERS
 #include <rhrand.h>
 #else
 #include "rhrand.h"
 #endif
-#endif
-
-#define CNEARTREE_RAND_MAX  32767
-
 
 #include <list>
 #include <set>
@@ -388,14 +379,14 @@ static inline DistanceType DistanceBetween( const short t1, const short t2 )
 
 
 private:
-#ifdef USE_RHRAND
+
 RHrand rhr;
-#endif
+
 // forward declaration of nested class NearTreeNode
 template <typename TNode, typename DistanceTypeNode, int distMinValueNode > 
 class NearTreeNode;
 public:
-// Forward declaration for the nested classes, iterator and const_itertor. Friend is necessary
+// Forward declaration for the nested classes, iterator and const_iterator. Friend is necessary
 // for the access to the appropriate data elements
 class iterator;
 friend class iterator;
@@ -966,13 +957,10 @@ void CompleteDelayedInsert ( void )
     const size_t toRandomlyInsert = (size_t)::sqrt( (double)vectorSize );
     for ( size_t i=0; i<toRandomlyInsert; ++i )
     {
-#ifdef USE_RHRAND
+
         size_t n = (size_t)((double)(vectorSize-1u) * (DistanceType)(rhr.urand()));
         rhr.urand( ); rhr.urand( );
-#else
-        size_t n = (size_t)((double)(vectorSize-1u) * (DistanceType)(random( )%CNEARTREE_RAND_MAX) / (double) CNEARTREE_RAND_MAX);
-        random( ); random( );
-#endif
+
         // Find the next pointer that hasn't already had its object "insert"ed
         // We can do this blindly since sqrt(n)<=n for all cases. n=1 would be the only 
         // bad case here, and that will not trigger the later loop.
@@ -1019,13 +1007,10 @@ void CompleteDelayedInsertRandom ( void )
     const size_t vectorSize = m_DelayedIndices.size( );
     for ( size_t i=0; i<m_DelayedIndices.size( ); ++i )
     {
-#ifdef USE_RHRAND
+
         size_t n = (size_t)((double)(vectorSize-1u) * (DistanceType)(rhr.urand()));
         rhr.urand( ); rhr.urand( );
-#else
-        size_t n = (size_t)((double)(vectorSize-1u) * (DistanceType)(random( )%CNEARTREE_RAND_MAX) / (double) CNEARTREE_RAND_MAX);
-        random( ); random( );
-#endif
+
         // Find the next pointer that hasn't already had its object "insert"ed
         // We can do this blindly since sqrt(n)<=n for all cases. n=1 would be the only 
         // bad case here, and that will not trigger the later loop.

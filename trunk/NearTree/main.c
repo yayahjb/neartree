@@ -37,19 +37,12 @@
 #include <time.h>
 #include <CVector.h>
 
-#ifdef USE_MINGW_RAND
-#define random(x) rand(x)
-#define srandom(x) srand(x)
-#endif
-
-#ifdef USE_RHRAND
 #ifndef USE_LOCAL_HEADERS
 #include <rhrand.h>
 #else
 #include "rhrand.h"
 #endif
 CRHrand rhr;
-#endif
 
 #ifndef USE_LOCAL_HEADERS
 #include <CNearTree.h>
@@ -77,21 +70,13 @@ int main ( int argc, char** argv )
     CVectorCreate(&vReturn,sizeof(void *),10);
     CVectorCreate(&oReturn,sizeof(void *),10);
     
-#ifdef USE_RHRAND
     if (argc <= 1) {
         CRHrandSrandom(&rhr, (int)time( NULL ) );  /* use the current time to seed the
          random number generator */
     } else {
         CRHrandSrandom(&rhr, (int)atoi(argv[1]));
     }    
-#else
-    if (argc <= 1) {
-        srandom( (unsigned int)time( NULL ) );  /* use the current time to seed the
-                                                 random number generator */
-    } else {
-        srandom((unsigned int)atoi(argv[1]));
-    }
-#endif
+
     /*---------------------------------------
      build up a library of points to search among
      ---------------------------------------*/
@@ -114,11 +99,9 @@ int main ( int argc, char** argv )
     for ( i=0;  i<10; i++ )
     {  double x, y, z;
         dRad += 0.05;
-#ifdef USE_RHRAND
-        x = (CRHrandUrand(&rhr)) * ((double) lMaxRow );
-#else
-        x = (random( )%CNEARTREE_RAND_MAX) * ((double) lMaxRow ) / CNEARTREE_RAND_MAX;
-#endif
+
+        x = CRHrandUrand(&rhr) * ((double) lMaxRow );
+
         y = x;
         z = ( 1.25 * ((double) lMaxRow) - 1.5 * x );
         vSearch[0] = x; vSearch[1] = 0.5*(x+y); vSearch[2] = z;

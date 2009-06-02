@@ -116,31 +116,6 @@ extern "C" {
         int jndx;
         int kndx;
         double dTemp;
-        /* void srandom(struct CRHrand_ * randhandle, int iseed) {
-            randhandle->jndx = iseed;
-            if (randhandle->jndx < 0) randhandle->jndx = -randhandle->jndx;
-            for(randhandle->indx=0; randhandle->indx<55; ++randhandle->indx )
-            {
-                randhandle->jndx = (randhandle->jndx*2349 + 14867)%32767;
-                (randhandle->buffer)[randhandle->indx] = fabs((double)((randhandle->jndx)/32767.0));
-            }
-            randhandle->indx = 55;
-            randhandle->kndx = 54;
-            randhandle->jndx = 31;
-            return;
-        };
-         */
-       /*  double urand(struct CRHrand_ * randhandle) { 
-            double dTemp;
-            randhandle->indx = randhandle->indx%55 + 1;
-            randhandle->jndx = randhandle->jndx%55 + 1;
-            randhandle->kndx = randhandle->kndx%55 + 1;
-            (randhandle->buffer)[randhandle->indx-1]
-            = modf( (randhandle->buffer)[randhandle->jndx-1]+
-                   (randhandle->buffer)[randhandle->kndx-1], &dTemp );
-            return (randhandle->buffer)[randhandle->indx-1]; 
-        };
-        */
     } CRHrand;
     
     typedef CRHrand * CRHrandHandle;

@@ -89,19 +89,12 @@ extern "C" {
 #include "CVector.h"
 #endif    
     
-#ifdef USE_MINGW_RAND
-#define random(x) rand(x)
-#define srandom(x) srand(x)
-#endif
     
-#ifdef USE_RHRAND
     
 #ifndef USE_LOCAL_HEADERS
 #include <rhrand.h>
 #else
 #include <rhrand.h>
-#endif
-    
 #endif
     
     
@@ -170,9 +163,9 @@ extern "C" {
         CVectorHandle    m_ObjectStore;   /* all inserted objects                        */
         CVectorHandle    m_CoordStore;    /* all inserted coordinates                    */
         CVectorHandle    m_DelayedIndices;/* objects queued for insertion                */
-#ifdef USE_RHRAND
+
         CRHrand          m_rhr;           /* random number generator                     */
-#endif
+
     } CNearTree;
     
     typedef CNearTree     FAR * CNearTreeHandle;
