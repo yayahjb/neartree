@@ -42,6 +42,19 @@
 #include "TNear.h"
 #include "v.h"
 
+#ifdef USE_RHRAND
+#ifndef USE_LOCAL_HEADERS
+#include <rhrand.h>
+#else
+#include "rhrand.h"
+#endif
+RHrand rhr;
+#define srandom(iseed) rhr.srandom(iseed)
+#define random(x) rhr.random(x)
+#endif
+
+
+
 int main ( int argc, char* argv[] )
 {
     CNearTree <v> vTree;
@@ -81,7 +94,7 @@ int main ( int argc, char* argv[] )
     for ( i=0;  i<10; i++ )
     {
         dRad += 0.05;
-        double x = (random( )%MYRAND_MAX) * double( lMaxRow ) / MYRAND_MAX;
+        double x = (random( )%CNEARTREE_RAND_MAX) * double( lMaxRow ) / CNEARTREE_RAND_MAX;
         double y = x;
         double z = ( 1.25 * double(lMaxRow) - 1.5 * x );
         v vSearch( x, 0.5*(x+y), z );

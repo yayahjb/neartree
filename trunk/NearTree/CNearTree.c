@@ -79,6 +79,7 @@ extern "C" {
     
 #define max2(x,y) ((x)>=(y)?(x):(y))    
     
+    
     /*
      =======================================================================
      double CNearTreeDistsq(void FAR * coord1, 
@@ -402,6 +403,10 @@ extern "C" {
         (*treehandle)->m_DelayedIndices = NULL;
         (*treehandle)->m_ObjectStore    = NULL;
         (*treehandle)->m_CoordStore     = NULL;
+#ifdef USE_RHRAND
+        CRHrandSrandom(&((*treehandle)->m_rhr),0);
+#endif
+         
         return CNEARTREE_SUCCESS;
         
     }
@@ -966,7 +971,11 @@ extern "C" {
         }
         
         for (ielement = 0; ielement < nrandom; ielement++) {
+#ifdef USE_RHRAND
+            kelement = (int)(CRHrandUrand(&(treehandle->m_rhr))*((double)(nqueued)));
+#else
             kelement = random()%nqueued;
+#endif
             oelement = kelement;
             do {
                 if (kelement >= nqueued) {

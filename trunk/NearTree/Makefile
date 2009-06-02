@@ -42,7 +42,7 @@
 
 # Version string
 VERSION = 2:1:2
-RELEASE = 2.1.0
+RELEASE = 2.1.1
 
 
 #
@@ -50,9 +50,10 @@ RELEASE = 2.1.0
 #
 CC	= gcc
 ifneq ($(MSYSTEM),MINGW32)
-CFLAGS  = -g -O2  -Wall -ansi -pedantic  -DCNEARTREE_SAFE_TRIANG=1
+CFLAGS  = -g -O2  -Wall -DUSE_RHRAND=1 -ansi -pedantic -DCNEARTREE_SAFE_TRIANG=1
 else
-CFLAGS  = -g -O2 -Wall -DUSE_MINGW_RAND=1 -DCNEARTREE_SAFE_TRIANG=1
+#CFLAGS  = -g -O2 -Wall -DUSE_MINGW_RAND=1 -DCNEARTREE_SAFE_TRIANG=1
+CFLAGS  = -g -O2 -Wall -DUSE_RHRAND=1 -DCNEARTREE_SAFE_TRIANG=1
 endif
 
 #
@@ -147,7 +148,7 @@ SOURCE   =  $(CPPSOURCE) $(CSOURCE)
 #
 # Header files
 #
-HEADERS   =  $(INC)/TNear.h $(INC)/CNearTree.h $(INC)/v.h
+HEADERS   =  $(INC)/TNear.h $(INC)/CNearTree.h $(INC)/v.h $(INC)/rhrand.h
 
 # Default: instructions
 #

@@ -12,7 +12,6 @@
  *
  *  Revised 30 May 2009, release with full containerization of C++
  *                       version and KNear/Far in C++ and C, LCA + HJB
- *
  */
 
 /**********************************************************************
@@ -95,6 +94,16 @@ extern "C" {
 #define srandom(x) srand(x)
 #endif
     
+#ifdef USE_RHRAND
+    
+#ifndef USE_LOCAL_HEADERS
+#include <rhrand.h>
+#else
+#include <rhrand.h>
+#endif
+    
+#endif
+    
     
     /* function returns */
 #define CNEARTREE_SUCCESS       0
@@ -161,6 +170,9 @@ extern "C" {
         CVectorHandle    m_ObjectStore;   /* all inserted objects                        */
         CVectorHandle    m_CoordStore;    /* all inserted coordinates                    */
         CVectorHandle    m_DelayedIndices;/* objects queued for insertion                */
+#ifdef USE_RHRAND
+        CRHrand          m_rhr;           /* random number generator                     */
+#endif
     } CNearTree;
     
     typedef CNearTree     FAR * CNearTreeHandle;
