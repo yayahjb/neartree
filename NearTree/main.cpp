@@ -42,16 +42,12 @@
 #include "TNear.h"
 #include "v.h"
 
-#ifdef USE_RHRAND
 #ifndef USE_LOCAL_HEADERS
 #include <rhrand.h>
 #else
 #include "rhrand.h"
 #endif
 RHrand rhr;
-#define srandom(iseed) rhr.srandom(iseed)
-#define random(x) rhr.random(x)
-#endif
 
 
 
@@ -64,10 +60,10 @@ int main ( int argc, char* argv[] )
     std::vector <v> vReturn;
     
     if (argc <= 1) {
-        srandom( (unsigned int)time( NULL ) );  /* use the current time to seed the
+        rhr.srandom( (unsigned int)time( NULL ) );  /* use the current time to seed the
                                                    random number generator */
     } else {
-        srandom((unsigned int)atoi(argv[1]));
+        rhr.srandom((unsigned int)atoi(argv[1]));
     }
     //---------------------------------------
     // build up a library of points to search among
@@ -94,7 +90,7 @@ int main ( int argc, char* argv[] )
     for ( i=0;  i<10; i++ )
     {
         dRad += 0.05;
-        double x = (random( )%CNEARTREE_RAND_MAX) * double( lMaxRow ) / CNEARTREE_RAND_MAX;
+        double x = rhr.urand() * double( lMaxRow ) ;
         double y = x;
         double z = ( 1.25 * double(lMaxRow) - 1.5 * x );
         v vSearch( x, 0.5*(x+y), z );

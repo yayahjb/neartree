@@ -55,17 +55,14 @@
 
 #define ABS(x) ((x)<0)?-(x):x
 
-#ifdef USE_RHRAND
 #ifndef USE_LOCAL_HEADERS
 #include <rhrand.h>
 #else
 #include "rhrand.h"
 #endif
 RHrand rhr;
-#define srandom(iseed) rhr.srandom(iseed)
-#define random(x) rhr.random(x)
-#endif
 
+#define CNEARTREE_RAND_MAX 32767
 
 void testEmptyTree( void );
 void testLinearTree( const int n );
@@ -769,7 +766,7 @@ void testRandomTree1( const int nRequestedRandoms )
     /* Build the tree with n random numbers. Remember the largest and smallest values. */
     for( int i=0; i<n; ++i )
     {
-        const int next = random( )%CNEARTREE_RAND_MAX;
+        const int next = rhr.urand()*((double)CNEARTREE_RAND_MAX);
         tree.insert( next );
         if( next > nmax ) nmax = next;
         if( next < nmin ) nmin = next;
@@ -904,7 +901,7 @@ void testRandomTree2( const int nRequestedRandoms )
     /* Build the tree with n random numbers. Remember the largest and smallest values. */
     for( int i=0; i<n; ++i )
     {
-        const int next = random( )%CNEARTREE_RAND_MAX;
+        const int next = (int)(rhr.urand()*((double)CNEARTREE_RAND_MAX));
         tree.insert( next );
         if( next > nmax ) nmax = next;
         if( next < nmin ) nmin = next;
@@ -1038,7 +1035,7 @@ class vec17
         {
             for( int i=0; i<dim; ++i )
             {
-                pd[i] = (double)(random( )%CNEARTREE_RAND_MAX);
+                pd[i] = rhr.urand()*((double)CNEARTREE_RAND_MAX);
             }
             length = Norm( );
         }
@@ -1913,7 +1910,7 @@ class intVec17
         {
             for( int i=0; i<dim; ++i )
             {
-                pd[i] = random( )%CNEARTREE_RAND_MAX;
+                pd[i] = rhr.urand()*((double)CNEARTREE_RAND_MAX);
             }
             length = this->Norm( );
         };

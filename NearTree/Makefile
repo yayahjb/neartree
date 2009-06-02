@@ -50,10 +50,9 @@ RELEASE = 2.1.1
 #
 CC	= gcc
 ifneq ($(MSYSTEM),MINGW32)
-CFLAGS  = -g -O2  -Wall -DUSE_RHRAND=1 -ansi -pedantic -DCNEARTREE_SAFE_TRIANG=1
+CFLAGS  = -g -O2  -Wall  -ansi -pedantic -DCNEARTREE_SAFE_TRIANG=1
 else
-#CFLAGS  = -g -O2 -Wall -DUSE_MINGW_RAND=1 -DCNEARTREE_SAFE_TRIANG=1
-CFLAGS  = -g -O2 -Wall -DUSE_RHRAND=1 -DCNEARTREE_SAFE_TRIANG=1
+CFLAGS  = -g -O2 -Wall  -DCNEARTREE_SAFE_TRIANG=1
 endif
 
 #
@@ -223,15 +222,17 @@ all:	$(LIB) $(BIN) $(SOURCE) $(HEADERS) \
 		$(BIN)/CPPMain $(BIN)/CMain $(BIN)/CPPNearTreeTest $(BIN)/CNearTreeTest
 		
 install:  all $(INSTALL_PREFIX) $(INSTALL_PREFIX)/lib $(INSTALL_PREFIX)/include \
-          $(INC) $(LIB)/libCNearTree.$(LIB_EXT)  $(INC)/TNear.h $(INC)/CNearTree.h
+          $(INC) $(LIB)/libCNearTree.$(LIB_EXT)  $(INC)/TNear.h $(INC)/CNearTree.h $(INC)/rhrand.h
 		  $(INSTALL_COMMAND) $(LIB)/libCNearTree.$(LIB_EXT) $(INSTALL_PREFIX)/lib/libCNearTree.$(LIB_EXT)
 		  $(INSTALL_FINISH_COMMAND) $(INSTALL_PREFIX)/lib/libCNearTree.$(LIB_EXT)
 		  -cp $(INSTALL_PREFIX)/include/TNear.h $(INSTALL_PREFIX)/include/TNear_old.h
 		  -cp $(INSTALL_PREFIX)/include/CNearTree.h $(INSTALL_PREFIX)/include/CNearTree_old.h
 		  cp $(INC)/TNear.h $(INSTALL_PREFIX)/include/TNear.h
+		  cp $(INC)/rhrand.h $(INSTALL_PREFIX)/include/rhrand.h
 		  cp $(INC)/CNearTree.h $(INSTALL_PREFIX)/include/CNearTree.h
 		  chmod 644 $(INSTALL_PREFIX)/include/TNear.h
 		  chmod 644 $(INSTALL_PREFIX)/include/CNearTree.h
+		  chmod 644 $(INSTALL_PREFIX)/include/rhrand.h
 		  echo "Testing final install dynamic"
 		  $(BUILD_COMMAND_DYNAMIC) $(INCLUDES) $(EXAMPLES)/CNearTreeTest.c \
 		  -L$(INSTALL_PREFIX)/lib -lCNearTree $(CLIBRARIES) -o $(BIN)/CNearTreeTest_dynamic
