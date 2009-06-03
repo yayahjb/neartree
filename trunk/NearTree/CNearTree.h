@@ -316,7 +316,7 @@ extern "C" {
      */
     
 #define CNearTreeSize(treehandle) \
-(treehandle)?(((treehandle)->m_CoordStore)?(CVectorSize((treehandle)->m_CoordStore)):0):0
+((treehandle)?(((treehandle)->m_CoordStore)?(CVectorSize((treehandle)->m_CoordStore)):0):0)
     
     /*
      =======================================================================
