@@ -770,7 +770,7 @@ void testRandomTree1( const int nRequestedRandoms )
     /* Build the tree with n random numbers. Remember the largest and smallest values. */
     for( int i=0; i<n; ++i )
     {
-        const int next = rhr.urand()*((double)CNEARTREE_RAND_MAX);
+        const int next = (int)(rhr.urand()*((double)CNEARTREE_RAND_MAX));
         tree.insert( next );
         if( next > nmax ) nmax = next;
         if( next < nmin ) nmin = next;
