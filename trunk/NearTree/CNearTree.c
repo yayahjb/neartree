@@ -673,8 +673,8 @@ extern "C" {
         }
         
         index = CVectorSize(treehandle->m_ObjectStore);
-        if (CVectorAddElement(treehandle->m_ObjectStore,&obj)) return CNEARTREE_CVECTOR_FAILED;
-        if (CVectorAddElement(treehandle->m_CoordStore,coord)) return CNEARTREE_CVECTOR_FAILED;
+        if (CVectorAddElement(treehandle->m_ObjectStore,(void FAR *)&obj)) return CNEARTREE_CVECTOR_FAILED;
+        if (CVectorAddElement(treehandle->m_CoordStore,(void FAR *)coord)) return CNEARTREE_CVECTOR_FAILED;
         
         
         depth = 1;
@@ -771,7 +771,7 @@ extern "C" {
             return CNEARTREE_SUCCESS;
         } else if ( dTempLeft > dTempRight ) {
             if (  !((treenodehandle->m_iflags)&CNEARTREE_FLAG_RIGHT_CHILD) ) {
-                if ( (errorcode = CNearTreeNodeCreate(treehandle, &(treenodehandle->m_pRightBranch)))) return errorcode;
+                if ( (errorcode = CNearTreeNodeCreate(treehandle, &(treenodehandle->m_pRightBranch))),errorcode) return errorcode;
                 treenodehandle->m_iflags |= CNEARTREE_FLAG_RIGHT_CHILD;
                 treenodehandle->m_dMaxRight = dTempRight;
                 if (((treehandle->m_iflags)&CNEARTREE_FLIP)&&!((treenodehandle->m_iflags)&CNEARTREE_FLAG_RIGHT_CHILD)
@@ -794,7 +794,7 @@ extern "C" {
             return CNearTreeNodeInsert(treehandle, treenodehandle->m_pRightBranch, index, depth);
         } else { /* ((double)(t - *m_tLeft) <= (double)(t - *m_tRight) ) */
             if (  !((treenodehandle->m_iflags)&CNEARTREE_FLAG_LEFT_CHILD) ) {
-                if ( (errorcode = CNearTreeNodeCreate(treehandle, &(treenodehandle->m_pLeftBranch)))) return errorcode;
+                if ( (errorcode = CNearTreeNodeCreate(treehandle, &(treenodehandle->m_pLeftBranch))),errorcode) return errorcode;
                 treenodehandle->m_iflags |= CNEARTREE_FLAG_LEFT_CHILD;
                 treenodehandle->m_dMaxLeft = dTempLeft;
                 if (((treehandle->m_iflags)&CNEARTREE_FLIP)&&!((treenodehandle->m_iflags)&CNEARTREE_FLAG_LEFT_CHILD)
@@ -874,8 +874,8 @@ extern "C" {
         }
         
         index = CVectorSize(treehandle->m_ObjectStore);
-        if (CVectorAddElement(treehandle->m_ObjectStore,&obj)) return CNEARTREE_CVECTOR_FAILED;
-        if (CVectorAddElement(treehandle->m_CoordStore,coord)) return CNEARTREE_CVECTOR_FAILED;
+        if (CVectorAddElement(treehandle->m_ObjectStore,(void FAR *)&obj)) return CNEARTREE_CVECTOR_FAILED;
+        if (CVectorAddElement(treehandle->m_CoordStore,(void FAR *)coord)) return CNEARTREE_CVECTOR_FAILED;
         
         if (treehandle->m_DelayedIndices==NULL) {
             if (CVectorCreate(&(treehandle->m_DelayedIndices),sizeof(size_t),10)) {
@@ -1266,7 +1266,7 @@ extern "C" {
         CNearTreeFindInSphere(treehandle, dRadius, coords, objs, coord, 0);
         
         for (ii=0; ii<CVectorSize(coords);ii++) {
-            if ((errorcode=CNearTreeInsert(foundClosest,*((void FAR * FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii)))) {
+            if ((errorcode=CNearTreeInsert(foundClosest,*((void FAR * FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii))),errorcode) {
                 CVectorFree(&coords);
                 CVectorFree(&objs);
                 return errorcode;
@@ -1477,7 +1477,7 @@ extern "C" {
         CNearTreeFindOutSphere(treehandle, dRadius, coords, objs, coord, 0);
         
         for (ii=0; ii<CVectorSize(coords);ii++) {
-            if ((errorcode=CNearTreeInsert(foundOutside,*((void FAR * FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii)))) {
+            if ((errorcode=CNearTreeInsert(foundOutside,*((void FAR * FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii))),errorcode) {
                 CVectorFree(&coords);
                 CVectorFree(&objs);
                 return errorcode;
@@ -1691,7 +1691,7 @@ extern "C" {
         CNearTreeFindInAnnulus(treehandle, dRadiusInner, dRadiusOuter, coords, objs, coord, 0);
         
         for (ii=0; ii<CVectorSize(coords);ii++) {
-            if ((errorcode=CNearTreeInsert(foundInRing,*((void FAR * FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii)))) {
+            if ((errorcode=CNearTreeInsert(foundInRing,*((void FAR * FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii))),errorcode) {
                 CVectorFree(&coords);
                 CVectorFree(&objs);
                 return errorcode;
@@ -1747,7 +1747,7 @@ extern "C" {
         if (localmetric <= ((double *)localmetrics)[low]) {
             
             tempmetric =  ((double *)localmetrics)[high];
-            tempindex =  ((double *)localindices)[high];
+            tempindex =  ((size_t *)localindices)[high];
             for (mid = high; mid > 0; mid--) {
                 ((double *)localmetrics)[mid] = ((double *)localmetrics)[mid-1];
                 ((size_t *)localindices)[mid] = ((size_t *)localindices)[mid-1];
@@ -1791,7 +1791,7 @@ extern "C" {
             
             if (low < high) {
                 tempmetric =  ((double *)localmetrics)[high];
-                tempindex =  ((double *)localindices)[high];
+                tempindex =  ((size_t *)localindices)[high];
                 for (mid = high; mid > low+1; mid--) {
                     ((double *)localmetrics)[mid] = ((double *)localmetrics)[mid-1];
                     ((size_t *)localindices)[mid] = ((size_t *)localindices)[mid-1];
@@ -2037,7 +2037,7 @@ extern "C" {
         CNearTreeFindKNearest(treehandle, k, dRadius, coords, objs, coord, 0);
         
         for (ii=0; ii<CVectorSize(coords);ii++) {
-            if ((errorcode=CNearTreeInsert(foundClosest,*((void FAR * FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii)))) {
+            if ((errorcode=CNearTreeInsert(foundClosest,*((void FAR * FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii))),errorcode) {
                 CVectorFree(&coords);
                 CVectorFree(&objs);
                 return errorcode;
@@ -2276,7 +2276,7 @@ extern "C" {
         CNearTreeFindKFarthest(treehandle, k, dRadius, coords, objs, coord, 0);
         
         for (ii=0; ii<CVectorSize(coords);ii++) {
-            if ((errorcode=CNearTreeInsert(foundFarthest,*((void FAR * FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii)))) {
+            if ((errorcode=CNearTreeInsert(foundFarthest,*((void FAR * FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii))),errorcode) {
                 CVectorFree(&coords);
                 CVectorFree(&objs);
                 return errorcode;
