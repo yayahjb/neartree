@@ -262,8 +262,6 @@
 #include "rhrand.h"
 #endif
 
-#include <list>
-#include <set>
 #include <vector>
 
 #ifdef CNEARTREE_SAFE_TRIANG

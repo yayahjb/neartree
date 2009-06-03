@@ -52,6 +52,10 @@
 #else
 #include "TNear.h"
 #endif
+#include <list>
+#include <set>
+#include <vector> 
+
 
 #define ABS(x) ((x)<0)?-(x):x
 
@@ -1439,7 +1443,7 @@ void testDelayedInsertionRandom( void )
             ++g_errorCount;
             fprintf(stdout, "testDelayedInsertionRandom: CompleteDelayedInsertRandom completion is incorrect\n" );
         }
-        else if( depth >= sqrt( nmax/2 ) )
+        else if( depth >= sqrt( (double)(nmax/2) ) )
         {
             ++g_errorCount;
             fprintf(stdout, "testDelayedInsertionRandom: tree depth is too large, %lu is greater than %ld\n", (unsigned long)depth, nmax/2 );
@@ -1910,7 +1914,7 @@ class intVec17
         {
             for( int i=0; i<dim; ++i )
             {
-                pd[i] = rhr.urand()*((double)CNEARTREE_RAND_MAX);
+                pd[i] = (int)(rhr.urand()*((double)CNEARTREE_RAND_MAX));
             }
             length = this->Norm( );
         };
