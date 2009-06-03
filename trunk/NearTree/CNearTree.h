@@ -94,7 +94,7 @@ extern "C" {
 #ifndef USE_LOCAL_HEADERS
 #include <rhrand.h>
 #else
-#include <rhrand.h>
+#include "rhrand.h"
 #endif
     
     
