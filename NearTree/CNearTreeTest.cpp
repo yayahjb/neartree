@@ -57,7 +57,7 @@
 #include <vector> 
 
 
-#define ABS(x) ((x)<0)?-(x):x
+#define ABS(x) (((x)<0)?-(x):(x))
 
 #ifndef USE_LOCAL_HEADERS
 #include <rhrand.h>
