@@ -1714,7 +1714,7 @@ void testDelayedInsertion( void )
             fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CNearTreeFindInSphere failed\n");
         } else {
             lReturned = CVectorSize(v);
-            if( lReturned != nmax )
+            if( lReturned != (size_t)nmax )
             {
                 ++g_errorCount;
                 printf( "CNearTreeTest:  testDelayedInsertion: CNearTreeFindInSphere failed for nmax=%ld, found %lu points\n", nmax, (unsigned long)lReturned );
@@ -1809,7 +1809,7 @@ void testDelayedInsertion( void )
             fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CNearTreeFindInSphere failed\n");
         } else {
             lReturned = CVectorSize(v);
-            if( lReturned != nmax )
+            if( lReturned != (size_t)nmax )
             {
                 ++g_errorCount;
                 printf( "CNearTreeTest:  testDelayedInsertion: CNearTreeFindInSphere failed for nmax=%ld, found %lu points\n", nmax, (unsigned long)lReturned );
@@ -1876,7 +1876,7 @@ void testDelayedInsertion( void )
             fprintf(stdout,"CNearTreeTest:  testDelayedInsertion: CNearTreeFindInSphere (second block) failed\n");
         } else {
             lReturned = CVectorSize(v);
-            if( lReturned != nmax )
+            if( lReturned != (size_t)nmax )
             {
                 ++g_errorCount;
                 printf( "CNearTreeTest:  testDelayedInsertion: CNearTreeFindInSphere (second block) failed for nmax=%ld, found %lu points\n", nmax, (unsigned long)lReturned );
