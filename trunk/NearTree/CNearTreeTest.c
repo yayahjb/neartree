@@ -59,7 +59,6 @@
 #include "CNearTree.h"
 #endif
 
-#define CNEARTREE_RAND_MAX  32767
 
 
 #ifndef USE_LOCAL_HEADERS
@@ -971,7 +970,7 @@ void testRandomTree1( const int nRequestedRandoms )
     /* Build the tree with n random numbers. Remember the largest and smallest values. */
     for( i=0; i<n; ++i )
     {
-        next[0] = ((int)(CRHrandUrand(&rhr)*(double)CNEARTREE_RAND_MAX));
+        next[0] = CRHrandRandom(&rhr);
         bReturn = !CNearTreeImmediateInsert(tree,next,NULL);
         if( next[0] > nmax ) nmax = next[0];
         if( next[0] < nmin ) nmin = next[0];
@@ -1111,7 +1110,7 @@ void testRandomTree1( const int nRequestedRandoms )
     /* Build the tree with n random numbers. Remember the largest and smallest values. */
     for( i=0; i<n; ++i )
     {
-        next[0] = ((int)(CRHrandUrand(&rhr)*(double)CNEARTREE_RAND_MAX));
+        next[0] = CRHrandRandom(&rhr);
         bReturn = !CNearTreeImmediateInsert(tree,next,NULL);
         if( next[0] > nmax ) nmax = next[0];
         if( next[0] < nmin ) nmin = next[0];
@@ -1243,7 +1242,7 @@ void testRandomTree1( const int nRequestedRandoms )
 int LoadVec17(double vec[17]) {
     size_t i;
     for (i = 0; i < 17; i++) {
-        vec[i] = CRHrandUrand(&rhr)*((double)CNEARTREE_RAND_MAX);
+        vec[i] = CRHrandRandom(&rhr);
     }
     return 0;
 }
@@ -1255,7 +1254,7 @@ int ConstVec17(double vec[17], double d) {
     }
     return 0;
 }
-double NormVec17(double vec[17]) {
+double NormVec17( const double vec[17]) {
     size_t i;
     double sum;
     sum = vec[0]*vec[0];
@@ -1265,7 +1264,7 @@ double NormVec17(double vec[17]) {
     return sqrt(sum);
 }
 
-int CopyVec17(double dst[17], double src[17]) {
+int CopyVec17(double dst[17],  const double src[17]) {
     size_t i;
     
     for (i = 0; i < 17; i++) {
@@ -1309,7 +1308,7 @@ void testBigVector(  )
         fprintf(stdout,"CNearTreeTest: testBigVector: CNearTreeCreate failed\n");
     }
     
-    /* All of the coordinate values will be in the range 0-CNEARTREE_RAND_MAX. In other words,
+    /* All of the coordinate values will be in the range 0-CRHRAND_MAX. In other words,
      all of the data points will be within a 17-D cube that has a corner at
      the origin of the space.
      */
@@ -1370,7 +1369,7 @@ void testBigVector(  )
         /* somewhere in the middle, find a point and its nearest neighbor */
         /* make sure that each includes the other in sphere search */
         
-        ConstVec17(vCenter, (double)(CNEARTREE_RAND_MAX/2) );
+        ConstVec17(vCenter, (double)(CRHRAND_MAX/2) );
         CVectorCreate(&vhand,sizeof(double FAR *),10);
         
         bResult = !CNearTreeNearestNeighbor( tree, 100000.0, &vvNearCenter, NULL, vCenter );
