@@ -50,7 +50,6 @@ CRHrand rhr;
 #include "CNearTree.h"
 #endif
 
-#define CNEARTREE_RAND_MAX 32767
 
 int main ( int argc, char** argv )
 {

@@ -65,14 +65,14 @@ public:
     };
     
     
-    RHrand( int iseed ) {            /* constructor with seed */
+    RHrand( const int iseed ) {            /* constructor with seed */
         srandom(iseed);
     };
     
     ~RHrand(void ) {                /* nothing to do for destructor */ 
     };
     
-    void srandom (int iseed) {
+    void srandom ( const int iseed ) {
         jndx = iseed;
         if (jndx < 0) jndx = -jndx;
         for( indx=0; indx<55; ++indx )
@@ -120,6 +120,8 @@ extern "C" {
     
     typedef CRHrand * CRHrandHandle;
     
+#define CRHRAND_MAX 32767
+
 #define CRHrandSrandom(randhandle,iseed) { \
         (randhandle)->jndx = iseed; \
         if ((randhandle)->jndx < 0) (randhandle)->jndx = -(randhandle)->jndx; \
@@ -140,6 +142,8 @@ extern "C" {
         = modf( ((randhandle)->buffer)[(randhandle)->jndx-1]+ \
                ((randhandle)->buffer)[(randhandle)->kndx-1], &(randhandle)->dTemp ) , \
         ((randhandle)->buffer)[(randhandle)->indx-1]  ) 
+
+#define CRHrandRandom(randhandle) ((int)(CRHrandUrand(randhandle)*(double)CRHRAND_MAX))
     
     
     

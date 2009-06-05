@@ -26,9 +26,9 @@ NearTree -- function library efficiently solving the Nearest Neighbor Problem
 <hr>
 <center>
 <h2 align=center>NearTree</h2>
-Release 2.1<br />
+Release 2.1.1<br />
 <font size="-1">
-30 May 2009<br />
+4 June 2009<br />
 &#169; Copyright 2001, 2008, 2009 Larry Andrews.  All rights reserved
 <br />
 based on<br />
@@ -42,6 +42,7 @@ Revised 12 Dec 2008, for sourceforge release, Larry Andrews and Herbert J. Berns
 11 Jan 2009 Release 1.0.1 LCA and HJB<br />
 21 March 2009 Release 2.0 LCA and HJB<br />
 30 May 2009 Release 2.1 LCA and HJB<br />
+4 June 2009 Release 2.1.1 LCA and HJB<br />
 </font>
 <P>
 
@@ -76,7 +77,13 @@ This is a release of an API for finding nearest neighbors among points in spaces
 arbtrary dimensions.  This release provides a C++ template, TNear.h, and a
 C library, CNearTree.c, with example/test programs.
 <font size="-1">
-<p>This is a minor update to the 2.0 release of 21 March 2009 to deal with the
+<p>This is a cleanup update to the 2.1 release of 30 May 2009 to increase
+portability, dealing with the following issues:
+<ul>
+<li>Convert to use of a self-contained portable random-number generator from Rob Harrison
+<li>Ensure wider use of const where appropriate
+</ul>
+<p>The 2.1 release was a minor update to the 2.0 release of 21 March 2009 to deal with the
 following issues:
 <ul>
 <li>Make delayed insertion the default
@@ -116,16 +123,17 @@ a problem.
   <li><a href="#Installation">Installation</a>
   <li><a href="#Tnear.h">The C++ template: TNear.h</a>
   <li><a href="#CNearTree.c">The C NearTree API: CNearTree.c</a>
+  <li><a href="#rhrand.h">A Portable pseudo-random number generator: rhrand.h</a>
 </ul>
 <hr>
 <hr>
 <h4><a name="Installation">Installation</a></h4>
 <p>
 The NearTree package is available at <a href="http://www.sourceforge.net/projects/neartree">www.sourceforge.net/projects/neartree</a>.
-A source tarball is available at <a href="http://downloads.sourceforge.net/neartree/NearTree-2.1.0.tar.gz">downloads.sourceforge.net/neartree/NearTree-2.1.0.tar.gz</a>.
+A source tarball is available at <a href="http://downloads.sourceforge.net/neartree/NearTree-2.1.1.tar.gz">downloads.sourceforge.net/neartree/NearTree-2.1.1.tar.gz</a>.
 Later tarballs may be available.
 <P>
-When the source tarball is dowloaded and unpacked, you should have a directory NearTree-2.1.0.  To see the current settings for a build
+When the source tarball is dowloaded and unpacked, you should have a directory NearTree-2.1.1.  To see the current settings for a build
 execute
 <p>
 make
@@ -600,10 +608,10 @@ So a complete program is:
      <b>double</b> <b>CNearTreeDist</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>, <b>void *</b> <i>coord1</i>,
                            <b>void *</b> <i>coord2</i> );
 <p>
-     <b>int</b> <b>CNearTreeSetNorm</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>, <b>int</b> <i>treenorm</i> );
+     <b>int</b> <b>CNearTreeSetNorm</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, <b>int</b> <i>treenorm</i> );
                                                  
 <p>
-     <b>int</b> <b>CNearTreeNodeCreate</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,  
+     <b>int</b> <b>CNearTreeNodeCreate</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,  
                                <b>CNearTreeNodeHandle *</b> <i>treenodehandle</i> )     
 
 <p> 
@@ -611,7 +619,7 @@ So a complete program is:
                         <b>size_t</b> <i>treedim</i>, 
                         <b>int</b> <i>treetype</i> );
 <p>    
-    <b>int</b> <b>CNearTreeFree</b> ( <b>CNearTreeHandle</b> <i>treehandle</i> );
+    <b>int</b> <b>CNearTreeFree</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i> );
  
 <p>    
     <b>int</b> <b>CNearTreeClear</b> ( <b>CNearTreeHandle *</b> <i>treehandle</i> );
@@ -621,75 +629,75 @@ So a complete program is:
 
 <p>
  
-    <b>int</b> <b>CNearTreeInsert</b>( <b>CNearTreeHandle</b> <i>treehandle</i>,
+    <b>int</b> <b>CNearTreeInsert</b>( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
                         <b>const</b> <b>void *</b> <i>coord</i>, 
                         <b>const</b> <b>void *</b> <i>obj</i> );
 <p>
-    <b>int</b> <b>CNearTreeNodeInsert</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+    <b>int</b> <b>CNearTreeNodeInsert</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
                         <b>CNearTreeNodeHandle</b> <i>treenodehandle</i>, 
                         <b>size_t</b> <i>index</i>;
                         <b>size_t *</b> <i>depth</i> );
 <p>
-    <b>int</b> <b>CNearTreeImmediateInsert</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+    <b>int</b> <b>CNearTreeImmediateInsert</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
                         <b>const</b> <b>void *</b> <i>coord</i>, 
                         <b>const</b> <b>void *</b> <i>obj</i> );
 <p>
-    <b>int</b> <b>CNearTreeDelayedInsert</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+    <b>int</b> <b>CNearTreeDelayedInsert</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
                         <b>const</b> <b>void *</b> <i>coord</i>, 
                         <b>const</b> <b>void *</b> <i>obj</i> ); /* ***DEPRECATED*** */
 <p>
-    <b>int</b> <b>CNearTreeCompleteDelayedInsert</b> ( <b>CNearTreeHandle</b> <i>treehandle</i> )
+    <b>int</b> <b>CNearTreeCompleteDelayedInsert</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i> )
 
     
-    <b>int</b> <b>CNearTreeZeroIfEmpty</b> ( <b>CNearTreeHandle</b> <i>treehandle</i> );
+    <b>int</b> <b>CNearTreeZeroIfEmpty</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i> );
 <p>
  
-    <b>int</b> <b>CNearTreeGetSize</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>, <b>size_t *</b> <i>size</i> );
+    <b>int</b> <b>CNearTreeGetSize</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, <b>size_t *</b> <i>size</i> );
     
 <p>
-    <b>int</b> <b>CNearTreeGetDelayedSize</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>, <b>size_t *</b> <i>size</i> );
+    <b>int</b> <b>CNearTreeGetDelayedSize</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, <b>size_t *</b> <i>size</i> );
 <p>
-    <b>int</b> <b>CNearTreeGetDepth</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>, <b>size_t *</b> <i>depth</i> )
+    <b>int</b> <b>CNearTreeGetDepth</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, <b>size_t *</b> <i>depth</i> )
     
 <p>     
-    <b>int</b> <b>CNearTreeNearestNeighbor</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>, 
+    <b>int</b> <b>CNearTreeNearestNeighbor</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, 
                                   <b>const</b> <b>double</b> dRadius,  
                                   <b>void * *</b> <i>coordClosest</i>,
                                   <b>void * *</b>  <i>objClosest</i>, 
                                   <b>const</b> <b>void *</b> <i>coord</i> );
 <p>     
-    <b>int</b> <b>CNearTreeFarthestNeighbor</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>, 
+    <b>int</b> <b>CNearTreeFarthestNeighbor</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, 
                                    <b>void *</b> * <i>coordFarthest</i>,
                                    <b>void *</b> * <i>objFarthest</i>,   
                                    <b>const</b> <b>void *</b> <i>coord</i> );
 <p>          
-    <b>int</b> <b>CNearTreeFindInSphere</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+    <b>int</b> <b>CNearTreeFindInSphere</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
                                <b>const</b> <b>double</b> <i>dRadius</i>,
                                <b>CVectorHandle</b> <i>coordInside</i>,
                                <b>CVectorHandle</b> <i>objInside</i>,
                                <b>const</b> <b>void *</b> <i>coord</i>,
                                <b>int</b> <i>resetcount</i> );
 <p>                               
-    <b>int</b> <b>CNearTreeFindTreeInSphere</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+    <b>int</b> <b>CNearTreeFindTreeInSphere</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
                                <b>const</b> <b>double</b> <i>dRadius</i>,
                                <b>CNearTreeHandle</b> <i>foundInside</i>,
                                <b>const void *</b> <i>coord</i>,
                                <b>int</b> <i>resetcount</i> )
 <p>          
-    <b>int</b> <b>CNearTreeFindOutSphere</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+    <b>int</b> <b>CNearTreeFindOutSphere</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
                                <b>const</b> <b>double</b> <i>dRadius</i>,
                                <b>CVectorHandle</b> <i>coordOutside</i>,
                                <b>CVectorHandle</b> <i>objOutside</i>,
                                <b>const</b> <b>void *</b> <i>coord</i>,
                                <b>int</b> <i>resetcount</i> );
 <p>                               
-    <b>int</b> <b>CNearTreeFindTreeOutSphere</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+    <b>int</b> <b>CNearTreeFindTreeOutSphere</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
                                <b>const</b> <b>double</b> <i>dRadius</i>,
                                <b>CNearTreeHandle</b> <i>foundOutside</i>,
                                <b>const void *</b> <i>coord</i>,
                                <b>int</b> <i>resetcount</i> )
 <p>          
-    <b>int</b> <b>CNearTreeFindInAnnulus</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+    <b>int</b> <b>CNearTreeFindInAnnulus</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
                                <b>const</b> <b>double</b> <i>dRadiusInner</i>,
                                <b>const</b> <b>double</b> <i>dRadiusOuter</i>,
                                <b>CVectorHandle</b> <i>coordInRing</i>,
@@ -697,14 +705,14 @@ So a complete program is:
                                <b>const</b> <b>void *</b> <i>coord</i>,
                                <b>int</b> <i>resetcount</i> );
 <p>                               
-    <b>int</b> <b>CNearTreeFindTreeInAnnulus</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+    <b>int</b> <b>CNearTreeFindTreeInAnnulus</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
                                <b>const</b> <b>double</b> <i>dRadiusInner</i>,
                                <b>const</b> <b>double</b> <i>dRadiusOuter</i>,
                                <b>CNearTreeHandle</b> <i>foundInRing</i>,
                                <b>const void *</b> <i>coord</i>,
                                <b>int</b> <i>resetcount</i> )
 <p>          
-    <b>int</b> <b>CNearTreeFindKNearest</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+    <b>int</b> <b>CNearTreeFindKNearest</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
                                <b>const</b> <b>size_t</b> <i>k</i>,
                                <b>const</b> <b>double</b> <i>dRadius</i>,
                                <b>CVectorHandle</b> <i>coordClosest</i>,
@@ -712,14 +720,14 @@ So a complete program is:
                                <b>const</b> <b>void *</b> <i>coord</i>,
                                <b>int</b> <i>resetcount</i> );
 <p>                               
-    <b>int</b> <b>CNearTreeFindKTreeNearest</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+    <b>int</b> <b>CNearTreeFindKTreeNearest</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
                                <b>const</b> <b>size_t</b> <i>k</i>,
                                <b>const</b> <b>double</b> <i>dRadius</i>,
                                <b>CNearTreeHandle</b> <i>foundClosest</i>,
                                <b>const void *</b> <i>coord</i>,
                                <b>int</b> <i>resetcount</i> )
 <p>          
-    <b>int</b> <b>CNearTreeFindKFarthest</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+    <b>int</b> <b>CNearTreeFindKFarthest</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
                                <b>const</b> <b>size_t</b> <i>k</i>,
                                <b>const</b> <b>double</b> <i>dRadius</i>,
                                <b>CVectorHandle</b> <i>coordFarthest</i>,
@@ -727,32 +735,32 @@ So a complete program is:
                                <b>const</b> <b>void *</b> <i>coord</i>,
                                <b>int</b> <i>resetcount</i> );
 <p>                               
-    <b>int</b> <b>CNearTreeFindKTreeFarthest</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+    <b>int</b> <b>CNearTreeFindKTreeFarthest</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
                                <b>const</b> <b>size_t</b> <i>k</i>,
                                <b>const</b> <b>double</b> <i>dRadius</i>,
                                <b>CNearTreeHandle</b> <i>foundFarthest</i>,
                                <b>const void *</b> <i>coord</i>,
                                <b>int</b> <i>resetcount</i> )
 <p> 
-    <b>int</b> <b>CNearTreeNearest</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>, 
+    <b>int</b> <b>CNearTreeNearest</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, 
                           <b>double</b> * dRadius,  
                           <b>void *</b> * <i>coordClosest</i>,
                           <b>void *</b> * <i>objClosest</i>,
                           <b>const</b> <b>void *</b> <i>coord</i> );
 <p>     
-    <b>int</b> <b>CNearTreeFindFarthest</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>,
+    <b>int</b> <b>CNearTreeFindFarthest</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
                                <b>double</b> * dRadius,  
                                <b>void *</b> * <i>coordFarthest</i>,
                                <b>void *</b> * <i>objFarthest</i>,
                                <b>const</b> <b>void *</b> <i>coord</i> );
 <p>
-    <b>int</b> <b>CNearTreeObjects</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>, <b>CVectorHandle *</b> <i>vectorhandle</i> );
+    <b>int</b> <b>CNearTreeObjects</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, <b>CVectorHandle *</b> <i>vectorhandle</i> );
 <p>
-    <b>void *</b> <b>CNearTreeObjectAt</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>, <b>size_t</b> <i>index</i> );
+    <b>void *</b> <b>CNearTreeObjectAt</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, <b>size_t</b> <i>index</i> );
 <p>
-    <b>int</b> <b>CNearTreeCoords</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>, <b>CVectorHandle *</b> <i>vectorhandle</i> );
+    <b>int</b> <b>CNearTreeCoords</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, <b>CVectorHandle *</b> <i>vectorhandle</i> );
 <p>
-    <b>void *</b> <b>CNearTreeCoordAt</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>, <b>size_t</b> <i>index</i> );
+    <b>void *</b> <b>CNearTreeCoordAt</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, <b>size_t</b> <i>index</i> );
 </font>
 </blockquote>
 <p>    
@@ -925,8 +933,97 @@ For more examples of the use of CNearTree.c, see <a href="main.c">main.c</a> and
 in the release kit.
 <hr>
 <hr>
+<h4><a name="rhrand.h">A Portable pseudo-random number generator: rhrand.h</a></h4>
+<p>
+rhrand.h is a portable pseudo-random number generator based one by Rob Harrison, derived from 
+"one in J.M.Hammersley and D.C. Handscomb, 'Monte Carlo 
+Methods,' Methuen &amp; Co., London and Wiley &amp; Sons, New 
+York, 1964, p47".  See also, D. E. Knuth "The Art of 
+Computer Programming", Volume 2, "Seminumerical
+Alogorithms, Third Edition, Addison-Wesley, Reading MA, 1997.
+<p>
+rhrand.h is a header file in which a C++ class, RHrand, is defined, and a
+C struct typedef CRHrand is defined.
+<p>
+The C++ interface is
+<p>
+<pre><tt>
+    static const int RHRAND_MAX = 32767;  /* the integer range accessible as RHrand::RHRAND_MAX */
+    
+    RHrand(void)                          /* the default constructor */
+    
+    RHrand( const int iseed )             /* a constructor to start with the given seed */
+    
+    ~RHrand( void)                        /* a destructor */
+    
+    void srandom( const int iseed)        /* reset the generator based on the given seed */
+    
+    double urand( void )                  /* return a random double uniformly distributed in [0,1) */
+    
+    int random ( void )                   /* return a random integer uniformly distributed in [0, RHRAND_MAX-1] */
+
+</tt></pre>
+<p>
+In C++ code, typical use is
+
+<pre><tt>
+#include <rhhand.h>
+    RHrand rhr;
+
+...
+
+    x = rhr.urand();
+</pre></tt>
+
+
+<p>
+The C interface is suppressed in RHRAND_NOCCODE is defined.  Otherwise the C interface is based on defining
+a struct of type CRHRrand and calling macros that refer to a handle of type RCRHrandHandle.
+<p>
+<pre><tt>
+    typedef struct CRHrand_ {           /* the struct used in random number generattion */
+        double buffer[55];
+        int indx;
+        int jndx;
+        int kndx;
+        double dTemp;
+    } CRHrand;
+
+    typedef CRHrand * CRHrandHandle;     /* the type to be used in maro calls */
+
+    #define CRHRAND_MAX 32767            /* the integer range */
+    
+    #define CRHrandSrandom(randhandle,iseed) ...  
+                                         /* a macro to call to initialize CHRrandHandle randhandle
+                                            using see int iseed */
+                                            
+    #define CRHrandUrand(randhandle) ... /* a macro to return a random double uniformly distributed in [0,1) */
+    
+    #define CRHrandRandom(randhandle) ((int)(CRHrandUrand(randhandle)*(double)CRHRAND_MAX))
+                                         /* a macro to return a random integer uniformly distributed in 
+                                            [0, CRHRAND_MAX-1] */
+</tt></pre>
+<p>
+Typical use is 
+
+<pre><tt>
+#include <rhhand.h>
+    CRHrand rhr;
+
+...
+
+    CRHrandSrandom(&amp;rhr, 0 ); 
+
+...
+
+    x = CRHrandUrand(&amp;rhr);
+</pre></tt>
+
+
+<hr>
+<hr>
 <font size="-1">
-Updated 30 May 2009<br />
+Updated 4 June 2009<br />
 <script language="javascript" type="text/javascript">
 <!-- 
       var name = "yaya@";

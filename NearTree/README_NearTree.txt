@@ -1,7 +1,7 @@
                                     NearTree
 
-                                  Release 2.1
-                                  30 May 2009
+                                 Release 2.1.1
+                                  4 June 2009
        (c) Copyright 2001, 2008, 2009 Larry Andrews. All rights reserved
                                     based on
          Larry Andrews, "A template for the nearest neighbor problem",
@@ -15,6 +15,7 @@
                      11 Jan 2009 Release 1.0.1 LCA and HJB
                      21 March 2009 Release 2.0 LCA and HJB
                       30 May 2009 Release 2.1 LCA and HJB
+                     4 June 2009 Release 2.1.1 LCA and HJB
 
     YOU MAY REDISTRIBUTE NearTree UNDER THE TERMS OF THE LGPL
 
@@ -40,8 +41,14 @@
    spaces of arbtrary dimensions. This release provides a C++ template,
    TNear.h, and a C library, CNearTree.c, with example/test programs.
 
-   This is a minor update to the 2.0 release of 21 March 2009 to deal with
-   the following issues:
+   This is a cleanup update to the 2.1 release of 30 May 2009 to increase
+   portability, dealing with the following issues:
+     * Convert to use of a self-contained portable random-number generator
+       from Rob Harrison
+     * Ensure wider use of const where appropriate
+
+   The 2.1 release was a minor update to the 2.0 release of 21 March 2009 to
+   deal with the following issues:
      * Make delayed insertion the default
      * Complete the containerization of TNear.h
      * Add code for K-nearest/farthest in TNear.h and in CNearTree.c
@@ -77,6 +84,7 @@
      * Installation
      * The C++ template: TNear.h
      * The C NearTree API: CNearTree.c
+     * A Portable pseudo-random number generator: rhrand.h
 
      ----------------------------------------------------------------------
 
@@ -86,11 +94,11 @@
 
    The NearTree package is available at
    www.sourceforge.net/projects/neartree. A source tarball is available at
-   downloads.sourceforge.net/neartree/NearTree-2.1.0.tar.gz. Later tarballs
+   downloads.sourceforge.net/neartree/NearTree-2.1.1.tar.gz. Later tarballs
    may be available.
 
    When the source tarball is dowloaded and unpacked, you should have a
-   directory NearTree-2.1.0. To see the current settings for a build execute
+   directory NearTree-2.1.1. To see the current settings for a build execute
 
    make
 
@@ -117,8 +125,7 @@
     libtool --mode=link  gcc -version-info 2:0:2 -release 2.0.0 \
       -no-undefined -rpath /usr/local/lib
  
-  The current C++ and C library local, and C dynamic and static build 
-  commands are:
+  The current C++ and C library local, and C dynamic and static build commands are:
  
     libtool --mode=link g++ -no-undefined -g -O2  -Wall -ansi -pedantic \
        -DCNEARTREE_SAFE_TRIANG=1 -I.
@@ -543,105 +550,111 @@ operator- ( );        // geometrical (vector) difference of two objects
      double CNearTreeDist ( CNearTreeHandle treehandle, void * coord1, void *
      coord2 );
 
-     int CNearTreeSetNorm ( CNearTreeHandle treehandle, int treenorm );
+     int CNearTreeSetNorm ( const CNearTreeHandle treehandle, int treenorm );
 
-     int CNearTreeNodeCreate ( CNearTreeHandle treehandle,
+     int CNearTreeNodeCreate ( const CNearTreeHandle treehandle,
      CNearTreeNodeHandle * treenodehandle )
 
      int CNearTreeCreate ( CNearTreeHandle * treehandle, size_t treedim, int
      treetype );
 
-     int CNearTreeFree ( CNearTreeHandle treehandle );
+     int CNearTreeFree ( const CNearTreeHandle treehandle );
 
      int CNearTreeClear ( CNearTreeHandle * treehandle );
 
      int CNearTreeNodeFree ( CNearTreeNodeHandle * treenodehandle );
 
-     int CNearTreeInsert( CNearTreeHandle treehandle, const void * coord,
-     const void * obj );
-
-     int CNearTreeNodeInsert ( CNearTreeHandle treehandle,
-     CNearTreeNodeHandle treenodehandle, size_t index; size_t * depth );
-
-     int CNearTreeImmediateInsert ( CNearTreeHandle treehandle, const void *
+     int CNearTreeInsert( const CNearTreeHandle treehandle, const void *
      coord, const void * obj );
 
-     int CNearTreeDelayedInsert ( CNearTreeHandle treehandle, const void *
-     coord, const void * obj ); /* ***DEPRECATED*** */
+     int CNearTreeNodeInsert ( const CNearTreeHandle treehandle,
+     CNearTreeNodeHandle treenodehandle, size_t index; size_t * depth );
 
-     int CNearTreeCompleteDelayedInsert ( CNearTreeHandle treehandle ) int
-     CNearTreeZeroIfEmpty ( CNearTreeHandle treehandle );
+     int CNearTreeImmediateInsert ( const CNearTreeHandle treehandle, const
+     void * coord, const void * obj );
 
-     int CNearTreeGetSize ( CNearTreeHandle treehandle, size_t * size );
+     int CNearTreeDelayedInsert ( const CNearTreeHandle treehandle, const
+     void * coord, const void * obj ); /* ***DEPRECATED*** */
 
-     int CNearTreeGetDelayedSize ( CNearTreeHandle treehandle, size_t * size
+     int CNearTreeCompleteDelayedInsert ( const CNearTreeHandle treehandle )
+     int CNearTreeZeroIfEmpty ( const CNearTreeHandle treehandle );
+
+     int CNearTreeGetSize ( const CNearTreeHandle treehandle, size_t * size
      );
 
-     int CNearTreeGetDepth ( CNearTreeHandle treehandle, size_t * depth )
+     int CNearTreeGetDelayedSize ( const CNearTreeHandle treehandle, size_t *
+     size );
 
-     int CNearTreeNearestNeighbor ( CNearTreeHandle treehandle, const double
-     dRadius, void * * coordClosest, void * * objClosest, const void * coord
-     );
-
-     int CNearTreeFarthestNeighbor ( CNearTreeHandle treehandle, void * *
-     coordFarthest, void * * objFarthest, const void * coord );
-
-     int CNearTreeFindInSphere ( CNearTreeHandle treehandle, const double
-     dRadius, CVectorHandle coordInside, CVectorHandle objInside, const void
-     * coord, int resetcount );
-
-     int CNearTreeFindTreeInSphere ( CNearTreeHandle treehandle, const double
-     dRadius, CNearTreeHandle foundInside, const void * coord, int resetcount
+     int CNearTreeGetDepth ( const CNearTreeHandle treehandle, size_t * depth
      )
 
-     int CNearTreeFindOutSphere ( CNearTreeHandle treehandle, const double
-     dRadius, CVectorHandle coordOutside, CVectorHandle objOutside, const
-     void * coord, int resetcount );
+     int CNearTreeNearestNeighbor ( const CNearTreeHandle treehandle, const
+     double dRadius, void * * coordClosest, void * * objClosest, const void *
+     coord );
 
-     int CNearTreeFindTreeOutSphere ( CNearTreeHandle treehandle, const
+     int CNearTreeFarthestNeighbor ( const CNearTreeHandle treehandle, void *
+     * coordFarthest, void * * objFarthest, const void * coord );
+
+     int CNearTreeFindInSphere ( const CNearTreeHandle treehandle, const
+     double dRadius, CVectorHandle coordInside, CVectorHandle objInside,
+     const void * coord, int resetcount );
+
+     int CNearTreeFindTreeInSphere ( const CNearTreeHandle treehandle, const
+     double dRadius, CNearTreeHandle foundInside, const void * coord, int
+     resetcount )
+
+     int CNearTreeFindOutSphere ( const CNearTreeHandle treehandle, const
+     double dRadius, CVectorHandle coordOutside, CVectorHandle objOutside,
+     const void * coord, int resetcount );
+
+     int CNearTreeFindTreeOutSphere ( const CNearTreeHandle treehandle, const
      double dRadius, CNearTreeHandle foundOutside, const void * coord, int
      resetcount )
 
-     int CNearTreeFindInAnnulus ( CNearTreeHandle treehandle, const double
-     dRadiusInner, const double dRadiusOuter, CVectorHandle coordInRing,
-     CVectorHandle objInRing, const void * coord, int resetcount );
+     int CNearTreeFindInAnnulus ( const CNearTreeHandle treehandle, const
+     double dRadiusInner, const double dRadiusOuter, CVectorHandle
+     coordInRing, CVectorHandle objInRing, const void * coord, int resetcount
+     );
 
-     int CNearTreeFindTreeInAnnulus ( CNearTreeHandle treehandle, const
+     int CNearTreeFindTreeInAnnulus ( const CNearTreeHandle treehandle, const
      double dRadiusInner, const double dRadiusOuter, CNearTreeHandle
      foundInRing, const void * coord, int resetcount )
 
-     int CNearTreeFindKNearest ( CNearTreeHandle treehandle, const size_t k,
-     const double dRadius, CVectorHandle coordClosest, CVectorHandle
-     objClosest, const void * coord, int resetcount );
+     int CNearTreeFindKNearest ( const CNearTreeHandle treehandle, const
+     size_t k, const double dRadius, CVectorHandle coordClosest,
+     CVectorHandle objClosest, const void * coord, int resetcount );
 
-     int CNearTreeFindKTreeNearest ( CNearTreeHandle treehandle, const size_t
-     k, const double dRadius, CNearTreeHandle foundClosest, const void *
-     coord, int resetcount )
+     int CNearTreeFindKTreeNearest ( const CNearTreeHandle treehandle, const
+     size_t k, const double dRadius, CNearTreeHandle foundClosest, const void
+     * coord, int resetcount )
 
-     int CNearTreeFindKFarthest ( CNearTreeHandle treehandle, const size_t k,
-     const double dRadius, CVectorHandle coordFarthest, CVectorHandle
-     objFarthest, const void * coord, int resetcount );
+     int CNearTreeFindKFarthest ( const CNearTreeHandle treehandle, const
+     size_t k, const double dRadius, CVectorHandle coordFarthest,
+     CVectorHandle objFarthest, const void * coord, int resetcount );
 
-     int CNearTreeFindKTreeFarthest ( CNearTreeHandle treehandle, const
+     int CNearTreeFindKTreeFarthest ( const CNearTreeHandle treehandle, const
      size_t k, const double dRadius, CNearTreeHandle foundFarthest, const
      void * coord, int resetcount )
 
-     int CNearTreeNearest ( CNearTreeHandle treehandle, double * dRadius,
-     void * * coordClosest, void * * objClosest, const void * coord );
+     int CNearTreeNearest ( const CNearTreeHandle treehandle, double *
+     dRadius, void * * coordClosest, void * * objClosest, const void * coord
+     );
 
-     int CNearTreeFindFarthest ( CNearTreeHandle treehandle, double *
+     int CNearTreeFindFarthest ( const CNearTreeHandle treehandle, double *
      dRadius, void * * coordFarthest, void * * objFarthest, const void *
      coord );
 
-     int CNearTreeObjects ( CNearTreeHandle treehandle, CVectorHandle *
+     int CNearTreeObjects ( const CNearTreeHandle treehandle, CVectorHandle *
      vectorhandle );
 
-     void * CNearTreeObjectAt ( CNearTreeHandle treehandle, size_t index );
+     void * CNearTreeObjectAt ( const CNearTreeHandle treehandle, size_t
+     index );
 
-     int CNearTreeCoords ( CNearTreeHandle treehandle, CVectorHandle *
+     int CNearTreeCoords ( const CNearTreeHandle treehandle, CVectorHandle *
      vectorhandle );
 
-     void * CNearTreeCoordAt ( CNearTreeHandle treehandle, size_t index );
+     void * CNearTreeCoordAt ( const CNearTreeHandle treehandle, size_t index
+     );
 
    The NearTree API works with coordinate vectors in an arbitrary number of
    dimensions. Each neartree is accessed by a pointer of type CNearTreeHandle
@@ -810,5 +823,86 @@ operator- ( );        // geometrical (vector) difference of two objects
 
      ----------------------------------------------------------------------
 
-   Updated 30 May 2009
+    A Portable pseudo-random number generator: rhrand.h
+
+   rhrand.h is a portable pseudo-random number generator based one by Rob
+   Harrison, derived from "one in J.M.Hammersley and D.C. Handscomb, 'Monte
+   Carlo Methods,' Methuen & Co., London and Wiley & Sons, New York, 1964,
+   p47". See also, D. E. Knuth "The Art of Computer Programming", Volume 2,
+   "Seminumerical Alogorithms, Third Edition, Addison-Wesley, Reading MA,
+   1997.
+
+   rhrand.h is a header file in which a C++ class, RHrand, is defined, and a
+   C struct typedef CRHrand is defined.
+
+   The C++ interface is
+
+     static const int RHRAND_MAX = 32767;  /* the integer range accessible as RHrand::RHRAND_MAX */
+    
+     RHrand(void)                          /* the default constructor */
+    
+     RHrand( const int iseed )             /* a constructor to start with the given seed */
+    
+     ~RHrand( void)                        /* a destructor */
+    
+     void srandom( const int iseed)        /* reset the generator based on the given seed */
+    
+     double urand( void )                  /* return a random double uniformly distributed in [0,1) */
+    
+     int random ( void )                   /* return a random integer uniformly distributed in [0, RHRAND_MAX-1] */
+
+
+   In C++ code, typical use is
+
+ #include <rhhand.h>
+     RHrand rhr;
+
+ ...
+
+     x = rhr.urand();
+
+   The C interface is suppressed in RHRAND_NOCCODE is defined. Otherwise the
+   C interface is based on defining a struct of type CRHRrand and calling
+   macros that refer to a handle of type RCRHrandHandle.
+
+     typedef struct CRHrand_ {           /* the struct used in random number generattion */
+         double buffer[55];
+         int indx;
+         int jndx;
+         int kndx;
+         double dTemp;
+     } CRHrand;
+
+     typedef CRHrand * CRHrandHandle;     /* the type to be used in maro calls */
+
+     #define CRHRAND_MAX 32767            /* the integer range */
+    
+     #define CRHrandSrandom(randhandle,iseed) ... 
+                                          /* a macro to call to initialize CHRrandHandle randhandle
+                                             using see int iseed */
+                                            
+     #define CRHrandUrand(randhandle) ... /* a macro to return a random double uniformly distributed in [0,1) */
+    
+     #define CRHrandRandom(randhandle) ((int)(CRHrandUrand(randhandle)*(double)CRHRAND_MAX))
+                                          /* a macro to return a random integer uniformly distributed in
+                                             [0, CRHRAND_MAX-1] */
+
+   Typical use is
+
+ #include <rhhand.h>
+     CRHrand rhr;
+
+ ...
+
+     CRHrandSrandom(&rhr, 0 );
+
+ ...
+
+     x = CRHrandUrand(&rhr);
+
+     ----------------------------------------------------------------------
+
+     ----------------------------------------------------------------------
+
+   Updated 4 June 2009
    yaya@bernstein-plus-sons.com

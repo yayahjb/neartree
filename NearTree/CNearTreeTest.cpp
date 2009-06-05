@@ -66,7 +66,6 @@
 #endif
 RHrand rhr;
 
-#define CNEARTREE_RAND_MAX 32767
 
 void testEmptyTree( void );
 void testLinearTree( const int n );
@@ -770,7 +769,7 @@ void testRandomTree1( const int nRequestedRandoms )
     /* Build the tree with n random numbers. Remember the largest and smallest values. */
     for( int i=0; i<n; ++i )
     {
-        const int next = (int)(rhr.urand()*((double)CNEARTREE_RAND_MAX));
+        const int next = (int)(rhr.urand()*((double)RHrand::RHRAND_MAX));
         tree.insert( next );
         if( next > nmax ) nmax = next;
         if( next < nmin ) nmin = next;
@@ -905,7 +904,7 @@ void testRandomTree2( const int nRequestedRandoms )
     /* Build the tree with n random numbers. Remember the largest and smallest values. */
     for( int i=0; i<n; ++i )
     {
-        const int next = (int)(rhr.urand()*((double)CNEARTREE_RAND_MAX));
+        const int next = (int)(rhr.urand()*((double)RHrand::RHRAND_MAX));
         tree.insert( next );
         if( next > nmax ) nmax = next;
         if( next < nmin ) nmin = next;
@@ -1039,7 +1038,7 @@ class vec17
         {
             for( int i=0; i<dim; ++i )
             {
-                pd[i] = rhr.urand()*((double)CNEARTREE_RAND_MAX);
+                pd[i] = rhr.urand()*((double)RHrand::RHRAND_MAX);
             }
             length = Norm( );
         }
@@ -1100,7 +1099,7 @@ void testBigVector(  )
     vec17 v17min; /* to be the point nearest to the origin */
     vec17 v17max; /* to be the point farthest from the origin */
     
-    /* All of the coordinate values will be in the range 0-CNEARTREE_RAND_MAX. In other words,
+    /* All of the coordinate values will be in the range 0-RHrand::RHRAND_MAX. In other words,
      all of the data points will be within a 17-D cube that has a corner at
      the origin of the space.
      */
@@ -1153,12 +1152,12 @@ void testBigVector(  )
         /* somewhere in the middle, find a point and its nearest neighbor */
         /* make sure that each includes the other in sphere search */
         
-        const vec17 vBox17Center( (double)(CNEARTREE_RAND_MAX/2) );
+        const vec17 vBox17Center( (double)(RHrand::RHRAND_MAX/2) );
         vec17 vNearCenter;
         vec17 vCloseToNearCenter;
-        tree.NearestNeighbor( double(CNEARTREE_RAND_MAX/2)*sqrt(17.), vNearCenter, vBox17Center );
+        tree.NearestNeighbor( double(RHrand::RHRAND_MAX/2)*sqrt(17.), vNearCenter, vBox17Center );
         CNearTree<vec17> sphereReturn;
-        unsigned long iFoundNearCenter = (unsigned long)tree.FindInSphere( double(CNEARTREE_RAND_MAX/2)*sqrt(17.)/2., sphereReturn, vNearCenter );
+        unsigned long iFoundNearCenter = (unsigned long)tree.FindInSphere( double(RHrand::RHRAND_MAX/2)*sqrt(17.)/2., sphereReturn, vNearCenter );
         
         /* Brute force search for the point closest to the point closest to the center */
         double dmin = DBL_MAX;
@@ -1173,7 +1172,7 @@ void testBigVector(  )
         
         {
             //const double radius = ( vCloseToNearCenter - vNearCenter ).Norm( );
-            const double radius = CNEARTREE_RAND_MAX*sqrt(17.0);
+            const double radius = RHrand::RHRAND_MAX*sqrt(17.0);
             unsigned long iSphereFoundNearCenter = (unsigned long)tree.FindInSphere( radius, sphereReturn, vNearCenter );
             
             double searchRadius = radius/2;
@@ -1914,7 +1913,7 @@ class intVec17
         {
             for( int i=0; i<dim; ++i )
             {
-                pd[i] = (int)(rhr.urand()*((double)CNEARTREE_RAND_MAX));
+                pd[i] = (int)(rhr.urand()*((double)RHrand::RHRAND_MAX));
             }
             length = this->Norm( );
         };
@@ -1970,7 +1969,7 @@ void testBigIntVec( void )
     intVec17 v17min; /* to be the point nearest to the origin */
     intVec17 v17max; /* to be the point farthest from the origin */
     
-    /* All of the coordinate values will be in the range 0-CNEARTREE_RAND_MAX. In other words,
+    /* All of the coordinate values will be in the range 0-RHrand::RHRAND_MAX. In other words,
      all of the data points will be within a 17-D cube that has a corner at
      the origin of the space.
      */
@@ -2023,10 +2022,10 @@ void testBigIntVec( void )
         /* somewhere in the middle, find a point and its nearest neighbor */
         /* make sure that each includes the other in sphere search */
         
-        const intVec17 vBox17Center( CNEARTREE_RAND_MAX/2 );
+        const intVec17 vBox17Center( RHrand::RHRAND_MAX/2 );
         intVec17 vNearCenter;
         intVec17 vCloseToNearCenter;
-        const bool bFoundNear = tree.NearestNeighbor( (int)CNEARTREE_RAND_MAX*17, vNearCenter, vBox17Center );
+        const bool bFoundNear = tree.NearestNeighbor( (int)RHrand::RHRAND_MAX*17, vNearCenter, vBox17Center );
         
         if( ! bFoundNear )
         {
@@ -2037,7 +2036,7 @@ void testBigIntVec( void )
         CNearTree<intVec17, int, -2> sphereReturn;
         // really, the only way to get the next section perfectly right is to do a 
         // binary search until exactly 2 points are found. (or do a linear search thru the points)
-        const int radius = 2*(int)(CNEARTREE_RAND_MAX/2*sqrt(17.)); // hand-tuned value
+        const int radius = 2*(int)(RHrand::RHRAND_MAX/2*sqrt(17.)); // hand-tuned value
         unsigned long iFoundNearCenter = (unsigned long)tree.FindInSphere( radius, sphereReturn, vNearCenter );
         
         int searchRadius = radius/2;
@@ -2140,7 +2139,7 @@ void testBigIntVec( void )
         
         {
             const intVec17 vOrigin( 0 );
-            const intVec17 vTopCorner( CNEARTREE_RAND_MAX );
+            const intVec17 vTopCorner( RHrand::RHRAND_MAX );
             tree.insert( vOrigin );
             tree.insert( vTopCorner );
             sphereReturn.clear( );
@@ -2165,7 +2164,7 @@ void testBigIntVec( void )
         
         {
             const intVec17 vOrigin( 0 );
-            const intVec17 vTopCorner( CNEARTREE_RAND_MAX );
+            const intVec17 vTopCorner( RHrand::RHRAND_MAX );
             tree.insert( vOrigin );
             tree.insert( vTopCorner );
             sphereReturn.clear( );

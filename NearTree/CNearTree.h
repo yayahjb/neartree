@@ -197,7 +197,7 @@ extern "C" {
                            int treetype);
     /*
      =======================================================================
-     double CNearTreeDist(CNearTreeHandle treehandle, void FAR * coord1, 
+     double CNearTreeDist(const CNearTreeHandle treehandle, void FAR * coord1, 
      void FAR * coord2)
      
      function to return the distance (L1, L2 or L-infinity) between two 
@@ -205,12 +205,12 @@ extern "C" {
      
      =======================================================================
      */
-    double CNearTreeDist(CNearTreeHandle treehandle, void FAR * coord1, 
+    double CNearTreeDist(const CNearTreeHandle treehandle, void FAR * coord1, 
                          void FAR * coord2);
     
     /*
      =======================================================================
-     int CNearTreeSetNorm(CNearTreeHandle treehandle, int treenorm);
+     int CNearTreeSetNorm(const CNearTreeHandle treehandle, int treenorm);
      
      function to set the norm to use used for this tree
      
@@ -223,12 +223,12 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeSetNorm(CNearTreeHandle treehandle, int treenorm);
+    int CNearTreeSetNorm(const CNearTreeHandle treehandle, int treenorm);
     
     
     /*
      =======================================================================
-     int CNearTreeNodeCreate ( CNearTreeHandle treehandle,  
+     int CNearTreeNodeCreate ( const CNearTreeHandle treehandle,  
      CNearTreeNodeHandle FAR * treenodehandle) 
      
      Create a CNearTreeNode
@@ -245,7 +245,7 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeNodeCreate ( CNearTreeHandle treehandle,  
+    int CNearTreeNodeCreate ( const CNearTreeHandle treehandle,  
                              CNearTreeNodeHandle FAR * treenodehandle);
     
     
@@ -293,7 +293,7 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeClear ( CNearTreeHandle treehandle )
+     int CNearTreeClear ( const CNearTreeHandle treehandle )
      
      Clear a CNearTree
      
@@ -303,12 +303,12 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeClear ( CNearTreeHandle treehandle );
+    int CNearTreeClear ( const CNearTreeHandle treehandle );
     
     
     /*
      =======================================================================
-     size_t CNearTreeSize (CNearTreeHandle treehandle)
+     size_t CNearTreeSize (const CNearTreeHandle treehandle)
      
      Macro to get Tree Size with no error checking
      
@@ -320,29 +320,29 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeGetSize (CNearTreeHandle treehandle, size_t FAR * size)
+     int CNearTreeGetSize (const CNearTreeHandle treehandle, size_t FAR * size)
      
      Return the number of objects in the tree in size
      
      =======================================================================
      */
     
-    int CNearTreeGetSize (CNearTreeHandle treehandle, size_t FAR * size);
+    int CNearTreeGetSize (const CNearTreeHandle treehandle, size_t FAR * size);
     
     /*
      =======================================================================
-     int CNearTreeGetDelayedSize (CNearTreeHandle treehandle, size_t FAR * size)
+     int CNearTreeGetDelayedSize (const CNearTreeHandle treehandle, size_t FAR * size)
      
      Return the number of objects in the delay queue tree in size
      
      =======================================================================
      */
     
-    int CNearTreeGetDelayedSize (CNearTreeHandle treehandle, size_t FAR * size);
+    int CNearTreeGetDelayedSize (const CNearTreeHandle treehandle, size_t FAR * size);
     
     /*
      =======================================================================
-     int CNearTreeGetTotalSize (CNearTreeHandle treehandle, size_t FAR * size)
+     int CNearTreeGetTotalSize (const CNearTreeHandle treehandle, size_t FAR * size)
      
      Return the number of objects in both in the tree and in the delay queue tree in size
      Identical to CNearTreeGetSize, retained to support older code
@@ -353,18 +353,18 @@ extern "C" {
 #define CNearTreeGetTotalSize(treehandle,size) CNearTreeGetSize(treehandle,size)
     /*
      =======================================================================
-     int CNearTreeGetDepth (CNearTreeHandle treehandle, size_t FAR * depth)
+     int CNearTreeGetDepth (const CNearTreeHandle treehandle, size_t FAR * depth)
      
      Return the depth of the tree in depth
      
      =======================================================================
      */
     
-    int CNearTreeGetDepth (CNearTreeHandle treehandle, size_t FAR * depth);
+    int CNearTreeGetDepth (const CNearTreeHandle treehandle, size_t FAR * depth);
     
     /*
      =======================================================================
-     int CNearTreeImmediateInsert ( CNearTreeHandle treehandle, 
+     int CNearTreeImmediateInsert ( const CNearTreeHandle treehandle, 
      const void FAR * coord, 
      const void FAR * obj )
      
@@ -386,15 +386,15 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeImmediateInsert( CNearTreeHandle treehandle,
+    int CNearTreeImmediateInsert( const CNearTreeHandle treehandle,
                         const void FAR * coord, 
                         const void FAR * obj );
     
     
     /*
      =======================================================================
-     int CNearTreeNodeInsert( CNearTreeHandle treehandle,
-     CNearTreeNodeHandle treenodehandle,
+     int CNearTreeNodeInsert( const CNearTreeHandle treehandle,
+     const CNearTreeNodeHandle treenodehandle,
      const size_t index,
      size_t FAR * depth );
      
@@ -417,15 +417,15 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeNodeInsert( CNearTreeHandle treehandle,
-                            CNearTreeNodeHandle treenodehandle,
+    int CNearTreeNodeInsert( const CNearTreeHandle treehandle,
+                            const CNearTreeNodeHandle treenodehandle,
                             const size_t index, 
                             size_t FAR * depth );
     
     
     /*
      =======================================================================
-     int CNearTreeInsert ( CNearTreeHandle treehandle, 
+     int CNearTreeInsert ( const CNearTreeHandle treehandle, 
      const void FAR * coord, 
      const void * obj )
      
@@ -439,7 +439,7 @@ extern "C" {
      balance the tree.
      
      The insertions will be completed by a call to 
-     CNearTreeCompleteDelayedInsert(CNearTreeHandle treehandle) 
+     CNearTreeCompleteDelayedInsert(const CNearTreeHandle treehandle) 
      or by execution of any search.
      
      return 0 for success, nonzero for an error
@@ -447,13 +447,13 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeInsert( CNearTreeHandle treehandle,
+    int CNearTreeInsert( const CNearTreeHandle treehandle,
                                const void FAR * coord, 
                                const void * obj );
     
     /*
      =======================================================================
-     int CNearTreeDelayedInsert ( CNearTreeHandle treehandle, 
+     int CNearTreeDelayedInsert ( const CNearTreeHandle treehandle, 
      const void FAR * coord, 
      const void * obj )
      
@@ -469,7 +469,7 @@ extern "C" {
      balance the tree.
      
      The insertions will be completed by a call to 
-     CNearTreeCompleteDelayedInsert(CNearTreeHandle treehandle) 
+     CNearTreeCompleteDelayedInsert(const CNearTreeHandle treehandle) 
      or by execution of any search.
      
      return 0 for success, nonzero for an error
@@ -477,13 +477,13 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeDelayedInsert( CNearTreeHandle treehandle,
+    int CNearTreeDelayedInsert( const CNearTreeHandle treehandle,
                                const void FAR * coord, 
                                const void FAR * obj );
         
     /*
      =======================================================================
-     int CNearTreeCompleteDelayedInsert ( CNearTreeHandle treehandle )
+     int CNearTreeCompleteDelayedInsert ( const CNearTreeHandle treehandle )
      
      Function to dequeue the "points" queued as an objects for future insertion
      into a CNearTree for later searching
@@ -493,22 +493,22 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeCompleteDelayedInsert( CNearTreeHandle treehandle );
+    int CNearTreeCompleteDelayedInsert( const CNearTreeHandle treehandle );
     
     /*
      =======================================================================
-     int CNearTreeZeroIfEmpty (CNearTreeHandle treehandle)
+     int CNearTreeZeroIfEmpty (const CNearTreeHandle treehandle)
      
      Test for an empty CNearTree, returning 0 in that case
      
      =======================================================================
      */
     
-    int CNearTreeZeroIfEmpty (CNearTreeHandle treehandle);
+    int CNearTreeZeroIfEmpty (const CNearTreeHandle treehandle);
     
     /*
      =======================================================================
-     int CNearTreeNearestNeighbor ( CNearTreeHandle treehandle, 
+     int CNearTreeNearestNeighbor ( const CNearTreeHandle treehandle, 
      const double dRadius,  
      void FAR *  FAR * coordClosest,
      void FAR * FAR * objClosest,   
@@ -533,14 +533,14 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeNearestNeighbor (CNearTreeHandle treehandle, 
+    int CNearTreeNearestNeighbor (const CNearTreeHandle treehandle, 
                                   const double dRadius,  
                                   void FAR *  FAR * coordClosest,
                                   void FAR * FAR * objClosest, 
                                   const void FAR * coord );
     /*
      =======================================================================
-     int CNearTreeFarthestNeighbor ( CNearTreeHandle treehandle, 
+     int CNearTreeFarthestNeighbor ( const CNearTreeHandle treehandle, 
      void FAR *  FAR * coordFarthest,
      void FAR * FAR * objFarthest,   
      const void FAR * coord )
@@ -560,13 +560,13 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeFarthestNeighbor (CNearTreeHandle treehandle, 
+    int CNearTreeFarthestNeighbor (const CNearTreeHandle treehandle, 
                                    void FAR * FAR * coordFarthest,
                                    void FAR * FAR * objFarthest,   
                                    const void FAR * coord );
     /*
      =======================================================================
-     int CNearTreeFindInSphere ( CNearTreeHandle treehandle, 
+     int CNearTreeFindInSphere ( const CNearTreeHandle treehandle, 
      const double FAR * dRadius,
      CVectorHandle coordClosest,
      CVectorHandle objClosest,
@@ -594,7 +594,7 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeFindInSphere ( CNearTreeHandle treehandle,
+    int CNearTreeFindInSphere ( const CNearTreeHandle treehandle,
                                const double dRadius,
                                CVectorHandle coordClosest,
                                CVectorHandle objClosest,
@@ -603,7 +603,7 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeFindTreeInSphere ( CNearTreeHandle treehandle, 
+     int CNearTreeFindTreeInSphere ( const CNearTreeHandle treehandle, 
      const double FAR * dRadius,
      CNearTreeHandle foundClosest,
      const void FAR * coord,
@@ -621,7 +621,7 @@ extern "C" {
      
      =======================================================================
      */
-    int CNearTreeFindTreeInSphere ( CNearTreeHandle treehandle,
+    int CNearTreeFindTreeInSphere ( const CNearTreeHandle treehandle,
                                    const double dRadius,
                                    CNearTreeHandle foundClosest,
                                    const void FAR * coord,
@@ -629,7 +629,7 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeFindOutSphere ( CNearTreeHandle treehandle, 
+     int CNearTreeFindOutSphere ( const CNearTreeHandle treehandle, 
      const double FAR * dRadius,
      CVectorHandle coordOutside,
      CVectorHandle objOutside,
@@ -657,7 +657,7 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeFindOutSphere ( CNearTreeHandle treehandle,
+    int CNearTreeFindOutSphere ( const CNearTreeHandle treehandle,
                                 const double dRadius,
                                 CVectorHandle coordOutside,
                                 CVectorHandle objOutside,
@@ -666,7 +666,7 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeFindTreeOutSphere ( CNearTreeHandle treehandle, 
+     int CNearTreeFindTreeOutSphere ( const CNearTreeHandle treehandle, 
      const double dRadius,
      CNearTreeHandle foundOutside,
      const void FAR * coord,
@@ -684,7 +684,7 @@ extern "C" {
      
      =======================================================================
      */
-    int CNearTreeFindTreeOutSphere ( CNearTreeHandle treehandle,
+    int CNearTreeFindTreeOutSphere ( const CNearTreeHandle treehandle,
                                     const double dRadius,
                                     CNearTreeHandle foundOutside,
                                     const void FAR * coord,
@@ -692,7 +692,7 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeFindInAnnulus ( CNearTreeHandle treehandle, 
+     int CNearTreeFindInAnnulus ( const CNearTreeHandle treehandle, 
      const double dRadiusInner,
      const double dRadiusOuter,
      CVectorHandle coordInRing,
@@ -716,7 +716,7 @@ extern "C" {
      
      =======================================================================
      */
-    int CNearTreeFindInAnnulus ( CNearTreeHandle treehandle,
+    int CNearTreeFindInAnnulus ( const CNearTreeHandle treehandle,
                                 const double dRadiusInner,
                                 const double dRadiusOuter,
                                 CVectorHandle coordInRing,
@@ -725,7 +725,7 @@ extern "C" {
                                 int resetcount);
     /*
      =======================================================================
-     int CNearTreeFindTreeInAnnulus ( CNearTreeHandle treehandle, 
+     int CNearTreeFindTreeInAnnulus ( const CNearTreeHandle treehandle, 
      const double dRadiusInner,
      const double dRadiusOuter,
      CNearTreeHandle foundInRing,
@@ -746,7 +746,7 @@ extern "C" {
      
      =======================================================================
      */
-    int CNearTreeFindTreeInAnnulus ( CNearTreeHandle treehandle,
+    int CNearTreeFindTreeInAnnulus ( const CNearTreeHandle treehandle,
                                     const double dRadiusInner,
                                     const double dRadiusOuter,
                                     CNearTreeHandle foundInRing,
@@ -755,7 +755,7 @@ extern "C" {
     /*
      =======================================================================
      
-     int CNearTreeNearest ( CNearTreeHandle treehandle, 
+     int CNearTreeNearest ( const CNearTreeHandle treehandle, 
      double FAR *dRadius,  
      void FAR * FAR * coordClosest,
      void FAR * FAR * objClosest,
@@ -778,14 +778,14 @@ extern "C" {
      
      =======================================================================
      */
-    int CNearTreeNearest ( CNearTreeHandle treehandle, 
+    int CNearTreeNearest ( const CNearTreeHandle treehandle, 
                           double FAR * dRadius,  
                           void FAR * FAR * coordClosest,
                           void FAR * FAR * objClosest,
                           const void FAR * coord );
     /*
      =======================================================================
-     int CNearTreeFindFarthest ( CNearTreeHandle treehandle,
+     int CNearTreeFindFarthest ( const CNearTreeHandle treehandle,
      double FAR * dRadius,  
      void FAR * FAR * coordFarthest,
      void FAR * FAR * objFarthest,
@@ -808,7 +808,7 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeFindFarthest ( CNearTreeHandle treehandle,
+    int CNearTreeFindFarthest ( const CNearTreeHandle treehandle,
                                double FAR * dRadius,  
                                void FAR * FAR * coordFarthest,
                                void FAR * FAR * objFarthest,
@@ -817,8 +817,8 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeFindKNearest ( const size_t k,
-     CNearTreeHandle treehandle,
+     int CNearTreeFindKNearest ( const CNearTreeHandle treehandle,
+     const size_t k,
      const double dRadius,
      CVectorHandle coordClosest,
      CVectorHandle objClosest,
@@ -848,7 +848,7 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeFindKNearest ( CNearTreeHandle treehandle,
+    int CNearTreeFindKNearest ( const CNearTreeHandle treehandle,
                                const size_t k,
                                const double dRadius,
                                CVectorHandle coordClosest,
@@ -858,8 +858,8 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeFindKTreeNearest ( const size_t k,
-     CNearTreeHandle treehandle,
+     int CNearTreeFindKTreeNearest ( const CNearTreeHandle treehandle,
+     const size_t k,
      const double dRadius,
      CNearTreeHandle foundNearest,
      const void FAR * coord,
@@ -878,7 +878,7 @@ extern "C" {
      
      =======================================================================
      */
-    int CNearTreeFindKTreeNearest ( CNearTreeHandle treehandle,
+    int CNearTreeFindKTreeNearest ( const CNearTreeHandle treehandle,
                                    const size_t k,
                                    const double dRadius,
                                    CNearTreeHandle foundClosest,
@@ -888,7 +888,7 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeFindKFarthest ( CNearTreeHandle treehandle,
+     int CNearTreeFindKFarthest ( const CNearTreeHandle treehandle,
      const size_t k,
      const double dRadius,
      CVectorHandle coordFarthest,
@@ -919,7 +919,7 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeFindKFarthest ( CNearTreeHandle treehandle,
+    int CNearTreeFindKFarthest ( const CNearTreeHandle treehandle,
                                 const size_t k,
                                 const double dRadius,
                                 CVectorHandle coordFarthest,
@@ -929,7 +929,7 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeFindKTreeFarthest ( CNearTreeHandle treehandle,
+     int CNearTreeFindKTreeFarthest ( const CNearTreeHandle treehandle,
      const size_t k,
      const double dRadius,
      CNearTreeHandle foundFarthest,
@@ -949,7 +949,7 @@ extern "C" {
      
      =======================================================================
      */
-    int CNearTreeFindKTreeFarthest ( CNearTreeHandle treehandle,
+    int CNearTreeFindKTreeFarthest ( const CNearTreeHandle treehandle,
                                     const size_t k,
                                     const double dRadius,
                                     CNearTreeHandle foundFarthest,
@@ -976,7 +976,7 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeObjects ( CNearTreeHandle treehandle, CVectorHandle FAR * vectorhandle)
+     int CNearTreeObjects ( const CNearTreeHandle treehandle, CVectorHandle FAR * vectorhandle)
      
      Function to return the vector of objects in the tree.  This vector
      is not guaranteed to be in the same order as the order of insertion
@@ -986,11 +986,11 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeObjects ( CNearTreeHandle treehandle, CVectorHandle FAR * vectorhandle);    
+    int CNearTreeObjects ( const CNearTreeHandle treehandle, CVectorHandle FAR * vectorhandle);    
     
     /*
      =======================================================================
-     int CNearTreeCoords ( CNearTreeHandle treehandle, CVectorHandle FAR * vectorhandle)
+     int CNearTreeCoords ( const CNearTreeHandle treehandle, CVectorHandle FAR * vectorhandle)
      
      Function to return the vector of coordinates in the tree.  This vector
      is not guaranteed to be in the same order as the order of insertion
@@ -1000,11 +1000,11 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeCoords ( CNearTreeHandle treehandle, CVectorHandle FAR * vectorhandle);    
+    int CNearTreeCoords ( const CNearTreeHandle treehandle, CVectorHandle FAR * vectorhandle);    
     
     /*
      =======================================================================
-     void FAR * CNearTreeObjectAt ( CNearTreeHandle treehandle, size_t index)
+     void FAR * CNearTreeObjectAt ( const CNearTreeHandle treehandle, size_t index)
      
      Function to return the an object pointer at the given index
      
@@ -1017,7 +1017,7 @@ extern "C" {
     
     /*
      =======================================================================
-     void FAR * CNearTreeCoordAt ( CNearTreeHandle treehandle, size_t index)
+     void FAR * CNearTreeCoordAt ( const CNearTreeHandle treehandle, size_t index)
      
      Function to return the a coordinate pointer at the given index
      
