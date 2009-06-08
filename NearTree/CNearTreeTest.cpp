@@ -47,10 +47,13 @@
 #include <cmath>
 #include <stdio.h>
 #include <stdlib.h>
+
 #ifndef USE_LOCAL_HEADERS
 #include <TNear.h>
+#include <rhrand.h>
 #else
 #include "TNear.h"
+#include "rhrand.h"
 #endif
 #include <list>
 #include <set>
@@ -59,11 +62,6 @@
 
 #define ABS(x) (((x)<0)?-(x):(x))
 
-#ifndef USE_LOCAL_HEADERS
-#include <rhrand.h>
-#else
-#include "rhrand.h"
-#endif
 RHrand rhr;
 
 
