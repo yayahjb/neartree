@@ -1,7 +1,7 @@
                                     NearTree
 
-                                 Release 2.1.1
-                                  4 June 2009
+                                 Release 2.1.2
+                                  7 June 2009
        (c) Copyright 2001, 2008, 2009 Larry Andrews. All rights reserved
                                     based on
          Larry Andrews, "A template for the nearest neighbor problem",
@@ -16,6 +16,7 @@
                      21 March 2009 Release 2.0 LCA and HJB
                       30 May 2009 Release 2.1 LCA and HJB
                      4 June 2009 Release 2.1.1 LCA and HJB
+                     7 June 2009 Release 2.1.2 LCA and HJB
 
     YOU MAY REDISTRIBUTE NearTree UNDER THE TERMS OF THE LGPL
 
@@ -38,14 +39,17 @@
 +------------------------------------------------------------------------------+
 
    This is a release of an API for finding nearest neighbors among points in
-   spaces of arbtrary dimensions. This release provides a C++ template,
+   spaces of arbitrary dimensions. This release provides a C++ template,
    TNear.h, and a C library, CNearTree.c, with example/test programs.
 
    This is a cleanup update to the 2.1 release of 30 May 2009 to increase
-   portability, dealing with the following issues:
+   portability, in two stages (2.1.1 on 4 June 2009 and 2.1.2 on 7 June 2009)
+   dealing with the following issues:
      * Convert to use of a self-contained portable random-number generator
-       from Rob Harrison
-     * Ensure wider use of const where appropriate
+       from Rob Harrison (2.1.1)
+     * Ensure wider use of const where appropriate (2.1.1)
+     * Correct typos and unclear wording in the README (2.1.2)
+     * Reorganize use of USE_LOCAL_HEADERS in CNearTreeTest.cpp (2.1.2)
 
    The 2.1 release was a minor update to the 2.0 release of 21 March 2009 to
    deal with the following issues:
@@ -70,12 +74,10 @@
    Our thanks to Nicolas Brodu for suggesting the more general handling of
    the distance type.
 
-   Note: As Nicolas Brodu has noted, CNearTree is paticularly well-suited to
+   Note: As Nicolas Brodu has noted, CNearTree is particularly well-suited to
    multi-threaded applications. However, if the same CNearTree is to be
    searched in multiple threads, it is important to complete all insertions
    and/or delayed insertions before parallel execution of parallel searches.
-   Delayed insertions are completed at the beginning if all searches, so for
-   normal use, this will not be a problem.
 
      ----------------------------------------------------------------------
 
@@ -97,7 +99,13 @@
    downloads.sourceforge.net/neartree/NearTree-2.1.1.tar.gz. Later tarballs
    may be available.
 
-   When the source tarball is dowloaded and unpacked, you should have a
+   If you decide to simply use the TNear.h header to add nearest neighbor
+   support to C++ code under Visual Studio, be sure to also use the rhrand.h
+   header, and to define USE_LOCAL_HEADERS. For unix or MINGW, you will need
+   to use the Makefile and to have libtool on your system. Be warned that the
+   default libtool under Mac OS X will not work for this installation.
+
+   When the source tarball is downloaded and unpacked, you should have a
    directory NearTree-2.1.1. To see the current settings for a build execute
 
    make
@@ -180,9 +188,13 @@
    If you need to include local header files using #include "..." instead of
    #include <...>, define the variable USE_LOCAL_HEADERS
 
-   There is an optimization error in some compilers that miscompiles the
-   triangle inequality. The default in this API is to do the triangle
-   inequality three different ways under the control of CNEARTREE_SAFE_TRIANG
+   The triangle inequality that must be evaluated in building trees and
+   retrieving data may not be evaluated correctly if the range of the three
+   values is extremely large (>10**15 or so for doubles) or may be evaluated
+   differently by some compilers in different parts of a program (due to
+   differing usage of registers). The default in this API is to do the
+   triangle inequality three different ways under the control of
+   CNEARTREE_SAFE_TRIANG
 
  #ifdef CNEARTREE_SAFE_TRIANG
  #define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0) \
@@ -199,6 +211,9 @@
    part in 10**15 is not a serious problem, the definition of
    -DCNEARTREE_SAFE_TRIANG=1 can be removed from the definition of CFLAGS in
    the Makefile.
+
+   NOTE: A range of 10**15 is comparable to the diameter of the earth vs. the
+   separation of two bonded atoms.
 
      ----------------------------------------------------------------------
 
@@ -236,10 +251,12 @@
    size because they are stored in an std::vector. If your application
    requires object of varying storage, then your best way to use this code is
    to store pointers or handles and to write your own distance functions.
+   Note that std::string is a pointer type variable and so can be stored
+   directly.
 
    The type of the objects to be stored is the only required template
    argument. The type of the distance measure (DistanceType) defaults to
-   double. If your application is for an integer type then the type for
+   double. If your application is for an integer type, then the type for
    DistanceType can be your integer type. This has the potential for speeding
    the calculations by avoiding FP computation. Other general types can be
    used if desired, but you may need to also input a value of distMinValue.
@@ -256,14 +273,13 @@
    would actually need this optional parameter, but it is here for
    completeness.
 
-   It is a design decision that this class cannot work for unsigned types. It
-   is hard to see how to verify the triangle rule for unsigned types, and
-   distance computations become more complex. Sorry, unsigned types are left
-   as an exercise for the reader.
+   It is a design decision that this class cannot work for unsigned types.
+   Verifying the triangle rule for unsigned types is more complex. Sorry,
+   unsigned types are left as an exercise for the reader.
 
    The user of this class needs to provide at least the following
    functionality for the template to work. For the built-in numerics of C++,
-   they are provided here (or else you should create them).
+   they are provided by the system.
 
                       // conversion constructor from the templated class to      
 DistanceType Norm( ); DistanceType                                               
@@ -286,6 +302,7 @@ operator- ( );        // geometrical (vector) difference of two objects
      CNearTree( const std::vector<T> )     // constructor
      CNearTree( const std::list<T> )       // constructor
      CNearTree( const std::set<T> )        // constructor
+     CNearTree( const CNearTree<T> )        // constructor
     
      ~CNearTree( void )  // destructor
 
@@ -306,22 +323,16 @@ operator- ( );        // geometrical (vector) difference of two objects
              allow insertion of containers of objects
 
 
-     void Insert( ContainerType ) 
-             for containers, std::vector, ..., or CNearTree
-             all inserts are delayed until a search is performed or
-             until an explicit call to CompleteDelayedInsertions.
-             examples follow ...
-
+     void Insert( ContainerType )      // e. g. ...
 
      void insert( const std::vector<T> )
      void insert( const std::list<T> )
      void insert( const std::set<T> )
+     void insert( const CNearTree<T> )
 
      bool NearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const T& t ) const
         dRadius is the largest radius within which to search; make it
            very large if you want to include every point that was loaded.
-           dRadius is returned as the closest distance to the probe (or the search radius
-           if nothing is found)
         tClosest is returned as the object that was found closest to the probe
            point (if any were within radius dRadius of the probe)
         t is the probe point, used to search in the group of points insert'ed
@@ -333,14 +344,14 @@ operator- ( );        // geometrical (vector) difference of two objects
         returns an iterator to the nearest point to the probe point t or end() if there is none
 
      bool FarthestNeighbor ( T& tFarthest,   const T& t ) const
-        tFarthest is returned as the object that was found farthest to the probe
+        tFarthest is returned as the object that was found farthest from the probe
            point
         t is the probe point, used to search in the group of points Insert'ed
         return value is true if some object was found, false otherwise
            If false is returned, tFarthest is invalid (at best).
 
      iterator FarthestNeighbor ( T& const T& t ) const
-        returns an iterator to the nearest point to the probe pointt or end() if there is none
+        returns an iterator to the nearest point to the probe point t or end() if there is none
 
 
      The following functions (FindInSphere, FindOutSphere, and FindInAnnulus) all return a container
@@ -440,7 +451,7 @@ operator- ( );        // geometrical (vector) difference of two objects
 
       operator ContainerType ( void ) const
          returns all of the inserted objects in the tree in a container of type ContainerType.
-         ContainerType can be std::vector<T>, etc, or other containers.
+         ContainerType can be std::vector<T>, etc, or other containers, including CNearTree<T>.
          The returned vector contents are not guaranteed to be returned in the order loaded.
 
       iterator begin ( void ) const
@@ -458,18 +469,20 @@ operator- ( );        // geometrical (vector) difference of two objects
 
  Information and special operation functions:
 
-      void ImmediateInsert( void ) Places objects immediately into the tree. The usual insert function
-          delays insertions, allowing them to be inserted into the tree in a more random order. The delay
-          can improve the structure of the tree and speed searches.
+      void ImmediateInsert( const T& t )
+         insert places objects in a queue for insertion later when CompleteDelayInsert
+         is called or a search is called. ImmediateInsert inserts the data immediately
+         into the tree (with the potential of a less balanced tree). ImmediateInsert is not
+         intended for the ordinary user.
 
       void CompleteDelayedInsert ( void )
-         calls insert for all delayed objects. sqrt(n) of them are inserted by random choice.
-         The rest are inserted in linear order as originally queued. CompleteDelayedInsert
-         is invoked at the beginning of all searches, so the average user will never need
-         to call it.
+         completes insertion for all delayed objects. sqrt(n) of them are inserted by
+         random choice.  The rest are inserted in linear order as originally queued.
+         CompleteDelayedInsert is invoked at the beginning of all searches, so the
+         average user will never need to call it.
 
       size_t GetDeferredSize ( void )
-         returns the number of delayed objects that have not yet been insert'ed. This is
+         returns the number of delayed objects that have not yet completed insertion. This is
          mainly for information about details of the tree.
 
       size_t GetTotalSize ( void )
@@ -493,11 +506,11 @@ operator- ( );        // geometrical (vector) difference of two objects
 
       Random access iterators are provided for accessing the data in a CNearTree. The most important
       expected use is to retrieve the objects returned from one of the sphere search functions that
-      return a CNearTree. However, they can be used with any CNearTree.
+      can return a CNearTree. However, they can be used with any CNearTree.
      
       They should function in a fashion essentially the same as STL iterators. There is no assurance
-      that data will be returned in the order it was loaded, just that it is accessible.  The same set is
-      provided for const_iterator.
+      that data will be returned in the order it was loaded, just that it is accessible.  This is the
+      list of iterators. The same set is avaiable for const_iterator.
 
       iterator ( void ) { }; // constructor
 
@@ -653,8 +666,8 @@ operator- ( );        // geometrical (vector) difference of two objects
      int CNearTreeCoords ( const CNearTreeHandle treehandle, CVectorHandle *
      vectorhandle );
 
-     void * CNearTreeCoordAt ( const CNearTreeHandle treehandle, size_t index
-     );
+     void * CNearTreeCoordAt ( const CNearTreeHandle treehandle, size_t 
+     index );
 
    The NearTree API works with coordinate vectors in an arbitrary number of
    dimensions. Each neartree is accessed by a pointer of type CNearTreeHandle
@@ -707,13 +720,15 @@ operator- ( );        // geometrical (vector) difference of two objects
    the two predefined constants CNEARTREE_TYPE_DOUBLE for double or
    CNEARTREE_TYPE_INTEGER for integer, optionally ORed with
    CNEARTREE_NORM_L1, CNEARTREE_NORM_L2 or CNEARTREE_NORM_LINF for L1, L2 or
-   L-infinity norms. Starting with release 2.1, all insertions are delayed by
-   default, unless the insertions is done by a call to
-   CNearTreeImmediateInsert. The insertions that have been queued are
-   completed by a call to CNearTreeCompleteDelayedInsert or by any search.
-   The insertions are actually done in a randomized order, either for an
-   initial block of sqrt(#queue) by default, or for the entire queue if the
-   flag CNEARTREE_DEFER_ALL is ored with treetype. In addition, if the flag
+   L-infinity norms.
+
+   Starting with release 2.1, all insertions are delayed by default, unless
+   the insertions is done by a call to CNearTreeImmediateInsert. The
+   insertions that have been queued are completed by a call to
+   CNearTreeCompleteDelayedInsert or by any search. The insertions are
+   actually done in a randomized order, either for an initial block of
+   sqrt(#queue) by default, or for the entire queue if the flag
+   CNEARTREE_DEFER_ALL is ored with treetype. In addition, if the flag
    CNEARTREE_DEFER_ALL is set, all inserts will be deferred, even in calls to
    CNearTreeImmediateInsert. Alteratively, if minimal reorganization of the
    order of the tree is desired on each insertion, CNEARTREE_FLIP should be
@@ -749,8 +764,8 @@ operator- ( );        // geometrical (vector) difference of two objects
    used to obtain a CVector result vector of the k coordinates closest to the
    probe point such that all results are within the specified radius of the
    probe point, or CNearTreeFindKFarthest to obtain a CVector result vector
-   of the k coordinates farthest to the probe point such that all results are
-   at or outside the specified radius of the probe point. The vectors
+   of the k coordinates farthest from the probe point such that all results
+   are at or outside the specified radius of the probe point. The vectors
    themselves are not copied into the result vector. If the parameter
    resetcount is true (non zero) the result vector is cleared before the
    search. A parallel CVector result vector of the matching object pointers
@@ -904,5 +919,5 @@ operator- ( );        // geometrical (vector) difference of two objects
 
      ----------------------------------------------------------------------
 
-   Updated 4 June 2009
+   Updated 7 June 2009
    yaya@bernstein-plus-sons.com
