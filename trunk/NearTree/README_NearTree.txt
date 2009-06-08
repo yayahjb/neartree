@@ -96,7 +96,7 @@
 
    The NearTree package is available at
    www.sourceforge.net/projects/neartree. A source tarball is available at
-   downloads.sourceforge.net/neartree/NearTree-2.1.1.tar.gz. Later tarballs
+   downloads.sourceforge.net/neartree/NearTree-2.1.2.tar.gz. Later tarballs
    may be available.
 
    If you decide to simply use the TNear.h header to add nearest neighbor
@@ -106,7 +106,7 @@
    default libtool under Mac OS X will not work for this installation.
 
    When the source tarball is downloaded and unpacked, you should have a
-   directory NearTree-2.1.1. To see the current settings for a build execute
+   directory NearTree-2.1.2. To see the current settings for a build execute
 
    make
 
