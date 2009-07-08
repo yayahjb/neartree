@@ -1,7 +1,7 @@
                                     NearTree
 
-                                 Release 2.1.2
-                                  7 June 2009
+                                 Release 2.1.3
+                                  7 July 2009
        (c) Copyright 2001, 2008, 2009 Larry Andrews. All rights reserved
                                     based on
          Larry Andrews, "A template for the nearest neighbor problem",
@@ -17,6 +17,7 @@
                       30 May 2009 Release 2.1 LCA and HJB
                      4 June 2009 Release 2.1.1 LCA and HJB
                      7 June 2009 Release 2.1.2 LCA and HJB
+                     7 July 2009 Release 2.1.3 LCA and HJB
 
     YOU MAY REDISTRIBUTE NearTree UNDER THE TERMS OF THE LGPL
 
@@ -43,13 +44,14 @@
    TNear.h, and a C library, CNearTree.c, with example/test programs.
 
    This is a cleanup update to the 2.1 release of 30 May 2009 to increase
-   portability, in two stages (2.1.1 on 4 June 2009 and 2.1.2 on 7 June 2009)
-   dealing with the following issues:
+   portability, in three stages (2.1.1 on 4 June 2009, 2.1.2 on 7 June 2009,
+   2.1.3 on 7 July 2009) dealing with the following issues:
      * Convert to use of a self-contained portable random-number generator
        from Rob Harrison (2.1.1)
      * Ensure wider use of const where appropriate (2.1.1)
      * Correct typos and unclear wording in the README (2.1.2)
      * Reorganize use of USE_LOCAL_HEADERS in CNearTreeTest.cpp (2.1.2)
+     * Change FAR macro to CNEARTREE_FAR (2.1.3)
 
    The 2.1 release was a minor update to the 2.0 release of 21 March 2009 to
    deal with the following issues:
@@ -58,8 +60,8 @@
      * Add code for K-nearest/farthest in TNear.h and in CNearTree.c
      * Correct the InAnnulus search filter
 
-   Rlease 2.0 was a major update to the 1.0 release of 8 January 2009 to deal
-   with the following issues:
+   Release 2.0 was a major update to the 1.0 release of 8 January 2009 to
+   deal with the following issues:
      * Replace use recursion with a stack, except in insertion logic
      * Replace use of double with templated DistanceType (usually double)
      * Provide constuctors to build NearTree from vectors, lists or sets
@@ -96,7 +98,7 @@
 
    The NearTree package is available at
    www.sourceforge.net/projects/neartree. A source tarball is available at
-   downloads.sourceforge.net/neartree/NearTree-2.1.2.tar.gz. Later tarballs
+   downloads.sourceforge.net/neartree/NearTree-2.1.3.tar.gz. Later tarballs
    may be available.
 
    If you decide to simply use the TNear.h header to add nearest neighbor
@@ -106,7 +108,7 @@
    default libtool under Mac OS X will not work for this installation.
 
    When the source tarball is downloaded and unpacked, you should have a
-   directory NearTree-2.1.2. To see the current settings for a build execute
+   directory NearTree-2.1.3. To see the current settings for a build execute
 
    make
 
@@ -469,7 +471,7 @@ operator- ( );        // geometrical (vector) difference of two objects
 
  Information and special operation functions:
 
-      void ImmediateInsert( const T& t )
+      void ImmediateInsert( const T&aamp; t )
          insert places objects in a queue for insertion later when CompleteDelayInsert
          is called or a search is called. ImmediateInsert inserts the data immediately
          into the tree (with the potential of a less balanced tree). ImmediateInsert is not
@@ -666,8 +668,8 @@ operator- ( );        // geometrical (vector) difference of two objects
      int CNearTreeCoords ( const CNearTreeHandle treehandle, CVectorHandle *
      vectorhandle );
 
-     void * CNearTreeCoordAt ( const CNearTreeHandle treehandle, size_t 
-     index );
+     void * CNearTreeCoordAt ( const CNearTreeHandle treehandle, size_t index
+     );
 
    The NearTree API works with coordinate vectors in an arbitrary number of
    dimensions. Each neartree is accessed by a pointer of type CNearTreeHandle
@@ -919,5 +921,5 @@ operator- ( );        // geometrical (vector) difference of two objects
 
      ----------------------------------------------------------------------
 
-   Updated 7 June 2009
+   Updated 7 July 2009
    yaya@bernstein-plus-sons.com
