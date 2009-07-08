@@ -82,8 +82,8 @@ extern "C" {
     
     /*
      =======================================================================
-     double CNearTreeDistsq(void FAR * coord1, 
-     void FAR * coord2,
+     double CNearTreeDistsq(void CNEARTREE_FAR * coord1, 
+     void CNEARTREE_FAR * coord2,
      size_t treedim, int treetype)
      
      function to return the square of the Euclidean distance between two 
@@ -97,19 +97,19 @@ extern "C" {
      =======================================================================
      */
     
-    double CNearTreeDistsq(void FAR * coord1, 
-                           void FAR * coord2,
+    double CNearTreeDistsq(void CNEARTREE_FAR * coord1, 
+                           void CNEARTREE_FAR * coord2,
                            size_t treedim, int treetype) {
         size_t index;
         double distsq;
         
         if (treetype == CNEARTREE_TYPE_DOUBLE) {
             
-            double FAR * dcoord1;
-            double FAR * dcoord2;
+            double CNEARTREE_FAR * dcoord1;
+            double CNEARTREE_FAR * dcoord2;
             
-            dcoord1 = (double FAR *)coord1;
-            dcoord2 = (double FAR *)coord2;
+            dcoord1 = (double CNEARTREE_FAR *)coord1;
+            dcoord2 = (double CNEARTREE_FAR *)coord2;
             
             distsq = (dcoord1[0]-dcoord2[0])*(dcoord1[0]-dcoord2[0]);
             
@@ -122,11 +122,11 @@ extern "C" {
             
         } else if (treetype == CNEARTREE_TYPE_INTEGER) {
             
-            int FAR * icoord1;
-            int FAR * icoord2;
+            int CNEARTREE_FAR * icoord1;
+            int CNEARTREE_FAR * icoord2;
             
-            icoord1 = (int FAR *)coord1;
-            icoord2 = (int FAR *)coord2;
+            icoord1 = (int CNEARTREE_FAR *)coord1;
+            icoord2 = (int CNEARTREE_FAR *)coord2;
             
             distsq = ((double)(icoord1[0]-icoord2[0]))*((double)(icoord1[0]-icoord2[0]));
             
@@ -171,8 +171,8 @@ extern "C" {
     /*
      =======================================================================
      double CNearTreeDist(const CNearTreeHandle treehandle, 
-     void FAR * coord1, 
-     void FAR * coord2))
+     void CNEARTREE_FAR * coord1, 
+     void CNEARTREE_FAR * coord2))
      
      function to return the distance (L1, L2 or L-infinity) between two 
      coordinate vectors according to the parameters of the given tree  
@@ -181,8 +181,8 @@ extern "C" {
      */
     
     double CNearTreeDist(const CNearTreeHandle treehandle, 
-                         void FAR * coord1,
-                         void FAR * coord2)  {
+                         void CNEARTREE_FAR * coord1,
+                         void CNEARTREE_FAR * coord2)  {
         size_t index;
         double dist, distsq;
         
@@ -190,10 +190,10 @@ extern "C" {
         int treetype;
         int treenorm;
         
-        double FAR * dcoord1 = NULL;
-        double FAR * dcoord2 = NULL;
-        int FAR * icoord1 = NULL;
-        int FAR * icoord2 = NULL;
+        double CNEARTREE_FAR * dcoord1 = NULL;
+        double CNEARTREE_FAR * dcoord2 = NULL;
+        int CNEARTREE_FAR * icoord1 = NULL;
+        int CNEARTREE_FAR * icoord2 = NULL;
         
         
         treedim = treehandle->m_szdimension;
@@ -211,11 +211,11 @@ extern "C" {
         
         if (treetype == CNEARTREE_TYPE_DOUBLE) {
             
-            dcoord1 = (double FAR *)coord1;
-            dcoord2 = (double FAR *)coord2;
+            dcoord1 = (double CNEARTREE_FAR *)coord1;
+            dcoord2 = (double CNEARTREE_FAR *)coord2;
         } else if (treetype == CNEARTREE_TYPE_INTEGER) {
-            icoord1 = (int FAR *)coord1;
-            icoord2 = (int FAR *)coord2;
+            icoord1 = (int CNEARTREE_FAR *)coord1;
+            icoord2 = (int CNEARTREE_FAR *)coord2;
         } else return -1.0;
         
         if (treedim == 1) {
@@ -282,7 +282,7 @@ extern "C" {
     /*
      =======================================================================
      int CNearTreeNodeCreate ( const CNearTreeHandle treehandle,  
-     CNearTreeNodeHandle FAR * treenodehandle)     
+     CNearTreeNodeHandle CNEARTREE_FAR * treenodehandle)     
      
      Create a CNearTreeNode
      
@@ -299,7 +299,7 @@ extern "C" {
      */
     
     int CNearTreeNodeCreate (const CNearTreeHandle treehandle,
-                             CNearTreeNodeHandle FAR * treenodehandle) {
+                             CNearTreeNodeHandle CNEARTREE_FAR * treenodehandle) {
         
         int treenorm, treetype;
         
@@ -314,7 +314,7 @@ extern "C" {
         if ( (treetype != CNEARTREE_TYPE_DOUBLE 
               && treetype != CNEARTREE_TYPE_INTEGER)) return CNEARTREE_BAD_ARGUMENT;
         
-        *treenodehandle = (CNearTreeNodeHandle)MALLOC(sizeof(CNearTreeNode));
+        *treenodehandle = (CNearTreeNodeHandle)CNEARTREE_MALLOC(sizeof(CNearTreeNode));
         if (!(*treenodehandle)) {
             return CNEARTREE_MALLOC_FAILED;
         }
@@ -333,7 +333,7 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeCreate ( CNearTreeHandle FAR * treehandle, 
+     int CNearTreeCreate ( CNearTreeHandle CNEARTREE_FAR * treehandle, 
      size_t treedim, int treetype)
      
      Create a CNearTree
@@ -359,7 +359,7 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeCreate ( CNearTreeHandle FAR * treehandle, 
+    int CNearTreeCreate ( CNearTreeHandle CNEARTREE_FAR * treehandle, 
                          size_t treedim, int treetype) {
         
         int treenorm;
@@ -384,7 +384,7 @@ extern "C" {
             || (treetype != CNEARTREE_TYPE_DOUBLE 
                 && treetype != CNEARTREE_TYPE_INTEGER)) return CNEARTREE_BAD_ARGUMENT;
         
-        *treehandle = (CNearTreeHandle)MALLOC(sizeof(CNearTree));
+        *treehandle = (CNearTreeHandle)CNEARTREE_MALLOC(sizeof(CNearTree));
         if (!(*treehandle)) {
             return CNEARTREE_MALLOC_FAILED;
         }
@@ -397,7 +397,7 @@ extern "C" {
         (*treehandle)->m_szsize        = 0;         /* number of nodes in the tree  */
         (*treehandle)->m_szdepth       = 0;         /* depth of in the tree         */
         if( CNearTreeNodeCreate(*treehandle,&((*treehandle)->m_ptTree))) {
-            FREE(*treehandle);
+            CNEARTREE_FREE(*treehandle);
             return CNEARTREE_MALLOC_FAILED;
         }
         (*treehandle)->m_DelayedIndices = NULL;
@@ -413,7 +413,7 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeNodeFree ( CNearTreeNodeHandle FAR * treenodehandle )
+     int CNearTreeNodeFree ( CNearTreeNodeHandle CNEARTREE_FAR * treenodehandle )
      
      Free a CNearTreeNode
      
@@ -424,7 +424,7 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeNodeFree ( CNearTreeNodeHandle FAR * treenodehandle ) {
+    int CNearTreeNodeFree ( CNearTreeNodeHandle CNEARTREE_FAR * treenodehandle ) {
         
         int errorcode;
         
@@ -440,7 +440,7 @@ extern "C" {
             errorcode |= CNearTreeNodeFree(&((*treenodehandle)->m_pRightBranch));
         }
         
-        FREE(*treenodehandle);
+        CNEARTREE_FREE(*treenodehandle);
         
         *treenodehandle = NULL;
         
@@ -448,7 +448,7 @@ extern "C" {
     }
     /*
      =======================================================================
-     int CNearTreeFree ( CNearTreeHandle FAR * treehandle )
+     int CNearTreeFree ( CNearTreeHandle CNEARTREE_FAR * treehandle )
      
      Free a CNearTree
      
@@ -459,7 +459,7 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeFree ( CNearTreeHandle FAR * treehandle ) {
+    int CNearTreeFree ( CNearTreeHandle CNEARTREE_FAR * treehandle ) {
         
         int errorcode, errorcodev;
         
@@ -486,7 +486,7 @@ extern "C" {
             if (errorcodev) errorcode |= CNEARTREE_FREE_FAILED ;
         }
         
-        FREE(*treehandle);
+        CNEARTREE_FREE(*treehandle);
         
         *treehandle = NULL;
         
@@ -555,14 +555,14 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeGetSize (const CNearTreeHandle treehandle, size_t FAR * size)
+     int CNearTreeGetSize (const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * size)
      
      Return the number of objects in the tree or delay queue in size
      
      =======================================================================
      */
     
-    int CNearTreeGetSize ( const CNearTreeHandle treehandle, size_t FAR * size )
+    int CNearTreeGetSize ( const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * size )
     {
         if (!treehandle || !size ) return CNEARTREE_BAD_ARGUMENT;
         
@@ -576,14 +576,14 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeGetDelayedSize (const CNearTreeHandle treehandle, size_t FAR * size)
+     int CNearTreeGetDelayedSize (const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * size)
      
      Return the number of objects in the delay queue tree in size
      
      =======================================================================
      */
     
-    int CNearTreeGetDelayedSize ( const CNearTreeHandle treehandle, size_t FAR * size )
+    int CNearTreeGetDelayedSize ( const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * size )
     {
         if (!treehandle || !size ) return CNEARTREE_BAD_ARGUMENT;
         
@@ -598,14 +598,14 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeGetDepth (const CNearTreeHandle treehandle, size_t FAR * depth)
+     int CNearTreeGetDepth (const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * depth)
      
      Return the depth of the tree in depth
      
      =======================================================================
      */
     
-    int CNearTreeGetDepth ( const CNearTreeHandle treehandle, size_t FAR * depth )
+    int CNearTreeGetDepth ( const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * depth )
     {
         if (!treehandle || !depth ) return CNEARTREE_BAD_ARGUMENT;
         
@@ -618,7 +618,7 @@ extern "C" {
     /*
      =======================================================================
      int CNearTreeImmediateInsert ( const CNearTreeHandle treehandle, 
-     const void FAR * coord, 
+     const void CNEARTREE_FAR * coord, 
      const void * obj )
      
      Function to insert some "point" as an object into a CNearTree for
@@ -639,8 +639,8 @@ extern "C" {
      */
     
     int CNearTreeImmediateInsert( const CNearTreeHandle treehandle,
-                        const void FAR * coord, 
-                        const void FAR * obj ) {
+                        const void CNEARTREE_FAR * coord, 
+                        const void CNEARTREE_FAR * obj ) {
         
         /* do a bit of precomputing if it is possible so that we can
          reduce the number of calls to sqrt */
@@ -673,8 +673,8 @@ extern "C" {
         }
         
         index = CVectorSize(treehandle->m_ObjectStore);
-        if (CVectorAddElement(treehandle->m_ObjectStore,(void FAR *)&obj)) return CNEARTREE_CVECTOR_FAILED;
-        if (CVectorAddElement(treehandle->m_CoordStore,(void FAR *)coord)) return CNEARTREE_CVECTOR_FAILED;
+        if (CVectorAddElement(treehandle->m_ObjectStore,(void CNEARTREE_FAR *)&obj)) return CNEARTREE_CVECTOR_FAILED;
+        if (CVectorAddElement(treehandle->m_CoordStore,(void CNEARTREE_FAR *)coord)) return CNEARTREE_CVECTOR_FAILED;
         
         
         depth = 1;
@@ -700,7 +700,7 @@ extern "C" {
      int CNearTreeNodeInsert ( const CNearTreeHandle treehandle,
      const const CNearTreeNodeHandle treenodehandle, 
      size_t index;
-     size_t FAR * depth)
+     size_t CNEARTREE_FAR * depth)
      
      Function to insert some "point" as an object into a a node if a CNearTree for
      later searching
@@ -727,7 +727,7 @@ extern "C" {
     int CNearTreeNodeInsert( const CNearTreeHandle treehandle,
                             const CNearTreeNodeHandle treenodehandle,
                             const size_t index,
-                            size_t FAR * depth) {
+                            size_t CNEARTREE_FAR * depth) {
         
         /* do a bit of precomputing if it is possible so that we can
          reduce the number of calls to sqrt */
@@ -735,10 +735,10 @@ extern "C" {
         double dTempRight =  0.;
         double dTempLeft  =  0.;
         int errorcode = 0;
-        void FAR * coord;
-        void FAR * coordLeft;
-        void FAR * coordRight;
-        const void FAR * obj;
+        void CNEARTREE_FAR * coord;
+        void CNEARTREE_FAR * coordLeft;
+        void CNEARTREE_FAR * coordRight;
+        const void CNEARTREE_FAR * obj;
         
         
         if ( !treehandle || !treenodehandle 
@@ -823,7 +823,7 @@ extern "C" {
     /*
      =======================================================================
      int CNearTreeInsert ( const CNearTreeHandle treehandle, 
-     const void FAR * coord, 
+     const void CNEARTREE_FAR * coord, 
      const void * obj )
      
      Function to queue some "point" as an object for future insertion
@@ -845,8 +845,8 @@ extern "C" {
      */
     
     int CNearTreeInsert( const CNearTreeHandle treehandle,
-                               const void FAR * coord, 
-                               const void FAR * obj ) {
+                               const void CNEARTREE_FAR * coord, 
+                               const void CNEARTREE_FAR * obj ) {
         
         int treetype;
         
@@ -874,8 +874,8 @@ extern "C" {
         }
         
         index = CVectorSize(treehandle->m_ObjectStore);
-        if (CVectorAddElement(treehandle->m_ObjectStore,(void FAR *)&obj)) return CNEARTREE_CVECTOR_FAILED;
-        if (CVectorAddElement(treehandle->m_CoordStore,(void FAR *)coord)) return CNEARTREE_CVECTOR_FAILED;
+        if (CVectorAddElement(treehandle->m_ObjectStore,(void CNEARTREE_FAR *)&obj)) return CNEARTREE_CVECTOR_FAILED;
+        if (CVectorAddElement(treehandle->m_CoordStore,(void CNEARTREE_FAR *)coord)) return CNEARTREE_CVECTOR_FAILED;
         
         if (treehandle->m_DelayedIndices==NULL) {
             if (CVectorCreate(&(treehandle->m_DelayedIndices),sizeof(size_t),10)) {
@@ -892,7 +892,7 @@ extern "C" {
     /*
      =======================================================================
      int CNearTreeDelayedInsert ( const CNearTreeHandle treehandle, 
-     const void FAR * coord, 
+     const void CNEARTREE_FAR * coord, 
      const void * obj )
      
      *** THIS IS A DEPRECATED ALTLERNATE CALL TO CNearTreeInsert ***
@@ -916,8 +916,8 @@ extern "C" {
      */
     
     int CNearTreeDelayedInsert( const CNearTreeHandle treehandle,
-                        const void FAR * coord, 
-                        const void FAR * obj ) {
+                        const void CNEARTREE_FAR * coord, 
+                        const void CNEARTREE_FAR * obj ) {
         return CNearTreeInsert(treehandle,coord,obj);
     }
         
@@ -1014,9 +1014,9 @@ extern "C" {
      =======================================================================
      int CNearTreeNearestNeighbor ( const CNearTreeHandle treehandle, 
      const double dRadius,  
-     void FAR * FAR * coordClosest,
-     void FAR * FAR * objClosest,   
-     const void FAR * coord )
+     void CNEARTREE_FAR * CNEARTREE_FAR * coordClosest,
+     void CNEARTREE_FAR * CNEARTREE_FAR * objClosest,   
+     const void CNEARTREE_FAR * coord )
      
      Function to search a Neartree for the object closest to some probe point, coord. This function
      is only here so that the function CNearTreeNearest can be called without having dRadius const
@@ -1033,9 +1033,9 @@ extern "C" {
      */
     int CNearTreeNearestNeighbor (const CNearTreeHandle treehandle, 
                                   const double dRadius,  
-                                  void FAR * FAR * coordClosest,
-                                  void FAR * FAR * objClosest, 
-                                  const void FAR * coord ) {
+                                  void CNEARTREE_FAR * CNEARTREE_FAR * coordClosest,
+                                  void CNEARTREE_FAR * CNEARTREE_FAR * objClosest, 
+                                  const void CNEARTREE_FAR * coord ) {
         
         double dSearchRadius = dRadius;
         if (!treehandle || ! coord ) return CNEARTREE_BAD_ARGUMENT;
@@ -1051,9 +1051,9 @@ extern "C" {
     /*
      =======================================================================
      int CNearTreeFarthestNeighbor ( const CNearTreeHandle treehandle, 
-     void FAR * FAR * coordFarthest,
-     void FAR * FAR * objFarthest,   
-     const void FAR * coord )
+     void CNEARTREE_FAR * CNEARTREE_FAR * coordFarthest,
+     void CNEARTREE_FAR * CNEARTREE_FAR * objFarthest,   
+     const void CNEARTREE_FAR * coord )
      
      Function to search a Neartree for the object farthest some probe point, coord.
      
@@ -1066,9 +1066,9 @@ extern "C" {
      =======================================================================
      */
     int CNearTreeFarthestNeighbor (const CNearTreeHandle treehandle, 
-                                   void FAR *  FAR * coordFarthest,
-                                   void FAR * FAR * objFarthest,   
-                                   const void FAR * coord ) {
+                                   void CNEARTREE_FAR *  CNEARTREE_FAR * coordFarthest,
+                                   void CNEARTREE_FAR * CNEARTREE_FAR * objFarthest,   
+                                   const void CNEARTREE_FAR * coord ) {
         double dSearchRadius = DBL_MIN;
         if ( !treehandle || !coord ) return CNEARTREE_BAD_ARGUMENT;
         if ( treehandle->m_DelayedIndices ) {
@@ -1085,7 +1085,7 @@ extern "C" {
      const double dRadius,
      CVectorHandle coordclosest,
      CVectorHandle objClosest,
-     const void FAR * coord,
+     const void CNEARTREE_FAR * coord,
      int resetcount)
      
      Function to search a Neartree for the set of objects closer to some probe point, coord,
@@ -1106,15 +1106,15 @@ extern "C" {
                                const double dRadius,
                                CVectorHandle coordClosest,
                                CVectorHandle objClosest,
-                               const void FAR * coord,
+                               const void CNEARTREE_FAR * coord,
                                int resetcount) {
         double dDR, dDL;
         int nopoints;
         CVectorHandle sStack;
         CVectorHandle coords;
         CVectorHandle objs;
-        void FAR * xcoord;
-        void FAR * xobj;
+        void CNEARTREE_FAR * xcoord;
+        void CNEARTREE_FAR * xobj;
         CNearTreeNodeHandle pt;
         enum  { left, right, end } eDir;
         
@@ -1155,7 +1155,7 @@ extern "C" {
             if ( eDir == right ) {
                 dDR = DBL_MAX;
                 if ((pt->m_iflags)&CNEARTREE_FLAG_RIGHT_DATA) {
-                    dDR = CNearTreeDist(treehandle, (void FAR *)coord, CVectorElementAt(coords,pt->m_indexRight));
+                    dDR = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexRight));
                     if (dDR <= dRadius ) {
                         nopoints = 0;
                         if (coordClosest) {
@@ -1179,7 +1179,7 @@ extern "C" {
             }
             if ( eDir == left ) {
                 if ((pt->m_iflags)&CNEARTREE_FLAG_LEFT_DATA) {
-                    dDL = CNearTreeDist(treehandle, (void FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
+                    dDL = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
                     if (dDL <= dRadius ) {
                         nopoints = 0;
                         if (coordClosest) {
@@ -1219,7 +1219,7 @@ extern "C" {
      int CNearTreeFindTreeInSphere ( const CNearTreeHandle treehandle, 
      const double dRadius,
      CNearTreeHandle foundClosest,
-     const void FAR * coord,
+     const void CNEARTREE_FAR * coord,
      int resetcount)
      
      Function to search a Neartree for the set of objects closer to some probe point, coord,
@@ -1237,7 +1237,7 @@ extern "C" {
     int CNearTreeFindTreeInSphere ( const CNearTreeHandle treehandle,
                                    const double dRadius,
                                    CNearTreeHandle foundClosest,
-                                   const void FAR * coord,
+                                   const void CNEARTREE_FAR * coord,
                                    int resetcount) {
         
         CVectorHandle objs;
@@ -1266,7 +1266,7 @@ extern "C" {
         CNearTreeFindInSphere(treehandle, dRadius, coords, objs, coord, 0);
         
         for (ii=0; ii<CVectorSize(coords);ii++) {
-            if ((errorcode=CNearTreeInsert(foundClosest,*((void FAR * FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii))),errorcode) {
+            if ((errorcode=CNearTreeInsert(foundClosest,*((void CNEARTREE_FAR * CNEARTREE_FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii))),errorcode) {
                 CVectorFree(&coords);
                 CVectorFree(&objs);
                 return errorcode;
@@ -1289,7 +1289,7 @@ extern "C" {
      const double dRadius,
      CVectorHandle coordOutside,
      CVectorHandle objOutside,
-     const void FAR * coord,
+     const void CNEARTREE_FAR * coord,
      int resetcount)
      
      Function to search a Neartree for the set of objects further from some probe point, coord,
@@ -1324,8 +1324,8 @@ extern "C" {
         CVectorHandle sStack;
         CVectorHandle coords;
         CVectorHandle objs;
-        void FAR * xcoord;
-        void FAR * xobj;
+        void CNEARTREE_FAR * xcoord;
+        void CNEARTREE_FAR * xobj;
         CNearTreeNodeHandle pt;
         enum  { left, right, end } eDir;
         
@@ -1366,7 +1366,7 @@ extern "C" {
             if ( eDir == right ) {
                 dDR = DBL_MAX;
                 if ((pt->m_iflags)&CNEARTREE_FLAG_RIGHT_DATA) {
-                    dDR = CNearTreeDist(treehandle, (void FAR *)coord, CVectorElementAt(coords,pt->m_indexRight));
+                    dDR = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexRight));
                     if (dDR >= dRadius ) {
                         nopoints = 0;
                         if (coordOutside) {
@@ -1390,7 +1390,7 @@ extern "C" {
             }
             if ( eDir == left ) {
                 if ((pt->m_iflags)&CNEARTREE_FLAG_LEFT_DATA) {
-                    dDL = CNearTreeDist(treehandle, (void FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
+                    dDL = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
                     if (dDL >= dRadius ) {
                         nopoints = 0;
                         if (coordOutside) {
@@ -1430,7 +1430,7 @@ extern "C" {
      int CNearTreeFindTreeOutSphere ( const CNearTreeHandle treehandle, 
      const double dRadius,
      CNearTreeHandle foundOutside,
-     const void FAR * coord,
+     const void CNEARTREE_FAR * coord,
      int resetcount)
      
      Function to search a Neartree for the set of objects further from some probe point, coord,
@@ -1448,7 +1448,7 @@ extern "C" {
     int CNearTreeFindTreeOutSphere ( const CNearTreeHandle treehandle,
                                     const double dRadius,
                                     CNearTreeHandle foundOutside,
-                                    const void FAR * coord,
+                                    const void CNEARTREE_FAR * coord,
                                     int resetcount){
         
         CVectorHandle objs;
@@ -1477,7 +1477,7 @@ extern "C" {
         CNearTreeFindOutSphere(treehandle, dRadius, coords, objs, coord, 0);
         
         for (ii=0; ii<CVectorSize(coords);ii++) {
-            if ((errorcode=CNearTreeInsert(foundOutside,*((void FAR * FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii))),errorcode) {
+            if ((errorcode=CNearTreeInsert(foundOutside,*((void CNEARTREE_FAR * CNEARTREE_FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii))),errorcode) {
                 CVectorFree(&coords);
                 CVectorFree(&objs);
                 return errorcode;
@@ -1501,7 +1501,7 @@ extern "C" {
      const double dRadiusOuter,
      CVectorHandle coordInRing,
      CVectorHandle objInRing,
-     const void FAR * coord,
+     const void CNEARTREE_FAR * coord,
      int resetcount)
      
      Function to search a Neartree for the set of objects closer to some probe point, coord,
@@ -1525,15 +1525,15 @@ extern "C" {
                                 const double dRadiusOuter,
                                 CVectorHandle coordInRing,
                                 CVectorHandle objInRing,
-                                const void FAR * coord,
+                                const void CNEARTREE_FAR * coord,
                                 int resetcount) {
         double dDR, dDL;
         int nopoints;
         CVectorHandle sStack;
         CVectorHandle coords;
         CVectorHandle objs;
-        void FAR * xcoord;
-        void FAR * xobj;
+        void CNEARTREE_FAR * xcoord;
+        void CNEARTREE_FAR * xobj;
         CNearTreeNodeHandle pt;
         enum  { left, right, end } eDir;
         
@@ -1574,7 +1574,7 @@ extern "C" {
             if ( eDir == right ) {
                 dDR = DBL_MAX;
                 if ((pt->m_iflags)&CNEARTREE_FLAG_RIGHT_DATA) {
-                    dDR = CNearTreeDist(treehandle, (void FAR *)coord, CVectorElementAt(coords,pt->m_indexRight));
+                    dDR = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexRight));
                     if (dDR <= dRadiusOuter && dDR >= dRadiusInner ) {
                         nopoints = 0;
                         if (coordInRing) {
@@ -1599,7 +1599,7 @@ extern "C" {
             }
             if ( eDir == left ) {
                 if ((pt->m_iflags)&CNEARTREE_FLAG_LEFT_DATA) {
-                    dDL = CNearTreeDist(treehandle, (void FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
+                    dDL = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
                     if (dDL <= dRadiusOuter && dDL >= dRadiusInner) {
                         nopoints = 0;
                         if (coordInRing) {
@@ -1641,7 +1641,7 @@ extern "C" {
      const double dRadiusInner,
      const double dRadiusOuter,
      CNearTreeHandle foundInRing,
-     const void FAR * coord,
+     const void CNEARTREE_FAR * coord,
      int resetcount)
      
      Function to search a Neartree for the set of objects closer to some probe point, coord,
@@ -1662,7 +1662,7 @@ extern "C" {
                                     const double dRadiusInner,
                                     const double dRadiusOuter,
                                     CNearTreeHandle foundInRing,
-                                    const void FAR * coord,
+                                    const void CNEARTREE_FAR * coord,
                                     int resetcount) {
         
         CVectorHandle objs;
@@ -1691,7 +1691,7 @@ extern "C" {
         CNearTreeFindInAnnulus(treehandle, dRadiusInner, dRadiusOuter, coords, objs, coord, 0);
         
         for (ii=0; ii<CVectorSize(coords);ii++) {
-            if ((errorcode=CNearTreeInsert(foundInRing,*((void FAR * FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii))),errorcode) {
+            if ((errorcode=CNearTreeInsert(foundInRing,*((void CNEARTREE_FAR * CNEARTREE_FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii))),errorcode) {
                 CVectorFree(&coords);
                 CVectorFree(&objs);
                 return errorcode;
@@ -1830,7 +1830,7 @@ extern "C" {
      
      k is the maximum number of closest neighbors to return.  Finds this many if passible.
      
-     dRadius is the maximum search radius - any point closer than dRadius to the probe
+     dRadius is the maximum search radius - any point further than dRadius from the probe
      point will be ignored
      
      coordClosest is a vector of pointers to coordinate tuples and is the 
@@ -1862,8 +1862,8 @@ extern "C" {
         CVectorHandle objs;
         CVectorHandle dDs;
         CVectorHandle stIndices;
-        void FAR * xcoord;
-        void FAR * xobj;
+        void CNEARTREE_FAR * xcoord;
+        void CNEARTREE_FAR * xobj;
         CNearTreeNodeHandle pt;
         size_t ii, index;
         enum  { left, right, end } eDir;
@@ -1911,7 +1911,7 @@ extern "C" {
             if ( eDir == right ) {
                 dDR = DBL_MAX;
                 if ((pt->m_iflags)&CNEARTREE_FLAG_RIGHT_DATA) {
-                    dDR = CNearTreeDist(treehandle, (void FAR *)coord, CVectorElementAt(coords,pt->m_indexRight));
+                    dDR = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexRight));
                     if (dDR <= dTarget ) {
                         nopoints = 0;
                         CNearTreeSortIn(dDs,stIndices,dDR,pt->m_indexRight,k);
@@ -1931,7 +1931,7 @@ extern "C" {
             }
             if ( eDir == left ) {
                 if ((pt->m_iflags)&CNEARTREE_FLAG_LEFT_DATA) {
-                    dDL = CNearTreeDist(treehandle, (void FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
+                    dDL = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
                     if (dDL <= dTarget ) {
                         nopoints = 0;
                         CNearTreeSortIn(dDs,stIndices,dDL,pt->m_indexLeft,k);
@@ -1988,7 +1988,7 @@ extern "C" {
      const size_t k,
      const double dRadius,
      CNearTreeHandle foundNearest,
-     const void FAR * coord,
+     const void CNEARTREE_FAR * coord,
      int resetcount);
      
      Function to search a Neartree for the set of k objects closer to some probe point, coord,
@@ -2008,7 +2008,7 @@ extern "C" {
                                    const size_t k,
                                    const double dRadius,
                                    CNearTreeHandle foundClosest,
-                                   const void FAR * coord,
+                                   const void CNEARTREE_FAR * coord,
                                    int resetcount){
         
         CVectorHandle objs;
@@ -2037,7 +2037,7 @@ extern "C" {
         CNearTreeFindKNearest(treehandle, k, dRadius, coords, objs, coord, 0);
         
         for (ii=0; ii<CVectorSize(coords);ii++) {
-            if ((errorcode=CNearTreeInsert(foundClosest,*((void FAR * FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii))),errorcode) {
+            if ((errorcode=CNearTreeInsert(foundClosest,*((void CNEARTREE_FAR * CNEARTREE_FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii))),errorcode) {
                 CVectorFree(&coords);
                 CVectorFree(&objs);
                 return errorcode;
@@ -2101,8 +2101,8 @@ extern "C" {
         CVectorHandle objs;
         CVectorHandle dDs;
         CVectorHandle stIndices;
-        void FAR * xcoord;
-        void FAR * xobj;
+        void CNEARTREE_FAR * xcoord;
+        void CNEARTREE_FAR * xobj;
         CNearTreeNodeHandle pt;
         size_t ii, index;
         enum  { left, right, end } eDir;
@@ -2149,7 +2149,7 @@ extern "C" {
             if ( eDir == right ) {
                 dDR = DBL_MAX;
                 if ((pt->m_iflags)&CNEARTREE_FLAG_RIGHT_DATA) {
-                    dDR = CNearTreeDist(treehandle, (void FAR *)coord, CVectorElementAt(coords,pt->m_indexRight));
+                    dDR = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexRight));
                     if (dDR >= dTarget ) {
                         nopoints = 0;
                         CNearTreeSortIn(dDs,stIndices,-dDR,pt->m_indexRight,k);
@@ -2170,7 +2170,7 @@ extern "C" {
             }
             if ( eDir == left ) {
                 if ((pt->m_iflags)&CNEARTREE_FLAG_LEFT_DATA) {
-                    dDL = CNearTreeDist(treehandle, (void FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
+                    dDL = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
                     if (dDL >= dTarget ) {
                         nopoints = 0;
                         CNearTreeSortIn(dDs,stIndices,-dDL,pt->m_indexLeft,k);
@@ -2227,7 +2227,7 @@ extern "C" {
      const size_t k,
      const double dRadius,
      CNearTreeHandle foundFarthest,
-     const void FAR * coord,
+     const void CNEARTREE_FAR * coord,
      int resetcount);
      
      Function to search a Neartree for the set of k objects farther from some probe point, coord,
@@ -2247,7 +2247,7 @@ extern "C" {
                                     const size_t k,
                                     const double dRadius,
                                     CNearTreeHandle foundFarthest,
-                                    const void FAR * coord,
+                                    const void CNEARTREE_FAR * coord,
                                     int resetcount) {
         
         CVectorHandle objs;
@@ -2276,7 +2276,7 @@ extern "C" {
         CNearTreeFindKFarthest(treehandle, k, dRadius, coords, objs, coord, 0);
         
         for (ii=0; ii<CVectorSize(coords);ii++) {
-            if ((errorcode=CNearTreeInsert(foundFarthest,*((void FAR * FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii))),errorcode) {
+            if ((errorcode=CNearTreeInsert(foundFarthest,*((void CNEARTREE_FAR * CNEARTREE_FAR *)CVectorElementAt(coords,ii)),CVectorElementAt(objs,ii))),errorcode) {
                 CVectorFree(&coords);
                 CVectorFree(&objs);
                 return errorcode;
@@ -2298,10 +2298,10 @@ extern "C" {
     /*
      =======================================================================
      int CNearTreeNearest ( const CNearTreeHandle treehandle, 
-     double FAR *dRadius,  
-     void FAR * FAR * coordClosest,
-     void FAR * FAR * objClosest,
-     const void FAR * coord )
+     double CNEARTREE_FAR *dRadius,  
+     void CNEARTREE_FAR * CNEARTREE_FAR * coordClosest,
+     void CNEARTREE_FAR * CNEARTREE_FAR * objClosest,
+     const void CNEARTREE_FAR * coord )
      
      Function to search a Neartree for the object closest to some probe point, coord.
      This function is called by CNearTreeNearestNeighbor.
@@ -2316,17 +2316,17 @@ extern "C" {
      =======================================================================
      */
     int CNearTreeNearest ( const CNearTreeHandle treehandle, 
-                          double FAR * dRadius,  
-                          void FAR * FAR * coordClosest,
-                          void FAR * FAR * objClosest,
-                          const void FAR * coord ) {
+                          double CNEARTREE_FAR * dRadius,  
+                          void CNEARTREE_FAR * CNEARTREE_FAR * coordClosest,
+                          void CNEARTREE_FAR * CNEARTREE_FAR * objClosest,
+                          const void CNEARTREE_FAR * coord ) {
         double   dDR, dDL;
         CVectorHandle sStack;
         CVectorHandle coords;
         CVectorHandle objs;
         CNearTreeNodeHandle pt;
-        void FAR * pobjClosest;
-        void FAR * pcoordClosest;
+        void CNEARTREE_FAR * pobjClosest;
+        void CNEARTREE_FAR * pcoordClosest;
         enum  { left, right, end } eDir;
         
         eDir = left; /* examine the left nodes first */
@@ -2356,7 +2356,7 @@ extern "C" {
         while (!(eDir == end && CVectorSize(sStack) == 0)) {
             
             if ( eDir == right ) {
-                dDR = CNearTreeDist(treehandle, (void FAR *)coord,  CVectorElementAt(coords,pt->m_indexRight));
+                dDR = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord,  CVectorElementAt(coords,pt->m_indexRight));
                 if (dDR <= *dRadius ) {
                     *dRadius = dDR;
                     pobjClosest = CVectorElementAt(objs,pt->m_indexRight);
@@ -2372,7 +2372,7 @@ extern "C" {
                 }
             }
             if ( eDir == left ) {
-                dDL = CNearTreeDist(treehandle, (void FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
+                dDL = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
                 if (dDL <= *dRadius ) {
                     *dRadius = dDL;
                     pobjClosest = CVectorElementAt(objs,pt->m_indexLeft);
@@ -2406,10 +2406,10 @@ extern "C" {
     /*
      =======================================================================
      int CNearTreeFindFarthest ( const CNearTreeHandle treehandle,
-     double FAR * dRadius,  
-     void FAR * FAR * coordFarthest,
-     void FAR * FAR * objFarthest,
-     const void FAR * coord )
+     double CNEARTREE_FAR * dRadius,  
+     void CNEARTREE_FAR * CNEARTREE_FAR * coordFarthest,
+     void CNEARTREE_FAR * CNEARTREE_FAR * objFarthest,
+     const void CNEARTREE_FAR * coord )
      
      Function to search a Neartree for the object farthest from some probe point, coord.
      This function is called by CNearTreeFarthestNeighbor.
@@ -2425,18 +2425,18 @@ extern "C" {
      =======================================================================
      */
     int CNearTreeFindFarthest ( const CNearTreeHandle treehandle,
-                               double FAR * dRadius,  
-                               void FAR * FAR * coordFarthest,
-                               void FAR * FAR * objFarthest,
-                               const void FAR * coord ) {
+                               double CNEARTREE_FAR * dRadius,  
+                               void CNEARTREE_FAR * CNEARTREE_FAR * coordFarthest,
+                               void CNEARTREE_FAR * CNEARTREE_FAR * objFarthest,
+                               const void CNEARTREE_FAR * coord ) {
         double   dDR, dDL;
         CVectorHandle sStack;
         CVectorHandle coords;
         CVectorHandle objs;
         
         CNearTreeNodeHandle pt;
-        void FAR * pobjFarthest;
-        void FAR * pcoordFarthest;
+        void CNEARTREE_FAR * pobjFarthest;
+        void CNEARTREE_FAR * pcoordFarthest;
         enum  { left, right, end } eDir;
         
         eDir = left; /* examine the left nodes first */
@@ -2466,7 +2466,7 @@ extern "C" {
         while (!(eDir == end && CVectorSize(sStack) == 0)) {
             
             if ( eDir == right ) {
-                dDR = CNearTreeDist(treehandle, (void FAR *)coord,  CVectorElementAt(coords,pt->m_indexRight));
+                dDR = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord,  CVectorElementAt(coords,pt->m_indexRight));
                 if (dDR >= *dRadius ) {
                     *dRadius = dDR;
                     pobjFarthest = CVectorElementAt(objs,pt->m_indexRight);
@@ -2482,7 +2482,7 @@ extern "C" {
                 }
             }
             if ( eDir == left ) {
-                dDL = CNearTreeDist(treehandle, (void FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
+                dDL = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
                 if (dDL >= *dRadius ) {
                     *dRadius = dDL;
                     pobjFarthest = CVectorElementAt(objs,pt->m_indexLeft);
@@ -2514,7 +2514,7 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeObjects ( const CNearTreeHandle treehandle, CVectorHandle FAR * vectorhandle)
+     int CNearTreeObjects ( const CNearTreeHandle treehandle, CVectorHandle CNEARTREE_FAR * vectorhandle)
      
      Function to return the vector of objects in the tree.  This vector
      is not guaranteed to be in the same order as the order of insertion
@@ -2524,7 +2524,7 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeObjects ( const CNearTreeHandle treehandle, CVectorHandle FAR * vectorhandle) {
+    int CNearTreeObjects ( const CNearTreeHandle treehandle, CVectorHandle CNEARTREE_FAR * vectorhandle) {
         if ( !treehandle || !vectorhandle ) return CNEARTREE_BAD_ARGUMENT;
         
         *vectorhandle = treehandle->m_ObjectStore;
@@ -2536,7 +2536,7 @@ extern "C" {
     
     /*
      =======================================================================
-     int CNearTreeCoords ( const CNearTreeHandle treehandle, CVectorHandle FAR * vectorhandle)
+     int CNearTreeCoords ( const CNearTreeHandle treehandle, CVectorHandle CNEARTREE_FAR * vectorhandle)
      
      Function to return the vector of coordinates in the tree.  This vector
      is not guaranteed to be in the same order as the order of insertion
@@ -2546,7 +2546,7 @@ extern "C" {
      =======================================================================
      */
     
-    int CNearTreeCoords ( const CNearTreeHandle treehandle, CVectorHandle FAR * vectorhandle) {
+    int CNearTreeCoords ( const CNearTreeHandle treehandle, CVectorHandle CNEARTREE_FAR * vectorhandle) {
         if ( !treehandle || !vectorhandle ) return CNEARTREE_BAD_ARGUMENT;
         
         *vectorhandle = treehandle->m_CoordStore;
