@@ -606,7 +606,7 @@ void ImmediateInsert ( const InputContainer& o )
 //             or iterator::end if no point was found
 //
 //=======================================================================
-iterator NearestNeighbor ( const DistanceType& radius, const T& t ) const
+inline iterator NearestNeighbor ( const DistanceType& radius, const T& t ) const
 {
     T closest;
     size_t index = ULONG_MAX;
@@ -643,7 +643,7 @@ iterator NearestNeighbor ( const DistanceType& radius, const T& t ) const
 //    the return value is true only if a point was found
 //
 //=======================================================================
-bool NearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const T& t ) const
+inline bool NearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const T& t ) const
 {
     const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
 
@@ -747,7 +747,7 @@ bool FarthestNeighbor ( T& tFarthest, const T& t ) const
 //
 //=======================================================================
 template<typename OutputContainerType>
-long FindInSphere ( const DistanceType& dRadius,  OutputContainerType& tClosest,   const T& t ) const
+inline long FindInSphere ( const DistanceType& dRadius,  OutputContainerType& tClosest,   const T& t ) const
 {
     // clear the contents of the return vector so that things don't accidentally accumulate
     tClosest.clear( );
@@ -943,7 +943,7 @@ long FindK_FarthestNeighbors ( const size_t k, OutputContainerType& tFarthest,  
 //  sequence as they were entered.
 //
 //=======================================================================
-void CompleteDelayedInsert ( void )
+inline void CompleteDelayedInsert ( void )
 {
     if ( m_DelayedIndices.empty( ) )
     {
@@ -994,7 +994,7 @@ void CompleteDelayedInsert ( void )
 //  a call to CompleteDelayedInsertRandom.
 //
 //=======================================================================
-void CompleteDelayedInsertRandom ( void )
+inline void CompleteDelayedInsertRandom ( void )
 {
     if ( m_DelayedIndices.empty( ) )
     {
