@@ -1,6 +1,6 @@
                                     NearTree
 
-                                 Release 2.1.3
+                                 Release 2.1.4
                                   7 July 2009
        (c) Copyright 2001, 2008, 2009 Larry Andrews. All rights reserved
                                     based on
@@ -18,6 +18,7 @@
                      4 June 2009 Release 2.1.1 LCA and HJB
                      7 June 2009 Release 2.1.2 LCA and HJB
                      7 July 2009 Release 2.1.3 LCA and HJB
+		     29 November 2009 Release 2.1.4 LCA
 
     YOU MAY REDISTRIBUTE NearTree UNDER THE TERMS OF THE LGPL
 
@@ -52,6 +53,7 @@
      * Correct typos and unclear wording in the README (2.1.2)
      * Reorganize use of USE_LOCAL_HEADERS in CNearTreeTest.cpp (2.1.2)
      * Change FAR macro to CNEARTREE_FAR (2.1.3)
+     * Add BelongsToPoints and SeparateByRadius (2.1.4)
 
    The 2.1 release was a minor update to the 2.0 release of 21 March 2009 to
    deal with the following issues:
@@ -98,7 +100,7 @@
 
    The NearTree package is available at
    www.sourceforge.net/projects/neartree. A source tarball is available at
-   downloads.sourceforge.net/neartree/NearTree-2.1.3.tar.gz. Later tarballs
+   downloads.sourceforge.net/neartree/NearTree-2.1.4.tar.gz. Later tarballs
    may be available.
 
    If you decide to simply use the TNear.h header to add nearest neighbor
@@ -108,7 +110,7 @@
    default libtool under Mac OS X will not work for this installation.
 
    When the source tarball is downloaded and unpacked, you should have a
-   directory NearTree-2.1.3. To see the current settings for a build execute
+   directory NearTree-2.1.4. To see the current settings for a build execute
 
    make
 
@@ -132,7 +134,7 @@
 
   The current library link command is:
  
-    libtool --mode=link  gcc -version-info 2:0:2 -release 2.0.0 \
+    libtool --mode=link  gcc -version-info 3:0:0 -release 2.1.4 \
       -no-undefined -rpath /usr/local/lib
  
   The current C++ and C library local, and C dynamic and static build commands are:
@@ -921,5 +923,5 @@ operator- ( );        // geometrical (vector) difference of two objects
 
      ----------------------------------------------------------------------
 
-   Updated 7 July 2009
-   yaya@bernstein-plus-sons.com
+   Updated 29 November 2009
+   andrewsL@ix.netcom.com

@@ -730,6 +730,52 @@ bool FarthestNeighbor ( T& tFarthest, const T& t ) const
 }  //  FarthestNeighbor
 
 //=======================================================================
+template<typename ContainerType>
+void BelongsToPoints( const T& t1, const T& t2, ContainerType& group1, ContainerType& group2 )
+{
+    group1.clear();
+    group2.clear();
+    CNearTree<T>::iterator it;
+
+    for ( it=this->begin( ); it!=this->end( ); ++it )
+    {
+        if( DistanceBetween( (*it), t1 ) > DistanceBetween( (*it), t2) )
+        {
+            group1.insert( group1.end( ), (*it) );
+        }
+        else
+        {
+            group2.insert( group2.end(), (*it) );
+        }
+    }
+}  // end BelongsToPoints
+
+//=======================================================================
+template<typename ContainerTypeInside, typename ContainerTypeOutside>
+void SeparateByRadius( const DistanceType radius, const T& tProbe, ContainerTypeInside& inside, ContainerTypeOutside& outside )
+{
+    inside.clear();
+    outside.clear();
+    CNearTree<T>::iterator it;
+
+    for ( it=this->begin( ); it!=this->end( ); ++it )
+    {
+        if( DistanceBetween( (*it), probe ) > radius )
+        {
+            inside.insert( inside.end( ), (*it) );
+        }
+        else
+        {
+            outside.insert( outside.end(), (*it) );
+        }
+    }
+
+    // The following was the first cut, but it's slower.
+    //const long nInside  = FindInSphere ( radius, inside,  tProbe );
+    //const long nOutside = FindOutSphere( radius, outside, tProbe );
+} // end SeparateByRadius
+
+//=======================================================================
 //  long FindInSphere ( const DistanceType& dRadius,  OutputContainerType& tClosest,   const T& t ) const
 //
 //  Function to search a NearTree for the set of objects closer to some probe point, t,
@@ -1468,7 +1514,12 @@ bool Farthest (
 };   //  end Farthest
 
 //=======================================================================
-//  long InSphere ( const DistanceTypeNode dRadius,  CNearTree<  TNode >& tClosest,   const TNode& t ) const
+//  long InSphere (
+//                const DistanceTypeNode& dRadius,
+//                ContainerType& tClosest,
+//                const TNode& t,
+//                const std::vector<TNode>& objectStore
+//                ) const
 //
 //  Private function to search a NearTree for the objects inside of the specified radius
 //     from the probe point
@@ -1547,7 +1598,12 @@ long InSphere (
 }  //  end InSphere
 
 //=======================================================================
-//  long OutSphere ( const DistanceTypeNode& dRadius,  CNearTree<  TNode >& tFarthest,   const TNode& t ) const
+//  long OutSphere (
+//                const DistanceTypeNode& dRadius,
+//                ContainerType& tFarthest,
+//                const TNode& t,
+//                const std::vector<TNode>& objectStore
+//                ) const
 //
 //  Private function to search a NearTree for the objects outside of the specified radius
 //     from the probe point
