@@ -5,6 +5,10 @@
 //*  test harness for the templated neartree implementation, TNear.h
 //*  Copyright 2008 Larry Andrews.  All rights reserved
 //*
+//*  Revised 29 November 2009, added SeparateByRadius and BelongsToPoint
+//*                            to be used for cluster analysis. 
+//*                            BelongsToPoint simply runs thru all the
+//*                            because that is the fastest way
 //*  Revised 30 May 2009, release with full containerization of C++
 //*                       version and KNear/Far in C++ and C, LCA + HJB
 
@@ -64,7 +68,7 @@
 
 RHrand rhr;
 
-
+void testSeparation( void );
 void testEmptyTree( void );
 void testLinearTree( const int n );
 void testFindFirstObject( void );
@@ -109,6 +113,9 @@ int main(int argc, char* argv[])
         testLinearTree( i );
         fprintf( stdout, "testLinearTree %d\n", i );
     }
+
+    testSeparation( );
+    fprintf( stdout, "testSeparation\n" );
     testFindFirstObject( );
     fprintf( stdout, "testFindFirstObject\n" );
     testFindLastObject( );
@@ -2743,3 +2750,19 @@ void testKNearFar( void )
     }
     
 }  // end testKNearFar
+
+void testSeparation( void )
+{
+    CNearTree<int> t;
+    const int imin = 0; 
+    const int imax = 2000000;
+    for ( int i=imin; i<imax; ++i )
+    {
+        t.insert( i );
+    }
+
+    typedef std::vector<int> container;
+    container group1, group2;
+    t.BelongsToPoints( imin, imax, group1, group2 );
+    fprintf( stdout, "in %d out %d\n", group1.size(), group2.size() );
+}
