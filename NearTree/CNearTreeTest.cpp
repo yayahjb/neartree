@@ -46,11 +46,12 @@
 #include <algorithm>
 #include <utility>
 
-#include <float.h>
-#include <limits.h>
+#include <cfloat>
+#include <climits>
 #include <cmath>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #ifndef USE_LOCAL_HEADERS
 #include <TNear.h>
