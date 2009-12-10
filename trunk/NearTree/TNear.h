@@ -251,7 +251,7 @@
 #if !defined(TNEAR_H_INCLUDED)
 #define TNEAR_H_INCLUDED
 
-#include <stdlib.h>
+#include <cstdlib>
 
 
 #include <cmath>
@@ -263,6 +263,7 @@
 #endif
 
 #include <vector>
+#include <algorithm>
 
 #ifdef CNEARTREE_SAFE_TRIANG
 #define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0) \
@@ -735,7 +736,7 @@ void BelongsToPoints( const T& t1, const T& t2, ContainerType& group1, Container
 {
     group1.clear();
     group2.clear();
-    CNearTree<T>::iterator it;
+    typename CNearTree<T>::iterator it;
 
     for ( it=this->begin( ); it!=this->end( ); ++it )
     {
@@ -752,11 +753,11 @@ void BelongsToPoints( const T& t1, const T& t2, ContainerType& group1, Container
 
 //=======================================================================
 template<typename ContainerTypeInside, typename ContainerTypeOutside>
-void SeparateByRadius( const DistanceType radius, const T& tProbe, ContainerTypeInside& inside, ContainerTypeOutside& outside )
+void SeparateByRadius( const DistanceType radius, const T& probe, ContainerTypeInside& inside, ContainerTypeOutside& outside )
 {
     inside.clear();
     outside.clear();
-    CNearTree<T>::iterator it;
+    typename CNearTree<T>::iterator it;
 
     for ( it=this->begin( ); it!=this->end( ); ++it )
     {
