@@ -2002,7 +2002,7 @@ class iterator
         iterator( const const_iterator& s ) { position = ((const_iterator)s).get_position(); parent = ((const_iterator)s).get_parent(); };// constructor
 
         iterator& operator=  ( const iterator& s )       { position = s.position; parent = s.parent; return ( *this ); };
-        iterator& operator=  ( const const_iterator& s ) { position = s.position; parent = s.parent; return ( *this ); };
+        iterator& operator=  ( const const_iterator& s ) { position = ((const_iterator&)s).get_position(); parent = ((const_iterator&)s).get_parent(); return ( *this ); };
         iterator  operator++ ( const int n )             { iterator it(*this); position+=1+n; return ( it ); };
         iterator  operator-- ( const int n )             { iterator it(*this); position-=1+n; return ( it ); };
         iterator& operator++ ( void )                    { ++position; return ( *this ); };
@@ -2015,7 +2015,7 @@ class iterator
 
         bool      operator== ( const iterator& t ) const { return ( t.position==(parent->m_ObjectStore.empty( )?1:position) && t.parent==parent ); };
         bool      operator!= ( const iterator& t ) const { return ( ! (*this==t )); };
-        bool      operator== ( const const_iterator& t ) const { return ( t.position==(parent->m_ObjectStore.empty( )?1:position) && t.parent==parent ); };
+        bool      operator== ( const const_iterator& t ) const { return ( ((const_iterator&)t).get_position()==(parent->m_ObjectStore.empty( )?1:position) &&  ((const_iterator&)t).get_parent()==parent ); };
         bool      operator!= ( const const_iterator& t ) const { return ( ! (*this==t )); };
 
         const T * const operator-> ( void )   const      { return ( &(const_cast<CNearTree*>(parent)->m_ObjectStore[position]) ); };
