@@ -251,9 +251,8 @@
 #if !defined(TNEAR_H_INCLUDED)
 #define TNEAR_H_INCLUDED
 
-#include <cstdlib>
-
-
+#include <stdlib.h>
+#include <algorithm>
 #include <cmath>
 
 #ifndef USE_LOCAL_HEADERS
@@ -2044,7 +2043,7 @@ class const_iterator
         const_iterator( const iterator& s ) { position = ((iterator)s).get_position(); parent = ((iterator)s).get_parent(); }; // constructor
 
         const_iterator& operator=  ( const const_iterator& s ) { position = s.position; parent = s.parent; return ( *this ); };
-        const_iterator& operator=  ( const       iterator& s ) { position = s.position; parent = s.parent; return ( *this ); };
+        const_iterator& operator=  ( const       iterator& s ) { position = ((iterator &)s).get_position(); parent = ((iterator &)s).get_parent(); return ( *this ); };
         const_iterator  operator++ ( const int n )             { const_iterator it(*this); position+=1+n; return ( it ); };
         const_iterator  operator-- ( const int n )             { const_iterator it(*this); position-=1+n; return ( it ); };
         const_iterator& operator++ ( void )                    { ++position; return ( *this ); };
@@ -2057,7 +2056,7 @@ class const_iterator
 
         bool            operator== ( const const_iterator& t ) const { return ( t.position==(parent->m_ObjectStore.empty( )?1:position) && t.parent==parent ); };
         bool            operator!= ( const const_iterator& t ) const { return ( ! (*this==t )); };
-        bool            operator== ( const iterator& t ) const { return ( t.position==(parent->m_ObjectStore.empty( )?1:position) && t.parent==parent ); };
+        bool            operator== ( const iterator& t ) const { return ( ((iterator &)t).get_position()==(parent->m_ObjectStore.empty( )?1:position) && ((iterator &)t).get_parent()==parent ); };
         bool            operator!= ( const iterator& t ) const { return ( ! (*this==t )); };
 
         const T * const operator-> ( void )   const      { return ( &(const_cast<CNearTree*>(parent)->m_ObjectStore[position]) ); };
