@@ -1928,6 +1928,19 @@ long K_Far (
     return ( (long)tFarthest.size( ) );
 }  //  end K_Far
 
+//=======================================================================
+// static bool K_Sorter( const std::pair<double, T>& t1, const std::pair<double, T>& t2 )
+//
+//  Private static function used to sort the K-near/far internal data stores. This 
+//  replaces the default less<>, which doesn't necessarily exist for all object.
+//  All this does is compare the distances, so only the .first element needs
+//  to be examined.
+//
+//=======================================================================
+static bool K_Sorter( const std::pair<double, T>& t1, const std::pair<double, T>& t2 )
+{
+    return ( t1.first < t2.first );
+}
 
 //=======================================================================
 //  void K_Resize ( const size_t k, const TNode& t, std::vector<T>& tClosest, double& dRadius ) const
@@ -1943,7 +1956,7 @@ long K_Far (
 //=======================================================================
 void K_Resize( const size_t k, const TNode& t, std::vector<std::pair<double, T> >& tClosest, double& dRadius )
 {
-    std::sort( tClosest.begin(), tClosest.end() );
+    std::sort( tClosest.begin(), tClosest.end(), &K_Sorter );
     tClosest.resize( k );
     dRadius = DistanceBetween( t, tClosest[tClosest.size()-1].second );
 }  // end K_Resize
@@ -2075,3 +2088,4 @@ class const_iterator
 }; // template class CNearTree
 
 #endif // !defined(TNEAR_H_INCLUDED)
+
