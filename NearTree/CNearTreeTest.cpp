@@ -2642,6 +2642,56 @@ void testKNearFar( void )
             fprintf(stdout, "testKNearFar, Near: found wrong count #6\n" );
         }
     }
+
+    {
+        CNearTree<vec17> tree;
+        CNearTree<vec17> outTree;
+        const unsigned int n2Store = 20;
+
+        for ( unsigned int i=0; i<n2Store; ++i )
+        {
+            tree.insert( vec17( ) );
+        }
+
+        const vec17 probe = vec17();
+        const size_t n2Finda = 5;
+        const size_t lFound17a = tree.FindK_NearestNeighbors( n2Finda, 100000.0, outTree, probe );
+        if( lFound17a != n2Finda )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Near: found wrong count #17a testing lFound17a\n" );
+        }
+        if( lFound17a != outTree.size( ) )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Near: found wrong count #17a testing outTree.size()\n" );
+        }
+        double maxDist = -1.0;
+        for ( unsigned int i=0; i<outTree.size(); ++i )
+        {
+            maxDist = std::max( maxDist, (probe-outTree[i]).Norm() );
+        }
+
+        outTree.clear( );
+        const size_t lFound17b = tree.FindK_NearestNeighbors( 10*n2Store, 100000.0, outTree, probe );
+        if( lFound17b != n2Store )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Near: found wrong count #17b testing outTree.size()\n" );
+        }
+
+        size_t count = 0;
+        for ( unsigned int i=0; i<outTree.size(); ++i )
+        {
+            count += ((probe-outTree[i]).Norm() <= maxDist ) ? 1 : 0 ;
+        }
+        if( count != n2Finda )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Near: found wrong count #17b testing\n" );
+        }
+
+    }
     
     {
         const int searchPoint = -1;
