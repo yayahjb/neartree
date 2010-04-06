@@ -927,8 +927,8 @@ long FindK_NearestNeighbors ( const size_t k, const DistanceType& radius,  Outpu
     }
     else
     {
-        std::vector<std::pair<double, T> > K_Storage;
-        double dRadius = radius;
+        std::vector<std::pair<DistanceType, T> > K_Storage;
+        DistanceType dRadius = radius;
         const long lFound = m_BaseNode.K_Near( k, dRadius, K_Storage, t, this->m_ObjectStore );
         for( unsigned int i=0; i<K_Storage.size( ); ++i )
         {
@@ -967,8 +967,8 @@ long FindK_FarthestNeighbors ( const size_t k, OutputContainerType& tFarthest,  
     }
     else
     {
-        std::vector<std::pair<double, T> > K_Storage;
-        double dRadius = 0;
+        std::vector<std::pair<DistanceType, T> > K_Storage;
+        DistanceType dRadius = 0;
         const long lFound = m_BaseNode.K_Far( k, dRadius, K_Storage, t, this->m_ObjectStore );
         for( unsigned int i=0; i<K_Storage.size( ); ++i )
         {
@@ -1779,7 +1779,7 @@ long InAnnulus (
 long K_Near (
              const size_t k,
              DistanceTypeNode& dRadius,
-             std::vector<std::pair<double,T> >& tClosest,
+             std::vector<std::pair<DistanceTypeNode,T> >& tClosest,
              const TNode& t,
              const std::vector<TNode>& objectStore
              )
@@ -1864,7 +1864,7 @@ long K_Near (
 long K_Far (
             const size_t k,
             DistanceTypeNode& dRadius,
-            std::vector<std::pair<double,T> >& tFarthest,
+            std::vector<std::pair<DistanceTypeNode,T> >& tFarthest,
             const TNode& t,
             const std::vector<TNode>& objectStore
             )
@@ -1929,7 +1929,7 @@ long K_Far (
 }  //  end K_Far
 
 //=======================================================================
-// static bool K_Sorter( const std::pair<double, T>& t1, const std::pair<double, T>& t2 )
+// static bool K_Sorter( const std::pair<DistanceTypeNode, T>& t1, const std::pair<DistanceTypeNode, T>& t2 )
 //
 //  Private static function used to sort the K-near/far internal data stores. This 
 //  replaces the default less<>, which doesn't necessarily exist for all object.
@@ -1937,13 +1937,13 @@ long K_Far (
 //  to be examined.
 //
 //=======================================================================
-static bool K_Sorter( const std::pair<double, T>& t1, const std::pair<double, T>& t2 )
+static bool K_Sorter( const std::pair<DistanceTypeNode, T>& t1, const std::pair<DistanceTypeNode, T>& t2 )
 {
     return ( t1.first < t2.first );
 }
 
 //=======================================================================
-//  void K_Resize ( const size_t k, const TNode& t, std::vector<T>& tClosest, double& dRadius ) const
+//  void K_Resize ( const size_t k, const TNode& t, std::vector<T>& tClosest, DistanceTypeNode& dRadius ) const
 //
 //  Private function to limit the size of internally stored data for K-nearest/farthest-neighbor searches
 //  This function is only called by K_Near and K_Far.
@@ -1954,7 +1954,7 @@ static bool K_Sorter( const std::pair<double, T>& t1, const std::pair<double, T>
 //    t  is the probe point
 //
 //=======================================================================
-void K_Resize( const size_t k, const TNode& t, std::vector<std::pair<double, T> >& tClosest, double& dRadius )
+void K_Resize( const size_t k, const TNode& t, std::vector<std::pair<DistanceTypeNode, T> >& tClosest, DistanceTypeNode& dRadius )
 {
     std::sort( tClosest.begin(), tClosest.end(), &K_Sorter );
     tClosest.resize( k );
