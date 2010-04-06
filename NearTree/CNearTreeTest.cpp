@@ -2677,18 +2677,20 @@ void testKNearFar( void )
         if( lFound17b != n2Store )
         {
             ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: found wrong count #17b testing outTree.size()\n" );
+	    fprintf(stdout, "testKNearFar, Near: found wrong count #17b testing %ld, got %ld, expected %ld\n",
+			                        (long int) outTree.size(), (long int) lFound17b, (long int) n2Store );
         }
 
         size_t count = 0;
         for ( unsigned int i=0; i<outTree.size(); ++i )
         {
-            count += ((probe-outTree[i]).Norm() <= maxDist ) ? 1 : 0 ;
+            count += ((probe-outTree[i]).Norm() <= maxDist*(1.0+1.0E-9) ) ? 1 : 0 ;
         }
         if( count != n2Finda )
         {
             ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: found wrong count #17b testing\n" );
+            fprintf(stdout, "testKNearFar, Near: found wrong count #17b testing %ld, got %ld, expected %ld\n",
+                                                (long int) outTree.size(), (long int) n2Finda, (long int) count );
         }
 
     }
