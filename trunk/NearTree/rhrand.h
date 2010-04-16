@@ -51,7 +51,7 @@
 class RHrand {
     
 private:
-    double randomNumberBuffer[55];
+    double randomNumberBuffer[56];
     int indx;
     int jndx;
     int kndx;
@@ -75,7 +75,7 @@ public:
     void srandom ( const int iseed ) {
         jndx = iseed;
         if (jndx < 0) jndx = -jndx;
-        for( indx=0; indx<55; ++indx )
+        for( indx=0; indx<(int)(sizeof(randomNumberBuffer)/sizeof(randomNumberBuffer[0])); ++indx )
         {
             jndx = (jndx*2349 + 14867)%32767;
             randomNumberBuffer[indx] = fabs((double)(jndx/32767.0));
@@ -111,7 +111,7 @@ extern "C" {
 #include <math.h>
     
     typedef struct CRHrand_ {
-        double buffer[55];
+        double buffer[56];
         int indx;
         int jndx;
         int kndx;
@@ -125,7 +125,7 @@ extern "C" {
 #define CRHrandSrandom(randhandle,iseed) { \
         (randhandle)->jndx = iseed; \
         if ((randhandle)->jndx < 0) (randhandle)->jndx = -(randhandle)->jndx; \
-        for((randhandle)->indx=0; (randhandle)->indx<55; ++(randhandle)->indx ) \
+        for((randhandle)->indx=0; (randhandle)->indx<(sizeof((randhandle)->buffer)/sizeof((randhandle)->buffer[0])); ++(randhandle)->indx ) \
         { \
             (randhandle)->jndx = ((randhandle)->jndx*2349 + 14867)%32767; \
             ((randhandle)->buffer)[(randhandle)->indx] = fabs((double)(((randhandle)->jndx)/32767.0)); \
@@ -156,4 +156,5 @@ extern "C" {
 
 
 #endif
+
 
