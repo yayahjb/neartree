@@ -262,7 +262,6 @@
 #endif
 
 #include <vector>
-#include <algorithm>
 
 #ifdef CNEARTREE_SAFE_TRIANG
 #define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0) \
@@ -2088,4 +2087,5 @@ class const_iterator
 }; // template class CNearTree
 
 #endif // !defined(TNEAR_H_INCLUDED)
+
 
