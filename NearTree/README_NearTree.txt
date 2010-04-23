@@ -1,8 +1,9 @@
+
                                     NearTree
 
-                                 Release 2.1.4
-                                  7 July 2009
-       (c) Copyright 2001, 2008, 2009 Larry Andrews. All rights reserved
+                                 Release 2.1.5
+                                 23 April 2010
+    (c) Copyright 2001, 2008, 2009, 2010 Larry Andrews. All rights reserved
                                     based on
          Larry Andrews, "A template for the nearest neighbor problem",
    C/C++ Users Journal, Volume 19 , Issue 11 (November 2001), 40 - 49 (2001),
@@ -18,7 +19,8 @@
                      4 June 2009 Release 2.1.1 LCA and HJB
                      7 June 2009 Release 2.1.2 LCA and HJB
                      7 July 2009 Release 2.1.3 LCA and HJB
-		     29 November 2009 Release 2.1.4 LCA
+                       29 November 2009 Release 2.1.4 LCA
+                    23 April 2010 Release 2.1.5 LCA and HJB
 
     YOU MAY REDISTRIBUTE NearTree UNDER THE TERMS OF THE LGPL
 
@@ -45,8 +47,9 @@
    TNear.h, and a C library, CNearTree.c, with example/test programs.
 
    This is a cleanup update to the 2.1 release of 30 May 2009 to increase
-   portability, in three stages (2.1.1 on 4 June 2009, 2.1.2 on 7 June 2009,
-   2.1.3 on 7 July 2009) dealing with the following issues:
+   portability, in five stages (2.1.1 on 4 June 2009, 2.1.2 on 7 June 2009,
+   2.1.3 on 7 July 2009, 2.1.4 on 29 November 2009 and 2.1.5 on 23 April
+   2010) dealing with the following issues:
      * Convert to use of a self-contained portable random-number generator
        from Rob Harrison (2.1.1)
      * Ensure wider use of const where appropriate (2.1.1)
@@ -54,6 +57,7 @@
      * Reorganize use of USE_LOCAL_HEADERS in CNearTreeTest.cpp (2.1.2)
      * Change FAR macro to CNEARTREE_FAR (2.1.3)
      * Add BelongsToPoints and SeparateByRadius (2.1.4)
+     * Fix dimensions for rhrand (2.1.5)
 
    The 2.1 release was a minor update to the 2.0 release of 21 March 2009 to
    deal with the following issues:
@@ -100,7 +104,7 @@
 
    The NearTree package is available at
    www.sourceforge.net/projects/neartree. A source tarball is available at
-   downloads.sourceforge.net/neartree/NearTree-2.1.4.tar.gz. Later tarballs
+   downloads.sourceforge.net/neartree/NearTree-2.1.3.tar.gz. Later tarballs
    may be available.
 
    If you decide to simply use the TNear.h header to add nearest neighbor
@@ -110,7 +114,7 @@
    default libtool under Mac OS X will not work for this installation.
 
    When the source tarball is downloaded and unpacked, you should have a
-   directory NearTree-2.1.4. To see the current settings for a build execute
+   directory NearTree-2.1.5. To see the current settings for a build execute
 
    make
 
@@ -923,5 +927,5 @@ operator- ( );        // geometrical (vector) difference of two objects
 
      ----------------------------------------------------------------------
 
-   Updated 29 November 2009
-   andrewsL@ix.netcom.com
+   Updated 23 April 2010
+   andrewsl@ix.netcom.com.com
