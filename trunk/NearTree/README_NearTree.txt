@@ -104,7 +104,7 @@
 
    The NearTree package is available at
    www.sourceforge.net/projects/neartree. A source tarball is available at
-   downloads.sourceforge.net/neartree/NearTree-2.1.3.tar.gz. Later tarballs
+   downloads.sourceforge.net/neartree/NearTree-2.1.5.tar.gz. Later tarballs
    may be available.
 
    If you decide to simply use the TNear.h header to add nearest neighbor
