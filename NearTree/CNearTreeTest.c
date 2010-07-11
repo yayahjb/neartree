@@ -84,6 +84,7 @@ void testRandomTree1( const int n );
 void testBigVector( void );
 void testDelayedInsertion( void );
 void testKNearFar( void );
+void test4Sphere(void);
 
 long g_errorCount;
 int dbgflg;
@@ -135,6 +136,8 @@ int main(int argc, char** argv)
     fprintf( stdout, "testDelayedInsertion\n" );
     testKNearFar();
     fprintf( stdout, "testKNearFar\n" );
+    test4Sphere();
+    fprintf( stdout, "test4Sphere\n" );
     
     if( g_errorCount == 0 )
     {
@@ -2290,6 +2293,87 @@ void testKNearFar( void )
     
 }
 
+/*=======================================================================*/
+void test4Sphere( void )
+{
+    CNearTreeHandle tree;
+    bool bReturn;
+    double searchPoint[4];
+    double vect[4];
+    double CNEARTREE_FAR * v;
+    void CNEARTREE_FAR * vv;
+    int ii, jj;
+    
+    bReturn = !CNearTreeCreate(&tree,4,CNEARTREE_TYPE_DOUBLE|CNEARTREE_NORM_SPHERE);
+    if (!bReturn)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: test4Sphere: CNearTreeCreate failed\n" );
+    }
+    
+    vect[0] = vect[1] = vect[2] = vect[3] = 0.;
+    bReturn = !CNearTreeImmediateInsert(tree,vect, NULL);
+    if (!bReturn)
+    {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: test4Sphere: CNearTreeImmediateInsert failed at origin\n" );
+    }
+    for (ii=0; ii < 4; ii++) {
+        for (jj=0; jj < 10; jj++) {
+            vect[0] = vect[1] = vect[2] = vect[3] = 0.;
+            vect[ii] = (double)jj;
+            bReturn = !CNearTreeImmediateInsert(tree,vect, NULL);
+            if (!bReturn)
+            {
+                ++g_errorCount;
+                fprintf(stdout, "CNearTreeTest: test4Sphere: CNearTreeImmediateInsert failed at [%g,%g,%g,%g]\n",
+                        vect[0],vect[1],vect[2],vect[3]);
+            }
+        }
+    }
+    
+    searchPoint[0] = searchPoint[1] = searchPoint[2] = searchPoint[3] = 0.49999;
+    
+    bReturn = !CNearTreeNearestNeighbor(tree, 1.999, &vv, NULL, searchPoint);
+    v = (double CNEARTREE_FAR *)vv;
+    
+    if (!bReturn || v[0] !=0. || v[1] !=0. || v[2] != 0. || v[3] != 0.) {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: test4Sphere: NearestNeighbor failed, got [%g,%g,%g,%g], should be [0,0,0,0]\n", 
+                v[0], v[1], v[2], v[3] );        
+    }
+    
+    
+    searchPoint[0] = searchPoint[1] = 0.;
+    searchPoint[2] = 0.700;
+    searchPoint[3] = 0.710;
+    
+    bReturn = !CNearTreeNearestNeighbor(tree, 6.0, &vv, NULL, searchPoint);
+    v = (double CNEARTREE_FAR *)vv;
+    
+    if (!bReturn || v[0] !=0. || v[1] !=0. || v[2] != 0. || v[3] != 1.) {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: test4Sphere: NearestNeighbor failed, got [%g,%g,%g,%g], should be [0,0,0,1]\n", 
+                v[0], v[1], v[2], v[3] );        
+    }
 
+    searchPoint[0] = searchPoint[1] = 0.;
+    searchPoint[2] = 0.700*2.25;
+    searchPoint[3] = 0.710*2.25;
+    
+    bReturn = !CNearTreeNearestNeighbor(tree, 6.0, &vv, NULL, searchPoint);
+    v = (double CNEARTREE_FAR *)vv;
+    
+    if (!bReturn || v[0] !=0. || v[1] !=0. || v[2] != 0. || v[3] != 2.) {
+        ++g_errorCount;
+        fprintf(stdout, "CNearTreeTest: test4Sphere: NearestNeighbor failed, got [%g,%g,%g,%g], should be [0,0,0,2]\n", 
+                v[0], v[1], v[2], v[3] );        
+    }
+    
+   
+    
+    
+    
+}
 
 

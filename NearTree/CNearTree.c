@@ -93,6 +93,7 @@ extern "C" {
      treetype -- and integer flag for type of the vectors
      CNEARTREE_TYPE_DOUBLE for double
      CNEARTREE_TYPE_INTEGER for integer
+     CNEARTREE_TYPE_STRING for strings
      
      =======================================================================
      */
@@ -138,6 +139,41 @@ extern "C" {
             return distsq;
             
             
+        } else if (treetype == CNEARTREE_TYPE_STRING) {
+            
+            char CNEARTREE_FAR * string1;
+            char CNEARTREE_FAR * string2;
+            char CNEARTREE_FAR * stringx;
+            char c1, c2;
+            
+            string1 = (char CNEARTREE_FAR *)coord1;
+            string2 = (char CNEARTREE_FAR *)coord2;
+
+            distsq = 0;
+            
+            c1=c2=0;
+            stringx = NULL;
+            for (index=0; index < treedim; index++) {
+                c1 = string1[index];
+                c2 = string2[index];
+                if (c1 == 0) {
+                    if (c2 == 0) break;
+                    stringx = (char CNEARTREE_FAR *)coord2;
+                    break;
+                } else if (c2 == 0) {
+                    stringx = (char CNEARTREE_FAR *)coord1;
+                    break;
+                }
+                if (c1 != c2) distsq++;
+            }
+            if (index < treedim && stringx) {
+                for (; index < treedim; index++) {
+                    if (stringx[index] == 0) break;
+                    distsq++;
+                }
+            }
+            return distsq*distsq;
+        
         } else return -1.0;
         
     }
@@ -151,6 +187,8 @@ extern "C" {
      treenorm should be one of CNEARTREE_NORM_L1 for an L-1 norm
      CNEARTREE_NORM_L2 for an L-2 norm
      CNEARTREE_NORM_LINF for an L-infinity norm
+     CNEARTREE_NORM_SPHERE for a sphere-based norm
+     CNEARTREE_NORM_HAMMING for a Hamming distance norm
      
      the function returns CNEARTREE_BAD_ARGUMENT for an invalid argument
      CNEARTREE_SUCCESS (0) otherwise
@@ -162,7 +200,9 @@ extern "C" {
         if (!treehandle ||
             (treenorm != CNEARTREE_NORM_L1
              && treenorm != CNEARTREE_NORM_L2
-             && treenorm != CNEARTREE_NORM_LINF)
+             && treenorm != CNEARTREE_NORM_LINF
+             && treenorm != CNEARTREE_NORM_SPHERE
+             && treenorm != CNEARTREE_NORM_HAMMING)
             || (treehandle->m_iflags & CNEARTREE_NORM)!=CNEARTREE_NORM_UNKNOWN ) return CNEARTREE_BAD_ARGUMENT;
         treehandle->m_iflags &= ~CNEARTREE_NORM_UNKNOWN;
         treehandle->m_iflags |= treenorm;
@@ -194,19 +234,27 @@ extern "C" {
         double CNEARTREE_FAR * dcoord2 = NULL;
         int CNEARTREE_FAR * icoord1 = NULL;
         int CNEARTREE_FAR * icoord2 = NULL;
+        char CNEARTREE_FAR * svalue1 = NULL;
+        char CNEARTREE_FAR * svalue2 = NULL;
         
         
         treedim = treehandle->m_szdimension;
         treetype = treehandle->m_iflags&CNEARTREE_TYPE;
         treenorm = treehandle->m_iflags&CNEARTREE_NORM;
-        
+  
+        if (!treehandle || !coord1 || !coord2) return -1.;
+
         if (treenorm == CNEARTREE_NORM_UNKNOWN || treenorm == 0) {
             treehandle->m_iflags &= ~CNEARTREE_NORM;
-            treehandle->m_iflags |= CNEARTREE_NORM_L2;
-            treenorm = CNEARTREE_NORM_L2;
+            if (treetype == CNEARTREE_TYPE_STRING) {
+                treehandle->m_iflags |= CNEARTREE_NORM_HAMMING;
+                treenorm = CNEARTREE_NORM_HAMMING;
+            } else {
+                treehandle->m_iflags |= CNEARTREE_NORM_L2;
+                treenorm = CNEARTREE_NORM_L2;
+            }
+            
         }
-        
-        if (!treehandle || !coord1 || !coord2) return -1.;
         
         
         if (treetype == CNEARTREE_TYPE_DOUBLE) {
@@ -216,6 +264,9 @@ extern "C" {
         } else if (treetype == CNEARTREE_TYPE_INTEGER) {
             icoord1 = (int CNEARTREE_FAR *)coord1;
             icoord2 = (int CNEARTREE_FAR *)coord2;
+        } else if (treetype == CNEARTREE_TYPE_STRING) {
+            svalue1 = (char CNEARTREE_FAR *)coord1;
+            svalue2 = (char CNEARTREE_FAR *)coord2;
         } else return -1.0;
         
         if (treedim == 1) {
@@ -223,12 +274,41 @@ extern "C" {
                 return fabs(dcoord1[0]-dcoord2[0]);
             } else if (treetype == CNEARTREE_TYPE_INTEGER) {
                 return fabs((double)(icoord1[0]-icoord2[0]));
+            } else if (treetype == CNEARTREE_TYPE_STRING) {
+                return (svalue1[0]==svalue2[0])?0.:1.;
             } else {
                 return -1.0;
             }
         }
         
         switch (treenorm) {
+            case CNEARTREE_NORM_HAMMING:
+                if (treetype == CNEARTREE_TYPE_STRING) {
+                    char c1, c2;
+                    char CNEARTREE_FAR * stringx;
+                    dist = 0.;
+                    stringx = NULL;
+                    for (index=0; index < treedim; index++){
+                        c1 = svalue1[index];
+                        c2 = svalue2[index];
+                        if (c1 == 0) {
+                            if (c2 == 0) break;
+                            stringx = (char CNEARTREE_FAR *)coord2;
+                            break;
+                        } else if (c2 == 0) {
+                            stringx = (char CNEARTREE_FAR *)coord1;
+                            break;
+                        }
+                        if (c1 != c2) dist++;
+                    }
+                    if (index < treedim && stringx) {
+                        for (; index < treedim; index++) {
+                            if (stringx[index] == 0) break;
+                            dist++;
+                        }                        
+                    }
+                } else return -1.0;
+                return dist;
             case CNEARTREE_NORM_L1:
                 if (treetype == CNEARTREE_TYPE_DOUBLE) {
                     dist= fabs(dcoord1[0]-dcoord2[0]);
@@ -242,6 +322,7 @@ extern "C" {
                     }
                 } else return -1.0;
                 return dist;
+
             case CNEARTREE_NORM_LINF:
                 if (treetype == CNEARTREE_TYPE_DOUBLE) {
                     dist= fabs(dcoord1[0]-dcoord2[0]);
@@ -252,6 +333,52 @@ extern "C" {
                     dist = fabs((double)(icoord1[0]-icoord2[0]));
                     for (index=1; index < treedim; index++) {
                         dist = max2(dist,fabs((double)(dcoord1[index]-dcoord2[index])));
+                    }
+                } else return -1.0;
+                return dist;
+                
+            case CNEARTREE_NORM_SPHERE:
+                if (treetype == CNEARTREE_TYPE_DOUBLE) {
+                    double dot, cosangle, angle, norm1, norm2;
+                    dot = norm1 = norm2 = 0.;
+                    for (index=0; index < treedim; index++) {
+                        dot += dcoord1[index]*dcoord2[index];
+                        norm1 += dcoord1[index]*dcoord1[index];
+                        norm2 += dcoord2[index]*dcoord2[index];
+                    }
+                    norm1 = sqrt(norm1);
+                    norm2 = sqrt(norm2);
+                    if (norm1 <= DBL_MIN) {
+                        dist = norm2;
+                    } else if (norm2 <= DBL_MIN) {
+                        dist = norm1;
+                    } else {
+                        cosangle = dot/(norm1*norm2);
+                        if (cosangle > 1.) cosangle = 1.;
+                        if (cosangle < -1.) cosangle = -1.;
+                        angle = atan2(sqrt(1.-cosangle*cosangle),cosangle);
+                    }
+                    dist = sqrt(angle*angle + (norm1-norm2)*(norm1-norm2));
+                } else if (treetype == CNEARTREE_TYPE_INTEGER) {
+                    double dot, cosangle, angle, norm1, norm2;
+                    dot = norm1 = norm2 = 0.;
+                    for (index=0; index < treedim; index++) {
+                        dot += ((double)icoord1[index])*((double)icoord2[index]);
+                        norm1 += ((double)icoord1[index])*((double)icoord1[index]);
+                        norm2 += ((double)icoord2[index])*((double)icoord2[index]);
+                    }
+                    norm1 = sqrt(norm1);
+                    norm2 = sqrt(norm2);
+                    if (norm1 <= DBL_MIN) {
+                        dist = norm2;
+                    } else if (norm2 <= DBL_MIN) {
+                        dist = norm1;
+                    } else {
+                        cosangle = dot/(norm1*norm2);
+                        if (cosangle > 1.) cosangle = 1.;
+                        if (cosangle < -1.) cosangle = -1.;
+                        angle = atan2(sqrt(1.-cosangle*cosangle),cosangle);
+                        dist = sqrt(angle*angle + (norm1-norm2)*(norm1-norm2));
                     }
                 } else return -1.0;
                 return dist;
@@ -311,8 +438,9 @@ extern "C" {
         
         treetype = (treehandle->m_iflags) & CNEARTREE_TYPE;
         
-        if ( (treetype != CNEARTREE_TYPE_DOUBLE 
-              && treetype != CNEARTREE_TYPE_INTEGER)) return CNEARTREE_BAD_ARGUMENT;
+        if ( (treetype != CNEARTREE_TYPE_DOUBLE) 
+              && (treetype != CNEARTREE_TYPE_INTEGER)
+              && (treetype != CNEARTREE_TYPE_STRING) ) return CNEARTREE_BAD_ARGUMENT;
         
         *treenodehandle = (CNearTreeNodeHandle)CNEARTREE_MALLOC(sizeof(CNearTreeNode));
         if (!(*treenodehandle)) {
@@ -346,10 +474,13 @@ extern "C" {
      treetype -- double or integer flag for type of the vectors ored with norm
      CNEARTREE_TYPE_DOUBLE for double
      CNEARTREE_TYPE_INTEGER for integer
+     CNEARTREE_TYPE_STRING for strings
        ored with
      CNEARTREE_NORM_L1        for the sum of the absolute values
      CNEARTREE_NORM_L2        for the square root of the sum of the squares
      CNEARTREE_NORM_LINF      for the max
+     CNEARTREE_NORM_SPHERE    for norm as spherical angular distance
+     CNEARTREE_NORM_HAMMING   for norm as string hamming distance
      
      
      creates an empty tree with no right or left node and with the dMax-below
@@ -382,7 +513,8 @@ extern "C" {
         
         if (treedim < 0 
             || (treetype != CNEARTREE_TYPE_DOUBLE 
-                && treetype != CNEARTREE_TYPE_INTEGER)) return CNEARTREE_BAD_ARGUMENT;
+                && treetype != CNEARTREE_TYPE_INTEGER
+                && treetype != CNEARTREE_TYPE_STRING)) return CNEARTREE_BAD_ARGUMENT;
         
         *treehandle = (CNearTreeHandle)CNEARTREE_MALLOC(sizeof(CNearTree));
         if (!(*treehandle)) {
@@ -1714,7 +1846,7 @@ extern "C" {
      size_t k);
      
      CNearTreeSortIn inserts a new metric and index into the vectors
-     metrics and indices, sorted on non-decreasng metric,
+     metrics and indices, sorted on non-decreasing metric,
      with the size of the vectors capped at k, or uncapped if k = 0;
      
      */ 

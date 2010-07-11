@@ -123,18 +123,21 @@ extern "C" {
     
 #define CNEARTREE_TYPE_DOUBLE      16         /* 0x0010 */
 #define CNEARTREE_TYPE_INTEGER     32         /* 0x0020 */
+#define CNEARTREE_TYPE_STRING      64         /* 0x0040 */
     
-#define CNEARTREE_TYPE             48         /* 0x0030 */
+#define CNEARTREE_TYPE            112         /* 0x0070 */
     
-#define CNEARTREE_NORM_UNKNOWN     64         /* 0x0040 */
-#define CNEARTREE_NORM_L1         128         /* 0x0080 */
-#define CNEARTREE_NORM_L2         256         /* 0x0100 */
-#define CNEARTREE_NORM_LINF       512         /* 0x0200 */
+#define CNEARTREE_NORM_UNKNOWN    128         /* 0x0080 */
+#define CNEARTREE_NORM_L1         256         /* 0x0100 */
+#define CNEARTREE_NORM_L2         512         /* 0x0200 */
+#define CNEARTREE_NORM_LINF      1024         /* 0x0400 */
+#define CNEARTREE_NORM_SPHERE    2048         /* 0x0800 */
+#define CNEARTREE_NORM_HAMMING   4096         /* 0x1000 */
     
-#define CNEARTREE_NORM            960         /* 0x03C0 */
+#define CNEARTREE_NORM           8064         /* 0x1F80 */
     
-#define CNEARTREE_FLIP           1024         /* 0x0400 */
-#define CNEARTREE_DEFER_ALL      2048         /* 0x0800 */
+#define CNEARTREE_FLIP           8192         /* 0x2000 */
+#define CNEARTREE_DEFER_ALL     16384         /* 0x4000 */
     
     
     
@@ -255,18 +258,26 @@ extern "C" {
     /*
      =======================================================================
      int CNearTreeCreate ( CNearTreeHandle CNEARTREE_FAR * treehandle, 
-     size_t treedim, 
-     int treetype )
+     size_t treedim, int treetype)
      
      Create a CNearTree
      
-     treedim -- the dimension of the vectors
-     treetype -- and integer flag for type of the vectors
-     CNEARTREE_TYPE_DOUBLE for double
-     CNEARTREE_TYPE_INTEGER for integer     
-     
      returns a pointer to the newly allocated block of memory as a 
-     CNearTreeHandle in *treehandle, assuming coordinates of dimension treedim
+     CNearTreeHandle in *treehandle
+     
+     
+     treedim -- the dimension of the vectors
+     treetype -- double or integer flag for type of the vectors ored with norm
+     CNEARTREE_TYPE_DOUBLE for double
+     CNEARTREE_TYPE_INTEGER for integer
+     CNEARTREE_TYPE_STRING for strings
+     ored with
+     CNEARTREE_NORM_L1        for the sum of the absolute values
+     CNEARTREE_NORM_L2        for the square root of the sum of the squares
+     CNEARTREE_NORM_LINF      for the max
+     CNEARTREE_NORM_SPHERE    for norm as spherical angular distance
+     CNEARTREE_NORM_HAMMING   for norm as string hamming distance
+     
      
      creates an empty tree with no right or left node and with the dMax-below
      set to negative values so that any match found will be stored since it will
@@ -538,7 +549,7 @@ extern "C" {
     
     int CNearTreeNearestNeighbor (const CNearTreeHandle treehandle, 
                                   const double dRadius,  
-                                  void CNEARTREE_FAR *  CNEARTREE_FAR * coordClosest,
+                                  void CNEARTREE_FAR * CNEARTREE_FAR * coordClosest,
                                   void CNEARTREE_FAR * CNEARTREE_FAR * objClosest, 
                                   const void CNEARTREE_FAR * coord );
     /*
