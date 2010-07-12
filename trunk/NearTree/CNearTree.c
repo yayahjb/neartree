@@ -339,7 +339,7 @@ extern "C" {
                 
             case CNEARTREE_NORM_SPHERE:
                 if (treetype == CNEARTREE_TYPE_DOUBLE) {
-                    double dot, cosangle, angle, norm1, norm2;
+                    double dot, cosangle, angle, norm1, norm2, norm;
                     dot = norm1 = norm2 = 0.;
                     for (index=0; index < treedim; index++) {
                         dot += dcoord1[index]*dcoord2[index];
@@ -357,10 +357,12 @@ extern "C" {
                         if (cosangle > 1.) cosangle = 1.;
                         if (cosangle < -1.) cosangle = -1.;
                         angle = atan2(sqrt(1.-cosangle*cosangle),cosangle);
+                        norm = (norm1<norm2?norm1:norm2);
+                        dist = sqrt(norm*norm*angle*angle + (norm1-norm2)*(norm1-norm2));
                     }
-                    dist = sqrt(angle*angle + (norm1-norm2)*(norm1-norm2));
+                    
                 } else if (treetype == CNEARTREE_TYPE_INTEGER) {
-                    double dot, cosangle, angle, norm1, norm2;
+                    double dot, cosangle, angle, norm1, norm2, norm;
                     dot = norm1 = norm2 = 0.;
                     for (index=0; index < treedim; index++) {
                         dot += ((double)icoord1[index])*((double)icoord2[index]);
@@ -378,7 +380,8 @@ extern "C" {
                         if (cosangle > 1.) cosangle = 1.;
                         if (cosangle < -1.) cosangle = -1.;
                         angle = atan2(sqrt(1.-cosangle*cosangle),cosangle);
-                        dist = sqrt(angle*angle + (norm1-norm2)*(norm1-norm2));
+                        norm = (norm1<norm2?norm1:norm2);
+                        dist = sqrt(norm*norm*angle*angle + (norm1-norm2)*(norm1-norm2));
                     }
                 } else return -1.0;
                 return dist;
@@ -781,6 +784,8 @@ extern "C" {
         
         size_t index;
         
+        size_t elsize;
+        
         int errorcode;
         
         if ( !treehandle || !coord ) return CNEARTREE_BAD_ARGUMENT;
@@ -796,10 +801,16 @@ extern "C" {
             }
         }
         
+        
         if ( treehandle->m_CoordStore == NULL) {
+            elsize = sizeof(double);
+            if ((treehandle->m_iflags)&CNEARTREE_TYPE_DOUBLE) {
+                elsize = sizeof(double);
+            } else if ((treehandle->m_iflags)&CNEARTREE_TYPE_INTEGER) {
+                elsize = sizeof(int);
+            } else elsize = sizeof(char);
             if (CVectorCreate(&(treehandle->m_CoordStore),
-                              (treehandle->m_szdimension)*
-                              (((treehandle->m_iflags)&CNEARTREE_TYPE_DOUBLE)?sizeof(double):sizeof(int)),10)) {
+                              (treehandle->m_szdimension)*elsize,10)) {
                 return CNEARTREE_MALLOC_FAILED;
             }
         }
