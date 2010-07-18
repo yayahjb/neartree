@@ -1,8 +1,7 @@
-
                                     NearTree
 
-                                 Release 2.1.5
-                                 23 April 2010
+                                  Release 2.2
+                                  18 July 2010
     (c) Copyright 2001, 2008, 2009, 2010 Larry Andrews. All rights reserved
                                     based on
          Larry Andrews, "A template for the nearest neighbor problem",
@@ -21,6 +20,7 @@
                      7 July 2009 Release 2.1.3 LCA and HJB
                        29 November 2009 Release 2.1.4 LCA
                     23 April 2010 Release 2.1.5 LCA and HJB
+                          18 July 2010 Release 2.2 HJB
 
     YOU MAY REDISTRIBUTE NearTree UNDER THE TERMS OF THE LGPL
 
@@ -46,10 +46,16 @@
    spaces of arbitrary dimensions. This release provides a C++ template,
    TNear.h, and a C library, CNearTree.c, with example/test programs.
 
-   This is a cleanup update to the 2.1 release of 30 May 2009 to increase
-   portability, in five stages (2.1.1 on 4 June 2009, 2.1.2 on 7 June 2009,
-   2.1.3 on 7 July 2009, 2.1.4 on 29 November 2009 and 2.1.5 on 23 April
-   2010) dealing with the following issues:
+   Release 2.2 adds support for C code for fixed length string searches using
+   a hamming distance norm, and for spherical and hemispherical geodesic norm
+   based searches. Because of the addition of new type and norm flags, the
+   version 2.2 shared libraries cannot be used to support binaries copiled
+   against earlier headers and vice-versa.
+
+   Release 2.1.5 was a cleanup update to the 2.1 release of 30 May 2009 to
+   increase portability, in five stages (2.1.1 on 4 June 2009, 2.1.2 on 7
+   June 2009, 2.1.3 on 7 July 2009, 2.1.4 on 29 November 2009 and 2.1.5 on 23
+   April 2010) dealing with the following issues:
      * Convert to use of a self-contained portable random-number generator
        from Rob Harrison (2.1.1)
      * Ensure wider use of const where appropriate (2.1.1)
@@ -104,8 +110,8 @@
 
    The NearTree package is available at
    www.sourceforge.net/projects/neartree. A source tarball is available at
-   downloads.sourceforge.net/neartree/NearTree-2.1.5.tar.gz. Later tarballs
-   may be available.
+   downloads.sourceforge.net/neartree/NearTree-2.2.tar.gz. Later tarballs may
+   be available.
 
    If you decide to simply use the TNear.h header to add nearest neighbor
    support to C++ code under Visual Studio, be sure to also use the rhrand.h
@@ -114,7 +120,7 @@
    default libtool under Mac OS X will not work for this installation.
 
    When the source tarball is downloaded and unpacked, you should have a
-   directory NearTree-2.1.5. To see the current settings for a build execute
+   directory NearTree-2.2. To see the current settings for a build execute
 
    make
 
@@ -138,7 +144,7 @@
 
   The current library link command is:
  
-    libtool --mode=link  gcc -version-info 3:0:0 -release 2.1.4 \
+    libtool --mode=link  gcc -version-info 3:0:0 -release 2.2 \
       -no-undefined -rpath /usr/local/lib
  
   The current C++ and C library local, and C dynamic and static build commands are:
@@ -289,13 +295,13 @@
    functionality for the template to work. For the built-in numerics of C++,
    they are provided by the system.
 
-                      // conversion constructor from the templated class to      
-DistanceType Norm( ); DistanceType                                               
-                      // (usually will return a "length" of type double)         
-operator- ( );        // geometrical (vector) difference of two objects          
-                      // a copy constructor would be nice                        
-                      // a constructor would be nice                             
-                      // a destructor would be nice                              
+                      // conversion constructor from the templated 
+                      // class to  DistanceType Norm( ); DistanceType
+                      // (usually will return a "length" of type double)
+operator- ( );        // geometrical (vector) difference of two objects 
+                      // a copy constructor would be nice
+                      // a constructor would be nice
+                      // a destructor would be nice   
 
    The provided interface is:
 
@@ -310,7 +316,7 @@ operator- ( );        // geometrical (vector) difference of two objects
      CNearTree( const std::vector<T> )     // constructor
      CNearTree( const std::list<T> )       // constructor
      CNearTree( const std::set<T> )        // constructor
-     CNearTree( const CNearTree<T> )        // constructor
+     CNearTree( const CNearTree<T> )       // constructor
     
      ~CNearTree( void )  // destructor
 
@@ -338,112 +344,155 @@ operator- ( );        // geometrical (vector) difference of two objects
      void insert( const std::set<T> )
      void insert( const CNearTree<T> )
 
-     bool NearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const T& t ) const
+     bool NearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   
+                            const T& t ) const
         dRadius is the largest radius within which to search; make it
            very large if you want to include every point that was loaded.
         tClosest is returned as the object that was found closest to the probe
            point (if any were within radius dRadius of the probe)
         t is the probe point, used to search in the group of points insert'ed
 
-        return value is true if some object was found within the search radius, false otherwise.
+        return value is true if some object was found within the search 
+           radius, false otherwise.
             If false is returned, tClosest is invalid (at best).
 
      iterator NearestNeighbor ( const DistanceType & dRadius, const T& t ) const
-        returns an iterator to the nearest point to the probe point t or end() if there is none
+        returns an iterator to the nearest point to the probe point t or 
+        end() if there is none
 
      bool FarthestNeighbor ( T& tFarthest,   const T& t ) const
-        tFarthest is returned as the object that was found farthest from the probe
+        tFarthest is returned as the object that was found farthest from 
+        the probe
            point
         t is the probe point, used to search in the group of points Insert'ed
         return value is true if some object was found, false otherwise
            If false is returned, tFarthest is invalid (at best).
 
      iterator FarthestNeighbor ( T& const T& t ) const
-        returns an iterator to the nearest point to the probe point t or end() if there is none
+        returns an iterator to the nearest point to the probe point t or 
+        end() if there is none
 
 
-     The following functions (FindInSphere, FindOutSphere, and FindInAnnulus) all return a container
-     (ContainerType) that can be any standard library container (such as std::vector< T >) or CNearTree.
+     The following functions (FindInSphere, FindOutSphere, and FindInAnnulus) 
+        all return a container
+     (ContainerType) that can be any standard library container (such as std::vector< T >) 
+        or CNearTree.
 
-     long FindInSphere ( const DistanceType& dRadius,  ContainerType& tInside,   const T& t ) const
-        dRadius is the radius within which to search; make it very large if you want to
-            include every point that was loaded;
-        tInside is returned as the container of objects that were found within a radius dRadius
-           of the probe point
+     long FindInSphere ( const DistanceType& dRadius,  ContainerType& tInside, 
+        const T& t ) const
+        dRadius is the radius within which to search; make it very large if 
+           you want to include every point that was loaded;
+        tInside is returned as the container of objects that were found 
+           within a radius dRadius of the probe point
         t is the probe point, used to search in the group of points Insert'ed
 
-        return value is the count of the number of points found within the search radius
+        return value is the count of the number of points found within the 
+          search radius
 
-     long FindInSphere ( const DistanceType& dRadius,  CNearTree<  T >& tInside,   const T& t ) const
-        dRadius is the radius within which to search; make it very large if you want to
-            include every point that was loaded;
-        tInside is returned as the CNearTree of objects that were found within a radius dRadius
-           of the probe point
+     long FindInSphere ( const DistanceType& dRadius,  
+                         CNearTree<  T >& tInside,   const T& t ) const
+        dRadius is the radius within which to search; make it very large if 
+            you want to include every point that was loaded;
+        tInside is returned as the CNearTree of objects that were found 
+           within a radius dRadius of the probe point
         t is the probe point, used to search in the group of points Insert'ed
 
-        return value is the count of the number of points found within the search radius
+        return value is the count of the number of points found within the 
+           search radius
 
-     long FindOutSphere ( const DistanceType& dRadius,  ContainerType& tOutside,   const T& t ) const
+     long FindOutSphere ( const DistanceType& dRadius,  
+                          ContainerType& tOutside,   const T& t ) const
         dRadius is the radius outside of which to search
-        tOutside is returned as the container of objects that were found at or outside of radius dRadius
-           of the probe point
+        tOutside is returned as the container of objects that were found at 
+           or outside of radius dRadius of the probe point
         t is the probe point, used to search in the group of points Insert'ed
 
-        return value is the count of the number of points found within the search radius
+        return value is the count of the number of points found within the 
+           search radius
 
-     long FindOutSphere ( const DistanceType& dRadius,  CNearTree<  T >& tOutside,   const T& t ) const
+     long FindOutSphere ( const DistanceType& dRadius,  
+                          CNearTree<  T >& tOutside,   const T& t ) const
         dRadius is the radius outside of which to search.
-        tClosest is returned as the CNearTree of objects that were found at or outside of a radius dRadius
-           of the probe point
+        tClosest is returned as the CNearTree of objects that were found at 
+           or outside of a radius dRadius of the probe point
         t is the probe point, used to search in the group of points Insert'ed
 
-        return value is the count of the number of points found within the search radius
+        return value is the count of the number of points found within 
+           the search radius
     
-     long FindInAnnulus ( const DistanceType& dRadius1, const DistanceType& dRadius2, ContainerType& tInRing,   const T& t ) const
-        dRadius1 and  dRadius2 are the two radii between which to find data points
-        tInRing is returned as the container of objects that were found at or outside of a radius dRadius1
+     long FindInAnnulus ( const DistanceType& dRadius1, 
+                          const DistanceType& dRadius2, 
+                          ContainerType& tInRing,   const T& t ) const
+        dRadius1 and  dRadius2 are the two radii between which to find 
+           data points
+        tInRing is returned as the container of objects that were found at 
+           or outside of a radius dRadius1
            and at or inside of radius dRadius2 of the probe point
         t is the probe point, used to search in the group of points Insert'ed
 
-        return value is the count of the number of points found within the annulus
+        return value is the count of the number of points found within 
+           the annulus
 
-     long FindInAnnulus ( const DistanceType& dRadius1, const DistanceType& dRadius2,  CNearTree<  T >& tInRing,   const T& t ) const
-        dRadius1 and  dRadius2 are the two radii between which to find data points
-        tInRing is returned as the CNearTree of objects that were found at or outside of a radius dRadius1
+     long FindInAnnulus ( const DistanceType& dRadius1, 
+                          const DistanceType& dRadius2,  
+                          CNearTree<  T >& tInRing,   const T& t ) const
+        dRadius1 and  dRadius2 are the two radii between which to find 
+           data points
+        tInRing is returned as the CNearTree of objects that were found at 
+           or outside of a radius dRadius1
            and at or inside of radius dRadius2 of the probe point
         t is the probe point, used to search in the group of points Insert'ed
 
-        return value is the count of the number of points found within the annulus
+        return value is the count of the number of points found within the 
+           annulus
     
-     long FindK_NearestNeighbors ( const size_t k, const DistanceType& dRadius, ContainerType& tClosest, const T& t )
-        k is the maximum number of nearest neighbors to return. Finds this many if possible
-        dRadius within a sphere defined by dRadius, search for the k-nearest-neighbors
-        tClosest is returned ContainerType of the objects found within the sphere
+     long FindK_NearestNeighbors ( const size_t k, 
+                                   const DistanceType& dRadius, 
+                                   ContainerType& tClosest, const T& t )
+        k is the maximum number of nearest neighbors to return. Finds this 
+           many if possible
+        dRadius within a sphere defined by dRadius, search for the 
+           k-nearest-neighbors
+        tClosest is returned ContainerType of the objects found within 
+           the sphere
         t is the probe point, used to search in the group of points insert'ed
 
-        return value is the count of the number of points found within the sphere
+        return value is the count of the number of points found within the 
+           sphere
 
-     long FindK_NearestNeighbors ( const size_t k, const DistanceType& dRadius, CNearTree<  T >& tClosest, const T& t )
-        k is the maximum number of nearest neighbors to return. Finds this many if possible
-        dRadius within a sphere defined by dRadius, search for the k-nearest-neighbors
-       tClosest is returned as the CNearTree of objects found within the sphere
+     long FindK_NearestNeighbors ( const size_t k, 
+                                   const DistanceType& dRadius, 
+                                   CNearTree<  T >& tClosest, const T& t )
+        k is the maximum number of nearest neighbors to return. Finds 
+           this many if possible
+        dRadius within a sphere defined by dRadius, search for the 
+           k-nearest-neighbors
+        tClosest is returned as the CNearTree of objects found within 
+           the sphere
         t is the probe point, used to search in the group of points Insert'ed
 
-        return value is the count of the number of points found within the sphere
+        return value is the count of the number of points found within 
+          the sphere
 
-     long FindK_FarthestNeighbors ( const size_t k, ContainerType& tFarthest, const T& t )
-        k is the maximum number of farthest neighbors to return. Finds this many if possible
+     long FindK_FarthestNeighbors ( const size_t k, 
+                                    ContainerType& tFarthest, const T& t )
+        k is the maximum number of farthest neighbors to return. Finds 
+           this many if possible
         tFarthest is returned ContainerType of the objects found
         t is the probe point, used to search in the group of points insert'ed
 
-        return value is the count of the number of points found within the sphere
+        return value is the count of the number of points found within 
+           the sphere
 
-     long FindK_NearestNeighbors ( const size_t k, CNearTree<  T >& tFarthest, const T& t )
-        k is the maximum number of farthest neighbors to return. Finds this many if possible
+     long FindK_NearestNeighbors ( const size_t k, 
+                                   CNearTree<  T >& tFarthest, const T& t )
+        k is the maximum number of farthest neighbors to return. Finds this 
+           many if possible
         tFarthest is returned as the CNearTree of objects found
         t is the probe point, used to search in the group of points Insert'ed
 
-        return value is the count of the number of points found within the sphere
+        return value is the count of the number of points found within the 
+           sphere
    
 
      ----------------------------------------------------------------------
@@ -458,15 +507,17 @@ operator- ( );        // geometrical (vector) difference of two objects
          returns the n'th item of the internal data store
 
       operator ContainerType ( void ) const
-         returns all of the inserted objects in the tree in a container of type ContainerType.
-         ContainerType can be std::vector<T>, etc, or other containers, including CNearTree<T>.
-         The returned vector contents are not guaranteed to be returned in the order loaded.
+         returns all of the inserted objects in the tree in a container of 
+         type ContainerType.  ContainerType can be std::vector<T>, etc, or 
+         other containers, including CNearTree<T>.  The returned vector 
+         contents are not guaranteed to be returned in the order loaded.
 
       iterator begin ( void ) const
          returns an iterator to the beginning of the internal data store
 
       iterator end ( void ) const
-         returns an iterator to the end of the data store (one beyond the last item)
+         returns an iterator to the end of the data store (one beyond the 
+         last item)
 
       iterator back ( void ) const
          returns an iterator to the last data item of the internal data store
@@ -478,30 +529,33 @@ operator- ( );        // geometrical (vector) difference of two objects
  Information and special operation functions:
 
       void ImmediateInsert( const T&aamp; t )
-         insert places objects in a queue for insertion later when CompleteDelayInsert
-         is called or a search is called. ImmediateInsert inserts the data immediately
-         into the tree (with the potential of a less balanced tree). ImmediateInsert is not
-         intended for the ordinary user.
+         insert places objects in a queue for insertion later when 
+         CompleteDelayInsert is called or a search is called. ImmediateInsert 
+         inserts the data immediately into the tree (with the potential of 
+         a less balanced tree).  ImmediateInsert is not intended for the 
+         ordinary user.
 
       void CompleteDelayedInsert ( void )
-         completes insertion for all delayed objects. sqrt(n) of them are inserted by
-         random choice.  The rest are inserted in linear order as originally queued.
-         CompleteDelayedInsert is invoked at the beginning of all searches, so the
-         average user will never need to call it.
+         completes insertion for all delayed objects. sqrt(n) of them are 
+         inserted by random choice.  The rest are inserted in linear order 
+         as originally queued.  CompleteDelayedInsert is invoked at the 
+         beginning of all searches, so the average user will never need 
+         to call it.
 
       size_t GetDeferredSize ( void )
-         returns the number of delayed objects that have not yet completed insertion. This is
-         mainly for information about details of the tree.
+         returns the number of delayed objects that have not yet completed 
+         insertion. This is mainly for information about details of the tree.
 
       size_t GetTotalSize ( void )
-         returns the number of objects that have been insert'ed plus those DelayInsert'ed
+         returns the number of objects that have been insert'ed plus those 
+         DelayInsert'ed
 
       size_t size ( void )
          identical to GetTotalSize
 
       size_t GetDepth ( void )
-         returns the maximum tree layers from the root.  This is mainly for information about
-         details of the tree.
+         returns the maximum tree layers from the root.  This is mainly for 
+         information about details of the tree.
 
       bool empty ( void )
          returns true if the tree is empty, otherwise false
@@ -512,13 +566,15 @@ operator- ( );        // geometrical (vector) difference of two objects
 
  Iterators:
 
-      Random access iterators are provided for accessing the data in a CNearTree. The most important
-      expected use is to retrieve the objects returned from one of the sphere search functions that
+      Random access iterators are provided for accessing the data in a 
+      CNearTree. The most important expected use is to retrieve the objects 
+      returned from one of the sphere search functions that
       can return a CNearTree. However, they can be used with any CNearTree.
      
-      They should function in a fashion essentially the same as STL iterators. There is no assurance
-      that data will be returned in the order it was loaded, just that it is accessible.  This is the
-      list of iterators. The same set is avaiable for const_iterator.
+      They should function in a fashion essentially the same as STL iterators.
+      There is no assurance that data will be returned in the order it was 
+      loaded, just that it is accessible.  This is the list of iterators. 
+      The same set is avaiable for const_iterator.
 
       iterator ( void ) { }; // constructor
 
@@ -725,10 +781,14 @@ operator- ( );        // geometrical (vector) difference of two objects
 
    A neartree is created by CNearTreeCreate and freed by CNearTreeFree.
    treedim is the dimension of the coordinate vectors and treetype is one of
-   the two predefined constants CNEARTREE_TYPE_DOUBLE for double or
-   CNEARTREE_TYPE_INTEGER for integer, optionally ORed with
-   CNEARTREE_NORM_L1, CNEARTREE_NORM_L2 or CNEARTREE_NORM_LINF for L1, L2 or
-   L-infinity norms.
+   the three predefined constants CNEARTREE_TYPE_DOUBLE for double or
+   CNEARTREE_TYPE_INTEGER for integer or CNEARTREE_TYPE_STRING, optionally
+   ORed with CNEARTREE_NORM_L1, CNEARTREE_NORM_L2 or CNEARTREE_NORM_LINF for
+   L1, L2 or L-infinity norms, CNEARTREE_NORM_SPHERE or
+   CNEARTREE_NORM_HSPHERE for a spherical or hemispherical norm (L1-norm
+   combination of radial and spherical/hemisppherical triangle distances), or
+   CNEARTREE_NORM_HAMMING for the string-Hamming distance norm (add one for
+   each differing character position).
 
    Starting with release 2.1, all insertions are delayed by default, unless
    the insertions is done by a call to CNearTreeImmediateInsert. The
@@ -927,5 +987,5 @@ operator- ( );        // geometrical (vector) difference of two objects
 
      ----------------------------------------------------------------------
 
-   Updated 23 April 2010
+   Updated 18 July 2010
    andrewsl@ix.netcom.com.com

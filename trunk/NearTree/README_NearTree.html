@@ -21,9 +21,9 @@ NearTree -- function library efficiently solving the Nearest Neighbor Problem
 <hr>
 <center>
 <h2 align=center>NearTree</h2>
-Release 2.1.5<br />
+Release 2.2<br />
 <font size="-1">
-23 April 2010<br />
+18 July 2010<br />
 &#169; Copyright 2001, 2008, 2009, 2010 Larry Andrews.  All rights reserved
 <br />
 based on<br />
@@ -42,6 +42,7 @@ Revised 12 Dec 2008, for sourceforge release, Larry Andrews and Herbert J. Berns
 7 July 2009 Release 2.1.3 LCA and HJB<br />
 29 November 2009 Release 2.1.4 LCA<br />
 23 April 2010 Release 2.1.5 LCA and HJB<br />
+18 July 2010 Release 2.2 HJB<br />
 </font>
 <P>
 
@@ -76,7 +77,11 @@ This is a release of an API for finding nearest neighbors among points in spaces
 arbitrary dimensions.  This release provides a C++ template, TNear.h, and a
 C library, CNearTree.c, with example/test programs.
 <font size="-1">
-<p>This is a cleanup update to the 2.1 release of 30 May 2009 to increase
+<p>Release 2.2 adds support for C code for fixed length string searches using a hamming distance norm,
+and for spherical and hemispherical geodesic norm based searches.  Because of the
+addition of new type and norm flags, the version 2.2 shared libraries cannot be used
+to support binaries copiled against earlier headers and vice-versa.
+<p>Release 2.1.5 was a cleanup update to the 2.1 release of 30 May 2009 to increase
 portability, in five stages (2.1.1 on 4 June 2009, 2.1.2 on 7 June 2009, 2.1.3 on 7 July 2009,
 2.1.4 on 29 November 2009 and 2.1.5 on 23 April 2010)
 dealing with the following issues:
@@ -134,7 +139,7 @@ insertions before parallel execution of parallel searches.
 <h4><a name="Installation">Installation</a></h4>
 <p>
 The NearTree package is available at <a href="http://www.sourceforge.net/projects/neartree">www.sourceforge.net/projects/neartree</a>.
-A source tarball is available at <a href="http://downloads.sourceforge.net/neartree/NearTree-2.1.5.tar.gz">downloads.sourceforge.net/neartree/NearTree-2.1.5.tar.gz</a>.
+A source tarball is available at <a href="http://downloads.sourceforge.net/neartree/NearTree-2.2.tar.gz">downloads.sourceforge.net/neartree/NearTree-2.2.tar.gz</a>.
 Later tarballs may be available.
 <p>
 If you decide to simply use the TNear.h header to add nearest neighbor support to C++ code under Visual
@@ -142,7 +147,7 @@ Studio, be sure to also use the rhrand.h header, and to define USE_LOCAL_HEADERS
 unix or MINGW, you will need to use the Makefile and to have libtool on your system.  Be warned that
 the default libtool under Mac OS X will not work for this installation.
 <P>
-When the source tarball is downloaded and unpacked, you should have a directory NearTree-2.1.5.  To see the current settings for a build
+When the source tarball is downloaded and unpacked, you should have a directory NearTree-2.2.  To see the current settings for a build
 execute
 <p>
 make
@@ -168,7 +173,7 @@ which should give the following information:
 
  The current library link command is:
  
-   libtool --mode=link  gcc -version-info 3:0:0 -release 2.1.4 \
+   libtool --mode=link  gcc -version-info 3:0:0 -release 2.2 \
      -no-undefined -rpath /usr/local/lib
  
  The current C++ and C library local, and C dynamic and static build commands are:
@@ -828,9 +833,13 @@ replacement obey the triangle inequality.
 <P>
 A neartree is created by  <b>CNearTreeCreate</b> and freed by <b>CNearTreeFree</b>.
 <i>treedim</i> is the dimension of the coordinate vectors and <i>treetype</i>
-is one of the two predefined constants <b>CNEARTREE_TYPE_DOUBLE</b> for double
-or <b>CNEARTREE_TYPE_INTEGER</b> for integer, optionally ORed with <b>CNEARTREE_NORM_L1</b>,
-<b>CNEARTREE_NORM_L2</b> or CNEARTREE_NORM_LINF</b> for L1, L2 or L-infinity norms.  
+is one of the three predefined constants <b>CNEARTREE_TYPE_DOUBLE</b> for double
+or <b>CNEARTREE_TYPE_INTEGER</b> for integer or <b>CNEARTREE_TYPE_STRING</b>, 
+optionally ORed with <b>CNEARTREE_NORM_L1</b>, <b>CNEARTREE_NORM_L2</b> or CNEARTREE_NORM_LINF</b> 
+for L1, L2 or L-infinity norms, <b>CNEARTREE_NORM_SPHERE</b> or <b>CNEARTREE_NORM_HSPHERE</b> for
+a spherical or hemispherical norm (L1-norm combination of radial and spherical/hemisppherical 
+triangle distances), or <b>CNEARTREE_NORM_HAMMING</b> for the string-Hamming distance norm
+(add one for each differing character position).
 <p>
 Starting with release 2.1, all insertions are delayed by default, unless the insertions is
 done by a call to <b>CNearTreeImmediateInsert</b>.   The insertions that have been queued
@@ -1037,7 +1046,7 @@ Typical use is
 <hr>
 <hr>
 <font size="-1">
-Updated 23 April 2010<br />
+Updated 18 July 2010<br />
 <script language="javascript" type="text/javascript">
 <!-- 
       var name = "andrewsL@";

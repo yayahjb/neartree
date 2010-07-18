@@ -42,7 +42,7 @@
 
 # Version string
 VERSION = 3:0:0
-RELEASE = 2.1.3
+RELEASE = 2.2
 
 
 #

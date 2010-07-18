@@ -2361,8 +2361,8 @@ void test4Sphere( void )
     }
 
     searchPoint[0] = searchPoint[1] = 0.;
-    searchPoint[2] = 0.700*2.40;
-    searchPoint[3] = 0.710*2.40;
+    searchPoint[2] = 0.700*1.75;
+    searchPoint[3] = 0.710*1.75;
     
     bReturn = !CNearTreeNearestNeighbor(tree, 6.0, &vv, NULL, searchPoint);
     v = (double CNEARTREE_FAR *)vv;
