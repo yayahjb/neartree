@@ -132,12 +132,13 @@ extern "C" {
 #define CNEARTREE_NORM_L2         512         /* 0x0200 */
 #define CNEARTREE_NORM_LINF      1024         /* 0x0400 */
 #define CNEARTREE_NORM_SPHERE    2048         /* 0x0800 */
-#define CNEARTREE_NORM_HAMMING   4096         /* 0x1000 */
+#define CNEARTREE_NORM_HSPHERE   4096         /* 0x1000 */
+#define CNEARTREE_NORM_HAMMING   8192         /* 0x2000 */
     
-#define CNEARTREE_NORM           8064         /* 0x1F80 */
+#define CNEARTREE_NORM          16256         /* 0x3F80 */
     
-#define CNEARTREE_FLIP           8192         /* 0x2000 */
-#define CNEARTREE_DEFER_ALL     16384         /* 0x4000 */
+#define CNEARTREE_FLIP          16384         /* 0x4000 */
+#define CNEARTREE_DEFER_ALL     32768         /* 0x8000 */
     
     
     
@@ -276,6 +277,7 @@ extern "C" {
      CNEARTREE_NORM_L2        for the square root of the sum of the squares
      CNEARTREE_NORM_LINF      for the max
      CNEARTREE_NORM_SPHERE    for norm as spherical angular distance
+     CNEARTREE_NORM_HSPHERE   for norm as hemispherical angular distance
      CNEARTREE_NORM_HAMMING   for norm as string hamming distance
      
      

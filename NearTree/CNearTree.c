@@ -188,6 +188,7 @@ extern "C" {
      CNEARTREE_NORM_L2 for an L-2 norm
      CNEARTREE_NORM_LINF for an L-infinity norm
      CNEARTREE_NORM_SPHERE for a sphere-based norm
+     CNEARTREE_NORM_HSPHERE for a hemisphere-based norm
      CNEARTREE_NORM_HAMMING for a Hamming distance norm
      
      the function returns CNEARTREE_BAD_ARGUMENT for an invalid argument
@@ -202,6 +203,7 @@ extern "C" {
              && treenorm != CNEARTREE_NORM_L2
              && treenorm != CNEARTREE_NORM_LINF
              && treenorm != CNEARTREE_NORM_SPHERE
+             && treenorm != CNEARTREE_NORM_HSPHERE
              && treenorm != CNEARTREE_NORM_HAMMING)
             || (treehandle->m_iflags & CNEARTREE_NORM)!=CNEARTREE_NORM_UNKNOWN ) return CNEARTREE_BAD_ARGUMENT;
         treehandle->m_iflags &= ~CNEARTREE_NORM_UNKNOWN;
@@ -338,6 +340,7 @@ extern "C" {
                 return dist;
                 
             case CNEARTREE_NORM_SPHERE:
+            case CNEARTREE_NORM_HSPHERE:
                 if (treetype == CNEARTREE_TYPE_DOUBLE) {
                     double dot, cosangle, angle, norm1, norm2, norm;
                     dot = norm1 = norm2 = 0.;
@@ -356,9 +359,11 @@ extern "C" {
                         cosangle = dot/(norm1*norm2);
                         if (cosangle > 1.) cosangle = 1.;
                         if (cosangle < -1.) cosangle = -1.;
+                        if (treenorm == CNEARTREE_NORM_HSPHERE && cosangle < 0.) cosangle = -cosangle;
+                        
                         angle = atan2(sqrt(1.-cosangle*cosangle),cosangle);
                         norm = (norm1<norm2?norm1:norm2);
-                        dist = sqrt(norm*norm*angle*angle + (norm1-norm2)*(norm1-norm2));
+                        dist = norm*fabs(angle)+fabs(norm1-norm2);
                     }
                     
                 } else if (treetype == CNEARTREE_TYPE_INTEGER) {
@@ -379,9 +384,10 @@ extern "C" {
                         cosangle = dot/(norm1*norm2);
                         if (cosangle > 1.) cosangle = 1.;
                         if (cosangle < -1.) cosangle = -1.;
+                        
                         angle = atan2(sqrt(1.-cosangle*cosangle),cosangle);
                         norm = (norm1<norm2?norm1:norm2);
-                        dist = sqrt(norm*norm*angle*angle + (norm1-norm2)*(norm1-norm2));
+                        dist = norm*fabs(angle)+fabs(norm1-norm2);
                     }
                 } else return -1.0;
                 return dist;
@@ -483,6 +489,7 @@ extern "C" {
      CNEARTREE_NORM_L2        for the square root of the sum of the squares
      CNEARTREE_NORM_LINF      for the max
      CNEARTREE_NORM_SPHERE    for norm as spherical angular distance
+     CNEARTREE_NORM_HSPHERE   for norm as hemisppherical angular distance
      CNEARTREE_NORM_HAMMING   for norm as string hamming distance
      
      
@@ -647,9 +654,11 @@ extern "C" {
         if (!treehandle) return CNEARTREE_BAD_ARGUMENT;
         
         errorcode = CNEARTREE_SUCCESS;
+        errorcodev = 0;
         
         if (treehandle->m_ptTree) {
             errorcode |= CNearTreeNodeFree(&(treehandle->m_ptTree));
+            treehandle->m_ptTree = NULL;
         }
         
         errorcode |= CNearTreeNodeCreate(treehandle,&((treehandle)->m_ptTree));
@@ -657,18 +666,25 @@ extern "C" {
         if (treehandle->m_DelayedIndices) {
             errorcodev = CVectorFree(&(treehandle->m_DelayedIndices));
             if (errorcodev) errorcode |= CNEARTREE_FREE_FAILED ;
+            if (!errorcodev) treehandle->m_DelayedIndices = NULL;
         }
         
         if (treehandle->m_ObjectStore) {
             errorcodev = CVectorFree(&(treehandle->m_ObjectStore));
             if (errorcodev) errorcode |= CNEARTREE_FREE_FAILED ;
+            if (!errorcodev) treehandle->m_ObjectStore = NULL;
         }
         
         if (treehandle->m_CoordStore) {
             errorcodev = CVectorFree(&(treehandle->m_CoordStore));
             if (errorcodev) errorcode |= CNEARTREE_FREE_FAILED ;
+            if (!errorcodev) treehandle->m_CoordStore = NULL;
         }
         
+        if (!errorcode) {
+            (treehandle)->m_szsize        = 0;         /* number of nodes in the tree  */
+            (treehandle)->m_szdepth       = 0;         /* depth of in the tree         */
+        }
         return errorcode;
     }
     
