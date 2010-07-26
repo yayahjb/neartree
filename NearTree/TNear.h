@@ -252,6 +252,7 @@
 #define TNEAR_H_INCLUDED
 
 #include <stdlib.h>
+#include <limits.h>
 #include <algorithm>
 #include <cmath>
 
