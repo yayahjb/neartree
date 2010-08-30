@@ -263,6 +263,8 @@
 #endif
 
 #include <vector>
+#include <set>
+#include <iterator>
 
 #ifdef CNEARTREE_SAFE_TRIANG
 #define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0) \
@@ -437,7 +439,35 @@ m_BaseNode       (   )
     typename InputContainer::const_iterator it;
     for( it=o.begin(); it!=o.end(); ++it )
     {
-        insert( *it);
+        insert( *it );
+    }
+}  //  CNearTree constructor
+
+//=======================================================================
+// CNearTree ( const InputContainer& o1, const InputContainer& o1 )
+//
+// templated constructor for class CNearTree for merging multiple 
+// containers.
+// The containers can be standard library containers or CNearTrees.
+//
+//=======================================================================
+template<typename InputContainer1, typename InputContainer2>
+CNearTree ( const InputContainer1& o1, const InputContainer2& o2 )  // constructor
+:m_DelayedIndices (   )
+,m_ObjectStore    (   )
+,m_DeepestDepth   ( 0 )
+,m_BaseNode       (   )
+{
+    typename InputContainer1::const_iterator it1;
+    for( it1=o1.begin(); it1!=o1.end(); ++it1 )
+    {
+        insert( *it1 );
+    }
+
+    typename InputContainer2::const_iterator it2;
+    for( it2=o2.begin(); it2!=o2.end(); ++it2 )
+    {
+        insert( *it2 );
     }
 }  //  CNearTree constructor
 
@@ -451,6 +481,115 @@ m_BaseNode       (   )
 {
     clear ( );
 }  //  ~CNearTree
+
+
+//=======================================================================
+// Name: operator+=()
+// Description: add a container's contents to a NearTree
+//
+//=======================================================================
+template<typename InputContainer>
+CNearTree& operator+= ( const InputContainer& o )
+{
+
+    if ( this->empty( ) )
+    {  // if "this" is empty, all that will remain is "o"
+        this->insert( o );
+    }
+    else if ( o.empty( ) )
+    { // do nothing if there is nothing to be added to "this"
+    }
+    else
+    {
+        std::set<T> s1, s2, s3;
+        s1.insert( this->begin( ), this->end( ) );
+
+        s2.insert( o.begin(), o.end( ) );
+
+        this->clear( );
+        std::set_union(
+            s1.begin( ), s1.end( ),
+            s2.begin( ), s2.end( ),
+            std::inserter( s3, s3.end( ) ) );
+
+        this->insert( s3 );
+    }
+
+    this->CompleteDelayedInsert( );
+    return( *this );
+}
+
+//=======================================================================
+// Name: operator-=()
+// Description: removes a container's contents from a NearTree
+//
+//=======================================================================
+template<typename InputContainer>
+CNearTree& operator-= ( const InputContainer& o )
+{
+
+    if ( this->empty( ) )
+    {// nothing to do if there's nothing to remove from
+    }
+    else if ( o.empty( ) )
+    { // do nothing if there is nothing to be removed
+    }
+    else
+    {
+        std::set<T> s1, s2, s3;
+        s1.insert( this->begin( ), this->end( ) );
+
+        s2.insert( o.begin(), o.end( ) );
+
+        this->clear( );
+        std::set_difference(
+            s1.begin( ), s1.end( ),
+            s2.begin( ), s2.end( ),
+            std::inserter( s3, s3.end( ) ) );
+
+        this->insert( s3 );;
+    }
+
+    this->CompleteDelayedInsert( );
+    return( *this );
+}
+
+//=======================================================================
+// Name: set_symmetric_difference()
+// Description: removes a container's contents from a NearTree
+//   (= Sheffer stroke operation and NAND)
+//
+//=======================================================================
+template<typename InputContainer>
+CNearTree& set_symmetric_difference ( const InputContainer& o )
+{
+
+    if ( o.empty( ) )
+    { // do nothing if "this" is already complete
+    }
+    else if ( this->empty( ) )
+    { // all that will remain is the content of "o"
+        this->insert( o );
+    }
+    else
+    {
+        std::set<T> s1, s2, s3;
+        s1.insert( this->begin( ), this->end( ) );
+
+        s2.insert( o.begin(), o.end( ) );
+
+        this->clear( );
+        std::set_symmetric_difference(
+            s1.begin( ), s1.end( ),
+            s2.begin( ), s2.end( ),
+            std::inserter( s3, s3.end( ) ) );
+
+        this->insert( s3 );;
+    }
+
+    this->CompleteDelayedInsert( );
+    return( *this );
+}
 
 //=======================================================================
 // clear( void )
@@ -512,7 +651,7 @@ void insert ( const T& t )
 //=======================================================================
 //  insert( const iterator& i, const T& t )
 //
-//  dummy here just for compatibility with vector and list, etc.
+//  dummy here just for compatibility with std::vector and std::list, etc.
 //=======================================================================
 void insert( const iterator& /*i*/, const T& t )
 {
@@ -2002,7 +2141,8 @@ void K_Resize( const size_t k, const TNode& t, std::vector<std::pair<DistanceTyp
 // nested class within CNearTree
 //====================================================================================
 public:
-class iterator
+    class iterator
+        : public std::iterator< std::random_access_iterator_tag, T, int, T*, T& >
     {
     public:
         friend class CNearTree< T, DistanceType, distMinValue >;
@@ -2030,9 +2170,13 @@ class iterator
         bool      operator!= ( const iterator& t ) const { return ( ! (*this==t )); };
         bool      operator== ( const const_iterator& t ) const { return ( ((const_iterator&)t).get_position()==(parent->m_ObjectStore.empty( )?1:position) &&  ((const_iterator&)t).get_parent()==parent ); };
         bool      operator!= ( const const_iterator& t ) const { return ( ! (*this==t )); };
+        bool      operator>  ( const iterator& t       ) const { return ( (*this).get_position()>t.get_position() ); };
+        bool      operator>  ( const const_iterator& t ) const { return ( (*this).get_position()>t.get_position() ); };
+        bool      operator<  ( const iterator& t       ) const { return ( (*this).get_position()<t.get_position() ); };
+        bool      operator<  ( const const_iterator& t ) const { return ( (*this).get_position()<t.get_position() ); };
 
         const T * const operator-> ( void )   const      { return ( &(const_cast<CNearTree*>(parent)->m_ObjectStore[position]) ); };
-        long get_position( void ) {return position;};
+        long get_position( void ) const {return position;};
         const CNearTree< T, DistanceType, distMinValue >* get_parent( void ) {return parent;};
 
     private:
@@ -2044,6 +2188,7 @@ class iterator
 //====================================================================================
 
 class const_iterator
+        : public std::iterator< std::random_access_iterator_tag, T, int, T*, T& >
     {
     public:
         friend class CNearTree< T, DistanceType, distMinValue >;
@@ -2071,9 +2216,13 @@ class const_iterator
         bool            operator!= ( const const_iterator& t ) const { return ( ! (*this==t )); };
         bool            operator== ( const iterator& t ) const { return ( ((iterator &)t).get_position()==(parent->m_ObjectStore.empty( )?1:position) && ((iterator &)t).get_parent()==parent ); };
         bool            operator!= ( const iterator& t ) const { return ( ! (*this==t )); };
+        bool      operator>  ( const iterator& t       ) const { return ( (*this).get_position()>t.get_position() ); };
+        bool      operator>  ( const const_iterator& t ) const { return ( (*this).get_position()>t.get_position() ); };
+        bool      operator<  ( const iterator& t       ) const { return ( (*this).get_position()<t.get_position() ); };
+        bool      operator<  ( const const_iterator& t ) const { return ( (*this).get_position()<t.get_position() ); };
 
         const T * const operator-> ( void )   const      { return ( &(const_cast<CNearTree*>(parent)->m_ObjectStore[position]) ); };
-        long get_position          ( void ) {return position;};
+        long get_position          ( void ) const  {return position;};
         const CNearTree< T, DistanceType, distMinValue >* get_parent( void ) {return parent;};
 
     private:
@@ -2088,5 +2237,6 @@ class const_iterator
 }; // template class CNearTree
 
 #endif // !defined(TNEAR_H_INCLUDED)
+
 
 

@@ -91,6 +91,12 @@ void testIntegerReturn( void );
 void testBigIntVec( void );
 void testSTLContainerInput( void );
 void testKNearFar( void );
+void testMergeConstructor( void );
+void testOperatorPlusEquals( void );
+void testOperatorMinusEquals( void );
+void testSetSymmetricDifference( void );
+
+
 long g_errorCount;
 
 int debug;
@@ -153,7 +159,15 @@ int main(int argc, char* argv[])
     fprintf( stdout, "testSTLContainerInput\n" );
     testKNearFar( );
     fprintf( stdout, "testKNearFar\n" );
-    
+    testMergeConstructor( );
+    fprintf( stdout, "testMergeConstructor\n" );
+    testOperatorPlusEquals( );
+    fprintf( stdout, "testOperatorPlusEquals\n" );
+    testOperatorMinusEquals( );
+    fprintf( stdout, "testOperatorMinusEquals\n" );
+    testSetSymmetricDifference( );
+    fprintf( stdout, "testSetSymmetricDifference\n" );
+
     if( g_errorCount == 0 )
     {
         fprintf(stdout,  "No errors were detected while testing CNearTree\n" );
@@ -276,7 +290,6 @@ void testLinearTree( const int n )
      Find all of the points in the tree using a negative radius, using the first
      input point as the probe point. Nothing should be found.
      */
-    std::vector<int> v;
     CNearTree<int> ntReturn;
     const long lFoundPointsInSphere = tree.FindInSphere( -100.0, ntReturn, 1 );
     if( lFoundPointsInSphere != 0 )
@@ -284,7 +297,6 @@ void testLinearTree( const int n )
         ++g_errorCount;
         fprintf(stdout, "FindInSphere found points for negative radius\n" );
     }
-    v.clear( );
     
     /*
      Find all of the points in the tree using a small radius. Do separate
@@ -312,7 +324,6 @@ void testLinearTree( const int n )
         ++g_errorCount;
         fprintf(stdout, "FindInSphere found too many points (as many as %ld) %ld times\n", localErrorMax, localErrorCount );
     }
-    v.clear( );
     
     /*
      Find all of the points in the tree that are within a large radius, using 
@@ -334,8 +345,6 @@ void testLinearTree( const int n )
             fprintf(stdout, "testLinearTree: found tree[i]!=i for tree[i-1]=%d, i=%ld\n", tree[i-1], (long)i );
         }
     }
-    
-    v.clear( );
     
     tree.clear( );
 }  // end testLinearTree
@@ -665,11 +674,9 @@ void testFindInSphereFromBottom( void )
         tree.insert( (double)i );
     }
     
-    std::vector<double> v;
     /* generate an unbalanced tree*/
     for( int i=1; i<=nmax; ++i )
     {
-        v.clear( );
         const double radius = 0.05 + (double)i;
         CNearTree<double> sphereReturn;
         const long lReturned = tree.FindInSphere( radius, sphereReturn, 0.9 );
@@ -2818,4 +2825,155 @@ void testSeparation( void )
     container group1, group2;
     t.BelongsToPoints( imin, imax, group1, group2 );
     fprintf( stdout, "in %ld out %ld\n", (long int)group1.size(), (long int)group2.size() );
+}
+
+void testMergeConstructor( void )
+{
+    CNearTree<int> nt1;
+    std::vector<int> nt2;
+    
+    int count = 0;
+    
+    const int nInTree = 10;
+    
+    for ( int i=0; i<nInTree; ++i )
+    {
+        nt1.insert( count++ );
+    }
+    
+    for ( int i=0; i<nInTree; ++i )
+    {
+        nt2.push_back( count++ );
+    }
+
+    const CNearTree<int> test0( nt2 ); // one vector
+    const CNearTree<int> test1( nt1, nt1 );// two neartrees
+    const CNearTree<int> test2( nt1, nt2 );// neartree and a vector
+    const CNearTree<int> test3( nt2, nt2 );// two vectors
+    const long lFound = test2.size( );
+
+    if( lFound != 2*nInTree )
+    {
+        ++g_errorCount;
+        fprintf(stdout, "testMergeConstructor: found wrong count\n" );
+    }
+}
+
+void testOperatorPlusEquals( void )
+{
+    CNearTree<int> nt1;
+    std::vector<int> nt2;
+    std::set<int> s2;
+    
+    int count = 0;
+    
+    const int nInTree = 10;
+    
+    for ( int i=0; i<nInTree; ++i )
+    {
+        nt1.insert( count++ );
+    }
+    const CNearTree<int> nt1a( nt1 );
+    
+    for ( int i=0; i<nInTree; ++i )
+    {
+        nt2.push_back( count );
+        s2.insert( count );
+        ++count;
+    }
+
+    nt1 += nt2;
+    const long lFound = nt1.size( );
+
+    if( lFound != 2*nInTree )
+    {
+        ++g_errorCount;
+        fprintf(stdout, "testOperatorPlusEquals, found wrong count \n" );
+    }
+
+    
+    nt1 = nt1a;
+    nt1 += s2;
+    const long lFounda = nt1.size( );
+
+    if( lFounda != 2*nInTree )
+    {
+        ++g_errorCount;
+        fprintf(stdout, "testOperatorPlusEquals-a, found wrong count \n" );
+    }
+
+    
+}
+
+void testOperatorMinusEquals( void )
+{
+    CNearTree<int> nt1;
+    CNearTree<int> nt2;
+    
+    int count = 0;
+    
+    const int nInTree = 2*5; // tests below depend on this being an even number
+    
+    for ( int i=0; i<nInTree; ++i )
+    {
+        nt1.insert( count++ );
+    }
+    
+    for ( int i=0; i<nInTree; ++i )
+    {
+        nt2.insert( 2*i );
+    }
+
+    nt1.CompleteDelayedInsert( );
+    nt2.CompleteDelayedInsert( );
+
+    nt1 -= nt2;
+    const long lFound = nt1.size( );
+
+    if( lFound != nInTree/2 )
+    {
+        ++g_errorCount;
+        fprintf(stdout, "testOperatorMinusEquals, found wrong count \n" );
+    }   
+}
+
+void testSetSymmetricDifference( void )
+{
+    CNearTree<int> nt1;
+    CNearTree<int> nt2;
+    std::vector<int> v2;
+    
+    const int nInTree = 2*5; // tests below depend on this being an even number
+    
+    for ( int i=0; i<nInTree; ++i )
+    {
+
+        nt1.insert( i );
+    }
+    const CNearTree<int> nt1a = nt1;
+    
+    for ( int i=0; i<nInTree; ++i )
+    {
+        nt2.insert( 2*i );
+        v2.push_back( 2*i );
+    }
+
+    nt1.set_symmetric_difference( nt2 );
+    const long lFound = nt1.size( );
+
+    if( lFound != nInTree )
+    {
+        ++g_errorCount;
+        fprintf(stdout, "testSetSymmetricDifference, found wrong count \n" );
+    } 
+
+    nt1 = nt1a;
+    nt1.set_symmetric_difference( v2 );
+    const long lFounda = nt1a.size( );
+
+    if( lFounda != nInTree )
+    {
+        ++g_errorCount;
+        fprintf(stdout, "testSetSymmetricDifference-a, found wrong count \n" );
+    } 
 }
