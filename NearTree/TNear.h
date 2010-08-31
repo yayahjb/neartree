@@ -556,8 +556,11 @@ CNearTree& operator-= ( const InputContainer& o )
 
 //=======================================================================
 // Name: set_symmetric_difference()
-// Description: removes a container's contents from a NearTree
-//   (= Sheffer stroke operation and NAND)
+// Description: removes the portion container's contents from a NearTree
+//              that is already in the NearTree and add in the portion
+//              of the container's contents that is not already in the
+//              NearTree
+//   (= Sheffer stroke operation and NAND = exclusive or)
 //
 //=======================================================================
 template<typename InputContainer>
@@ -878,7 +881,7 @@ void BelongsToPoints( const T& t1, const T& t2, ContainerType& group1, Container
 
     for ( it=this->begin( ); it!=this->end( ); ++it )
     {
-        if( DistanceBetween( (*it), t1 ) > DistanceBetween( (*it), t2) )
+        if( DistanceBetween( (*it), t1 ) < DistanceBetween( (*it), t2) )
         {
             group1.insert( group1.end( ), (*it) );
         }
@@ -899,7 +902,7 @@ void SeparateByRadius( const DistanceType radius, const T& probe, ContainerTypeI
 
     for ( it=this->begin( ); it!=this->end( ); ++it )
     {
-        if( DistanceBetween( (*it), probe ) > radius )
+        if( DistanceBetween( (*it), probe ) < radius )
         {
             inside.insert( inside.end( ), (*it) );
         }

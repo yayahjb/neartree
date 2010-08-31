@@ -2824,7 +2824,9 @@ void testSeparation( void )
     typedef std::vector<int> container;
     container group1, group2;
     t.BelongsToPoints( imin, imax, group1, group2 );
-    fprintf( stdout, "in %ld out %ld\n", (long int)group1.size(), (long int)group2.size() );
+    if ((long int)group1.size() != (long int)group2.size()) {
+      fprintf( stdout, "testSeparation: in %ld out %ld\n", (long int)group1.size(), (long int)group2.size() );
+    }
 }
 
 void testMergeConstructor( void )
