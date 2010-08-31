@@ -21,7 +21,7 @@ NearTree -- function library efficiently solving the Nearest Neighbor Problem
 <hr>
 <center>
 <h2 align=center>NearTree</h2>
-Release 2.2.1<br />
+Release 2.3<br />
 <font size="-1">
 25 July 2010<br />
 &#169; Copyright 2001, 2008, 2009, 2010 Larry Andrews.  All rights reserved
@@ -44,6 +44,7 @@ Revised 12 Dec 2008, for sourceforge release, Larry Andrews and Herbert J. Berns
 23 April 2010 Release 2.1.5 LCA and HJB<br />
 18 July 2010 Release 2.2 HJB<br />
 25 July 2010 Release 2.2.1 HJB<br />
+31 August 2010 Release 2.3 LCA<br />
 </font>
 <P>
 
@@ -78,7 +79,8 @@ This is a release of an API for finding nearest neighbors among points in spaces
 arbitrary dimensions.  This release provides a C++ template, TNear.h, and a
 C library, CNearTree.c, with example/test programs.
 <font size="-1">
-<p>Release 2.2.1 is a minor revision to Release 2.2 to add an include of limits.h to TNear.h,
+<p>Release 2.3 adds methods for clustering.
+<p>Release 2.2.1 was a minor revision to Release 2.2 to add an include of limits.h to TNear.h,
 primarily for MINGW use.
 <p>Release 2.2 added support for C code for fixed length string searches using a hamming distance norm,
 and for spherical and hemispherical geodesic norm based searches.  Because of the
@@ -142,7 +144,7 @@ insertions before parallel execution of parallel searches.
 <h4><a name="Installation">Installation</a></h4>
 <p>
 The NearTree package is available at <a href="http://www.sourceforge.net/projects/neartree">www.sourceforge.net/projects/neartree</a>.
-A source tarball is available at <a href="http://downloads.sourceforge.net/neartree/NearTree-2.2.1.tar.gz">downloads.sourceforge.net/neartree/NearTree-2.2.1.tar.gz</a>.
+A source tarball is available at <a href="http://downloads.sourceforge.net/neartree/NearTree-2.3.tar.gz">downloads.sourceforge.net/neartree/NearTree-2.3.tar.gz</a>.
 Later tarballs may be available.
 <p>
 If you decide to simply use the TNear.h header to add nearest neighbor support to C++ code under Visual
@@ -150,7 +152,7 @@ Studio, be sure to also use the rhrand.h header, and to define USE_LOCAL_HEADERS
 unix or MINGW, you will need to use the Makefile and to have libtool on your system.  Be warned that
 the default libtool under Mac OS X will not work for this installation.
 <P>
-When the source tarball is downloaded and unpacked, you should have a directory NearTree-2.2.1.  To see the current settings for a build
+When the source tarball is downloaded and unpacked, you should have a directory NearTree-2.3.  To see the current settings for a build
 execute
 <p>
 make
@@ -176,7 +178,7 @@ which should give the following information:
 
  The current library link command is:
  
-   libtool --mode=link  gcc -version-info 3:0:0 -release 2.2 \
+   libtool --mode=link  gcc -version-info 3:0:0  \
      -no-undefined -rpath /usr/local/lib
  
  The current C++ and C library local, and C dynamic and static build commands are:
@@ -370,11 +372,35 @@ The provided interface is:
     <b>CNearTree</b>( <b>const std::vector&lt;T&gt;</b> )     // constructor
     <b>CNearTree</b>( <b>const std::list&lt;T&gt;</b> )       // constructor
     <b>CNearTree</b>( <b>const std::set&lt;T&gt;</b> )        // constructor
-    <b>CNearTree</b>( <b>const CNearTree&lt;T&gt;</b> )        // constructor
+    <b>CNearTree</b>( <b>const CNearTree&lt;T&gt;</b> )       // constructor
+
+    <b>CNearTree</b>( <b>const ContainerType&lt;T&gt;</b>, <b>const ContainerType&lt;T&gt;</b> ) 
+                                                              // constructor merging 2 containers, e.g. ...
     
     <b>~CNearTree</b>( <b>void</b> )  // destructor
+    
+    <b>void clear</b>( <b>void</b> )  // clear the NearTree
+    
+    <b>template&lt;typename</b> <i>InputContainer</i>&gt;
+    <b>CNearTree&amp; operator+=</b>( <b>const InputContainer&amp;</b>, <i>o</i> )
+                                                              // add a container's contents to a NearTree
 
-    <b>void Insert</b>( <b>const T&amp;</b> <i>t</i> )
+    <b>template&lt;typename</b> <i>InputContainer</i>&gt;
+    <b>CNearTree&amp; operator-=</b>( <b>const InputContainer&amp;</b>, <i>o</i> )
+                                                              // remove a container's contents from a NearTree
+
+    <b>template&lt;typename</b> <i>InputContainer</i>&gt;
+    <b>CNearTree&amp; set_symmetric_difference</b>( <b>const InputContainer&amp;</b>, <i>o</i> )
+                                                              // remove the part of a container's 
+                                                              // contents from a NearTree that is
+                                                              // already in the Neartree and add
+                                                              // in the contents of the container
+                                                              // that is not already in the Neartree
+                                                              // i.e. the exclusive or
+                                                              
+    
+
+    <b>void insert</b>( <b>const T&amp;</b> <i>t</i> )
        where t is an object of the type T
 
             all inserts are delayed until a search is performed or
@@ -391,7 +417,8 @@ The provided interface is:
             allow insertion of containers of objects
 
 
-    <b>void Insert</b>( <b>ContainerType</b> )      // e. g. ...
+    <b>template&lt; typename</b> <i>InputContainer</i> &gt;
+    <b>void insert</b>( <b>ContainerType</b> )      // e. g. ...
 
     <b>void insert</b>( <b>const std::vector&lt;T&gt;</b> )
     <b>void insert</b>( <b>const std::list&lt;T&gt;</b> )
@@ -421,6 +448,15 @@ The provided interface is:
     <b>iterator FarthestNeighbor</b> ( <b>T&amp;</b> <b>const T&amp;</b> <i>t</i> ) <b>const</b>
        returns an iterator to the nearest point to the probe point <i>t</i> or end() if there is none
 
+    <b>bool FarthestNeighbor</b> ( <b>T&amp;</b> <i>tFarthest</i>, <b>const T&amp;</b> <i>t</i> ) <b>const</b>
+     
+    <b>template&lt;typename</b> <i>ContainerType</i>&gt;
+    <b>void BelongsToPoints</b> ( <b>const T&amp;</b> <i>t1</i>, <b>const T&amp;</b> <i>t2</i>, <b>ContainerType&amp;</b> <i>group1</i>, <b>ContainerType&amp;</b> <i>group2</i> )
+       returns the points closer to t1 than to t2 in group1 and the rest in group 2
+       
+    <b>template&lt;typename</b> <i>ContainerTypeInside</i>, <b>typename</b> <i>ContainerTypeOutside</i>&gt;
+    <b>void SeparateByRadius</b> ( <b>const DistanceType</b> <i>radius</i>, <b>const T&amp;</b> <i>probe</i>, <b>ContainerTypeInside&amp;</b> <i>inside</i>, <b>ContainerTypeOutside&amp;</b> <i>outside</i> )
+       return the points within radius of the probe in inside and the rest in outside
 
     The following functions (FindInSphere, FindOutSphere, and FindInAnnulus) all return a container 
     (ContainerType) that can be any standard library container (such as std::vector&lt; T &gt;) or CNearTree.
@@ -515,6 +551,7 @@ Access Functions:
      <b>T operator[]</b> ( <b>const size_t</b> <i>n</i> )
         returns the n'th item of the internal data store
 
+     <b>template&lt;typename</b> <i>ContainerType</i>&gt;
      <b>operator ContainerType</b> ( <b>void</b> ) <b>const</b> 
         returns all of the inserted objects in the tree in a container of type ContainerType.
         ContainerType can be std::vector&lt;T&gt;, etc, or other containers, including CNearTree&lt;T&gt;.
@@ -575,20 +612,27 @@ Iterators:
      list of iterators. The same set is avaiable for const_iterator.
 
      <b>iterator</b> ( <b>void</b> ) { }; // constructor
-
-     <b>iterator& operator=  </b> ( <b>const iterator&amp;</b> <i>s</i> )      
+     <b>iterator</b> ( <b>const const_iterator&amp;</b> <i>s</i> )
+     <b>iterator&amp; operator=  </b> ( <b>const iterator&amp;</b> <i>s</i> )      
      <b>iterator  operator++ </b> ( <b>const int</b> <i>n</i> )            
      <b>iterator  operator-- </b> ( <b>const int</b> <i>n</i> )            
-     <b>iterator& operator++ </b> ( <b>void</b> )                   
-     <b>iterator& operator-- </b> ( <b>void</b> )                   
+     <b>iterator&amp; operator++ </b> ( <b>void</b> )                   
+     <b>iterator&amp; operator-- </b> ( <b>void</b> )                   
      <b>iterator  operator+  </b> ( <b>const long</b> <i>n</i> ) <b>const</b>     
      <b>iterator  operator-  </b> ( <b>const long</b> <i>n</i> ) <b>const</b>     
-     <b>iterator& operator+= </b> ( <b>const long</b> <i>n</i> )           
-     <b>iterator& operator-= </b> ( <b>const long</b> <i>n</i> )           
+     <b>iterator&amp; operator+= </b> ( <b>const long</b> <i>n</i> )           
+     <b>iterator&amp; operator-= </b> ( <b>const long</b> <i>n</i> )           
      <b>T         operator*  </b> ( <b>void</b> )        <b>const</b>     
 
-     <b>bool      operator== </b> ( <b>const iterator&amp</b> <i>t</i> ) <b>const</b> 
-     <b>bool      operator!= </b> ( <b>const iterator&</b> <i>t</i> ) <b>const</b> 
+     <b>bool      operator== </b> ( <b>const iterator&amp;</b> <i>t</i> ) <b>const</b> 
+     <b>bool      operator!= </b> ( <b>const iterator&amp;</b> <i>t</i> ) <b>const</b> 
+     <b>bool      operator== </b> ( <b>const const_iterator&amp;</b> </i>t</i> ) <b>const</b>
+     <b>bool      operator!= </b> ( <b>const const_iterator&amp;</b> </i>t</i> ) <b>const</b>
+     <b>bool      operator&gt; </b> ( <b>const iterator&amp;</b> </i>t</i> ) <b>const</b>
+     <b>bool      operator&gt; </b> ( <b>const const_iterator&amp;</b> </i>t</i> ) <b>const</b>
+     <b>bool      operator&lt; </b> ( <b>const iterator&amp;</b> </i>t</i> ) <b>const</b>
+     <b>bool      operator&lt; </b> ( <b>const const_iterator&amp;</b> </i>t</i> ) <b>const</b>
+
 
      <b>const T * const operator-> </b> ( <b>void</b> )   <b>const</b>
 
@@ -1049,7 +1093,7 @@ Typical use is
 <hr>
 <hr>
 <font size="-1">
-Updated 25 July 2010<br />
+Updated 31 August 2010<br />
 <script language="javascript" type="text/javascript">
 <!-- 
       var name = "andrewsL@";
