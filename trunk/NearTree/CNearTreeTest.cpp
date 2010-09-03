@@ -95,7 +95,10 @@ void testMergeConstructor( void );
 void testOperatorPlusEquals( void );
 void testOperatorMinusEquals( void );
 void testSetSymmetricDifference( void );
+void testCentroid( void );
+void testLloyd( void );
 
+//std::vector<int> LloydCycleStep( const CNearTree<int>& coord, const std::vector<int>& vIn );
 
 long g_errorCount;
 
@@ -104,7 +107,9 @@ int debug;
 /*=======================================================================*/
 int main(int argc, char* argv[])
 {
-    
+        testLloyd( );
+    fprintf( stdout, "testLloyd\n" );
+
     g_errorCount = 0;
     
     debug = 0;
@@ -167,6 +172,8 @@ int main(int argc, char* argv[])
     fprintf( stdout, "testOperatorMinusEquals\n" );
     testSetSymmetricDifference( );
     fprintf( stdout, "testSetSymmetricDifference\n" );
+    testCentroid( );
+    fprintf( stdout, "testCentroid\n" );
 
     if( g_errorCount == 0 )
     {
@@ -2979,3 +2986,131 @@ void testSetSymmetricDifference( void )
         fprintf(stdout, "testSetSymmetricDifference-a, found wrong count \n" );
     } 
 }
+
+void testCentroid( )
+{
+    {
+        std::vector<int> v;
+        for ( int i=0; i<20; ++i )
+        {
+            v.push_back( i );
+        }
+
+        CNearTree<int> nt( v );
+
+        const double cm1 = nt.Centroid( ); 
+        const double cm2 = CNearTree<int>::Centroid( v ); 
+
+        if ( cm1 != cm2 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testCentroid-a, cm1 %f  cm2 %f\n", cm1, cm2 );
+        }
+    }
+
+    {
+        std::vector<double> v;
+        for ( int i=0; i<20; ++i )
+        {
+            v.push_back( i );
+        }
+
+        CNearTree<double> nt( v );
+
+        const double cm1 = nt.Centroid( ); 
+        const double cm2 = CNearTree<double>::Centroid( v ); 
+
+        if ( cm1 != cm2 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testCentroid-b, cm1 %f  cm2 %f\n", cm1, cm2 );
+        }
+    }
+}
+
+template< typename T >
+std::vector<T> LloydCycleStep( const CNearTree<T>& coord, const std::vector<T>& vIn )
+{
+    std::vector<T> v(vIn);
+    std::vector<T> vSum(v.size( ), 0); 
+    std::vector<T> vCount( v.size( ) );
+
+    typename CNearTree<T>::iterator it;
+    for ( it=coord.begin( ); it!=coord.end( ); ++it )
+    {
+        double dmin = DBL_MAX;
+        int indexVSumMin=0;
+        int indexVMin = 0;
+        for ( unsigned int i=0; i<v.size( ); ++i )
+        {
+            if ( abs((*it)-v[i]) < dmin )
+            {
+                dmin = abs((*it)-v[i]);
+                indexVMin = it.get_position( );
+                indexVSumMin = i;
+            }
+        }
+
+        vSum[indexVSumMin] += coord[indexVMin];
+        ++(vCount[indexVSumMin]);
+    }
+
+    for ( unsigned int i=0; i<vSum.size( ); ++i )
+    {
+        if ( vCount[i] > 0.0 )
+        {
+           vSum[i] /= double(vCount[i]);
+        }
+    }
+
+    return( vSum );
+}
+
+void testLloyd( )
+{
+    CNearTree<double> vdata;
+    std::vector<double> vk;
+
+    for ( int i=0; i<20000; ++i )
+    {
+        vdata.insert( double(i) );
+    }
+
+    vk.push_back( double(-12) );
+    vk.push_back( double(0) );
+    vk.push_back( double(17) );
+
+    for ( unsigned int j=0; j<vk.size( ); ++j )
+    {
+        fprintf( stdout, "%.3f ", vk[j] );
+    }
+    fprintf( stdout, "\n" );
+
+    for ( int i=0; i<30; ++i  )
+    {
+        std::vector<double> vOut = LloydCycleStep( vdata, vk );
+        vk = vOut;
+        for ( unsigned int j=0; j<vk.size( ); ++j )
+        {
+            fprintf( stdout, "%.3f ", vk[j] );
+        }
+        fprintf( stdout, "\n" );
+    }
+}
+
+//> Lloyd cycle step
+//>
+//> put starting points (SPs) in a neartree
+//>
+//> CNearTree LloydCycle( const CNearTree& data, const CNearTree& SP )
+//> make a vector v of Vector_3 of size SP.size( ) and one of long same size
+//> for each data point
+//>   get iterator to nearest SP
+//>   v[it->GetPosition()] += *it;
+//>   ++count[it->GetPosition()];
+//> end for
+//>
+//> foreach in v
+//>   v[i] /= count[i]
+//>
+//> return (CNearTree(v));
