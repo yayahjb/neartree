@@ -1261,6 +1261,60 @@ size_t GetDepth ( void ) const
     return ( m_DeepestDepth );
 };
 
+
+//=======================================================================
+//  T Centroid ( void ) const
+//
+//  compute the centroid of a neartree
+//
+//=======================================================================
+T Centroid( void ) const
+{
+    T t( T(0.0) );
+    const unsigned int count = m_ObjectStore.size( );
+
+    if ( count == 0 )
+    {
+    }
+    else
+    {
+        for ( unsigned int i=0; i<count; ++i )
+        {
+            t += m_ObjectStore[i];
+        }
+        t = T( DistanceType(t) / DistanceType(count) );
+    }
+    return( t );
+}
+
+
+//=======================================================================
+//  T Centroid ( void ) const
+//
+//  compute the centroid of a neartree
+//
+//=======================================================================
+template< typename CentroidContainerType >
+static T Centroid(  CentroidContainerType& vt )
+{
+    T t( T(0.0) );
+    const unsigned int count = vt.size( );
+
+    if ( count == 0 )
+    {
+    }
+    else
+    {
+        typename CentroidContainerType::iterator it;
+        for ( it=vt.begin( ); it!=vt.end( ); ++it )
+        {
+            t += (*it);
+        }
+        t = T( DistanceType(t) / DistanceType(count) );
+    }
+    return( t );
+}
+
 //=======================================================================
 //  operator ContainerType ( void ) const
 //
