@@ -1,6 +1,6 @@
                                     NearTree
 
-                                  Release 2.3
+                                 Release 2.3.1
                                   25 July 2010
     (c) Copyright 2001, 2008, 2009, 2010 Larry Andrews. All rights reserved
                                     based on
@@ -23,6 +23,7 @@
                           18 July 2010 Release 2.2 HJB
                          25 July 2010 Release 2.2.1 HJB
                          31 August 2010 Release 2.3 LCA
+                       7 September 2010 Release 2.3.1 LCA
 
     YOU MAY REDISTRIBUTE NearTree UNDER THE TERMS OF THE LGPL
 
@@ -48,7 +49,9 @@
    spaces of arbitrary dimensions. This release provides a C++ template,
    TNear.h, and a C library, CNearTree.c, with example/test programs.
 
-   Release 2.3 adds methods for clustering.
+   Release 2.3.1 adds Centroid method for Llyod clustering.
+
+   Release 2.3 added methods for clustering.
 
    Release 2.2.1 was a minor revision to Release 2.2 to add an include of
    limits.h to TNear.h, primarily for MINGW use.
@@ -117,8 +120,8 @@
 
    The NearTree package is available at
    www.sourceforge.net/projects/neartree. A source tarball is available at
-   downloads.sourceforge.net/neartree/NearTree-2.3.tar.gz. Later tarballs may
-   be available.
+   downloads.sourceforge.net/neartree/NearTree-2.3.1.tar.gz. Later tarballs
+   may be available.
 
    If you decide to simply use the TNear.h header to add nearest neighbor
    support to C++ code under Visual Studio, be sure to also use the rhrand.h
@@ -127,7 +130,7 @@
    default libtool under Mac OS X will not work for this installation.
 
    When the source tarball is downloaded and unpacked, you should have a
-   directory NearTree-2.3. To see the current settings for a build execute
+   directory NearTree-2.3.1. To see the current settings for a build execute
 
    make
 
@@ -550,6 +553,9 @@ operator- ( );        // geometrical (vector) difference of two objects
       size_t GetDepth ( void )
          returns the maximum tree layers from the root.  This is mainly for information about
          details of the tree.
+        
+      T Centroid ( void )
+         returns the centroid of a neartree.
 
       bool empty ( void )
          returns true if the tree is empty, otherwise false
@@ -986,5 +992,5 @@ operator- ( );        // geometrical (vector) difference of two objects
 
      ----------------------------------------------------------------------
 
-   Updated 31 August 2010
+   Updated 8 September 2010
    andrewsl@ix.netcom.com.com
