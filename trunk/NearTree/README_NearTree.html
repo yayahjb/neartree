@@ -21,7 +21,7 @@ NearTree -- function library efficiently solving the Nearest Neighbor Problem
 <hr>
 <center>
 <h2 align=center>NearTree</h2>
-Release 2.3<br />
+Release 2.3.1<br />
 <font size="-1">
 25 July 2010<br />
 &#169; Copyright 2001, 2008, 2009, 2010 Larry Andrews.  All rights reserved
@@ -45,6 +45,7 @@ Revised 12 Dec 2008, for sourceforge release, Larry Andrews and Herbert J. Berns
 18 July 2010 Release 2.2 HJB<br />
 25 July 2010 Release 2.2.1 HJB<br />
 31 August 2010 Release 2.3 LCA<br />
+7 September 2010 Release 2.3.1 LCA<br />
 </font>
 <P>
 
@@ -79,7 +80,8 @@ This is a release of an API for finding nearest neighbors among points in spaces
 arbitrary dimensions.  This release provides a C++ template, TNear.h, and a
 C library, CNearTree.c, with example/test programs.
 <font size="-1">
-<p>Release 2.3 adds methods for clustering.
+<p>Release 2.3.1 adds  Centroid method for Llyod clustering.
+<p>Release 2.3 added methods for clustering.
 <p>Release 2.2.1 was a minor revision to Release 2.2 to add an include of limits.h to TNear.h,
 primarily for MINGW use.
 <p>Release 2.2 added support for C code for fixed length string searches using a hamming distance norm,
@@ -144,7 +146,7 @@ insertions before parallel execution of parallel searches.
 <h4><a name="Installation">Installation</a></h4>
 <p>
 The NearTree package is available at <a href="http://www.sourceforge.net/projects/neartree">www.sourceforge.net/projects/neartree</a>.
-A source tarball is available at <a href="http://downloads.sourceforge.net/neartree/NearTree-2.3.tar.gz">downloads.sourceforge.net/neartree/NearTree-2.3.tar.gz</a>.
+A source tarball is available at <a href="http://downloads.sourceforge.net/neartree/NearTree-2.3.1.tar.gz">downloads.sourceforge.net/neartree/NearTree-2.3.1.tar.gz</a>.
 Later tarballs may be available.
 <p>
 If you decide to simply use the TNear.h header to add nearest neighbor support to C++ code under Visual
@@ -152,7 +154,7 @@ Studio, be sure to also use the rhrand.h header, and to define USE_LOCAL_HEADERS
 unix or MINGW, you will need to use the Makefile and to have libtool on your system.  Be warned that
 the default libtool under Mac OS X will not work for this installation.
 <P>
-When the source tarball is downloaded and unpacked, you should have a directory NearTree-2.3.  To see the current settings for a build
+When the source tarball is downloaded and unpacked, you should have a directory NearTree-2.3.1.  To see the current settings for a build
 execute
 <p>
 make
@@ -595,6 +597,9 @@ Information and special operation functions:
      <b>size_t GetDepth</b> ( <b>void</b> ) 
         returns the maximum tree layers from the root.  This is mainly for information about 
         details of the tree.
+        
+     <b>T Centroid</b> ( <b>void</b> )
+        returns the centroid of a neartree.
 
      <b>bool empty</b> ( <b>void</b> )
         returns true if the tree is empty, otherwise false
@@ -1093,7 +1098,7 @@ Typical use is
 <hr>
 <hr>
 <font size="-1">
-Updated 31 August 2010<br />
+Updated 8 September 2010<br />
 <script language="javascript" type="text/javascript">
 <!-- 
       var name = "andrewsL@";
