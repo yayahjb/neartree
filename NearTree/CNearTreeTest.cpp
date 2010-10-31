@@ -2531,6 +2531,7 @@ void testKNearFar( void )
 {
     CNearTree<int> tree;
     CNearTree<int> outTree;
+    std::vector<size_t> outIndices;
     
     {
         const int searchPoint = 50;
@@ -2546,7 +2547,27 @@ void testKNearFar( void )
         if( lFound0 != 0 )
         {
             ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: found wrong count #0\n" );
+            fprintf(stdout, "testKNearFar, Near: #0: found wrong count %ld\n",  (long)lFound0);
+        }
+    }
+
+    {
+        const int searchPoint = 50;
+        const long nToFind0 = 0;
+        const double radius0 = 1000.0;
+        
+        const size_t lFound0 = tree.FindK_NearestNeighbors( 
+                                                           nToFind0,
+                                                           radius0,
+                                                           outTree,
+                                                           outIndices,
+                                                           searchPoint );
+        outTree.CompleteDelayedInsert( );
+        if( lFound0 != 0 || outIndices.size() != 0 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Near: #0: found wrong count %ld and unexpected indices %ld \n",
+                    (long)lFound0, (long)outIndices.size());
         }
     }
     
@@ -2570,7 +2591,35 @@ void testKNearFar( void )
         if( lFound1 != 13 )
         {
             ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: found wrong count #1\n" );
+            fprintf(stdout, "testKNearFar, Near: #1: found wrong count %ld\n", (long)lFound1 );
+        }
+    }
+
+    {
+        const int searchPoint = 50;
+        const long nToFind1 = 13;
+        const double radius1 = 1000.0;
+        
+        const size_t lFound1 = tree.FindK_NearestNeighbors( 
+                                                           nToFind1,
+                                                           radius1,
+                                                           outTree,
+                                                           outIndices,
+                                                           searchPoint );
+        outTree.CompleteDelayedInsert( );
+        if( lFound1 != 13 || outIndices.size() !=13)
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testKNearFar, Near: #1: found wrong count %ld or wrong indices %ld\n",
+                    lFound1, outIndices.size());
+        } else {
+            for (size_t ii = 0; ii < outIndices.size(); ii++) {
+                if (tree[outIndices[ii]] != outTree[ii]) {
+                    ++g_errorCount;
+                    fprintf(stdout, "testKNearFar, Near: #1: mismatch between tree[%ld] and outTree[%ld]\n",
+                            (long)outIndices[ii], (long)ii);
+                }
+            }
         }
     }
     
@@ -2832,10 +2881,43 @@ void testSeparation( void )
 
     typedef std::vector<int> container;
     container group1, group2;
+    std::vector<size_t> group1_indices;
+    std::vector<size_t> group2_indices;
     t.BelongsToPoints( imin, imax, group1, group2 );
     if ((long int)group1.size() != (long int)group2.size()) {
+      ++g_errorCount;
       fprintf( stdout, "testSeparation: in %ld out %ld\n", (long int)group1.size(), (long int)group2.size() );
     }
+    group1.clear();
+    group2.clear();
+    t.BelongsToPoints( imin, imax, group1, group2, group1_indices, group2_indices);
+    if ((long int)group1.size() != (long int)group2.size()) {
+        ++g_errorCount;
+        fprintf( stdout, "testSeparation: in %ld out %ld\n", (long int)group1.size(), (long int)group2.size() );
+    }
+    if ((long int)group1_indices.size() != (long int)group1.size()) {
+        ++g_errorCount;
+        fprintf( stdout, "testSeparation: in indices %ld in %ld\n", (long int)group1_indices.size(), (long int)group2.size() );
+    }
+    if ((long int)group2_indices.size() != (long int)group2.size()) {
+        ++g_errorCount;
+        fprintf( stdout, "testSeparation: out indices %ld out %ld\n", (long int)group1_indices.size(), (long int)group2.size() );
+    }
+    for (size_t ii=0; ii <  group1.size(); ii++) {
+        if (t[group1_indices[ii]] != group1[ii]) {
+            ++g_errorCount;
+            fprintf( stdout, "testSeparation: group1 index error index t[%ld] != group1[%ld] \n",
+                    (long)group1_indices[ii], (long)ii);
+        }
+    }
+    for (size_t ii=0; ii <  group2.size(); ii++) {
+        if (t[group2_indices[ii]] != group2[ii]) {
+            ++g_errorCount;
+            fprintf( stdout, "testSeparation: group2 index error index t[%ld] != group2[%ld] \n",
+                    (long)group2_indices[ii], (long)ii);
+        }
+    }
+    
 }
 
 void testMergeConstructor( void )

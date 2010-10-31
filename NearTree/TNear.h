@@ -918,12 +918,12 @@ void BelongsToPoints( const T& t1, const T& t2, ContainerType& group1, Container
         if( DistanceBetween( (*it), t1 ) < DistanceBetween( (*it), t2) )
         {
             group1.insert( group1.end( ), (*it) );
-            group1_ordinals( group1_ordinals.end( ), (*it).get_position( ) );
+            group1_ordinals.insert( group1_ordinals.end( ), it.get_position( ) );
         }
         else
         {
             group2.insert( group2.end(), (*it) );
-            group2_ordinals( group2_ordinals.end( ), (*it).get_position( ) );
+            group2_ordinals.insert( group2_ordinals.end( ), it.get_position( ) );
         }
     }
 }  // end BelongsToPoints
@@ -968,12 +968,12 @@ void SeparateByRadius( const DistanceType radius, const T& probe,
         if( DistanceBetween( (*it), probe ) < radius )
         {
             inside.insert( inside.end( ), (*it) );
-            inside_ordinals.insert( inside_ordinals.end( ), (*it).get_position());
+            inside_ordinals.insert( inside_ordinals.end( ), it.get_position());
         }
         else
         {
             outside.insert( outside.end(), (*it) );
-            inside_ordinals.insert( outside_ordinals.end( ), (*it).get_position());
+            inside_ordinals.insert( outside_ordinals.end( ), it.get_position());
         }
     }
     
@@ -1021,6 +1021,7 @@ inline long FindInSphere ( const DistanceType& dRadius,  OutputContainerType& tC
 {
     // clear the contents of the return vector so that things don't accidentally accumulate
     tClosest.clear( );
+    tIndices.clear( );
     const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
     
     if( this->empty( ) )
@@ -1080,6 +1081,7 @@ long FindOutSphere (
 {
     // clear the contents of the return vector so that things don't accidentally accumulate
     tFarthest.clear( );
+    tIndices.clear( );
     const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
     
     if( this->empty( ) )
@@ -1151,6 +1153,7 @@ long FindInAnnulus (
     long lReturn = 0;
     // clear the contents of the return vector so that things don't accidentally accumulate
     tAnnular.clear( );
+    tIndices.clear( );
     const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
     
     if( this->empty( ) )
@@ -1218,6 +1221,7 @@ long FindK_NearestNeighbors ( const size_t k, const DistanceType& radius,
 {
     // clear the contents of the return vector so that things don't accidentally accumulate
     tClosest.clear( );
+    tIndices.clear( );
     const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
     
     if( this->empty( ) )
@@ -1231,8 +1235,8 @@ long FindK_NearestNeighbors ( const size_t k, const DistanceType& radius,
         const long lFound = m_BaseNode.K_Near( k, dRadius, K_Storage, t, this->m_ObjectStore );
         for( unsigned int i=0; i<K_Storage.size( ); ++i )
         {
-            tClosest.insert( tClosest.end( ), K_Storage[i].second );
-            tIndices.insert( tIndices.end( ), K_Storage[i].third );
+            tClosest.insert( tClosest.end( ), K_Storage[i].GetSecond() );
+            tIndices.insert( tIndices.end( ), K_Storage[i].GetThird() );
         }
         return( lFound );
     }
@@ -1282,6 +1286,7 @@ long FindK_FarthestNeighbors ( const size_t k, OutputContainerType& tFarthest, s
 {
     // clear the contents of the return vector so that things don't accidentally accumulate
     tFarthest.clear( );
+    tIndices.clear( );
     const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
     
     if( this->empty( ) )
@@ -2662,9 +2667,9 @@ static bool K_Sorter2( const std::pair<DistanceTypeNode, T>& t1, const std::pair
 {
     return ( t1.first < t2.first );
 }
-static bool K_Sorter3( const triple<DistanceTypeNode, T, size_t>& t1, const std::pair<DistanceTypeNode, T>& t2 )
+static bool K_Sorter3( const triple<DistanceTypeNode, T, size_t>& t1, const triple<DistanceTypeNode, T, size_t>& t2 )
 {
-    return ( t1.first < t2.first );
+    return ( t1.GetFirst() < t2.GetFirst() );
 }
 
 //=======================================================================
@@ -2692,7 +2697,7 @@ void K_Resize( const size_t k, const TNode& t, std::vector<triple<DistanceTypeNo
 {
     std::sort( tClosest.begin(), tClosest.end(), &K_Sorter3 );
     tClosest.resize( k );
-    dRadius = DistanceBetween( t, tClosest[tClosest.size()-1].second );
+    dRadius = DistanceBetween( t, tClosest[tClosest.size()-1].GetSecond() );
 }  // end K_Resize
 
 
