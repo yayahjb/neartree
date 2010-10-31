@@ -867,6 +867,29 @@ void testRandomTree1( const int nRequestedRandoms )
             fprintf(stdout, "FindInSphere failed in testRandomTree1, n=%d, lReturn=%ld\n", n, lReturn );
         }
     }
+
+    {
+        /*verify that for very large radius, every point is detected (from below)*/
+        std::vector<int> v;
+        const double radius = DBL_MAX;
+        CNearTree<int> sphereReturn;
+        std::vector<size_t> sphereIndices;
+        const long lReturn = tree.FindInSphere( radius, sphereReturn, sphereIndices, INT_MIN/2 );
+        if( lReturn != n || sphereIndices.size() != (size_t)n )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "FindInSphere failed in testRandomTree1, n=%d, lReturn=%ld, indices=%ld\n", 
+                    n, (long)lReturn, (long)sphereIndices.size() );
+        } else {
+            for (size_t ii = 0; ii < (size_t) n; ii++) {
+                if (tree[sphereIndices[ii]]!=sphereReturn[ii]) {
+                    ++g_errorCount;
+                    fprintf(stdout, "FindInSphere: testRandomTree1: tree[%ld] != sphereReturn[%ld]\n",
+                            (long)sphereIndices[ii], (long)ii );
+                }
+            }
+        }
+    }
     
     {
         /*verify that we find NO points if we are below the lowest and with too small radius*/
@@ -877,6 +900,20 @@ void testRandomTree1( const int nRequestedRandoms )
         {
             ++g_errorCount;
             fprintf(stdout, "FindInSphere failed in testRandomTree1 found points incorrectly, n=%d, lReturn=%ld\n", n, lReturn );
+        }
+    }
+
+    {
+        /*verify that we find NO points if we are below the lowest and with too small radius*/
+        const double radius = .5;
+        CNearTree<int> sphereReturn;
+        CNearTree<size_t> sphereIndices;
+        const long lReturn = tree.FindInSphere( radius, sphereReturn, nmin-1 );
+        if( lReturn != 0 || sphereIndices.size() !=0)
+        {
+            ++g_errorCount;
+            fprintf(stdout, "FindInSphere failed in testRandomTree1 found points or indices incorrectly, n=%d, lReturn=%ld, indices=%ld\n",
+                    n, lReturn, (long)sphereIndices.size());
         }
     }
     
@@ -1002,6 +1039,29 @@ void testRandomTree2( const int nRequestedRandoms )
             fprintf(stdout, "FindInSphere failed in testRandomTree2, n=%d, lReturn=%ld\n", n, lReturn );
         }
     }
+
+    {
+        /*verify that for very large radius, every point is detected (from below)*/
+        std::vector<int> v;
+        const double radius = DBL_MAX;
+        CNearTree<int,double,-11> sphereReturn;
+        std::vector<size_t> sphereIndices;
+        const long lReturn = tree.FindInSphere( radius, sphereReturn, sphereIndices, INT_MIN/2 );
+        if( lReturn != n || sphereIndices.size() != (size_t)n )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "FindInSphere failed in testRandomTree2,  n=%d, lReturn=%ld, indices=%ld\n", 
+                    n, (long)lReturn, (long)sphereIndices.size() );
+        } else {
+            for (size_t ii = 0; ii < (size_t)n; ii++) {
+                if (tree[sphereIndices[ii]]!=sphereReturn[ii]) {
+                    ++g_errorCount;
+                    fprintf(stdout, "FindInSphere: testRandomTree2: tree[%ld] != sphereReturn[%ld]\n",
+                            (long)sphereIndices[ii], (long)ii );
+                }
+            }
+        }
+    }
     
     {
         /*verify that we find NO points if we are below the lowest and with too small radius*/
@@ -1012,6 +1072,19 @@ void testRandomTree2( const int nRequestedRandoms )
         {
             ++g_errorCount;
             fprintf(stdout, "FindInSphere failed in testRandomTree2 found points incorrectly, n=%d, lReturn=%ld\n", n, lReturn );
+        }
+    }
+    {
+        /*verify that we find NO points if we are below the lowest and with too small radius*/
+        const double radius = .5;
+        CNearTree<int,double,-11> sphereReturn;
+        std::vector<size_t> sphereIndices;
+        const long lReturn = tree.FindInSphere( radius, sphereReturn, sphereIndices, nmin-1 );
+        if( lReturn != 0 || sphereIndices.size() !=0 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "FindInSphere failed in testRandomTree2 found points or indices incorrectly, n=%d, lReturn=%ld, indices=%ld\n",
+                    n, lReturn, (long)sphereIndices.size());
         }
     }
     
@@ -1033,6 +1106,35 @@ void testRandomTree2( const int nRequestedRandoms )
             }
             else
             {
+                lastFoundCount = lReturn;
+                radius *= 1.414;
+            }
+        }
+
+        lastFoundCount = 0;
+        radius = 0.00001; /* start with a very small radius (remember these are int's) */
+        while( radius < (double)(5*(nmax-nmin)) )
+        {
+            CNearTree<int,double,-11> sphereReturn;
+            std::vector<size_t> sphereIndices;
+            lReturn = tree.FindInSphere( radius, sphereReturn, sphereIndices, nmin-1 );
+            if( lReturn < lastFoundCount || sphereIndices.size() != (size_t)lReturn )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "FindInSphere in testRandomTree2 found DECREASING count on increasing radius for radius=%f"
+                        " or mismatched index count %ld != %ld\n",
+                        radius, (long)sphereIndices.size(), (long)lastFoundCount );
+                break;
+            }
+            else
+            {
+                for (size_t ii = 0; ii < sphereIndices.size(); ii++) {
+                    if (tree[sphereIndices[ii]]!=sphereReturn[ii]) {
+                        ++g_errorCount;
+                        fprintf(stdout, "FindInSphere in testRandomTree2 mismatch between tree[%ld] and sphereReturn[%ld]\n",
+                          (long)sphereIndices[ii], (long)ii);
+                    }
+                }
                 lastFoundCount = lReturn;
                 radius *= 1.414;
             }
@@ -1179,6 +1281,7 @@ void testBigVector(  )
         vec17 vCloseToNearCenter;
         tree.NearestNeighbor( double(RHrand::RHRAND_MAX/2)*sqrt(17.), vNearCenter, vBox17Center );
         CNearTree<vec17> sphereReturn;
+        std::vector<size_t> sphereIndices;
         unsigned long iFoundNearCenter = (unsigned long)tree.FindInSphere( double(RHrand::RHRAND_MAX/2)*sqrt(17.)/2., sphereReturn, vNearCenter );
         
         /* Brute force search for the point closest to the point closest to the center */
@@ -1219,6 +1322,48 @@ void testBigVector(  )
             {
                 ++g_errorCount;
                 fprintf(stdout, "testBigVector: FindInSphere failed to find only 2 points\n" );
+            }
+        }
+ 
+        {
+            //const double radius = ( vCloseToNearCenter - vNearCenter ).Norm( );
+            const double radius = RHrand::RHRAND_MAX*sqrt(17.0);
+            unsigned long iSphereFoundNearCenter = (unsigned long)tree.FindInSphere( radius, sphereReturn, vNearCenter );
+            
+            double searchRadius = radius/2;
+            double delta        = searchRadius;
+            int count = 0;
+            while( iSphereFoundNearCenter != 2 && count < 100 )
+            {
+                iSphereFoundNearCenter = (unsigned long)tree.FindInSphere( searchRadius, sphereReturn, sphereIndices, vNearCenter );
+                if ((size_t)iSphereFoundNearCenter != sphereIndices.size()) {
+                    ++g_errorCount;
+                    fprintf(stdout, "testBigVector: FindInSphere mismatch size %ld with indices %ld\n",
+                            (long)iSphereFoundNearCenter, (long)sphereIndices.size());
+                } else {
+                    for (size_t ii = 0; ii < sphereIndices.size(); ii++) {
+                        if ((tree[sphereIndices[ii]]-sphereReturn[ii]).Norm() != 0.) {
+                            fprintf(stdout, "testBigVector: FindInSphere mismatch tree[%ld] != sphereReturn[%ld]\n",
+                                    (long)sphereIndices[ii], (long)ii);
+                        }
+                    }
+                }
+                if( iSphereFoundNearCenter > 2 )
+                {
+                    searchRadius = searchRadius - delta/2;
+                }
+                else if( iSphereFoundNearCenter < 2 )
+                {
+                    searchRadius = searchRadius + delta/2;
+                }
+                delta /= 2;
+                ++count;
+            }  // end while
+            
+            if( iSphereFoundNearCenter != 2 || sphereIndices.size() != 2 )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testBigVector: FindInSphere failed to find only 2 points or indices !=2\n" );
             }
         }
         
@@ -1765,6 +1910,42 @@ void testFindInAnnulus( void )
             {
                 ++g_errorCount;
                 fprintf(stdout, "testFindInAnnulus: wrong number of objects found\n" );
+            }
+            
+            CNearTree<int>::iterator itNear = annulusTree.NearestNeighbor( 1000.0, 0 );
+            
+            if( *itNear != 101 )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testFindInAnnulus: lowest value (%d) is incorrect\n", *itNear );
+            }
+            
+            CNearTree<int>::iterator itFar = annulusTree.FarthestNeighbor( 0 );
+            if( *itFar != 299 )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testFindInAnnulus: highest value (%d) is incorrect\n", *itFar );
+            }
+        }
+
+        {
+            
+            CNearTree<int> annulusTree;
+            std::vector<size_t> annulusIndices;
+            const long lInAnnulus = tree.FindInAnnulus( r1, r2, annulusTree, annulusIndices, 0 );
+            
+            if( lInAnnulus != (299-101+1) || annulusIndices.size() != (299-101+1) )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testFindInAnnulus: wrong number of objects found\n" );
+            } else {
+                for (size_t ii=0; ii < annulusIndices.size(); ii++) {
+                    if (tree[annulusIndices[ii]] != annulusTree[ii]) {
+                        ++g_errorCount;
+                        fprintf(stdout, "testFindInAnnulus: mismatch tree[%ld] != annulusTree[%ld]\n",
+                                (long)annulusIndices[ii], (long)ii);                        
+                    }
+                }
             }
             
             CNearTree<int>::iterator itNear = annulusTree.NearestNeighbor( 1000.0, 0 );
