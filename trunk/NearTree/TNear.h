@@ -116,38 +116,50 @@
 //
 //    the following functions (FindInSphere, FindOutSphere, and FindInAnnulus) all return a container
 //    (ContainerType) that can be any standard library container (such as std::vector< T >) or CNearTree.
+//    each has an alternate version in which, in addition the indices of the objects in the
+//    object store are returned in a second parallel vector.
 //
 //    long FindInSphere ( const DistanceType dRadius,  ContainerType& tClosest, const T& t ) const
+//    long FindInSphere ( const DistanceType dRadius,  ContainerType& tClosest, std::vector<size_t>& tIndices, const T& t ) const
 //       dRadius is the radius within which to search; make it very large if you want to
 //           include every point that was loaded;
 //       tClosest is returned as the ContainerType of objects that were found within a radius dRadius
 //          of the probe point
+//       if tIndices is used, it is a vector to which to add the indices of the points found
 //       t is the probe point, used to search in the group of points insert'ed
 //       return value is the number of objects found within the search radius
 //
 //    long FindOutSphere ( const DistanceType dRadius,  ContainerType& tClosest, const T& t ) const
+//    long FindOutSphere ( const DistanceType dRadius,  ContainerType& tClosest, std::vector<size_t>& tIndices, const T& t ) const
 //       dRadius is the radius outside which to search; make it very small if you want to
 //           include every point that was loaded;
 //       tClosest is returned as the ContainerType of objects that were found within a radius dRadius
 //          of the probe point
+//       if tIndices is used, it is a vector to which to add the indices of the points found
 //       t is the probe point, used to search in the group of points insert'ed
 //       return value is the number of objects found within the search radius
 //
 //    long FindInAnnulus (const DistanceType dRadius1, const DistanceType dRadius2, ContainerType& tClosest,   const T& t ) const
+//    long FindInAnnulus (const DistanceType dRadius1, const DistanceType dRadius2, ContainerType& tClosest, std::vector<size_t>& tIndices,  const T& t ) const
 //       dRadius1 and dRadius2 are the two radii between which to find  data points
 //       tClosest is returned ContainerType of the objects found in the annulus
+//       if tIndices is used, it is a vector to which to add the indices of the points found
 //       t is the probe point, used to search in the group of points insert'ed
 //       return value is the number of objects found within the search radius
 //
 //    long FindK_NearestNeighbors ( const size_t k, const DistanceType& radius,  OutputContainerType& tClosest,   const T& t )
+//    long FindK_NearestNeighbors ( const size_t k, const DistanceType& radius,  OutputContainerType& tClosest, std::vector<size_t>& tIndices,  const T& t )
 //       k is the maximum number of nearest neighbors to return. Finds this many if possible
 //       radius Within a sphere defined by radius, search for the k-nearest-neighbors
 //       tClosest is returned ContainerType of the objects found within the sphere
+//       if tIndices is used, it is a vector to which to add the indices of the points found
 //       t is the probe point, used to search in the group of points insert'ed
 //
 //    long FindK_FarthestNeighbors ( const size_t k, OutputContainerType& tClosest,   const T& t )
+//    long FindK_FarthestNeighbors ( const size_t k, OutputContainerType& tClosest, std::vector<size_t>& tIndices,  const T& t )
 //       k is the maximum number of farthest neighbors to return. Finds this many if possible
 //       tClosest is returned ContainerType of the objects found
+//       if tIndices is used, it is a vector to which to add the indices of the points found
 //       t is the probe point, used to search in the group of points insert'ed
 //
 //    ~CNearTree( void )  // destructor
@@ -258,8 +270,10 @@
 
 #ifndef USE_LOCAL_HEADERS
 #include <rhrand.h>
+#include <triple.h>
 #else
 #include "rhrand.h"
+#include "triple.h"
 #endif
 
 #include <vector>
@@ -891,6 +905,28 @@ void BelongsToPoints( const T& t1, const T& t2, ContainerType& group1, Container
         }
     }
 }  // end BelongsToPoints
+template<typename ContainerType>
+void BelongsToPoints( const T& t1, const T& t2, ContainerType& group1, ContainerType& group2,
+                     std::vector<size_t>& group1_ordinals, std::vector<size_t>& group2_ordinals)
+{
+    group1.clear();
+    group2.clear();
+    typename CNearTree<T>::iterator it;
+    
+    for ( it=this->begin( ); it!=this->end( ); ++it )
+    {
+        if( DistanceBetween( (*it), t1 ) < DistanceBetween( (*it), t2) )
+        {
+            group1.insert( group1.end( ), (*it) );
+            group1_ordinals( group1_ordinals.end( ), (*it).get_position( ) );
+        }
+        else
+        {
+            group2.insert( group2.end(), (*it) );
+            group2_ordinals( group2_ordinals.end( ), (*it).get_position( ) );
+        }
+    }
+}  // end BelongsToPoints
 
 //=======================================================================
 template<typename ContainerTypeInside, typename ContainerTypeOutside>
@@ -912,6 +948,35 @@ void SeparateByRadius( const DistanceType radius, const T& probe, ContainerTypeI
         }
     }
 
+    // The following was the first cut, but it's slower.
+    //const long nInside  = FindInSphere ( radius, inside,  tProbe );
+    //const long nOutside = FindOutSphere( radius, outside, tProbe );
+} // end SeparateByRadius
+
+//=======================================================================
+template<typename ContainerTypeInside, typename ContainerTypeOutside>
+void SeparateByRadius( const DistanceType radius, const T& probe, 
+                      ContainerTypeInside& inside, ContainerTypeOutside& outside,
+                      std::vector<size_t>& inside_ordinals, std::vector<size_t>& outside_ordinals)
+{
+    inside.clear();
+    outside.clear();
+    typename CNearTree<T>::iterator it;
+    
+    for ( it=this->begin( ); it!=this->end( ); ++it )
+    {
+        if( DistanceBetween( (*it), probe ) < radius )
+        {
+            inside.insert( inside.end( ), (*it) );
+            inside_ordinals.insert( inside_ordinals.end( ), (*it).get_position());
+        }
+        else
+        {
+            outside.insert( outside.end(), (*it) );
+            inside_ordinals.insert( outside_ordinals.end( ), (*it).get_position());
+        }
+    }
+    
     // The following was the first cut, but it's slower.
     //const long nInside  = FindInSphere ( radius, inside,  tProbe );
     //const long nOutside = FindOutSphere( radius, outside, tProbe );
@@ -950,6 +1015,23 @@ inline long FindInSphere ( const DistanceType& dRadius,  OutputContainerType& tC
         return ( m_BaseNode.InSphere( dRadius, tClosest, t, m_ObjectStore ) );
     }
 }  //  FindInSphere
+template<typename OutputContainerType>
+inline long FindInSphere ( const DistanceType& dRadius,  OutputContainerType& tClosest, 
+                          std::vector<size_t>& tIndices, const T& t ) const
+{
+    // clear the contents of the return vector so that things don't accidentally accumulate
+    tClosest.clear( );
+    const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+    
+    if( this->empty( ) )
+    {
+        return( 0L );
+    }
+    else
+    {
+        return ( m_BaseNode.InSphere( dRadius, tClosest, tIndices, t, m_ObjectStore ) );
+    }
+}  //  FindInSphere
 
 //=======================================================================
 //  long FindOutSphere ( const DistanceType& dRadius,  OutputContainerType& tFarthest,   const T& t ) const
@@ -986,6 +1068,27 @@ long FindOutSphere (
     else
     {
         return ( m_BaseNode.OutSphere( dRadius, tFarthest, t, m_ObjectStore ) );
+    }
+}  //  FindOutSphere
+template<typename OutputContainerType>
+long FindOutSphere (
+                    const DistanceType& dRadius,
+                    OutputContainerType& tFarthest,
+                    std::vector<size_t>& tIndices,
+                    const T& t
+                    ) const
+{
+    // clear the contents of the return vector so that things don't accidentally accumulate
+    tFarthest.clear( );
+    const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+    
+    if( this->empty( ) )
+    {
+        return( 0L );
+    }
+    else
+    {
+        return ( m_BaseNode.OutSphere( dRadius, tFarthest, tIndices, t, m_ObjectStore ) );
     }
 }  //  FindOutSphere
 
@@ -1036,6 +1139,35 @@ long FindInAnnulus (
 
     return ( lReturn );
 }  //  FindInAnnulus
+template<typename OutputContainerType>
+long FindInAnnulus (
+                    const DistanceType& dRadius1,
+                    const DistanceType& dRadius2,
+                    OutputContainerType& tAnnular,
+                    std::vector<size_t>& tIndices,
+                    const T& t
+                    ) const
+{
+    long lReturn = 0;
+    // clear the contents of the return vector so that things don't accidentally accumulate
+    tAnnular.clear( );
+    const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+    
+    if( this->empty( ) )
+    {
+    }
+    else if ( dRadius1 > dRadius2 )
+    {
+        // Make sure that r1 < r2
+        return ( FindInAnnulus( dRadius2, dRadius1, tAnnular, tIndices, t ) );
+    }
+    else
+    {
+        lReturn = this->m_BaseNode.InAnnulus( dRadius1, dRadius2, tAnnular, tIndices, t, m_ObjectStore );
+    }
+    
+    return ( lReturn );
+}  //  FindInAnnulus
 
 //=======================================================================
 //  long FindK_NearestNeighbors(  const size_t k, const DistanceType& dRadius, OutputContainerType& tClosest, const T& t ) const
@@ -1079,6 +1211,32 @@ long FindK_NearestNeighbors ( const size_t k, const DistanceType& radius,  Outpu
         return( lFound );
     }
 }  //  FindK_NearestNeighbors
+template<typename OutputContainerType>
+long FindK_NearestNeighbors ( const size_t k, const DistanceType& radius,  
+                             OutputContainerType& tClosest,
+                             std::vector<size_t>& tIndices, const T& t )
+{
+    // clear the contents of the return vector so that things don't accidentally accumulate
+    tClosest.clear( );
+    const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+    
+    if( this->empty( ) )
+    {
+        return( 0L );
+    }
+    else
+    {
+        std::vector<triple<DistanceType, T, size_t> > K_Storage;
+        DistanceType dRadius = radius;
+        const long lFound = m_BaseNode.K_Near( k, dRadius, K_Storage, t, this->m_ObjectStore );
+        for( unsigned int i=0; i<K_Storage.size( ); ++i )
+        {
+            tClosest.insert( tClosest.end( ), K_Storage[i].second );
+            tIndices.insert( tIndices.end( ), K_Storage[i].third );
+        }
+        return( lFound );
+    }
+}  //  FindK_NearestNeighbors
 
 //=======================================================================
 //  long FindK_FarthestNeighbors const size_t k,OutputContainerType& tFarthest, const T& t ) const
@@ -1115,6 +1273,30 @@ long FindK_FarthestNeighbors ( const size_t k, OutputContainerType& tFarthest,  
         for( unsigned int i=0; i<K_Storage.size( ); ++i )
         {
             tFarthest.insert( tFarthest.end( ), K_Storage[i].second );
+        }
+        return( lFound );
+    }
+}  //  FindK_FarthestNeighbors
+template<typename OutputContainerType>
+long FindK_FarthestNeighbors ( const size_t k, OutputContainerType& tFarthest, std::vector<size_t>& tIndices, const T& t )
+{
+    // clear the contents of the return vector so that things don't accidentally accumulate
+    tFarthest.clear( );
+    const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+    
+    if( this->empty( ) )
+    {
+        return( 0L );
+    }
+    else
+    {
+        std::vector<triple<DistanceType, T, size_t> > K_Storage;
+        DistanceType dRadius = 0;
+        const long lFound = m_BaseNode.K_Far( k, dRadius, K_Storage, t, this->m_ObjectStore );
+        for( unsigned int i=0; i<K_Storage.size( ); ++i )
+        {
+            tFarthest.insert( tFarthest.end( ), K_Storage[i].second);
+            tIndices.insert( tIndices.end( ), K_Storage[i].third);
         }
         return( lFound );
     }
@@ -1792,6 +1974,73 @@ long InSphere (
 
     return ( (long)tClosest.size() );
 }  //  end InSphere
+template<typename ContainerType>
+long InSphere (
+               const DistanceTypeNode& dRadius,
+               ContainerType& tClosest,
+               std::vector<size_t>& tIndices,
+               const TNode& t,
+               const std::vector<TNode>& objectStore
+               ) const
+{
+    std::vector <NearTreeNode* > sStack;
+    enum  { left, right, end } eDir;
+    eDir = left; // examine the left nodes first
+    NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
+    while ( ! ( eDir == end && sStack.empty( ) ) )
+    {
+        if ( eDir == right )
+        {
+            const DistanceTypeNode dDR =  DistanceBetween( t, objectStore[pt->m_ptRight] );
+            if ( dDR <= dRadius )
+            {
+                tClosest.insert( tClosest.end(), objectStore[pt->m_ptRight] );
+                tIndices.insert( tIndices.end(), pt->m_ptRight);
+            }
+            if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
+            { // we did the left and now we finished the right, go down
+                pt = pt->m_pRightBranch;
+                eDir = left;
+            }
+            else
+            {
+                eDir = end;
+            }
+        }
+        if ( eDir == left )
+        {
+            const DistanceTypeNode dDL = DistanceBetween( t, objectStore[pt->m_ptLeft]  );
+            if ( dDL <= dRadius )
+            {
+                tClosest.insert( tClosest.end(), objectStore[pt->m_ptLeft] );
+                tIndices.insert( tIndices.end(), pt->m_ptLeft);;
+            }
+            if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
+            {
+                sStack.push_back( pt );
+            }
+            if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,pt->m_dMaxLeft,dRadius) )
+            { // we did the left, go down
+                pt = pt->m_pLeftBranch;
+            }
+            else
+            {
+                eDir = end;
+            }
+        }
+        
+        if ( eDir == end && !sStack.empty( ) )
+        {
+            pt = sStack.back( );
+            sStack.pop_back( );
+            eDir = right;
+        }
+    }
+    
+    return ( (long)tClosest.size() );
+}  //  end InSphere
+
 
 //=======================================================================
 //  long OutSphere (
@@ -1876,6 +2125,72 @@ long OutSphere (
 
     return ( (long)tFarthest.size() );
 }  //  end OutSphere
+template<typename ContainerType>
+long OutSphere (
+                const DistanceTypeNode& dRadius,
+                ContainerType& tFarthest,
+                std::vector<size_t>& tIndices,
+                const TNode& t,
+                const std::vector<TNode> objectStore
+                ) const
+{
+    std::vector <NearTreeNode* > sStack;
+    enum  { left, right, end } eDir;
+    eDir = left; // examine the left nodes first
+    NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
+    while ( ! ( eDir == end && sStack.empty( ) ) )
+    {
+        if ( eDir == right )
+        {
+            const DistanceTypeNode dDR = DistanceBetween( t, objectStore[pt->m_ptRight] );
+            if ( dDR >= dRadius )
+            {
+                tFarthest.insert( tFarthest.end(), objectStore[pt->m_ptRight] );
+                tIndices.insert( tIndices.end(), pt->m_ptRight );
+            }
+            if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
+            { // we did the left and now we finished the right, go down
+                pt = pt->m_pRightBranch;
+                eDir = left;
+            }
+            else
+            {
+                eDir = end;
+            }
+        }
+        if ( eDir == left )
+        {
+            const DistanceTypeNode dDL = DistanceBetween( t, objectStore[pt->m_ptLeft]  );
+            if ( dDL >= dRadius )
+            {
+                tFarthest.insert( tFarthest.end(), objectStore[pt->m_ptLeft] );
+                tIndices.insert( tIndices.end(), pt->m_ptLeft );
+            }
+            if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
+            {
+                sStack.push_back( pt );
+            }
+            if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
+            { // we did the left, go down
+                pt = pt->m_pLeftBranch;
+            }
+            else
+            {
+                eDir = end;
+            }
+        }
+        
+        if ( eDir == end && !sStack.empty( ) )
+        {
+            pt = sStack.back( );
+            sStack.pop_back( );
+            eDir = right;
+        }
+    }
+    
+    return ( (long)tFarthest.size() );
+}  //  end OutSphere
 
 //=======================================================================
 //  long InAnnulus ( const DistanceTypeNode& dRadius1, const DistanceTypeNode& dRadius2, CNearTree< TNode >& tAnnular,   const TNode& t ) const
@@ -1954,9 +2269,81 @@ long InAnnulus (
 
     return ( (long)tAnnular.size() );
 }  // end InAnnulus
+template<typename ContainerType>
+long InAnnulus (
+                const DistanceTypeNode& dRadius1,
+                const DistanceTypeNode& dRadius2,
+                ContainerType& tAnnular,
+                std::vector<size_t>& tIndices,
+                const TNode& t,
+                const std::vector<TNode> objectStore
+                ) const
+{
+    std::vector <NearTreeNode* > sStack;
+    enum  { left, right, end } eDir;
+    eDir = left; // examine the left nodes first
+    NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
+    while ( ! ( eDir == end && sStack.empty( ) ) )
+    {
+        if ( eDir == right )
+        {
+            const DistanceTypeNode dDR = DistanceBetween( t, objectStore[pt->m_ptRight] );
+            if ( dDR <= dRadius2 && dDR >= dRadius1 )
+            {
+                tAnnular.insert( tAnnular.end( ), objectStore[pt->m_ptRight] );
+                tIndices.insert( tIndices.end( ), pt->m_ptRight );
+            }
+            if ( pt->m_pRightBranch != 0 && (TRIANG(dRadius1,dDR,pt->m_dMaxRight)) && (TRIANG(dDR,pt->m_dMaxRight,dRadius2) ) )
+            { // we did the left and now we finished the right, go down
+                pt = pt->m_pRightBranch;
+                eDir = left;
+            }
+            else
+            {
+                eDir = end;
+            }
+        }
+        if ( eDir == left )
+        {
+            const DistanceTypeNode dDL = DistanceBetween( t, objectStore[pt->m_ptLeft]  );
+            if ( dDL <= dRadius2 && dDL >= dRadius1 )
+            {
+                tAnnular.insert( tAnnular.end(), objectStore[pt->m_ptLeft] );
+                tIndices.insert( tIndices.end( ), pt->m_ptLeft );
+            }
+            if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
+            {
+                sStack.push_back( pt );
+            }
+            if ( pt->m_pLeftBranch != 0 && (TRIANG(dRadius1,dDL,pt->m_dMaxLeft)) && (TRIANG(dDL,pt->m_dMaxLeft,dRadius2)  ) )
+            { // we did the left, go down
+                pt = pt->m_pLeftBranch;
+            }
+            else
+            {
+                eDir = end;
+            }
+        }
+        
+        if ( eDir == end && !sStack.empty( ) )
+        {
+            pt = sStack.back( );
+            sStack.pop_back( );
+            eDir = right;
+        }
+    }
+    
+    return ( (long)tAnnular.size() );
+}  // end InAnnulus
 
 //=======================================================================
-//  long K_Near ( const DistanceTypeNode dRadius,  std::vector<T>& tClosest,   const TNode& t ) const
+//  long K_Near ( const DistanceTypeNode dRadius,  
+//                std::vector<std::pair<DistanceTypeNode,T> >& tClosest,
+//                const TNode& t, const std::vector<TNode>& objectStore ) const
+//  long K_Near ( const DistanceTypeNode dRadius,  
+//                std::vector<triple<DistanceTypeNode,T,size_t> >& tClosest,
+//                const TNode& t, const std::vector<TNode>& objectStore ) const
 //
 //  Private function to search a NearTree for the objects inside of the specified radius
 //     from the probe point
@@ -1964,7 +2351,9 @@ long InAnnulus (
 //
 // k:           the maximum number of object to return, giving preference to the nearest
 // dRadius:     the search radius, which will be updated when the internal store is resized
-// tClosest:    is a vector of objects of the templated type found within dRadius of the
+// tClosest:    is a vector of pairs of Nodes and objects or of triples 
+//                 of Nodes, objects and ordinals of objects where the objects
+//                 are of the templated type found within dRadius of the
 //                 probe point, limited by the k-near search
 // t:           is the probe point
 // objectStore: the internal vector storing the object in CNearTree
@@ -2038,9 +2427,76 @@ long K_Near (
     if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
     return ( (long)tClosest.size( ) );
 }  // end K_Near
+long K_Near (
+             const size_t k,
+             DistanceTypeNode& dRadius,
+             std::vector<triple<DistanceTypeNode,T,size_t> >& tClosest,
+             const TNode& t,
+             const std::vector<TNode>& objectStore
+             )
+{
+    std::vector <NearTreeNode* > sStack;
+    enum  { left, right, end } eDir;
+    eDir = left; // examine the left nodes first
+    NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
+    while ( ! ( eDir == end && sStack.empty( ) ) )
+    {
+        if ( eDir == right )
+        {
+            const DistanceTypeNode dDR =  DistanceBetween( t, objectStore[pt->m_ptRight] );
+            if ( dDR <= dRadius )
+            {
+                tClosest.insert( tClosest.end(), make_triple( dDR, objectStore[pt->m_ptRight], pt->m_ptRight ) );
+                if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+            }
+            if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
+            { // we did the left and now we finished the right, go down
+                pt = pt->m_pRightBranch;
+                eDir = left;
+            }
+            else
+            {
+                eDir = end;
+            }
+        }
+        if ( eDir == left )
+        {
+            const DistanceTypeNode dDL = DistanceBetween( t, objectStore[pt->m_ptLeft]  );
+            if ( dDL <= dRadius )
+            {
+                tClosest.insert( tClosest.end(), make_triple( dDL, objectStore[pt->m_ptLeft], pt->m_ptLeft ) );
+                if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+            }
+            if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
+            {
+                sStack.push_back( pt );
+            }
+            if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,pt->m_dMaxLeft,dRadius) )
+            { // we did the left, go down
+                pt = pt->m_pLeftBranch;
+            }
+            else
+            {
+                eDir = end;
+            }
+        }
+        
+        if ( eDir == end && !sStack.empty( ) )
+        {
+            pt = sStack.back( );
+            sStack.pop_back( );
+            eDir = right;
+        }
+    }
+    
+    if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
+    return ( (long)tClosest.size( ) );
+}  // end K_Near
 
 //=======================================================================
-//  long K_Far ( const DistanceTypeNode dRadius, std::vector<T>& tFarthest, const TNode& t ) const
+//  long K_Far ( const DistanceTypeNode dRadius, std::vector<std::pair<DistanceTypeNode,T> >& tFarthest, const TNode& t ) const
+//  long K_Far ( const DistanceTypeNode dRadius, std::vector<triple<DistanceTypeNode,T,size_t> >& tFarthest, tFarthest, const TNode& t ) const
 //
 //  Private function to search a NearTree for the objects inside of the specified radius
 //     from the probe point. Distances are stored in an intermediate array as negative values
@@ -2049,8 +2505,10 @@ long K_Near (
 //
 // k:           the maximum number of object to return, giving preference to the nearest
 // dRadius:     the search radius, which will be updated when the internal store is resized
-// tClosest:    is a vector of objects of the templated type found within dRadius of the
-//                 probe point, limited by the k-near search
+// tFarthest:    is a vector of pairs of Nodes and objects or of triples 
+//                 of Nodes, objects and ordinals of objects where the objects
+//                 are of the templated type found outside of dRadius of the
+//                 probe point, limited by the k-farthest search
 // t:           is the probe point
 // objectStore: the internal vector storing the object in CNearTree
 //
@@ -2123,36 +2581,116 @@ long K_Far (
     if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
     return ( (long)tFarthest.size( ) );
 }  //  end K_Far
+long K_Far (
+            const size_t k,
+            DistanceTypeNode& dRadius,
+            std::vector<triple<DistanceTypeNode,T,size_t> >& tFarthest,
+            const TNode& t,
+            const std::vector<TNode>& objectStore
+            )
+{
+    std::vector <NearTreeNode* > sStack;
+    enum  { left, right, end } eDir;
+    eDir = left; // examine the left nodes first
+    NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
+    while ( ! ( eDir == end && sStack.empty( ) ) )
+    {
+        if ( eDir == right )
+        {
+            const DistanceTypeNode dDR =  DistanceBetween( t, objectStore[pt->m_ptRight] );
+            if ( dDR >= dRadius )
+            {
+                tFarthest.insert( tFarthest.end(), make_triple( -dDR, objectStore[pt->m_ptRight], pt->m_pt_Right ) );
+                if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+            }
+            if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
+            { // we did the left and now we finished the right, go down
+                pt = pt->m_pRightBranch;
+                eDir = left;
+            }
+            else
+            {
+                eDir = end;
+            }
+        }
+        if ( eDir == left )
+        {
+            const DistanceTypeNode dDL = DistanceBetween( t, objectStore[pt->m_ptLeft]  );
+            if ( dDL >= dRadius )
+            {
+                tFarthest.insert( tFarthest.end(), make_triple( -dDL, objectStore[pt->m_ptLeft], pt->m_ptLeft) );
+                if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+            }
+            if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
+            {
+                sStack.push_back( pt );
+            }
+            if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
+            { // we did the left, go down
+                pt = pt->m_pLeftBranch;
+            }
+            else
+            {
+                eDir = end;
+            }
+        }
+        
+        if ( eDir == end && !sStack.empty( ) )
+        {
+            pt = sStack.back( );
+            sStack.pop_back( );
+            eDir = right;
+        }
+    }
+    
+    if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
+    return ( (long)tFarthest.size( ) );
+}  //  end K_Far
 
 //=======================================================================
-// static bool K_Sorter( const std::pair<DistanceTypeNode, T>& t1, const std::pair<DistanceTypeNode, T>& t2 )
+// static bool K_Sorter2( const std::pair<DistanceTypeNode, T>& t1, const std::pair<DistanceTypeNode, T>& t2 )
+// static bool K_Sorter3( const triple<DistanceTypeNode, T, size_t>& t1, const std::pair<DistanceTypeNode, T>& t2 )
 //
 //  Private static function used to sort the K-near/far internal data stores. This 
-//  replaces the default less<>, which doesn't necessarily exist for all object.
+//  replaces the default less<>, which doesn't necessarily exist for all objects.
 //  All this does is compare the distances, so only the .first element needs
 //  to be examined.
 //
 //=======================================================================
-static bool K_Sorter( const std::pair<DistanceTypeNode, T>& t1, const std::pair<DistanceTypeNode, T>& t2 )
+static bool K_Sorter2( const std::pair<DistanceTypeNode, T>& t1, const std::pair<DistanceTypeNode, T>& t2 )
+{
+    return ( t1.first < t2.first );
+}
+static bool K_Sorter3( const triple<DistanceTypeNode, T, size_t>& t1, const std::pair<DistanceTypeNode, T>& t2 )
 {
     return ( t1.first < t2.first );
 }
 
 //=======================================================================
-//  void K_Resize ( const size_t k, const TNode& t, std::vector<T>& tClosest, DistanceTypeNode& dRadius ) const
+//  void K_Resize ( const size_t k, const TNode& t, std::vector<std::pair<DistanceTypeNode, T> >& tClosest, DistanceTypeNode& dRadius ) const
+//  void K_Resize ( const size_t k, const TNode& t, std::vector<triple<DistanceTypeNode, T, size_t> >& tClosest, DistanceTypeNode& dRadius ) const
 //
 //  Private function to limit the size of internally stored data for K-nearest/farthest-neighbor searches
 //  This function is only called by K_Near and K_Far.
 //
 //    dRadius is the search radius, updated to the best-known value
-//    tClosest is a CNearTree of objects of the templated type found within dRadius of the
+//    tClosest is a vector of pairs of Nodes and objects or of triples 
+//         of Nodes, objects and ordinals of objects where the objects
+//         are of the templated type found within dRadius of the
 //         probe point
 //    t  is the probe point
 //
 //=======================================================================
 void K_Resize( const size_t k, const TNode& t, std::vector<std::pair<DistanceTypeNode, T> >& tClosest, DistanceTypeNode& dRadius )
 {
-    std::sort( tClosest.begin(), tClosest.end(), &K_Sorter );
+    std::sort( tClosest.begin(), tClosest.end(), &K_Sorter2 );
+    tClosest.resize( k );
+    dRadius = DistanceBetween( t, tClosest[tClosest.size()-1].second );
+}  // end K_Resize
+void K_Resize( const size_t k, const TNode& t, std::vector<triple<DistanceTypeNode, T, size_t> >& tClosest, DistanceTypeNode& dRadius )
+{
+    std::sort( tClosest.begin(), tClosest.end(), &K_Sorter3 );
     tClosest.resize( k );
     dRadius = DistanceBetween( t, tClosest[tClosest.size()-1].second );
 }  // end K_Resize

@@ -21,9 +21,9 @@ NearTree -- function library efficiently solving the Nearest Neighbor Problem
 <hr>
 <center>
 <h2 align=center>NearTree</h2>
-Release 2.3.1<br />
+Release 2.3.2<br />
 <font size="-1">
-25 July 2010<br />
+30 October 2010<br />
 &#169; Copyright 2001, 2008, 2009, 2010 Larry Andrews.  All rights reserved
 <br />
 based on<br />
@@ -46,6 +46,7 @@ Revised 12 Dec 2008, for sourceforge release, Larry Andrews and Herbert J. Berns
 25 July 2010 Release 2.2.1 HJB<br />
 31 August 2010 Release 2.3 LCA<br />
 7 September 2010 Release 2.3.1 LCA<br />
+30 October 2010 Release 2.3.2 LCA<br />
 </font>
 <P>
 
@@ -80,7 +81,8 @@ This is a release of an API for finding nearest neighbors among points in spaces
 arbitrary dimensions.  This release provides a C++ template, TNear.h, and a
 C library, CNearTree.c, with example/test programs.
 <font size="-1">
-<p>Release 2.3.1 adds  Centroid method for Llyod clustering.
+<p>Release 2.3.2 adds optional returns of vectors of ordinals of found objects
+<p>Release 2.3.1 adds  Centroid method for Lloyd clustering.
 <p>Release 2.3 added methods for clustering.
 <p>Release 2.2.1 was a minor revision to Release 2.2 to add an include of limits.h to TNear.h,
 primarily for MINGW use.
@@ -146,15 +148,15 @@ insertions before parallel execution of parallel searches.
 <h4><a name="Installation">Installation</a></h4>
 <p>
 The NearTree package is available at <a href="http://www.sourceforge.net/projects/neartree">www.sourceforge.net/projects/neartree</a>.
-A source tarball is available at <a href="http://downloads.sourceforge.net/neartree/NearTree-2.3.1.tar.gz">downloads.sourceforge.net/neartree/NearTree-2.3.1.tar.gz</a>.
+A source tarball is available at <a href="http://downloads.sourceforge.net/neartree/NearTree-2.3.2.tar.gz">downloads.sourceforge.net/neartree/NearTree-2.3.2.tar.gz</a>.
 Later tarballs may be available.
 <p>
 If you decide to simply use the TNear.h header to add nearest neighbor support to C++ code under Visual
-Studio, be sure to also use the rhrand.h header, and to define USE_LOCAL_HEADERS.  For
+Studio, be sure to also use the rhrand.h and triple.h headers, and to define USE_LOCAL_HEADERS.  For
 unix or MINGW, you will need to use the Makefile and to have libtool on your system.  Be warned that
 the default libtool under Mac OS X will not work for this installation.
 <P>
-When the source tarball is downloaded and unpacked, you should have a directory NearTree-2.3.1.  To see the current settings for a build
+When the source tarball is downloaded and unpacked, you should have a directory NearTree-2.3.2.  To see the current settings for a build
 execute
 <p>
 make
@@ -413,7 +415,7 @@ The provided interface is:
       
             Starting with the 2.1 release, places objects in a queue for 
             insertion later when  CompleteDelayInsert is called.  In
-            earlier releasesm the default was immediate insertion.
+            earlier releases the default was immediate insertion.
             
             The following additional convenience insert template
             allow insertion of containers of objects
@@ -451,28 +453,53 @@ The provided interface is:
        returns an iterator to the nearest point to the probe point <i>t</i> or end() if there is none
 
     <b>bool FarthestNeighbor</b> ( <b>T&amp;</b> <i>tFarthest</i>, <b>const T&amp;</b> <i>t</i> ) <b>const</b>
+
+    The following functions (BelongsToPoints, SeparateByRadius, FindInSphere, FindOutSphere, 
+    and FindInAnnulus) all return a container (ContainerType) that can be any standard library 
+    container (such as std::vector&lt; T &gt;) or CNearTree.  In each case option arguments
+    allow a parallel vector of indices to be returned for each container, giving the
+    indices of the returned objects within the original NearTree.
      
     <b>template&lt;typename</b> <i>ContainerType</i>&gt;
-    <b>void BelongsToPoints</b> ( <b>const T&amp;</b> <i>t1</i>, <b>const T&amp;</b> <i>t2</i>, <b>ContainerType&amp;</b> <i>group1</i>, <b>ContainerType&amp;</b> <i>group2</i> )
+    <b>void BelongsToPoints</b> ( <b>const T&amp;</b> <i>t1</i>, <b>const T&amp;</b> <i>t2</i>, 
+        <b>ContainerType&amp;</b> <i>group1</i>, <b>ContainerType&amp;</b> <i>group2</i> )
+    <b>template&lt;typename</b> <i>ContainerType</i>&gt;
+    <b>void BelongsToPoints</b> ( <b>const T&amp;</b> <i>t1</i>, <b>const T&amp;</b> <i>t2</i>, 
+        <b>ContainerType&amp;</b> <i>group1</i>, <b>ContainerType&amp;</b> <i>group2</i>,
+        <b>std::vector&lt;size_t&gt;&amp; <i>group1_ordinals</i>, <b>std::vector&lt;size_t&gt;&amp; <i>group2_ordinals</i>)
        returns the points closer to t1 than to t2 in group1 and the rest in group 2
+       if group1_ordinals and group2_ordinals are provided the ordinals of the
+       found objects in the object store are put into those vectors.
        
     <b>template&lt;typename</b> <i>ContainerTypeInside</i>, <b>typename</b> <i>ContainerTypeOutside</i>&gt;
-    <b>void SeparateByRadius</b> ( <b>const DistanceType</b> <i>radius</i>, <b>const T&amp;</b> <i>probe</i>, <b>ContainerTypeInside&amp;</b> <i>inside</i>, <b>ContainerTypeOutside&amp;</b> <i>outside</i> )
+    <b>void SeparateByRadius</b> ( <b>const DistanceType</b> <i>radius</i>, <b>const T&amp;</b> <i>probe</i>, 
+        <b>ContainerTypeInside&amp;</b> <i>inside</i>, <b>ContainerTypeOutside&amp;</b> <i>outside</i> )
+    <b>template&lt;typename</b> <i>ContainerTypeInside</i>, <b>typename</b> <i>ContainerTypeOutside</i>&gt;
+    <b>void SeparateByRadius</b> ( <b>const DistanceType</b> <i>radius</i>, <b>const T&amp;</b> <i>probe</i>, 
+        <b>ContainerTypeInside&amp;</b> <i>inside</i>, <b>ContainerTypeOutside&amp;</b> <i>outside</i>,
+        <b>std::vector&lt;size_t&gt;&amp; <i>inside_ordinals</i>, <b>std::vector&lt;size_t&gt;&amp; <i>outside_ordinals</i>)
        return the points within radius of the probe in inside and the rest in outside
+       if inside_ordinals and outside_ordinals are provided the ordinals of the
+       found objects in the object store are put into those vectors.
 
-    The following functions (FindInSphere, FindOutSphere, and FindInAnnulus) all return a container 
-    (ContainerType) that can be any standard library container (such as std::vector&lt; T &gt;) or CNearTree.
 
-    <b>long FindInSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,  <b>ContainerType&amp;</b> <i>tInside</i>,   <b>const T&amp;</b> t ) <b>const</b>
+    <b>long FindInSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,  
+         <b>ContainerType&amp;</b> <i>tInside</i>,   <b>const T&amp;</b> t ) <b>const</b>
+    <b>long FindInSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,  
+         <b>ContainerType&amp;</b> <i>tInside</i>,   
+         <b>std::vector&lt;size_t&gt;&amp; tIndices, <b>const T&amp;</b> t ) <b>const</b>
        <i>dRadius</i> is the radius within which to search; make it very large if you want to
            include every point that was loaded;
        <i>tInside</i> is returned as the container of objects that were found within a radius dRadius
           of the probe point
+       if the <i>tIndices</i> argument is given it will ve returned as a parallel vector
+          of indices in the near tree of the objects returned.
        <i>t</i> is the probe point, used to search in the group of points Insert'ed
 
        return value is the count of the number of points found within the search radius
 
-    <b>long FindInSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,  <b>CNearTree&lt;  T &gt;&amp;</b> <i>tInside</i>,   <b>const T&amp;</b> t ) <b>const</b>
+    <b>long FindInSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>CNearTree&lt;  T &gt;&amp;</b> <i>tInside</i>,   <b>const T&amp;</b> t ) <b>const</b>
        <i>dRadius</i> is the radius within which to search; make it very large if you want to
            include every point that was loaded;
        <i>tInside</i> is returned as the CNearTree of objects that were found within a radius dRadius
@@ -481,15 +508,22 @@ The provided interface is:
 
        return value is the count of the number of points found within the search radius
 
-    <b>long FindOutSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,  <b>ContainerType&amp;</b> <i>tOutside</i>,   <b>const T&amp;</b> t ) <b>const</b>
+    <b>long FindOutSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>ContainerType&amp;</b> <i>tOutside</i>,   <b>const T&amp;</b> t ) <b>const</b>
+    <b>long FindOutSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>ContainerType&amp;</b> <i>tOutside</i>,
+         <b>std::vector&lt;size_t&gt;&amp; tIndices, <b>const T&amp;</b> t ) <b>const</b>
        <i>dRadius</i> is the radius outside of which to search
        <i>tOutside</i> is returned as the container of objects that were found at or outside of radius dRadius
           of the probe point
+       if the <i>tIndices</i> argument is given it will ve returned as a parallel vector
+          of indices in the near tree of the objects returned.
        <i>t</i> is the probe point, used to search in the group of points Insert'ed
 
        return value is the count of the number of points found within the search radius
 
-    <b>long FindOutSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,  <b>CNearTree&lt;  T &gt;&amp;</b> <i>tOutside</i>,   <b>const T&amp;</b> t ) <b>const</b>
+    <b>long FindOutSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>CNearTree&lt;  T &gt;&amp;</b> <i>tOutside</i>,   <b>const T&amp;</b> t ) <b>const</b>
        <i>dRadius</i> is the radius outside of which to search.
        <i>tClosest</i> is returned as the CNearTree of objects that were found at or outside of a radius dRadius
           of the probe point
@@ -497,15 +531,25 @@ The provided interface is:
 
        return value is the count of the number of points found within the search radius
     
-    <b>long FindInAnnulus</b> ( <b>const DistanceType&amp;</b> <i>dRadius1</i>, <b>const DistanceType&amp;</b> <i>dRadius2</i>, <b>ContainerType&amp;</b> <i>tInRing</i>,   <b>const T&amp;</b> t ) <b>const</b>
+    <b>long FindInAnnulus</b> ( <b>const DistanceType&amp;</b> <i>dRadius1</i>,
+         <b>const DistanceType&amp;</b> <i>dRadius2</i>, 
+         <b>ContainerType&amp;</b> <i>tInRing</i>,   <b>const T&amp;</b> t ) <b>const</b>
+    <b>long FindInAnnulus</b> ( <b>const DistanceType&amp;</b> <i>dRadius1</i>,
+         <b>const DistanceType&amp;</b> <i>dRadius2</i>, 
+         <b>ContainerType&amp;</b> <i>tInRing</i>,
+         <b>std::vector&lt;size_t&gt;&amp; tIndices,  <b>const T&amp;</b> t ) <b>const</b>
        <i>dRadius1</i> and  <i>dRadius2</i> are the two radii between which to find data points
        <i>tInRing</i> is returned as the container of objects that were found at or outside of a radius dRadius1
           and at or inside of radius dRadius2 of the probe point
+       if the <i>tIndices</i> argument is given it will ve returned as a parallel vector
+          of indices in the near tree of the objects returned.
        <i>t</i> is the probe point, used to search in the group of points Insert'ed
 
        return value is the count of the number of points found within the annulus
 
-    <b>long FindInAnnulus</b> ( <b>const DistanceType&amp;</b> <i>dRadius1</i>, <b>const DistanceType&amp;</b> <i>dRadius2</i>,  <b>CNearTree&lt;  T &gt;&amp;</b> <i>tInRing</i>,   <b>const T&amp;</b> t ) <b>const</b>
+    <b>long FindInAnnulus</b> ( <b>const DistanceType&amp;</b> <i>dRadius1</i>, 
+         <b>const DistanceType&amp;</b> <i>dRadius2</i>,
+         <b>CNearTree&lt;  T &gt;&amp;</b> <i>tInRing</i>,   <b>const T&amp;</b> t ) <b>const</b>
        <i>dRadius1</i> and  <i>dRadius2</i> are the two radii between which to find data points
        <i>tInRing</i> is returned as the CNearTree of objects that were found at or outside of a radius dRadius1
           and at or inside of radius dRadius2 of the probe point
@@ -513,25 +557,38 @@ The provided interface is:
 
        return value is the count of the number of points found within the annulus
     
-    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>, <b>ContainerType&amp;</b> <i>tClosest</i>, <b>const T&amp;</b> t )
+    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>ContainerType&amp;</b> <i>tClosest</i>, <b>const T&amp;</b> t )
+    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>ContainerType&amp;</b> <i>tClosest</i>,
+         <b>std::vector&lt;size_t&gt;&amp; tIndices, <b>const T&amp;</b> t )
        <i>k</i> is the maximum number of nearest neighbors to return. Finds this many if possible
        <i>dRadius</i> within a sphere defined by dRadius, search for the k-nearest-neighbors
        <i>tClosest</i> is returned ContainerType of the objects found within the sphere
+       if the <i>tIndices</i> argument is given it will ve returned as a parallel vector
+          of indices in the near tree of the objects returned.
        <i>t</i> is the probe point, used to search in the group of points insert'ed
 
        return value is the count of the number of points found within the sphere
 
-    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>, <b>CNearTree&lt;  T &gt;&amp;</b> <i>tClosest</i>, <b>const T&amp;</b> t )
+    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>CNearTree&lt;  T &gt;&amp;</b> <i>tClosest</i>, <b>const T&amp;</b> t )
        <i>k</i> is the maximum number of nearest neighbors to return. Finds this many if possible
        <i>dRadius</i> within a sphere defined by dRadius, search for the k-nearest-neighbors
-      <i>tClosest</i> is returned as the CNearTree of objects found within the sphere
+       <i>tClosest</i> is returned as the CNearTree of objects found within the sphere
        <i>t</i> is the probe point, used to search in the group of points Insert'ed
 
        return value is the count of the number of points found within the sphere
 
-    <b>long FindK_FarthestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>ContainerType&amp;</b> <i>tFarthest</i>, <b>const T&amp;</b> t )
+    <b>long FindK_FarthestNeighbors</b> ( <b>const size_t</b> <i>k</i>,
+         <b>ContainerType&amp;</b> <i>tFarthest</i>, <b>const T&amp;</b> t )
+    <b>long FindK_FarthestNeighbors</b> ( <b>const size_t</b> <i>k</i>,
+         <b>ContainerType&amp;</b> <i>tFarthest</i>,
+         <b>std::vector&lt;size_t&gt;&amp; tIndices, <b>const T&amp;</b> t )
        <i>k</i> is the maximum number of farthest neighbors to return. Finds this many if possible
        <i>tFarthest</i> is returned ContainerType of the objects found
+       if the <i>tIndices</i> argument is given it will ve returned as a parallel vector
+          of indices in the near tree of the objects returned.
        <i>t</i> is the probe point, used to search in the group of points insert'ed
 
        return value is the count of the number of points found within the sphere
@@ -1098,7 +1155,7 @@ Typical use is
 <hr>
 <hr>
 <font size="-1">
-Updated 8 September 2010<br />
+Updated 31 September 2010<br />
 <script language="javascript" type="text/javascript">
 <!-- 
       var name = "andrewsL@";

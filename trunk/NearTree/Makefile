@@ -13,6 +13,8 @@
 #  Revised 30 May 2009, release with full containerization of C++
 #                       version and KNear/Far in C++ and C, LCA + HJB
 #
+#  Revised 31 October 2009, adding triple.h
+#
 
 
 #**********************************************************************
@@ -41,8 +43,8 @@
 #**********************************************************************/
 
 # Version string
-VERSION = 3:0:0
-RELEASE = 2.3
+VERSION = 3:1:1
+RELEASE = 2.3.2
 
 
 #
@@ -147,7 +149,7 @@ SOURCE   =  $(CPPSOURCE) $(CSOURCE)
 #
 # Header files
 #
-HEADERS   =  $(INC)/TNear.h $(INC)/CNearTree.h $(INC)/v.h $(INC)/rhrand.h
+HEADERS   =  $(INC)/TNear.h $(INC)/CNearTree.h $(INC)/v.h $(INC)/rhrand.h $(INC)/triple.h
 
 # Default: instructions
 #
@@ -222,17 +224,20 @@ all:	$(LIB) $(BIN) $(SOURCE) $(HEADERS) \
 		$(BIN)/CPPMain $(BIN)/CMain $(BIN)/CPPNearTreeTest $(BIN)/CNearTreeTest
 		
 install:  all $(INSTALL_PREFIX) $(INSTALL_PREFIX)/lib $(INSTALL_PREFIX)/include \
-          $(INC) $(LIB)/libCNearTree.$(LIB_EXT)  $(INC)/TNear.h $(INC)/CNearTree.h $(INC)/rhrand.h
+          $(INC) $(LIB)/libCNearTree.$(LIB_EXT)  $(INC)/TNear.h $(INC)/CNearTree.h \
+		  $(INC)/rhrand.h $(INC)/triple.h
 		  $(INSTALL_COMMAND) $(LIB)/libCNearTree.$(LIB_EXT) $(INSTALL_PREFIX)/lib/libCNearTree.$(LIB_EXT)
 		  $(INSTALL_FINISH_COMMAND) $(INSTALL_PREFIX)/lib/libCNearTree.$(LIB_EXT)
 		  -cp $(INSTALL_PREFIX)/include/TNear.h $(INSTALL_PREFIX)/include/TNear_old.h
 		  -cp $(INSTALL_PREFIX)/include/CNearTree.h $(INSTALL_PREFIX)/include/CNearTree_old.h
 		  cp $(INC)/TNear.h $(INSTALL_PREFIX)/include/TNear.h
 		  cp $(INC)/rhrand.h $(INSTALL_PREFIX)/include/rhrand.h
+		  cp $(INC)/triple.h $(INSTALL_PREFIX)/include/triple.h
 		  cp $(INC)/CNearTree.h $(INSTALL_PREFIX)/include/CNearTree.h
 		  chmod 644 $(INSTALL_PREFIX)/include/TNear.h
 		  chmod 644 $(INSTALL_PREFIX)/include/CNearTree.h
 		  chmod 644 $(INSTALL_PREFIX)/include/rhrand.h
+		  chmod 644 $(INSTALL_PREFIX)/include/triple.h
 		  echo "Testing final install dynamic"
 		  $(BUILD_COMMAND_DYNAMIC) $(INCLUDES) $(EXAMPLES)/CNearTreeTest.c \
 		  -L$(INSTALL_PREFIX)/lib -lCNearTree $(CLIBRARIES) -o $(BIN)/CNearTreeTest_dynamic
