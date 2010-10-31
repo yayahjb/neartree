@@ -107,14 +107,12 @@ int debug;
 /*=======================================================================*/
 int main(int argc, char* argv[])
 {
-        testLloyd( );
-    fprintf( stdout, "testLloyd\n" );
-
     g_errorCount = 0;
     
     debug = 0;
     if (argc > 1 && !strcmp(argv[1],"--debug")) debug = 1;
-    
+   
+        
     /* test the interface with an empty tree */
     testEmptyTree( );
     fprintf( stdout, "testEmptyTree\n" );
@@ -174,6 +172,10 @@ int main(int argc, char* argv[])
     fprintf( stdout, "testSetSymmetricDifference\n" );
     testCentroid( );
     fprintf( stdout, "testCentroid\n" );
+    /* Test Lloyd Clustering */
+    testLloyd( );
+    fprintf( stdout, "testLloyd\n" );
+    
 
     if( g_errorCount == 0 )
     {
@@ -3080,21 +3082,21 @@ void testLloyd( )
     vk.push_back( double(0) );
     vk.push_back( double(17) );
 
-    for ( unsigned int j=0; j<vk.size( ); ++j )
-    {
-        fprintf( stdout, "%.3f ", vk[j] );
-    }
-    fprintf( stdout, "\n" );
-
-    for ( int i=0; i<30; ++i  )
+    for ( int i=0; i<60; ++i  )
     {
         std::vector<double> vOut = LloydCycleStep( vdata, vk );
-        vk = vOut;
-        for ( unsigned int j=0; j<vk.size( ); ++j )
-        {
-            fprintf( stdout, "%.3f ", vk[j] );
+        if (i > 35 && (vk[0] != 3333. || vk[1] != 10000. || vk[2] != 16666.5)) {
+            ++g_errorCount;
+            fprintf( stdout, "testLoyd cycle %d ", i);
+            for ( unsigned int j=0; j<vk.size( ); ++j )
+            {
+                fprintf( stdout, "%.3f ", vk[j] );
+            }
+            fprintf( stdout, "\n" );            
+        } else {
+            if (i > 35) break;
         }
-        fprintf( stdout, "\n" );
+        vk = vOut;
     }
 }
 
