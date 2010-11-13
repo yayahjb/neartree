@@ -259,6 +259,13 @@ void testLinearTree( const int n )
         ++g_errorCount;
         fprintf(stdout, "testLinearTree: tree depth is too large, %lu is greater than %d\n", (unsigned long)tree.GetDepth( ), (n+1)/2 );
     }
+    
+    size_t estdim = (size_t)(0.5+tree.GetDimEstimate());
+    if (n < 129 && estdim != 0) {
+       ++g_errorCount;   
+       fprintf(stdout, "testLinearTree: dimension estimate %ld\n",estdim);
+    }
+    
     /*
      Search for the nearest value using a probe point that is larger than 
      the largest value that was input. The returned values should be the
@@ -396,6 +403,7 @@ void testFindFirstObject( void )
             fprintf(stdout, "testFindFirstObject incorrectly found empty tree for float\n" );
         }
         
+       
         //   /*
         //   Search for the value closest to zero. It should be a very small, probably
         //   denormalized number.
@@ -1215,7 +1223,7 @@ class vec17
 /*=======================================================================*/
 void testBigVector(  )
 {
-    const int vectorsize = 1000;   
+    const int vectorsize = 10000;   
     CNearTree<vec17> tree;
     vec17 vAll[vectorsize]; /* keep a list of all of the input so we can find particular entries */
     double rmax = -DBL_MAX;
@@ -1245,6 +1253,16 @@ void testBigVector(  )
         tree.insert( v );
         vAll[i] = v;
     }
+    
+#ifdef CNEARTREE_INSTRUMENTED
+    tree.SetNodeVisits( (size_t)0);
+#endif
+    
+    size_t estdim = (size_t)(0.5+tree.GetDimEstimate());;
+    if ( estdim < 6) {
+        ++g_errorCount;   
+        fprintf(stdout, "testBigVector: dimension estimate %ld <6 \n",estdim);
+    }    
     
     {
         /* Find the point farthest from the point that was nearest the origin. */
@@ -1418,6 +1436,11 @@ void testBigVector(  )
                 fprintf(stdout, "testBigVector: FindInSphere found %ld points using %f radius\n", iFound, (vCloseToNearCenter-vNearCenter).Norm( )*0.9 );
             }
         }
+        
+#ifdef CNEARTREE_INSTRUMENTED
+        fprintf(stdout, "treeBigVector: Total Node Visits: %ld\n", (long)tree.GetNodeVisits());
+#endif
+        
     }
 }  // testBigVector
 
@@ -1987,6 +2010,13 @@ void testFindInAnnulus( void )
             }
         }
         
+        size_t estdim = (size_t)(0.5+tree.GetDimEstimate());
+        if ( estdim != 2) {
+            ++g_errorCount;   
+            fprintf(stdout, "testFindInAnnulus: dimension estimate %ld != 2\n",estdim);
+        }    
+        
+        
         const double r1 = 4.0;
         const double r2 = 8.0;
         
@@ -2194,6 +2224,13 @@ void testBigIntVec( void )
         tree.insert( v );
         vAll[i] = v;
     }
+    
+    size_t estdim = (size_t)(0.5+tree.GetDimEstimate());
+    if ( estdim < 4) {
+        ++g_errorCount;   
+        fprintf(stdout, "testBigIntVec: dimension estimate %ld < 4\n",estdim);
+    }    
+    
     
     {
         /* Find the point farthest from the point that was nearest the origin. */
@@ -3339,8 +3376,14 @@ void testLloyd( )
     for ( int i=0; i<20000; ++i )
     {
         vdata.insert( double(i) );
-    }
-
+    }    
+    
+    size_t estdim = (size_t)(0.5+vdata.GetDimEstimate());
+    if ( estdim != 1) {
+        ++g_errorCount;   
+    fprintf(stdout, "testLloyd: dimension estimate %ld != 1\n",estdim);
+    }    
+    
     vk.push_back( double(-12) );
     vk.push_back( double(0) );
     vk.push_back( double(17) );

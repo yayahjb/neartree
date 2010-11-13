@@ -43,8 +43,8 @@
 #**********************************************************************/
 
 # Version string
-VERSION = 3:1:1
-RELEASE = 2.3.2
+VERSION = 4:0:2
+RELEASE = 2.4
 
 
 #
@@ -289,6 +289,10 @@ $(BIN)/CPPMain: $(INC)/TNear.h $(EXAMPLES)/main.cpp $(EXAMPLES)/v.cpp $(BIN)
 $(BIN)/CPPNearTreeTest: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
 	$(CPPBUILD_COMMAND_LOCAL) $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
 		      -o $@
+
+$(BIN)/CPPNearTreeTestInst: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
+	$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
+		      -o $@
 			  
 $(BIN)/CMain: $(INC)/CNearTree.h $(EXAMPLES)/main.c $(SRC)/CNearTree.c $(BIN) $(LIB)/libCNearTree.$(LIB_EXT)
 	$(BUILD_COMMAND_LOCAL) $(EXAMPLES)/main.c $(SRC)/CNearTree.c $(LIB)/libCNearTree.$(LIB_EXT) $(CLIBRARIES) \
@@ -303,10 +307,11 @@ $(BIN)/CNearTreeTest: $(INC)/CNearTree.h $(EXAMPLES)/CNearTreeTest.c $(SRC)/CNea
 # Tests
 #
 tests:		$(LIB) $(BIN) $(BIN)/CPPMain $(BIN)/CPPNearTreeTest \
-				$(BIN)/CMain $(BIN)/CNearTreeTest
+				$(BIN)/CPPNearTreeTestInst $(BIN)/CMain $(BIN)/CNearTreeTest
 			$(BIN)/CPPMain 3458923 > $(TESTDATA)/CPPMain.lst
 			$(BIN)/CMain 3458923 > $(TESTDATA)/CMain.lst
 			$(BIN)/CPPNearTreeTest
+			$(BIN)/CPPNearTreeTestInst
 			$(BIN)/CNearTreeTest
 ifneq ($(MSYSTEM),MINGW32)
 			diff -b -c $(TESTDATA)/CPPMain_orig.lst $(TESTDATA)/CPPMain.lst
