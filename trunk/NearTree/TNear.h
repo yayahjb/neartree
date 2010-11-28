@@ -431,6 +431,7 @@ DistanceType      m_SumSpacings;       // sum of spacings at time of insertion
 DistanceType      m_SumSpacingsSq;     // sum of squares of spacings at time of insertion
 long              m_Flags;             // flags for operational control (mainly for testing)
 double            m_DimEstimate;       // estimated dimension
+double            m_DimEstimateEsd;    // estimated dimension estimated standard deviation
 
 
 NearTreeNode<T, DistanceType, distMinValue>      m_BaseNode; // the tree's data is stored down from here
@@ -459,6 +460,7 @@ m_BaseNode       (   )
     m_SumSpacings   = DistanceType( 0 );
     m_SumSpacingsSq = DistanceType( 0 );
     m_DimEstimate   = 0;
+    m_DimEstimateEsd= 0;
 #ifdef CNEARTREE_INSTRUMENTED
     m_NodeVisits    = 0;
 #endif    
@@ -490,6 +492,7 @@ m_BaseNode       (   )
     m_SumSpacings   = DistanceType( 0 );
     m_SumSpacingsSq = DistanceType( 0 );
     m_DimEstimate   = 0;
+    m_DimEstimateEsd= 0;
 #ifdef CNEARTREE_INSTRUMENTED
     m_NodeVisits    = 0;
 #endif
@@ -526,6 +529,7 @@ m_BaseNode       (   )
     m_SumSpacings   = DistanceType( 0 );
     m_SumSpacingsSq = DistanceType( 0 );
     m_DimEstimate   = 0;
+    m_DimEstimateEsd= 0;
 #ifdef CNEARTREE_INSTRUMENTED
     m_NodeVisits    = 0;
 #endif
@@ -775,6 +779,7 @@ void insert ( const InputContainer& o )
     }
     m_DeepestDepth = std::max( localDepth, m_DeepestDepth );
     m_DimEstimate = 0;
+    m_DimEstimateEsd= 0;
 }
 
 //=======================================================================
@@ -801,6 +806,7 @@ void ImmediateInsert ( const T& t )
     m_DeepestDepth = std::max( localDepth, m_DeepestDepth );
     m_DiamEstimate = m_BaseNode.GetDiamEstimate();
     m_DimEstimate = 0;
+    m_DimEstimateEsd= 0;
 }
 
 //=======================================================================
@@ -822,6 +828,7 @@ void ImmediateInsert ( const InputContainer& o )
     m_DeepestDepth = std::max( localDepth, m_DeepestDepth );
     m_DiamEstimate = m_BaseNode.GetDiamEstimate();
     m_DimEstimate = 0;
+    m_DimEstimateEsd= 0;
 }
 
 //=======================================================================
@@ -2540,66 +2547,113 @@ DistanceType GetDiamEstimate (  void )
 //=======================================================================
 //  size_t GetDimEstimate (  void )
 //
-//  Get an estimate of the dimension of the colletion of points
-//  in the tree
+//  Get an estimate of the dimension of the collection of points
+//  in the tree.  If no argument, estimate to within esd of 0.1
 //  
 //
 //=======================================================================
 double GetDimEstimate ( void )
 {
+    return GetDimEstimate(0.1);
+};
+
+
+//=======================================================================
+//  size_t GetDimEstimate (  const double DimEstimateEsd )
+//
+//  Get an estimate of the dimension of the collection of points
+//  in the tree, to within the specified esd
+//  
+//
+//=======================================================================
+double GetDimEstimate ( const double DimEstimateEsd )
+{
     const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
     if ( m_DimEstimate == DBL_MAX ) return ( 0. );
-    if ( m_DimEstimate > 0. ) return (m_DimEstimate);
+    if ( m_DimEstimate > 0. 
+        && (m_DimEstimateEsd <= DimEstimateEsd || DimEstimateEsd <= 0.) ) return (m_DimEstimate);
     size_t estsize = m_ObjectStore.size();
     std::vector<T> sampledisklarge;
     std::vector<T> sampledisksmall;
+    size_t trials;
+    double estd;
     double estdim = 0.;
+    double estdimsq = 0.;
+    double testlim = (DimEstimateEsd<=0.)?0.01:(DimEstimateEsd*DimEstimateEsd);
+    DistanceType meanSpacing = m_SumSpacings/DistanceType((1+m_ObjectStore.size()));
     size_t n;
     long poplarge, popsmall, poptrial;
     T probe = m_ObjectStore[0];
-
-    if (estsize < 128) return( 0 );
-    double pointdensity = ((double)estsize)/((double)m_DiamEstimate);
-    double targetradius = 256./pointdensity;
-    double ratest = 0.;
-    int trials = 10;
-    int goodtrials = 0;
-    int pretrials = 0;
-    if (estsize < 1024) {
-        trials = (int)(estsize/256.+0.5);
-        if (trials < 1 ) return ( 0 );
+    
+    
+    /*  Do not try to get a dimension extimate with fewer than
+        32 points or a diameter less than DBL_EPSILON*/
+    
+    if (estsize < 32 || (double)m_DiamEstimate < DBL_EPSILON) {
+        m_DimEstimate = m_DimEstimateEsd = DBL_MAX;
+        return( 0 );
     }
+    
+    /* Estimate the number of points per unit distance
+       and a target radius that would produce 4096 points
+       in dimension 1.  If this would bring us beyond
+       the diameter/2, reduce to that size.  */
+    double pointdensity = ((double)estsize)/((double)m_DiamEstimate);
+    double targetradius = 4096./pointdensity;
+    double rat;
+    double shrinkfactor;
+    if (targetradius <  meanSpacing*2.) targetradius = meanSpacing*2.;
+    if (targetradius > (double)m_DiamEstimate/1.1) targetradius = (double)m_DiamEstimate/1.1;
+    
+    /*  Now try to find a smaller adjusted target radius that will
+     contain a reasonable number of points*/
+    
+    shrinkfactor = 32.;
+    do { 
+        shrinkfactor = shrinkfactor/1.2;
+        n = (size_t)(((double)estsize-1u) * ((DistanceType)rhr.urand()));
+        rhr.urand( ); rhr.urand( );
+        probe = m_ObjectStore[n];
+        poptrial=FindInSphere((DistanceType)targetradius/shrinkfactor,sampledisklarge,probe);
+    } while (poptrial < 256 && shrinkfactor > 1.);
+    
+    targetradius /= shrinkfactor;
+    targetradius *= 1.1;
+
+    int goodtrials = 0;
+    trials = sqrt(0.5+(double)estsize);
+    if (trials < 10.) trials = 10.;
+        
     n = (size_t)(((double)estsize-1u) * ((DistanceType)rhr.urand()));
     rhr.urand( ); rhr.urand( );
     probe = m_ObjectStore[n];
-    while(pretrials < 10 && (poptrial=FindInSphere((DistanceType)targetradius,sampledisklarge,probe)) < 128) {
-        targetradius *= 2.;
-        n = (size_t)(((double)estsize-1u) * ((DistanceType)rhr.urand()));
-        rhr.urand( ); rhr.urand( );
-        probe = m_ObjectStore[n];        
-    }
-    if (poptrial < 128) {
-        m_DimEstimate = -1;
-        return 0;
-    }
     
-    for(int ii = 0; ii < trials; ii++) {
+     
+    for(size_t ii = 0; ii < trials; ii++) {
         n = (size_t)(((double)estsize-1u) * ((DistanceType)rhr.urand()));
         rhr.urand( ); rhr.urand( );
-        T probe = m_ObjectStore[n];
+        probe = m_ObjectStore[n];
         
         if ((poplarge=FindInSphere((DistanceType)targetradius,sampledisklarge,probe))>0
-            &&(popsmall=FindInSphere((DistanceType)(targetradius/2.),sampledisksmall,probe))>0 )
+            &&(popsmall=FindInSphere((DistanceType)(targetradius/1.1),sampledisksmall,probe))>0 )
         {
-           ratest += (double)poplarge/(double)popsmall;
-           goodtrials++;
+            rat = (double)poplarge/(double)popsmall;
+            estd = log(rat)/log(1.1);
+            estdim += estd;
+            estdimsq += estd*estd;
+            goodtrials++;
+            if (estdimsq/((double)goodtrials) - estdim*estdim/((double)(goodtrials*goodtrials)) <= testlim) break;
         }
     }
-    if (goodtrials < 1) return(0);
-    ratest /= (double)goodtrials;
-    estdim = log(ratest)/log(2.);
-    m_DimEstimate = estdim;
-    if (estdim == 0) m_DimEstimate = DBL_MAX;
+    if (goodtrials < 1) {
+        m_DimEstimate = m_DimEstimateEsd = DBL_MAX;
+        return(0);
+    }
+    m_DimEstimate = estdim/((double)goodtrials);
+    m_DimEstimateEsd = sqrt(estdimsq/((double)goodtrials) -  m_DimEstimate*m_DimEstimate);
+    if (m_DimEstimate + 3.*m_DimEstimateEsd< 0.) {
+        m_DimEstimate = m_DimEstimateEsd = DBL_MAX;
+    }
     return(estdim);
 };
 
