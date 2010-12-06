@@ -1,0 +1,690 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE>DataGen Programs</TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.0  (Unix)">
+	<META NAME="AUTHOR" CONTENT="lca">
+	<META NAME="CREATED" CONTENT="20101114;9410000">
+	<META NAME="CHANGEDBY" CONTENT="lca">
+	<META NAME="CHANGED" CONTENT="20101128;13200000">
+	<STYLE TYPE="text/css">
+	<!--
+		@page { margin-right: 1.25in; margin-top: 1in; margin-bottom: 1in }
+		P { margin-bottom: 0.08in; direction: ltr; color: #000000; widows: 2; orphans: 2 }
+		P.western { font-family: "Arial", sans-serif; font-size: 12pt; so-language: en-US }
+		P.cjk { font-family: "Times New Roman", serif; font-size: 12pt }
+		P.ctl { font-family: "Arial", sans-serif; font-size: 12pt; so-language: ar-SA }
+		H1 { margin-top: 0in; margin-bottom: 0in; direction: ltr; color: #000000; widows: 2; orphans: 2 }
+		H1.western { font-family: "Arial", sans-serif; font-size: 12pt; so-language: en-US }
+		H1.cjk { font-family: "Times New Roman", serif; font-size: 12pt }
+		H1.ctl { font-family: "Arial", sans-serif; font-size: 12pt; so-language: ar-SA }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-US" TEXT="#000000" DIR="LTR">
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=4><B>DataGen
+Programs</B></FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">This is a group of
+programs designed to generate various test datasets for the nearest
+neighbor problem. All communication between the programs is by CSV
+(Comma Separated Value) files, and some properties are set using
+command line arguments. Program svg can be used to write svg files,
+which can be displayed in any browser (except IE) and some graphics
+packages (such as GIMP and ImageMagick).</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">The programs</P>
+<TABLE WIDTH=690 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=8 CELLSPACING=0>
+	<COL WIDTH=173>
+	<COL WIDTH=482>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>DataGen</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Create data sets</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>TestMaxDist</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Analyze data sets by various
+			criteria</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>FixedTestSet</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Analyzes a dataset using a
+			specified set of probe data</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>NNStat</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Provides some statistics about a
+			csv file’s data</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>Scale</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Change the dimensions of the data</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>Rotateq</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Rotate the data set (around the
+			origin). The rotation is specified by a quaternion on the command
+			line. (The quaternion will be normalized to a unit quaternion.)</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>Rotatea</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Rotate the data set (around the
+			origin). The rotation is specified by an angle (in degrees) and 3
+			vector components</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>BoxIt</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Rescale and translate a dataset so
+			that it fits within a box of –1 to +1 (for every axis).</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>Transl</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Translate the points of a dataset
+			(the 3 axial translations are specified on the command line).</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>Svg</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Write an SVG file from the input.
+			The first two coordinates (only) are plotted.</FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">Program command line
+inputs</P>
+<TABLE WIDTH=690 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=8 CELLSPACING=0>
+	<COL WIDTH=173>
+	<COL WIDTH=482>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>DataGen</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Creates both 3-D and n-D datasets</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>TestMaxDist</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Accepts n-D data files</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>FixedTestSet</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Accepts n-D data files</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>Scale</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Accepts and writes 3-D data files</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>Rotateq</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Accepts and writes 3-D data files</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>BoxIt</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Accepts and writes n-D data files</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>Transl</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Accepts and writes 3-D data files</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=173>
+			<P CLASS="western"><FONT SIZE=2>svg</FONT></P>
+		</TD>
+		<TD WIDTH=482>
+			<P CLASS="western"><FONT SIZE=2>Accepts n-D data files, but only
+			uses the first two</FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<H1 CLASS="western">DataGen</H1>
+<P CLASS="western" STYLE="margin-bottom: 0in">DataGen input is
+entirely from the command line. The first argument specifies what
+kind of data set will be output. All output data sets are scaled and
+translated to fit within an n-dimensional box of –1 to +1.</P>
+<TABLE WIDTH=690 BORDER=1 BORDERCOLOR="#000000" CELLPADDING=8 CELLSPACING=0>
+	<COL WIDTH=89>
+	<COL WIDTH=110>
+	<COL WIDTH=82>
+	<COL WIDTH=342>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P CLASS="western"><FONT SIZE=2>Specifier</FONT></P>
+		</TD>
+		<TD WIDTH=110>
+			<P CLASS="western"><FONT SIZE=2>Type</FONT></P>
+		</TD>
+		<TD WIDTH=82>
+			<P CLASS="western"><FONT SIZE=2>No. of Parameters</FONT></P>
+		</TD>
+		<TD WIDTH=342>
+			<P CLASS="western"><FONT SIZE=2>Parameters</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P CLASS="western"><FONT SIZE=2>GEODB</FONT></P>
+		</TD>
+		<TD WIDTH=110>
+			<P CLASS="western"><FONT SIZE=2>Dumbbell based on geodesic spheres</FONT></P>
+		</TD>
+		<TD WIDTH=82>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=2>3</FONT></P>
+		</TD>
+		<TD WIDTH=342>
+			<P CLASS="western"><FONT SIZE=2>1. The number of points on each
+			sphere<BR>2. The radius of the sphere (just for initial
+			scaling).<BR>3. The separation of the centers of the two spheres.</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P CLASS="western"><FONT SIZE=2>RANDB</FONT></P>
+		</TD>
+		<TD WIDTH=110>
+			<P CLASS="western"><FONT SIZE=2>Dumbbell based on random points in
+			spheres</FONT></P>
+		</TD>
+		<TD WIDTH=82>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=2>3</FONT></P>
+		</TD>
+		<TD WIDTH=342>
+			<P CLASS="western"><FONT SIZE=2>1. The number of points on each
+			sphere<BR>2. The radius of the sphere (just for initial
+			scaling).<BR>3. The separation of the centers of the two spheres.</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P CLASS="western"><FONT SIZE=2>RANSP</FONT></P>
+		</TD>
+		<TD WIDTH=110>
+			<P CLASS="western"><FONT SIZE=2>Random points in a unit sphere</FONT></P>
+		</TD>
+		<TD WIDTH=82>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=2>1</FONT></P>
+		</TD>
+		<TD WIDTH=342>
+			<P CLASS="western"><FONT SIZE=2>The number of points to place.</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P CLASS="western"><FONT SIZE=2>RANUSP</FONT></P>
+		</TD>
+		<TD WIDTH=110>
+			<P CLASS="western"><FONT SIZE=2>Random points on the surface of a
+			unit sphere</FONT></P>
+		</TD>
+		<TD WIDTH=82>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=2>1</FONT></P>
+		</TD>
+		<TD WIDTH=342>
+			<P CLASS="western"><FONT SIZE=2>The number of points to place.</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P CLASS="western"><FONT SIZE=2>RANBOX</FONT></P>
+		</TD>
+		<TD WIDTH=110>
+			<P CLASS="western"><FONT SIZE=2>Random points in an n-dimensional
+			cube</FONT></P>
+		</TD>
+		<TD WIDTH=82>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=2>1</FONT></P>
+		</TD>
+		<TD WIDTH=342>
+			<P CLASS="western"><FONT SIZE=2>The number of points to generate.</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P CLASS="western"><FONT SIZE=2>GEOSP</FONT></P>
+		</TD>
+		<TD WIDTH=110>
+			<P CLASS="western"><FONT SIZE=2>Geodesic array of points on the
+			surface of a sphere</FONT></P>
+		</TD>
+		<TD WIDTH=82>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=2>1</FONT></P>
+		</TD>
+		<TD WIDTH=342>
+			<P CLASS="western"><FONT SIZE=2>The minimum number of points to
+			place. The geodesic arrangement will probably require somewhat
+			more points.</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P CLASS="western"><FONT SIZE=2>QRGEO</FONT></P>
+		</TD>
+		<TD WIDTH=110>
+			<P CLASS="western"><FONT SIZE=2>Geodesic array of 4-D quaternion
+			points</FONT></P>
+		</TD>
+		<TD WIDTH=82>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=2>1</FONT></P>
+		</TD>
+		<TD WIDTH=342>
+			<P CLASS="western"><FONT SIZE=2>The minimum number of points to
+			place. The geodesic arrangement will probably require somewhat
+			more points.</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P CLASS="western"><FONT SIZE=2>LAT2</FONT></P>
+		</TD>
+		<TD WIDTH=110>
+			<P CLASS="western"><FONT SIZE=2>2-D lattice</FONT></P>
+		</TD>
+		<TD WIDTH=82>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=2>1</FONT></P>
+		</TD>
+		<TD WIDTH=342>
+			<P CLASS="western"><FONT SIZE=2>The number of points along each
+			edge of the lattice.</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P CLASS="western"><FONT SIZE=2>LAT3</FONT></P>
+		</TD>
+		<TD WIDTH=110>
+			<P CLASS="western"><FONT SIZE=2>3-D lattice</FONT></P>
+		</TD>
+		<TD WIDTH=82>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=2>1</FONT></P>
+		</TD>
+		<TD WIDTH=342>
+			<P CLASS="western"><FONT SIZE=2>The number of points along each
+			edge of the lattice.</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P CLASS="western"><FONT SIZE=2>LAT4</FONT></P>
+		</TD>
+		<TD WIDTH=110>
+			<P CLASS="western"><FONT SIZE=2>4-D lattice</FONT></P>
+		</TD>
+		<TD WIDTH=82>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=2>1</FONT></P>
+		</TD>
+		<TD WIDTH=342>
+			<P CLASS="western"><FONT SIZE=2>The number of points along each
+			edge of the lattice.</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P CLASS="western"><FONT SIZE=2>HAM</FONT></P>
+		</TD>
+		<TD WIDTH=110>
+			<P CLASS="western"><FONT SIZE=2>array of n-Dimensional quasirandom
+			points obeying the Hammersley distribution</FONT></P>
+		</TD>
+		<TD WIDTH=82>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=2>2</FONT></P>
+		</TD>
+		<TD WIDTH=342>
+			<P CLASS="western"><FONT SIZE=2>1. The dimensionality of the
+			points to be generated.<BR>2. The number of data points to
+			generate.</FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P CLASS="western"><FONT SIZE=2>CLOUD</FONT></P>
+		</TD>
+		<TD WIDTH=110>
+			<P CLASS="western"><FONT SIZE=2>Fractal-like set of point</FONT></P>
+		</TD>
+		<TD WIDTH=82>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=2>3</FONT></P>
+		</TD>
+		<TD WIDTH=342>
+			<P CLASS="western"><FONT SIZE=2>1. The number of random points at
+			each level to generate.<BR>2. The number of levels at which to do
+			the generation.<BR>3. The relative shrinking (or expansion)
+			between levels. </FONT>
+			</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P CLASS="western"><FONT SIZE=2>FRAC</FONT></P>
+		</TD>
+		<TD WIDTH=110>
+			<P CLASS="western"><FONT SIZE=2>Fractions in 0-1 scaled into –1
+			to +1</FONT></P>
+		</TD>
+		<TD WIDTH=82>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=2>1</FONT></P>
+		</TD>
+		<TD WIDTH=342>
+			<P CLASS="western"><FONT SIZE=2>The number of fractions to
+			generate </FONT>
+			</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P CLASS="western"><FONT SIZE=2>COMB</FONT></P>
+		</TD>
+		<TD WIDTH=110>
+			<P CLASS="western"><FONT SIZE=2>Integers from 0 to n-1, scaled
+			into –1 to +1</FONT></P>
+		</TD>
+		<TD WIDTH=82>
+			<P CLASS="western" ALIGN=CENTER><FONT SIZE=2>1</FONT></P>
+		</TD>
+		<TD WIDTH=342>
+			<P CLASS="western"><FONT SIZE=2>The number of integers to generate
+			</FONT>
+			</P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=89>
+			<P LANG="" CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>Other</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=110>
+			<P LANG="" CLASS="western"><FONT FACE="Courier New, monospace"><FONT SIZE=2>Print
+			the list of these Specifiers</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=82>
+			<P LANG="" CLASS="western" ALIGN=CENTER><FONT FACE="Courier New, monospace"><FONT SIZE=2>none</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=342>
+			<P LANG="" CLASS="western"><BR>
+			</P>
+		</TD>
+	</TR>
+</TABLE>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">GEODB</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">datagen geodb 200 1 5 |
+svg 500 &gt;geodb200.svg</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><IMG SRC="DataGen_Programs_html_229883ec.png" NAME="graphics1" ALIGN=BOTTOM WIDTH=392 HEIGHT=121 BORDER=0></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">RANDB</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">datagen randb 200 1 5 |
+svg 500 &gt;randb200.svg</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><IMG SRC="DataGen_Programs_html_2e007c9c.png" NAME="graphics2" ALIGN=BOTTOM WIDTH=398 HEIGHT=106 BORDER=0></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">RANSP</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">datagen ransp 500 | svg
+500 &gt;ransp500.svg</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><IMG SRC="DataGen_Programs_html_61300adb.png" NAME="graphics3" ALIGN=BOTTOM WIDTH=145 HEIGHT=146 BORDER=0></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">RANUSP</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">datagen ranusp 500 |
+svg 500 &gt;ranusp500.svg</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><IMG SRC="DataGen_Programs_html_m6d4165cd.png" NAME="graphics4" ALIGN=BOTTOM WIDTH=143 HEIGHT=146 BORDER=0></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">GEOSP</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">datagen geosp 500 | svg
+500 &gt;geosp500.svg</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><IMG SRC="DataGen_Programs_html_m49a3da1b.png" NAME="graphics5" ALIGN=BOTTOM WIDTH=140 HEIGHT=140 BORDER=0></P>
+<P CLASS="western" STYLE="margin-bottom: 0in">datagen geosp 500 |
+rotateq .2 1 1 1 | svg 500 &gt;geopRot500.svg</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><IMG SRC="DataGen_Programs_html_m763736f5.png" NAME="graphics6" ALIGN=BOTTOM WIDTH=140 HEIGHT=140 BORDER=0></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">QRGEO</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">datagen qrgeo 500 | svg
+500 &gt;qrgeo500.svg</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><IMG SRC="DataGen_Programs_html_34489db4.png" NAME="graphics7" ALIGN=BOTTOM WIDTH=139 HEIGHT=140 BORDER=0></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">LAT3</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">LAT3 25 | svg 500
+&gt;LAT3-25.svg</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><IMG SRC="DataGen_Programs_html_m175a97d7.png" NAME="graphics8" ALIGN=BOTTOM WIDTH=122 HEIGHT=123 BORDER=0></P>
+<P CLASS="western" STYLE="margin-bottom: 0in">datagen LAT3 8 |
+rotateq .2 1 1 1 | svg 500 &gt;LAT3Rot-8.svg</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><IMG SRC="DataGen_Programs_html_m16a6c175.png" NAME="graphics9" ALIGN=BOTTOM WIDTH=138 HEIGHT=140 BORDER=0></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">HAM</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">DataGen HAM 3 200 | svg
+&gt; HAM200.svg</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><IMG SRC="DataGen_Programs_html_41858f0a.png" NAME="graphics10" ALIGN=BOTTOM WIDTH=168 HEIGHT=166 BORDER=0></P>
+<P CLASS="western" STYLE="margin-bottom: 0in">DataGen HAM 3 200 |
+rotateq .2 1 1 1 | svg &gt; HAM200ROT.svg</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><IMG SRC="DataGen_Programs_html_16b7663.png" NAME="graphics11" ALIGN=BOTTOM WIDTH=161 HEIGHT=168 BORDER=0></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">CLOUD</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">DataGen CLOUD 15 2 9 |
+svg &gt; cloud.svg</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">15 points per level, 2
+levels, shrink 9x between levels. This gives 15 groups of 15 points.</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><IMG SRC="DataGen_Programs_html_1b616757.png" NAME="graphics12" ALIGN=BOTTOM WIDTH=153 HEIGHT=188 BORDER=0></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">RANBOX</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">datagen ranbox 3 1500 |
+rotateq .95 .1 .1 .05 | svg 500 &gt;ranbox.svg</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><IMG SRC="DataGen_Programs_html_m7880b260.png" NAME="graphics13" ALIGN=BOTTOM WIDTH=168 HEIGHT=166 BORDER=0></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<H1 CLASS="western">TestMaxDist</H1>
+<P CLASS="western" STYLE="margin-bottom: 0in">There are two optional
+command line arguments. If a question mark is used, then instead of
+processing data, a CSV line is output that is the titles for column
+of data. This is useful if the output is to be examined in Excel. The
+other option is “I”. The latter will cause the NearTree to be
+built using immediate insertion, rather than using the delayed
+insertion mechanism.</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><B>Examples:</B></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+HAM 3 200 | svg &gt; ham3-200.svg</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in; border-top: none; border-bottom: 1.10pt double #000000; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+geosp 500 | rotateq .2 1 1 1 | svg 500 &gt;geopRot500.svg</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in; border-top: none; border-bottom: 1.10pt double #000000; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>testmaxdist
+?                       &gt; LAT4.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+LAT4 15    | testmaxdist    &gt;&gt; LAT4.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+LAT4 20   | testmaxdist    &gt;&gt; LAT4.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+LAT4 25   | testmaxdist    &gt;&gt; LAT4.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+LAT4 30  | testmaxdist    &gt;&gt; LAT4.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in; border-top: none; border-bottom: 1.10pt double #000000; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>testmaxdist
+?                       &gt; HAM.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+HAM 1 10000 | testmaxdist    &gt;&gt; HAM.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+HAM 2 10000 | testmaxdist    &gt;&gt; HAM.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+HAM 3 10000 | testmaxdist    &gt;&gt; HAM.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+HAM 4 10000 | testmaxdist    &gt;&gt; HAM.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+HAM 5 10000 | testmaxdist    &gt;&gt; HAM.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in; border-top: none; border-bottom: 1.10pt double #000000; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>testmaxdist
+?                       &gt; CLOUD.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+CLOUD 3 7 2 | testmaxdist    &gt;&gt; CLOUD.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+CLOUD 3 8 2 | testmaxdist    &gt;&gt; CLOUD.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+CLOUD 3 9 2 | testmaxdist    &gt;&gt; CLOUD.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+CLOUD 4 6 2 | testmaxdist    &gt;&gt; CLOUD.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+CLOUD 4 7 2 | testmaxdist    &gt;&gt; CLOUD.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+CLOUD 4 8 2 | testmaxdist    &gt;&gt; CLOUD.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+CLOUD 5 6 2 | testmaxdist    &gt;&gt; CLOUD.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+CLOUD 5 7 2 | testmaxdist    &gt;&gt; CLOUD.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in; border-top: none; border-bottom: 1.10pt double #000000; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+lat3 5000 | rotateq 0.5 1 1 1 &gt; out1.txt</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+lat3 5000 | transl 1 2 0  &gt;&gt; out1.txt </FONT>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+geodb 5000 1 5 | transl 5 5 0 &gt;&gt; out1.txt</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>type
+out1.txt | svg &gt; rot.svg</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in; border-top: none; border-bottom: 1.10pt double #000000; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>testmaxdist
+?                       &gt; alphaC.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+cloud 9 5 1 | transl 200 0 0 &gt; cloud1.txt</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+cloud 9 6 2 &gt; cloud2.txt</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>copy/b
+cloud1.txt+cloud2.txt cloud.txt</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>type
+cloud.txt | BoxIt  | testmaxdist &gt;&gt; alphaC.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in; border-top: none; border-bottom: 1.10pt double #000000; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+geodb 400 1 5 | transl .5 -.5 0 &gt; geodb.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+ranusp 4000  | scale .5  &gt; sphere.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>copy/b
+geodb.csv+sphere.csv both.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>type
+both.csv | svg 500 &gt; both.svg</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><IMG SRC="DataGen_Programs_html_102eff7a.png" NAME="graphics14" ALIGN=BOTTOM WIDTH=210 HEIGHT=170 BORDER=0></P>
+<P CLASS="western" STYLE="margin-bottom: 0in; border-top: none; border-bottom: 1.10pt double #000000; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+geodb 400 1 5 | rotateq .998 0 -.063 0   | rotateq .998 0 -.063 0   |
+rotateq .998 -.063 0 0   | transl .8 -.5 -1 &gt; geodb.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>datagen
+ranusp 400  | scale .5  &gt; sphere.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>copy/b
+geodb.csv+sphere.csv both.csv</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>type
+both.csv | rotateq .998 0 -.063 0   | rotateq .998 0 -.063 0  | svg
+500 &gt; bothROT.svg</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>type
+both.csv | rotateq .998 0 -.063 0   | svg 500 &gt; both.svg</FONT></P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><FONT SIZE=2>S<IMG SRC="DataGen_Programs_html_244bcb73.gif" NAME="Object1" ALIGN=LEFT HSPACE=14 WIDTH=265 HEIGHT=242><IMG SRC="DataGen_Programs_html_m6a142ba0.png" NAME="graphics15" ALIGN=LEFT HSPACE=14 WIDTH=252 HEIGHT=230 BORDER=0>tereo
+Pair</FONT></P>
+</BODY>
+</HTML>
