@@ -36,6 +36,14 @@
 
 #include "TNear.h"
 #include "vector_3d.h"
+#include <cmath>
+
+#ifndef LOCAL_CBRT
+#define CBRT cbrt
+#else
+#define CBRT local_cbrt
+double local_cbrt(const double);
+#endif
 
 #define GEOM_avgdist(level)  1./(.8033489316118848*(double)(level) + .8491319884243533)
 #define GEOM_avgarea(level)  1./(.6453695059219567*((double)(level))*((double)(level))  + 1.364298551396359*((double)(level)) + .7210251337654962)
@@ -44,7 +52,7 @@
 #define GEOM_pointcount(level) 4.0*((double)(level))*((double)(level)) + 8.0*((double)(level)) + 6.0
 #define GEOM_levelforpointcount(points) (points>6)?((long)floor(.5+(sqrt(((double)(points))-2.)/2. -1.))):0
 #define GEOM_SQRpointcount(level) sqrt(GEOM_pointcount(level)*GEOM_pointcount(level)*GEOM_pointcount(level))
-#define GEOM_SQRlevelforpointcount(points) (points>44)?((long)floor(sqrt(cbrt((((double)(points))*((double)(points))))-2.)/2. -1.+cbrt((double)(points))/50.)):0
+#define GEOM_SQRlevelforpointcount(points) (points>44)?((long)floor(sqrt(CBRT((((double)(points))*((double)(points))))-2.)/2. -1.+CBRT((double)(points))/50.)):0
 #define GEOM_HQRpointcount(level) 0.5*(GEOM_SQRpointcount(level))
 #define GEOM_HQRlevelforpointcount(points) ((points>22)?(GEOM_SQRlevelforpointcount(2.*(double)(points))):0)
 

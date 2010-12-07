@@ -53,7 +53,7 @@ long GEO_AtLeastNGeodesic( CNearTree<Vector_3>& t, const long minPoints )
     return( GEO_GenerateGeodesic2( t, long(ceil(d) )) );
 }
 
-double cbrt( const double d )
+double local_cbrt( const double d )
 {
     return( pow(d,1.0/3.0) );
 }

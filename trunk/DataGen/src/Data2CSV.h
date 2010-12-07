@@ -13,7 +13,7 @@
 #include <vector>
 #include <iostream>
 
-#include "Vector_3d.h"
+#include "vector_3d.h"
 
 template <typename T>
 T MAX( const T& t1, const T& t2 )

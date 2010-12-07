@@ -8,7 +8,7 @@
 #include <iostream>
 #include <cmath>
 
-#include "tnear.h"
+#include "TNear.h"
 
 #include "Data2CSV.h"
 

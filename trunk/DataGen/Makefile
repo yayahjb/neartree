@@ -222,7 +222,7 @@ $(BIN)/TestMaxDist:	src/TestMaxDist.cpp \
 		hammersley.$(OBJ_EXT) \
 		vector_3d.$(OBJ_EXT)
 	$(CPPCOMPILE_COMMAND) $(SRC)/TestMaxDist.cpp
-	$(CPPBUILD_COMMAND_LOCAL) $(BIN)/TestMaxDist.$(OBJ_EXT) \
+	$(CPPBUILD_COMMAND_LOCAL) TestMaxDist.$(OBJ_EXT) \
 	hammersley.$(OBJ_EXT) \
 	vector_3d.$(OBJ_EXT) \
 	Data2CSV.$(OBJ_EXT) -o $@
@@ -395,3 +395,28 @@ $(EXAMPLES)/both2.svg: $(BIN)/Rotateq $(BIN)/Svg
 
 
 
+#
+# Remove all non-source files
+#
+empty:
+		  @-rm -rf $(LIB)
+		  @-rm -rf $(BIN)
+		  
+#
+# Remove temporary files
+#
+clean:
+	@-rm -f core 
+	@-rm -f *.o
+	@-rm -f *.$(OBJ_EXT)
+	@-rm -f *.c.*
+	@-rm -rf .libs
+	@-rm -f $(SRC)/*.o
+	@-rm -f $(SRC)/*.$(OBJ_EXT)
+	@-rm -r -f $(SRC)/.libs
+
+
+#
+# Restore to distribution state
+#
+distclean:	clean empty
