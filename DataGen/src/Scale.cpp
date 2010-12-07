@@ -8,7 +8,7 @@
 // sets for NearTree.
 //
 //
-#include "Vector_3d.h"
+#include "vector_3d.h"
 #include <iostream>
 
 #include "Data2CSV.h"

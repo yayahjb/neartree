@@ -34,7 +34,7 @@
 #include "geodesic.h"
 #include "hammersley.h"
 #include "Data2CSV.h"
-#include "Vector_3D.h"
+#include "vector_3d.h"
 
 std::map<std::string,int> theMap;
 

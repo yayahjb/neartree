@@ -9,7 +9,7 @@
 
 #include <sstream>
 
-#include "RHrand.h"
+#include "rhrand.h"
 
 static RHrand rhr;
 

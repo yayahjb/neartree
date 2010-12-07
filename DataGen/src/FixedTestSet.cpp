@@ -13,7 +13,7 @@
 // descriptions are output. They can be used as a title line
 // in Excel.
 
-#include "Tnear.h"
+#include "TNear.h"
 
 #include <cfloat>
 #include <climits>

@@ -15,7 +15,7 @@
 #include "vector_3d.h"
 #include "Data2CSV.h"
 
-#include "tnear.h"
+#include "TNear.h"
 #include "rhrand.h"
 
 #ifdef _DEBUG
