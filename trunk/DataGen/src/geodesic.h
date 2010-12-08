@@ -38,6 +38,9 @@
 #include "vector_3d.h"
 #include <cmath>
 
+#ifdef _MSC_VER
+#define LOCAL_CBRT
+#endif
 #ifndef LOCAL_CBRT
 #define CBRT cbrt
 #else

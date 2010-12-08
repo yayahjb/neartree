@@ -269,7 +269,9 @@
 #include <algorithm>
 #include <cmath>
 
+#ifdef _MSC_VER
 #define USE_LOCAL_HEADERS
+#endif
 #ifndef USE_LOCAL_HEADERS
 #include <rhrand.h>
 #include <triple.h>

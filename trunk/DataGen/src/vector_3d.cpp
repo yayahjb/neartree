@@ -6,7 +6,10 @@
 #include <iostream>
 /* remove the next include if using a local version of rand */
 #include <stdlib.h>
-#ifdef USE_SYSTEM_HEADERS
+#ifdef _MSC_VER
+#define USE_LOCAL_HEADERS
+#endif
+#ifndef USE_LOCAL_HEADERS
 #include <vector_3d.h>
 #else
 #include "vector_3d.h"
