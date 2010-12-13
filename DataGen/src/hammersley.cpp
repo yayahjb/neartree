@@ -8,6 +8,7 @@
 # include <iostream>
 # include <fstream>
 # include <iomanip>
+# include <string.h> /* needed under MINGW/MSYS */
 
 using namespace std;
 
