@@ -2049,6 +2049,7 @@ static QR<double> AB_BestRotationCore2(
 class PairPairDescriptor
 {
 public:
+    PairPairDescriptor( void ); // just to keep compilers happy
     PairPairDescriptor( 
         const std::pair<unsigned int, unsigned int> mol1, 
         const std::pair<unsigned int, unsigned int> mol2 )
@@ -2078,6 +2079,7 @@ private:
 
 class PairTripleDescriptor {
 public:
+    PairTripleDescriptor( void ); // just to keep compilers happy
     PairTripleDescriptor( 
                          const triple<unsigned int, unsigned int, unsigned int> mol1, 
                          const triple<unsigned int, unsigned int, unsigned int> mol2 )

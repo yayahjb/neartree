@@ -12,10 +12,15 @@
 
 #include "Data2CSV.h"
 
+void Dummy( int, char*[] )
+{
+}
+
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int main(int argc, char* argv[])
 //---------------------------------------------------------------------
 {
+    Dummy( argc, argv );
     std::vector<vecN> v = ReadGeneralFile( std::cin );
     BoxIt( v );
     WriteVectorFile( v );
