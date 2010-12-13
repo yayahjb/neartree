@@ -49,7 +49,7 @@ void SVG_Output(
         const double yd = (points[i][1]-miny)/scale;
         const int x = int( sign_t(xd)*xd );
         const int y = int( sign_t(yd)*yd );
-        fprintf( stdout, "<circle r=\"%ld\" cx=\"%ld\" cy=\"%ld\" stroke=\"black\" stroke-width=\"2\" fill=\"red\"/>\n",
+        fprintf( stdout, "<circle r=\"%d\" cx=\"%d\" cy=\"%d\" stroke=\"black\" stroke-width=\"2\" fill=\"red\"/>\n",
             r, x, y );
     }
 

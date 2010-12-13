@@ -227,7 +227,7 @@ char digit_to_ch ( int i )
 
   if ( 0 <= i && i <= 9 )
   {
-    c = '0' + i;
+    c = (char)('0' + i);
   }
   else
   {
@@ -1331,6 +1331,8 @@ void hammersley_sequence ( int n, double r[] )
   int *seed;
   int step;
 
+  i = 0;
+
   if ( hammersley_DIM_NUM < 1 )
   { 
     hammersley_DIM_NUM = 1;
@@ -2034,7 +2036,7 @@ void i4vec_transpose_print ( int n, int a[], char *title )
 
   if ( 0 < s_len_trim ( title ) )
   {
-    title_len = strlen ( title );
+    title_len = (int)strlen ( title );
 
     for ( ilo = 1; ilo <= n; ilo = ilo + 5 )
     {
@@ -2306,7 +2308,7 @@ int prime ( int n )
     exit ( 1 );
   }
 
-  return 0;
+  //return 0;
 # undef PRIME_MAX
 }
 //****************************************************************************80
@@ -2484,7 +2486,7 @@ int s_len_trim ( char *s )
   int n;
   char* t;
 
-  n = strlen ( s );
+  n = (int)strlen ( s );
   t = s + strlen ( s ) - 1;
 
   while ( 0 < n ) 

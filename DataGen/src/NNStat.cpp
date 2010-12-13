@@ -12,10 +12,15 @@
 
 #include "Data2CSV.h"
 
+void Dummy( int, char*[] )
+{
+}
+
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int main(int argc, char* argv[])
 //---------------------------------------------------------------------
 {
+    Dummy( argc, argv );
     std::vector<vecN> v = ReadGeneralFile( std::cin );
 
     CNearTree<vecN> nt( v );
@@ -52,8 +57,8 @@ int main(int argc, char* argv[])
 
     avgNearest /= double( n-1 );
 
-    fprintf( stdout, " v.size %d\n dimension %d\n smallestNear-near %g\n largest-near %g\n largest-far %g\n average nearest %g\n hausdorff-dimension %g\n", 
-        nt.size( ), v[0].dim, smallestNear, largestNear, largest, avgNearest, hausdorff );
+    fprintf( stdout, " v.size %ld\n dimension %d\n smallestNear-near %g\n largest-near %g\n largest-far %g\n average nearest %g\n estimated-dimension %g\n", 
+       (long)nt.size( ), v[0].dim, smallestNear, largestNear, largest, avgNearest, hausdorff );
 
     bool bCopyInput = false;
     if ( bCopyInput )

@@ -15,6 +15,7 @@
     LAT4",1) );   // 4-D lattice - n pts in each direction
     HAM",2) );    // dimension of data point, n data points
     CLOUD",3) );  // cloud points per level, n levels, relative cloud spacing
+    RANBOX",2) ); // dimension of data point, n data points
 */
 //
 
@@ -713,12 +714,14 @@ int main(int argc, char* argv[])
     else if ( cmd == "HAM" )
     {
         const std::vector<double> vHAM = HAM_Gen( int(vArgs[0]), int(vArgs[1]) );
+        
+        const unsigned int vArgs0 = (unsigned int)(int(vArgs[0]));
 
-        for ( unsigned int i=0; i<vHAM.size( ); i+=int(vArgs[0]) )
+        for ( unsigned int i=0; i<vHAM.size( ); i+=vArgs0 )
         {
-            for ( int k=0; k<int(vArgs[0]); ++k )
+            for ( unsigned int k=0; k<vArgs0; ++k )
             {
-                if ( k == int(vArgs[0])-1 )
+                if ( k == vArgs0-1 )
                 {
                     fprintf( stdout, "%f", vHAM[i+k] );
                 }

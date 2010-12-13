@@ -26,8 +26,10 @@
 
 #include "Data2CSV.h"
 
+#ifdef _MSC_VER
 #ifdef _DEBUG
 #define new DEBUG_NEW
+#endif
 #endif
 
 int g_errorCount;
@@ -122,7 +124,7 @@ void testProbes( const bool Do_Random_Insertion, const std::pair<std::vector<vec
         //        (long)nt.size(), (long)nt.GetDimEstimate(), (double)nt.GetDiamEstimate(),
         //        (double)nt.GetMeanSpacing(), (double)nt.GetVarSpacing());
 
-        fprintf( stdout, "CSV-balanced,%ld,%d,%.3f,%.3f,%.3f,%.3f,%.2f,%.4f,%.4f,%.4f,%.4f\n",
+        fprintf( stdout, "CSV-balanced,%ld,%ld,%.3f,%.3f,%.3f,%.3f,%.2f,%.4f,%.4f,%.4f,%.4f\n",
             (long)nt.size( ),
             totalTests,
             ((double)(tc2-tc1))/CLOCKS_PER_SEC,
@@ -196,7 +198,7 @@ void testProbes( const bool Do_Random_Insertion, const std::pair<std::vector<vec
         //        (long)nt.size(), (long)nt.GetDimEstimate(), (double)nt.GetDiamEstimate(),
         //        (double)nt.GetMeanSpacing(), (double)nt.GetVarSpacing());
 
-        fprintf( stdout, "CSV-LEFT,%ld,%d,%.3f,%.3f,%.3f,%.3f,%.2f,%.4f,%.4f,%.4f,%.4f\n",
+        fprintf( stdout, "CSV-LEFT,%ld,%ld,%.3f,%.3f,%.3f,%.3f,%.2f,%.4f,%.4f,%.4f,%.4f\n",
             (long)nt.size( ),
             totalTests,
             ((double)(tc2-tc1))/CLOCKS_PER_SEC,
@@ -219,7 +221,7 @@ void testProbes( const bool Do_Random_Insertion, const std::pair<std::vector<vec
         totalTests = 0;
         while ( totalTests < requiredTests )
         {
-            totalTests += vProbe.size( );
+            totalTests += (long)vProbe.size( );
             for ( unsigned int i=0; i<vProbe.size( ); ++i )
             {
                 vecN newPoint(vTarget[0]);
@@ -269,7 +271,7 @@ void testProbes( const bool Do_Random_Insertion, const std::pair<std::vector<vec
         //fprintf( stdout, "testHGeneral tree size: %ld, dimension estimate: %ld, diameter est,: %g, mean spacing est.: %g, variance spacing est.: %g\n",
         //        (long)nt.size(), (long)nt.GetDimEstimate(), (double)nt.GetDiamEstimate(),
         //        (double)nt.GetMeanSpacing(), (double)nt.GetVarSpacing());
-        fprintf( stdout, "CSV-SHORT,%ld,%d,%.3f,%.3f,%.3f,%.3f,%.2f,%.4f,%.4f,%.4f,%.4f\n",
+        fprintf( stdout, "CSV-SHORT,%ld,%ld,%.3f,%.3f,%.3f,%.3f,%.2f,%.4f,%.4f,%.4f,%.4f\n",
             (long)nt.size( ),
             totalTests,
             ((double)(tc2-tc1))/CLOCKS_PER_SEC,

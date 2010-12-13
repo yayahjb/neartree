@@ -70,7 +70,7 @@ DistanceType w, x, y, z;
 
 public:
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-inline CPPQR( ) : // default constructor
+inline CPPQR( ) : /* default constructor */
 w( DistanceType( 0.0 ) ),
 x( DistanceType( 0.0 ) ),
 y( DistanceType( 0.0 ) ),
@@ -79,7 +79,7 @@ z( DistanceType( 0.0 ) )
 }
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-inline CPPQR( const CPPQR& q ) // copy constructor
+inline CPPQR( const CPPQR& q ) /* copy constructor */
 {
     if ( this != &q )
     {
@@ -91,7 +91,7 @@ inline CPPQR( const CPPQR& q ) // copy constructor
 }
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-inline CPPQR(                  // constructor
+inline CPPQR(                  /* constructor */
           const DistanceType& wi,
           const DistanceType& xi, 
           const DistanceType& yi, 
@@ -353,7 +353,7 @@ inline CPPQR operator- ( void ) const
 
 /* Multiply -- multiply a quaternion (q1) by quaternion (q2)  */    
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-inline CPPQR operator* ( const CPPQR& q ) const // multiply two quaternions
+inline CPPQR operator* ( const CPPQR& q ) const /* multiply two quaternions */
 {
     CPPQR temp;
     temp.w = -z*q.z - y*q.y - x*q.x + w*q.w;
@@ -425,7 +425,7 @@ inline CPPQR& operator/= ( const CPPQR& q2 )
 
 /* ScalarMultiply -- multiply a quaternion (q) by scalar (s)  */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-inline CPPQR operator* ( const DistanceType& d ) const // multiply by a constant
+inline CPPQR operator* ( const DistanceType& d ) const /* multiply by a constant */
 {
     CPPQR temp;
     temp.w = w*d;
@@ -466,7 +466,7 @@ inline CPPQR& operator/= ( const DistanceType& d )
 
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-inline CPPQR operator/ ( const DistanceType& d ) const // divide by a constant
+inline CPPQR operator/ ( const DistanceType& d ) const /* divide by a constant */
 {
     CPPQR temp;
     temp.w = w/d;
@@ -730,7 +730,7 @@ DistanceType operator[] ( const int k ) const
     if ( i==1 ) return x;
     if ( i==2 ) return y;
     if ( i==3 ) return z;
-    return( 0 ); // just to keep compilers happy
+    return( 0 ); /* just to keep compilers happy */
 }
 
 /* Quaternion2Matrix -- Form the 3x3 rotation matrix from a quaternion */    
@@ -780,7 +780,7 @@ static inline void Quaternion2Matrix( DistanceType m[3][3], const CPPQR q )
         
 }
 
-// end Quaternion2Matrix
+/* end Quaternion2Matrix */
 
 /* Get a unit quaternion from a general one */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -795,7 +795,7 @@ inline CPPQR UnitQ( void ) const
     {
         return( (*this) / sqrt( Normsq( ) ) );
     }
-} // end UnitQ
+} /* end UnitQ */
 
 /* Quaternion2Angles -- Convert a Quaternion into Euler Angles for Rz(Ry(Rx))) convention */  
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -866,7 +866,7 @@ inline bool Quaternion2Angles ( DistanceType& rotX, DistanceType& rotY, Distance
     }
     
     return( true );
-}  // end Quaternion2Angles
+}  /* end Quaternion2Angles */
 
 /* Angles2Quaternion -- Convert Euler Angles for Rz(Ry(Rx))) convention into a quaternion */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -887,7 +887,7 @@ static inline CPPQR Angles2Quaternion ( const DistanceType& rotX, const Distance
                cx*cy*sz - sx*sy*cz 
                ); 
     return( q );
-} // end Angles2Quaternion
+} /* end Angles2Quaternion */
 
 static inline CPPQR Point2Quaternion( const DistanceType v[3] )
 {
@@ -1217,7 +1217,7 @@ inline DistanceType HLERPDist (const CPPQR& q) const
 
 
 
-}; // end class CPPQR
+}; /* end class CPPQR */
 
 #ifndef CQR_NOCCODE
 extern "C" {

@@ -267,7 +267,6 @@ Matrix_3x3 Vector_3::Pair( const Vector_3& x1, const Vector_3& x2, const Vector_
             //const double thirdDistSqBefore = (distSqBefore1_3<distSqBefore2_3) ? distSqBefore1_3 : distSqBefore2_3;
         return( mResult );
     }
-    return ( mTemp );
 }
 
 
