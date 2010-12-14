@@ -123,7 +123,7 @@ double atan4 ( double y, double x )
   double abs_x;
   double abs_y;
   double pi = 3.141592653589793;
-  double theta;
+  double theta=0.;
   double theta_0;
 //
 //  Special cases:

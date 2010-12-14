@@ -1265,8 +1265,12 @@ inline CPPQR<DistanceType> MakeCPPQR( void ) const {
 /*=========================================================================================*/
 /* start of non-class functions */
 /*=========================================================================================*/
-static Vector_3 UnitV( const Vector_3& v ) { return( v/v.Norm( ) ); }
+template <typename vectype>
+static vectype UnitV( const vectype& v ) { return( v/v.Norm( ) ); }
+
 static Matrix_3x3 UnitMatrix( void ) { return( Matrix_3x3( 1.0,0.0,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0 ) ); }
+
+static const Matrix_3x3 V3D_UnitMatrix = UnitMatrix();
 
 //-----------------------------------------------------------------------------
 // Name: BestPlane()
