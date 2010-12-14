@@ -193,6 +193,7 @@ all:	$(BIN)/DataGen      \
 		$(BIN)/TestMaxDist  \
 		$(BIN)/FixedTestSet \
 		$(BIN)/NNStat       \
+		$(BIN)/NNStat2      \
 		$(BIN)/Scale        \
 		$(BIN)/Rotateq      \
 		$(BIN)/Rotatea      \
@@ -240,6 +241,11 @@ $(BIN)/NNStat:	src/NNStat.cpp \
 		Data2CSV.$(OBJ_EXT)
 	$(CPPCOMPILE_COMMAND) $(SRC)/NNStat.cpp
 	$(CPPBUILD_COMMAND_LOCAL) NNStat.$(OBJ_EXT) Data2CSV.$(OBJ_EXT) -o $@
+
+$(BIN)/NNStat2:	src/NNStat2.cpp \
+		Data2CSV.$(OBJ_EXT)
+	$(CPPCOMPILE_COMMAND) $(SRC)/NNStat2.cpp
+	$(CPPBUILD_COMMAND_LOCAL) NNStat2.$(OBJ_EXT) Data2CSV.$(OBJ_EXT) -o $@
 
 #  Scale -- Change the dimensions of the data
 
