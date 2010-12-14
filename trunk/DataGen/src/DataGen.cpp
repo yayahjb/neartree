@@ -167,6 +167,8 @@ std::vector<double> HAM_Gen( const long dim, const long nPoints )
   return( r );
 }
 
+inline void GEO_USE(const long arg) {}
+
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // GEN_GeoSphere
 //
@@ -178,7 +180,7 @@ std::vector<Vector_3> GEO_GenSphere( const long nSpherePoints )
 {
     CNearTree<Vector_3> nt;
     const long count = GEO_AtLeastNGeodesic( nt, nSpherePoints );
-    count;
+    GEO_USE(count);
     return( nt.GetObjectStore() );
 }
 
@@ -740,7 +742,7 @@ int main(int argc, char* argv[])
         //long GEO_AtLeastNQGeodesic( CNearTree<SQR<double> >& t, const long minPoints );
         CNearTree<SQR<double> > nt;
         const long nGEOPoints = GEO_AtLeastNQGeodesic( nt, int(vArgs[0]) );
-        nGEOPoints;
+        GEO_USE(nGEOPoints);
 
         std::vector<Vector_3> vq;
         for ( unsigned int i=0; i<nt.size( ); ++i )
