@@ -2605,13 +2605,13 @@ double GetDimEstimate ( const double DimEstimateEsd )
     double targetradius = 4096./pointdensity;
     double rat;
     double shrinkfactor;
-    if (targetradius <  meanSpacing*2.) targetradius = meanSpacing*2.;
+    if (targetradius <  meanSpacing*10.) targetradius = meanSpacing*10.;
     if (targetradius > (double)m_DiamEstimate/1.1) targetradius = (double)m_DiamEstimate/1.1;
     
     /*  Now try to find a smaller adjusted target radius that will
      contain a reasonable number of points*/
     
-    shrinkfactor = 32.;
+    shrinkfactor = 16.;
     do { 
         shrinkfactor = shrinkfactor/1.2;
         n = (size_t)(((double)estsize-1u) * ((DistanceType)rhr.urand()));
@@ -2625,7 +2625,7 @@ double GetDimEstimate ( const double DimEstimateEsd )
 
     int goodtrials = 0;
     trials = (size_t)sqrt(0.5+(double)estsize);
-    if (trials < 10) trials = 10;
+    if (trials < 20) trials = 20;
         
     n = (size_t)(((double)estsize-1u) * ((DistanceType)rhr.urand()));
     rhr.urand( ); rhr.urand( );
