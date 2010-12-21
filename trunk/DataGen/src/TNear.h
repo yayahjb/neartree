@@ -2611,7 +2611,7 @@ double GetDimEstimate ( const double DimEstimateEsd )
     /*  Now try to find a smaller adjusted target radius that will
      contain a reasonable number of points*/
     
-    shrinkfactor = 16.;
+    shrinkfactor = 4.;
     do { 
         shrinkfactor = shrinkfactor/1.2;
         n = (size_t)(((double)estsize-1u) * ((DistanceType)rhr.urand()));
@@ -5740,7 +5740,7 @@ long LeftK_Far (
         }
     }
     
-    if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
+    if( tFarthest.size( ) > 1 ) K_Resize( k, t, tFarthest, dRadius );
     return ( (long)tFarthest.size( ) );
 }  //  end K_Far
 
@@ -5822,7 +5822,7 @@ long LeftK_Far (
         }
     }
     
-    if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
+    if( tFarthest.size( ) > 1 ) K_Resize( k, t, tFarthest, dRadius );
     return ( (long)tFarthest.size( ) );
 }  //  end LeftK_Far
 
