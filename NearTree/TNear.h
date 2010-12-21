@@ -277,6 +277,9 @@
 #include <algorithm>
 #include <cmath>
 
+#ifdef _MSC_VER
+#define USE_LOCAL_HEADERS
+#endif
 #ifndef USE_LOCAL_HEADERS
 #include <rhrand.h>
 #include <triple.h>
@@ -423,18 +426,18 @@ private: // start of real definition of CNearTree
 std::vector<long> m_DelayedIndices;    // objects queued for insertion, possibly in random order
 std::vector<T>    m_ObjectStore;       // all inserted objects go here
 size_t            m_DeepestDepth;      // maximum diameter of the tree
-#ifdef CNEARTREE_INSTRUMENTED
-size_t            m_NodeVisits;        // number of node visits
-#endif
-DistanceType      m_DiamEstimate;      // estimated diameter
-DistanceType      m_SumSpacings;       // sum of spacings at time of insertion
-DistanceType      m_SumSpacingsSq;     // sum of squares of spacings at time of insertion
-long              m_Flags;             // flags for operational control (mainly for testing)
-double            m_DimEstimate;       // estimated dimension
-double            m_DimEstimateEsd;    // estimated dimension estimated standard deviation
 
 
 NearTreeNode<T, DistanceType, distMinValue>      m_BaseNode; // the tree's data is stored down from here
+long              m_Flags;             // flags for operational control (mainly for testing)
+DistanceType      m_DiamEstimate;      // estimated diameter
+DistanceType      m_SumSpacings;       // sum of spacings at time of insertion
+DistanceType      m_SumSpacingsSq;     // sum of squares of spacings at time of insertion
+double            m_DimEstimate;       // estimated dimension
+double            m_DimEstimateEsd;    // estimated dimension estimated standard deviation
+#ifdef CNEARTREE_INSTRUMENTED
+size_t            m_NodeVisits;        // number of node visits
+#endif
 
 public:
 
@@ -448,23 +451,21 @@ public:
 //  greater than the negative value
 //
 //=======================================================================
-CNearTree ( void ) :  // constructor
-m_DelayedIndices (   ),
-m_ObjectStore    (   ),
-m_DeepestDepth   ( 0 ),
-m_BaseNode       (   )
-
-{
-    m_Flags = 0;
-    m_DiamEstimate  = DistanceType( 0 );
-    m_SumSpacings   = DistanceType( 0 );
-    m_SumSpacingsSq = DistanceType( 0 );
-    m_DimEstimate   = 0;
-    m_DimEstimateEsd= 0;
+CNearTree ( void )  // constructor
+: m_DelayedIndices (   )
+, m_ObjectStore    (   )
+, m_DeepestDepth   ( 0 )
+, m_BaseNode       (   )
+, m_Flags ( 0 )
+, m_DiamEstimate  ( DistanceType( 0 ) )
+, m_SumSpacings   ( DistanceType( 0 ) )
+, m_SumSpacingsSq ( DistanceType( 0 ) )
+, m_DimEstimate   ( 0 )
+, m_DimEstimateEsd( 0 )
 #ifdef CNEARTREE_INSTRUMENTED
-    m_NodeVisits    = 0;
-#endif    
-
+, m_NodeVisits( 0 )
+#endif
+{
     
 }  //  CNearTree constructor
 
@@ -476,26 +477,26 @@ m_BaseNode       (   )
 //
 //=======================================================================
 template<typename InputContainer>
-CNearTree ( const InputContainer& o ) :  // constructor
-m_DelayedIndices (   ),
-m_ObjectStore    (   ),
-m_DeepestDepth   ( 0 ),
-m_BaseNode       (   )
+CNearTree ( const InputContainer& o )  // constructor
+: m_DelayedIndices (   )
+, m_ObjectStore    (   )
+, m_DeepestDepth   ( 0 )
+, m_BaseNode       (   )
+, m_Flags ( 0 )
+, m_DiamEstimate  ( DistanceType( 0 ) )
+, m_SumSpacings   ( DistanceType( 0 ) )
+, m_SumSpacingsSq ( DistanceType( 0 ) )
+, m_DimEstimate   ( 0 )
+, m_DimEstimateEsd( 0 )
+#ifdef CNEARTREE_INSTRUMENTED
+, m_NodeVisits( 0 )
+#endif
 {
     typename InputContainer::const_iterator it;
     for( it=o.begin(); it!=o.end(); ++it )
     {
         insert( *it );
     }
-    m_Flags = 0;
-    m_DiamEstimate  = DistanceType( 0 );
-    m_SumSpacings   = DistanceType( 0 );
-    m_SumSpacingsSq = DistanceType( 0 );
-    m_DimEstimate   = 0;
-    m_DimEstimateEsd= 0;
-#ifdef CNEARTREE_INSTRUMENTED
-    m_NodeVisits    = 0;
-#endif
 }  //  CNearTree constructor
 
 //=======================================================================
@@ -507,11 +508,20 @@ m_BaseNode       (   )
 //
 //=======================================================================
 template<typename InputContainer1, typename InputContainer2>
-CNearTree ( const InputContainer1& o1, const InputContainer2& o2 ) : // constructor
-m_DelayedIndices (   ),
-m_ObjectStore    (   ),
-m_DeepestDepth   ( 0 ),
-m_BaseNode       (   )
+CNearTree ( const InputContainer1& o1, const InputContainer2& o2 ) // constructor
+: m_DelayedIndices (   )
+, m_ObjectStore    (   )
+, m_DeepestDepth   ( 0 )
+, m_BaseNode       (   )
+, m_Flags ( 0 )
+, m_DiamEstimate  ( DistanceType( 0 ) )
+, m_SumSpacings   ( DistanceType( 0 ) )
+, m_SumSpacingsSq ( DistanceType( 0 ) )
+, m_DimEstimate   ( 0 )
+, m_DimEstimateEsd( 0 )
+#ifdef CNEARTREE_INSTRUMENTED
+, m_NodeVisits( 0 )
+#endif
 {
     typename InputContainer1::const_iterator it1;
     for( it1=o1.begin(); it1!=o1.end(); ++it1 )
@@ -524,15 +534,7 @@ m_BaseNode       (   )
     {
         insert( *it2 );
     }
-    m_Flags = 0;
-    m_DiamEstimate  = DistanceType( 0 );
-    m_SumSpacings   = DistanceType( 0 );
-    m_SumSpacingsSq = DistanceType( 0 );
-    m_DimEstimate   = 0;
-    m_DimEstimateEsd= 0;
-#ifdef CNEARTREE_INSTRUMENTED
-    m_NodeVisits    = 0;
-#endif
+
 }  //  CNearTree constructor
 
 //=======================================================================
@@ -1152,7 +1154,7 @@ inline bool ShortNearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   
 #ifdef CNEARTREE_INSTRUMENTED
                                                         , m_NodeVisits
 #endif
-                                                        )) return bReturn;
+                                                        ), bReturn) return bReturn;
                 shortRadius *= DistanceType(10);
             }
           }
@@ -2602,13 +2604,13 @@ double GetDimEstimate ( const double DimEstimateEsd )
     double targetradius = 4096./pointdensity;
     double rat;
     double shrinkfactor;
-    if (targetradius <  meanSpacing*2.) targetradius = meanSpacing*2.;
+    if (targetradius <  meanSpacing*10.) targetradius = meanSpacing*10.;
     if (targetradius > (double)m_DiamEstimate/1.1) targetradius = (double)m_DiamEstimate/1.1;
     
     /*  Now try to find a smaller adjusted target radius that will
      contain a reasonable number of points*/
     
-    shrinkfactor = 32.;
+    shrinkfactor = 4.;
     do { 
         shrinkfactor = shrinkfactor/1.2;
         n = (size_t)(((double)estsize-1u) * ((DistanceType)rhr.urand()));
@@ -2621,8 +2623,8 @@ double GetDimEstimate ( const double DimEstimateEsd )
     targetradius *= 1.1;
 
     int goodtrials = 0;
-    trials = sqrt(0.5+(double)estsize);
-    if (trials < 10.) trials = 10.;
+    trials = (size_t)sqrt(0.5+(double)estsize);
+    if (trials < 20) trials = 20;
         
     n = (size_t)(((double)estsize-1u) * ((DistanceType)rhr.urand()));
     rhr.urand( ); rhr.urand( );
@@ -5737,7 +5739,7 @@ long LeftK_Far (
         }
     }
     
-    if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
+    if( tFarthest.size( ) > 1 ) K_Resize( k, t, tFarthest, dRadius );
     return ( (long)tFarthest.size( ) );
 }  //  end K_Far
 
@@ -5819,7 +5821,7 @@ long LeftK_Far (
         }
     }
     
-    if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
+    if( tFarthest.size( ) > 1 ) K_Resize( k, t, tFarthest, dRadius );
     return ( (long)tFarthest.size( ) );
 }  //  end LeftK_Far
 
