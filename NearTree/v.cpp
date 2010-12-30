@@ -97,6 +97,16 @@ v v::operator -(const v &vv) const
    return ( vReturn );
 }
 
+bool v::operator <(const v &vv) const
+{
+    // subtract two vectors
+    bool vReturn(
+              m_dvec[0]<vv.m_dvec[0] ||
+              (m_dvec[0]==vv.m_dvec[0] && m_dvec[1]<vv.m_dvec[1])  ||
+              (m_dvec[0]==vv.m_dvec[0] && m_dvec[1]== vv.m_dvec[1] && m_dvec[2]<vv.m_dvec[2] ));
+    return ( vReturn );
+}
+
 v::operator double( ) const
 {
    // return the Euclidean (L2) length of the vector

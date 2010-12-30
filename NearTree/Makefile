@@ -285,6 +285,10 @@ $(LIB)/libCNearTree.$(LIB_EXT): $(SRC)/CNearTree.c $(INC)/CNearTree.h $(LIB) $(C
 $(BIN)/CPPMain: $(INC)/TNear.h $(EXAMPLES)/main.cpp $(EXAMPLES)/v.cpp $(BIN)
 	$(CPPBUILD_COMMAND_LOCAL) $(EXAMPLES)/main.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
 		      -o $@
+
+$(BIN)/CPPMain_Flip: $(INC)/TNear.h $(EXAMPLES)/main_flip.cpp $(EXAMPLES)/v.cpp $(BIN)
+	$(CPPBUILD_COMMAND_LOCAL) $(EXAMPLES)/main_flip.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
+		      -o $@
 			  
 $(BIN)/CPPNearTreeTest: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
 	$(CPPBUILD_COMMAND_LOCAL) $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
@@ -306,18 +310,21 @@ $(BIN)/CNearTreeTest: $(INC)/CNearTree.h $(EXAMPLES)/CNearTreeTest.c $(SRC)/CNea
 #
 # Tests
 #
-tests:		$(LIB) $(BIN) $(BIN)/CPPMain $(BIN)/CPPNearTreeTest \
+tests:		$(LIB) $(BIN) $(BIN)/CPPMain $(BIN)/CPPMain_Flip $(BIN)/CPPNearTreeTest \
 				$(BIN)/CPPNearTreeTestInst $(BIN)/CMain $(BIN)/CNearTreeTest
-			$(BIN)/CPPMain 3458923 > $(TESTDATA)/CPPMain.lst
+			time $(BIN)/CPPMain 3458923 > $(TESTDATA)/CPPMain.lst
+			time $(BIN)/CPPMain_Flip 3458923 > $(TESTDATA)/CPPMain_Flip.lst
 			$(BIN)/CMain 3458923 > $(TESTDATA)/CMain.lst
 			$(BIN)/CPPNearTreeTest
 			$(BIN)/CPPNearTreeTestInst
 			$(BIN)/CNearTreeTest
 ifneq ($(MSYSTEM),MINGW32)
 			diff -b -c $(TESTDATA)/CPPMain_orig.lst $(TESTDATA)/CPPMain.lst
+			diff -b -c $(TESTDATA)/CPPMain_orig.lst $(TESTDATA)/CPPMain_Flip.lst
 			diff -b -c $(TESTDATA)/CMain_orig.lst $(TESTDATA)/CMain.lst
 else
 			diff -b -c $(TESTDATA)/CPPMain_MINGW_orig.lst $(TESTDATA)/CPPMain.lst
+			diff -b -c $(TESTDATA)/CPPMain_MINGW_orig.lst $(TESTDATA)/CPPMain_Flip.lst
 			diff -b -c $(TESTDATA)/CMain_MINGW_orig.lst $(TESTDATA)/CMain.lst
 endif
 			

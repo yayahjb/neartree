@@ -808,7 +808,9 @@ void insert ( const InputContainer& o )
 void ImmediateInsert ( const T& t )
 {
     size_t localDepth = 0;
-    if ( (m_Flags & NTF_ForceFlip) || !(m_Flags & NTF_NoFlip) ) { 
+    if ( (m_Flags & NTF_ForceFlip) ) {
+        m_BaseNode.Inserter_FullFlip( t, localDepth, m_ObjectStore, m_SumSpacings, m_SumSpacingsSq );        
+    } else if ( !(m_Flags & NTF_NoFlip) ) { 
         m_BaseNode.Inserter_Flip( t, localDepth, m_ObjectStore, m_SumSpacings, m_SumSpacingsSq );
     } else {
         m_BaseNode.Inserter( t, localDepth, m_ObjectStore, m_SumSpacings, m_SumSpacingsSq );
@@ -831,8 +833,13 @@ void ImmediateInsert ( const InputContainer& o )
     size_t localDepth = 0;
     typename InputContainer::const_iterator it;
 
-    
-    if ( (m_Flags & NTF_ForceFlip) || !(m_Flags & NTF_NoFlip) ) {
+    if ( (m_Flags & NTF_ForceFlip) ) {
+        for( it=o.begin(); it!=o.end(); ++it )
+        {
+            m_BaseNode.Inserter_FullFlip( *it, localDepth, m_ObjectStore, m_SumSpacings, m_SumSpacingsSq );
+        }
+        
+    } else if ( !(m_Flags & NTF_NoFlip) ) {
         for( it=o.begin(); it!=o.end(); ++it )
         {
             m_BaseNode.Inserter_Flip( *it, localDepth, m_ObjectStore, m_SumSpacings, m_SumSpacingsSq );
@@ -2807,7 +2814,9 @@ private:
 void insertDelayed ( const long n )
 {
     size_t localDepth = 0;
-    if (m_Flags & NTF_ForceFlip || !(m_Flags & NTF_NoFlip)) {
+    if ((m_Flags & NTF_ForceFlip)) {
+        m_BaseNode.InserterDelayed_FullFlip( n, localDepth, m_ObjectStore, m_SumSpacings, m_SumSpacingsSq );
+    } else if (!(m_Flags & NTF_NoFlip)) {
         m_BaseNode.InserterDelayed_Flip( n, localDepth, m_ObjectStore, m_SumSpacings, m_SumSpacingsSq );
     } else {
         m_BaseNode.InserterDelayed( n, localDepth, m_ObjectStore, m_SumSpacings, m_SumSpacingsSq );
@@ -2913,6 +2922,135 @@ DistanceTypeNode GetDiamEstimate( void ) const
 }
 
 //=======================================================================
+//  void Inserter_FullFlip ( const TNode& t, size_t& localDepth, std::vector<TNode>& objectStore,
+//                  DistanceTypeNode& SumSpacings,  DistanceTypeNode& SumSpacingsSq )
+//
+//  Function to insert some "point" as an object into a CNearTree for
+//  later searching
+//
+//     t is an object of the templated type which is to be inserted into a
+//     NearTree
+//
+//     localDepth is the returned deepest tree level reached for the current insert
+//
+//  Three possibilities exist: put the datum into the left
+//  position (first test),into the right position, or else
+//  into a node descending from the nearer of those positions
+//  when they are both already used.
+//
+//  This version will do a flip on insertions to try to drive the top pairs
+//  apart, starting at any level in the tree.
+//
+//=======================================================================
+void Inserter_FullFlip ( const TNode& t, size_t& localDepth, std::vector<TNode>& objectStore,
+                    DistanceTypeNode& SumSpacings,  DistanceTypeNode& SumSpacingsSq )
+{
+    // do a bit of precomputing if it is possible so that we can
+    // reduce the number of calls to operator 'DistanceTypeNode' as much as possible;
+    // 'DistanceTypeNode' might use square roots in some cases
+    DistanceTypeNode dTempRight =  DistanceTypeNode(0);
+    DistanceTypeNode dTempLeft  =  DistanceTypeNode(0);
+    size_t tindex;
+    size_t tempdepth;
+    
+    ++localDepth;
+    
+    if ( m_ptRight  != ULONG_MAX )
+    {
+        dTempRight  = DistanceBetween( t, objectStore[m_ptRight] );
+        dTempLeft   = DistanceBetween( t, objectStore[m_ptLeft]  );
+    }
+    
+    if ( m_ptLeft == ULONG_MAX )
+    {
+        m_ptLeft = objectStore.size( );
+        objectStore.push_back( t );
+    }
+    else if ( m_ptRight == ULONG_MAX )
+    {
+        m_ptRight = objectStore.size( );
+        objectStore.push_back( t );
+    }
+    else if ( dTempLeft > dTempRight )
+    {
+        if ( m_pRightBranch == 0 ) m_pRightBranch = new NearTreeNode;
+        // note that the next line assumes that m_dMaxRight is negative for a new node
+        if ( m_dMaxRight < dTempRight ) m_dMaxRight = dTempRight;
+        if ( m_pRightBranch->m_ptLeft == ULONG_MAX || m_pRightBranch->m_ptRight == ULONG_MAX)
+        {
+            SumSpacings += dTempRight;
+            SumSpacingsSq += dTempRight*dTempRight;
+        }
+        if (DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempRight) {
+            if (m_pRightBranch->m_ptLeft == ULONG_MAX || m_pRightBranch->m_ptRight == ULONG_MAX ) {
+                if ( dTempRight > m_dMaxRight ) m_dMaxRight = dTempRight;
+                tindex = m_ptRight;
+                m_ptRight = objectStore.size();
+                objectStore.push_back( t );
+                m_pRightBranch->InserterDelayed_FullFlip(tindex,localDepth,objectStore,
+                                                     SumSpacings, SumSpacingsSq );
+                return;
+            } else {
+                NearTreeNode * prevtree = m_pRightBranch;
+                m_pRightBranch = new NearTreeNode;
+                m_dMaxRight = dTempRight;
+                tindex = m_ptRight;
+                m_ptRight = objectStore.size();
+                objectStore.push_back( t );
+                SumSpacings += dTempRight;
+                SumSpacingsSq += dTempRight*dTempRight;
+                m_pRightBranch->InserterDelayed_FullFlip(tindex,localDepth,objectStore,
+                                                     SumSpacings, SumSpacingsSq );
+                ReInserter_Flip( prevtree,tempdepth,objectStore );
+                localDepth = tempdepth>localDepth?tempdepth:localDepth;
+                delete prevtree;
+                return;
+            }
+        }
+        m_pRightBranch->Inserter_FullFlip( t, localDepth, objectStore, SumSpacings, SumSpacingsSq );
+    }
+    else  // ((DistanceTypeNode)(t - *m_tLeft) <= (DistanceTypeNode)(t - *m_tRight) )
+    {
+        if ( m_pLeftBranch  == 0 ) m_pLeftBranch  = new NearTreeNode;
+        // note that the next line assumes that m_dMaxLeft is negative for a new node
+        if ( m_dMaxLeft < dTempLeft ) m_dMaxLeft  = dTempLeft;
+        if ( m_pLeftBranch->m_ptLeft == ULONG_MAX || m_pLeftBranch->m_ptRight == ULONG_MAX)
+        {
+            SumSpacings += dTempLeft;
+            SumSpacingsSq += dTempLeft*dTempLeft;
+        }
+        if (DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempLeft) {
+            if (m_pLeftBranch->m_ptLeft == ULONG_MAX || m_pLeftBranch->m_ptRight == ULONG_MAX) {
+                if (dTempLeft > m_dMaxLeft) m_dMaxLeft = dTempLeft;
+                tindex = m_ptLeft;
+                m_ptLeft = objectStore.size();
+                objectStore.push_back( t );
+                m_pLeftBranch->InserterDelayed_FullFlip(tindex,localDepth,objectStore,
+                                                    SumSpacings, SumSpacingsSq );
+                return;
+            } else {
+                NearTreeNode * prevtree = m_pLeftBranch;
+                m_pLeftBranch = new NearTreeNode;
+                m_dMaxLeft = dTempLeft;
+                tindex = m_ptLeft;
+                m_ptLeft = objectStore.size();
+                objectStore.push_back( t );
+                SumSpacings += dTempLeft;
+                SumSpacingsSq += dTempLeft*dTempLeft;
+                m_pLeftBranch->InserterDelayed_FullFlip(tindex,localDepth,objectStore,
+                                                    SumSpacings, SumSpacingsSq );
+                ReInserter_Flip( prevtree,tempdepth,objectStore );
+                localDepth = tempdepth>localDepth?tempdepth:localDepth;
+                delete prevtree;
+                return;
+            }
+        }
+        m_pLeftBranch->Inserter_FullFlip( t, localDepth, objectStore, SumSpacings, SumSpacingsSq );
+    }
+}  //  end Inserter_FullFlip
+
+
+//=======================================================================
 //  void Inserter_Flip ( const TNode& t, size_t& localDepth, std::vector<TNode>& objectStore,
 //                  DistanceTypeNode& SumSpacings,  DistanceTypeNode& SumSpacingsSq )
 //
@@ -2930,7 +3068,7 @@ DistanceTypeNode GetDiamEstimate( void ) const
 //  when they are both already used.
 //
 //  This version will do a flip on insertions to try to drive the top pairs
-//  apart
+//  apart, starting just before a terminal node
 //
 //=======================================================================
 void Inserter_Flip ( const TNode& t, size_t& localDepth, std::vector<TNode>& objectStore,
@@ -2942,10 +3080,8 @@ void Inserter_Flip ( const TNode& t, size_t& localDepth, std::vector<TNode>& obj
     DistanceTypeNode dTempRight =  DistanceTypeNode(0);
     DistanceTypeNode dTempLeft  =  DistanceTypeNode(0);
     size_t tindex;
-    int newnode;
     
     ++localDepth;
-    newnode = 0;
     
     if ( m_ptRight  != ULONG_MAX )
     {
@@ -2965,7 +3101,7 @@ void Inserter_Flip ( const TNode& t, size_t& localDepth, std::vector<TNode>& obj
     }
     else if ( dTempLeft > dTempRight )
     {
-        if ( m_pRightBranch == 0 ) {m_pRightBranch = new NearTreeNode; newnode = 1;}
+        if ( m_pRightBranch == 0 ) m_pRightBranch = new NearTreeNode;
         // note that the next line assumes that m_dMaxRight is negative for a new node
         if ( m_dMaxRight < dTempRight ) m_dMaxRight = dTempRight;
         if ( m_pRightBranch->m_ptLeft == ULONG_MAX || m_pRightBranch->m_ptRight == ULONG_MAX)
@@ -2973,20 +3109,22 @@ void Inserter_Flip ( const TNode& t, size_t& localDepth, std::vector<TNode>& obj
             SumSpacings += dTempRight;
             SumSpacingsSq += dTempRight*dTempRight;
         }
-        if (newnode && DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempRight) {
-            if (m_dMaxRight < dTempRight) m_dMaxRight = dTempRight;
-            tindex = m_ptRight;
-            m_ptRight = objectStore.size();
-            objectStore.push_back( t );
-            m_pRightBranch->InserterDelayed_Flip(tindex,localDepth,objectStore,
-                                         SumSpacings, SumSpacingsSq );
-            return;
+        if (DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempRight) {
+            if (m_pRightBranch->m_ptLeft == ULONG_MAX || m_pRightBranch->m_ptRight == ULONG_MAX ) {
+                if ( dTempRight > m_dMaxRight ) m_dMaxRight = dTempRight;
+                tindex = m_ptRight;
+                m_ptRight = objectStore.size();
+                objectStore.push_back( t );
+                m_pRightBranch->InserterDelayed_Flip(tindex,localDepth,objectStore,
+                                                     SumSpacings, SumSpacingsSq );
+                return;
+            } 
         }
         m_pRightBranch->Inserter_Flip( t, localDepth, objectStore, SumSpacings, SumSpacingsSq );
     }
     else  // ((DistanceTypeNode)(t - *m_tLeft) <= (DistanceTypeNode)(t - *m_tRight) )
     {
-        if ( m_pLeftBranch  == 0 ) { m_pLeftBranch  = new NearTreeNode; newnode = 1;}
+        if ( m_pLeftBranch  == 0 ) m_pLeftBranch  = new NearTreeNode; 
         // note that the next line assumes that m_dMaxLeft is negative for a new node
         if ( m_dMaxLeft < dTempLeft ) m_dMaxLeft  = dTempLeft;
         if ( m_pLeftBranch->m_ptLeft == ULONG_MAX || m_pLeftBranch->m_ptRight == ULONG_MAX)
@@ -2994,14 +3132,16 @@ void Inserter_Flip ( const TNode& t, size_t& localDepth, std::vector<TNode>& obj
             SumSpacings += dTempLeft;
             SumSpacingsSq += dTempLeft*dTempLeft;
         }
-        if (newnode && DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempLeft) {
-            if (m_dMaxLeft < dTempLeft) m_dMaxLeft = dTempLeft;
-            tindex = m_ptLeft;
-            m_ptLeft = objectStore.size();
-            objectStore.push_back( t );
-            m_pLeftBranch->InserterDelayed_Flip(tindex,localDepth,objectStore,
-                                         SumSpacings, SumSpacingsSq );
-            return;
+        if (DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempLeft) {
+            if ( m_pLeftBranch->m_ptLeft == ULONG_MAX || m_pLeftBranch->m_ptRight == ULONG_MAX) {
+                if (dTempLeft > m_dMaxLeft) m_dMaxLeft = dTempLeft;
+                tindex = m_ptLeft;
+                m_ptLeft = objectStore.size();
+                objectStore.push_back( t );
+                m_pLeftBranch->InserterDelayed_Flip(tindex,localDepth,objectStore,
+                                                     SumSpacings, SumSpacingsSq );
+                return;
+            }
         }
         m_pLeftBranch->Inserter_Flip( t, localDepth, objectStore, SumSpacings, SumSpacingsSq );
     }
@@ -3079,7 +3219,7 @@ void Inserter ( const TNode& t, size_t& localDepth, std::vector<TNode>& objectSt
 
 
 //=======================================================================
-void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>& objectStore,
+void InserterDelayed_FullFlip ( const long n, size_t& localDepth, std::vector<TNode>& objectStore,
                        DistanceTypeNode& SumSpacings,  DistanceTypeNode& SumSpacingsSq )
 {
     // do a bit of precomputing if it is possible so that we can
@@ -3088,9 +3228,8 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
     DistanceTypeNode dTempRight =  DistanceTypeNode(0);
     DistanceTypeNode dTempLeft  =  DistanceTypeNode(0);
     size_t tindex;
-    int newnode;
+    size_t tempdepth = localDepth;
     ++localDepth;
-    newnode = 0;
 
     if ( m_ptRight  != ULONG_MAX )
     {
@@ -3108,7 +3247,7 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
     }
     else if ( dTempLeft > dTempRight )
     {
-        if ( m_pRightBranch == 0 ) { m_pRightBranch = new NearTreeNode; newnode = 1; }
+        if ( m_pRightBranch == 0 ) m_pRightBranch = new NearTreeNode;
         // note that the next line assumes that m_dMaxRight is negative for a new node
         if ( m_dMaxRight < dTempRight ) m_dMaxRight = dTempRight;
         if ( m_pRightBranch->m_ptLeft == ULONG_MAX || m_pRightBranch->m_ptRight == ULONG_MAX)
@@ -3116,19 +3255,36 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
             SumSpacings += dTempRight;
             SumSpacingsSq += dTempRight*dTempRight;
         }
-        if (newnode && DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempRight) {
-            if (m_dMaxRight < dTempRight) m_dMaxRight = dTempRight;
-            tindex = m_ptRight;
-            m_ptRight = n;
-            m_pRightBranch->InserterDelayed_Flip(tindex,localDepth,objectStore,
-                                         SumSpacings, SumSpacingsSq );
-            return;
+        if (DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempRight) {
+            if ( m_pRightBranch->m_ptLeft == ULONG_MAX || m_pRightBranch->m_ptRight == ULONG_MAX) {
+                if ( dTempRight > m_dMaxRight ) m_dMaxRight = dTempRight;
+                tindex = m_ptRight;
+                m_ptRight = n;
+                m_pRightBranch->InserterDelayed_FullFlip(tindex,localDepth,objectStore,
+                                                     SumSpacings, SumSpacingsSq );
+                return;
+            } else {
+                NearTreeNode * prevtree = m_pRightBranch;
+                m_pRightBranch = new NearTreeNode;
+                m_dMaxRight = dTempRight;
+                tindex = m_ptRight;
+                m_ptRight = n;
+                SumSpacings += dTempRight;
+                SumSpacingsSq += dTempRight*dTempRight;
+                m_pRightBranch->InserterDelayed_FullFlip(tindex,localDepth,objectStore,
+                                                     SumSpacings, SumSpacingsSq );
+                ReInserter_Flip(prevtree,tempdepth,objectStore);
+                localDepth = tempdepth>localDepth?tempdepth:localDepth;
+                delete prevtree;
+                return;
+            }
         }
-        m_pRightBranch->InserterDelayed_Flip( n, localDepth, objectStore, SumSpacings, SumSpacingsSq );
+    
+        m_pRightBranch->InserterDelayed_FullFlip( n, localDepth, objectStore, SumSpacings, SumSpacingsSq );
     }
     else  // ((DistanceTypeNode)(t - *m_tLeft) <= (DistanceTypeNode)(t - *m_tRight) )
     {
-        if ( m_pLeftBranch  == 0 ) { m_pLeftBranch  = new NearTreeNode; newnode = 1; }
+        if ( m_pLeftBranch  == 0 )  m_pLeftBranch  = new NearTreeNode;
         // note that the next line assumes that m_dMaxLeft is negative for a new node
         if ( m_dMaxLeft < dTempLeft ) m_dMaxLeft  = dTempLeft;
         if ( m_pLeftBranch->m_ptLeft == ULONG_MAX || m_pLeftBranch->m_ptRight == ULONG_MAX)
@@ -3136,17 +3292,108 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
             SumSpacings += dTempLeft;
             SumSpacingsSq += dTempLeft*dTempLeft;
         }        
-        if (newnode && DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempLeft) {
-            if (m_dMaxLeft < dTempLeft) m_dMaxLeft = dTempLeft;
-            tindex = m_ptLeft;
-            m_ptLeft = n;
-            m_pLeftBranch->InserterDelayed_Flip(tindex,localDepth,objectStore,
-                                        SumSpacings, SumSpacingsSq );
-            return;
+        if (DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempLeft) {
+            if ( m_pLeftBranch->m_ptLeft == ULONG_MAX || m_pLeftBranch->m_ptRight == ULONG_MAX) {
+                if ( dTempLeft > m_dMaxLeft ) m_dMaxLeft = dTempLeft;
+                tindex = m_ptLeft;
+                m_ptLeft = n;
+                m_pLeftBranch->InserterDelayed_FullFlip(tindex,localDepth,objectStore,
+                                                    SumSpacings, SumSpacingsSq );
+                return;
+            } else {
+                NearTreeNode * prevtree = m_pLeftBranch;
+                m_pLeftBranch = new NearTreeNode;
+                m_dMaxLeft = dTempLeft;
+                tindex = m_ptLeft;
+                m_ptLeft = n;
+                SumSpacings += dTempLeft;
+                SumSpacingsSq += dTempLeft*dTempLeft;
+                m_pLeftBranch->InserterDelayed_FullFlip(tindex,localDepth,objectStore,
+                                                     SumSpacings, SumSpacingsSq );
+                ReInserter_Flip(prevtree,tempdepth,objectStore);
+                localDepth = tempdepth>localDepth?tempdepth:localDepth;
+                delete prevtree;
+                return;
+            }
+            
+        }
+        m_pLeftBranch->InserterDelayed_FullFlip( n, localDepth, objectStore, SumSpacings, SumSpacingsSq );
+    }
+}  //   end InserterDelayed_Flip
+
+//=======================================================================
+void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>& objectStore,
+                           DistanceTypeNode& SumSpacings,  DistanceTypeNode& SumSpacingsSq )
+{
+    // do a bit of precomputing if it is possible so that we can
+    // reduce the number of calls to operator 'DistanceTypeNode' as much as possible;
+    // 'DistanceTypeNode' might use square roots in some cases
+    DistanceTypeNode dTempRight =  DistanceTypeNode(0);
+    DistanceTypeNode dTempLeft  =  DistanceTypeNode(0);
+    size_t tindex;
+    ++localDepth;
+    
+    if ( m_ptRight  != ULONG_MAX )
+    {
+        dTempRight  = DistanceBetween( objectStore[n], objectStore[m_ptRight] );
+        dTempLeft   = DistanceBetween( objectStore[n], objectStore[m_ptLeft]  );
+    }
+    
+    if ( m_ptLeft == ULONG_MAX )
+    {
+        m_ptLeft = n;
+    }
+    else if ( m_ptRight == ULONG_MAX )
+    {
+        m_ptRight = n;
+    }
+    else if ( dTempLeft > dTempRight )
+    {
+        if ( m_pRightBranch == 0 ) m_pRightBranch = new NearTreeNode;
+        // note that the next line assumes that m_dMaxRight is negative for a new node
+        if ( m_dMaxRight < dTempRight ) m_dMaxRight = dTempRight;
+        if ( m_pRightBranch->m_ptLeft == ULONG_MAX || m_pRightBranch->m_ptRight == ULONG_MAX)
+        {
+            SumSpacings += dTempRight;
+            SumSpacingsSq += dTempRight*dTempRight;
+        }
+        if (DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempRight) {
+            if ( m_pRightBranch->m_ptLeft == ULONG_MAX || m_pRightBranch->m_ptRight == ULONG_MAX) {
+                if ( dTempRight > m_dMaxRight ) m_dMaxRight = dTempRight;
+                tindex = m_ptRight;
+                m_ptRight = n;
+                m_pRightBranch->InserterDelayed_Flip(tindex,localDepth,objectStore,
+                                                     SumSpacings, SumSpacingsSq );
+                return;
+            }
+        }
+        
+        m_pRightBranch->InserterDelayed_Flip( n, localDepth, objectStore, SumSpacings, SumSpacingsSq );
+    }
+    else  // ((DistanceTypeNode)(t - *m_tLeft) <= (DistanceTypeNode)(t - *m_tRight) )
+    {
+        if ( m_pLeftBranch  == 0 )  m_pLeftBranch  = new NearTreeNode;
+        // note that the next line assumes that m_dMaxLeft is negative for a new node
+        if ( m_dMaxLeft < dTempLeft ) m_dMaxLeft  = dTempLeft;
+        if ( m_pLeftBranch->m_ptLeft == ULONG_MAX || m_pLeftBranch->m_ptRight == ULONG_MAX)
+        {
+            SumSpacings += dTempLeft;
+            SumSpacingsSq += dTempLeft*dTempLeft;
+        }        
+        if (DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempLeft) {
+            if ( m_pLeftBranch->m_ptLeft == ULONG_MAX || m_pLeftBranch->m_ptRight == ULONG_MAX) {
+                if ( dTempLeft > m_dMaxLeft ) m_dMaxLeft = dTempLeft;
+                tindex = m_ptLeft;
+                m_ptLeft = n;
+                m_pLeftBranch->InserterDelayed_Flip(tindex,localDepth,objectStore,
+                                                    SumSpacings, SumSpacingsSq );
+                return;
+            }
         }
         m_pLeftBranch->InserterDelayed_Flip( n, localDepth, objectStore, SumSpacings, SumSpacingsSq );
     }
 }  //   end InserterDelayed_Flip
+
 
 //=======================================================================
 void InserterDelayed ( const long n, size_t& localDepth, std::vector<TNode>& objectStore,
@@ -3198,6 +3445,47 @@ void InserterDelayed ( const long n, size_t& localDepth, std::vector<TNode>& obj
         m_pLeftBranch->InserterDelayed( n, localDepth, objectStore, SumSpacings, SumSpacingsSq );
     }
 }  //   end InserterDelayed
+
+//=======================================================================
+//  void ReInserter_Flip ( const NearTreeNode * pntn, size_t& localDepth, std::vector<TNode>& objectStore ),
+//
+//  Function to reinsert the elements from the object store as an object into a 
+//  contained in a NearTreeNode into a CNearTree for later searching
+//
+//     pntn is a point to a neartree node, the objects from which are to be re-inserted into a
+//     NearTree
+//
+//     localDepth is the returned deepest tree level reached for the current insert
+//
+//  This version will do a flip on insertions to try to drive the top pairs
+//  apart
+//
+//=======================================================================
+void ReInserter_Flip ( const NearTreeNode * pntn, size_t& localDepth, std::vector<TNode>& objectStore)
+{   
+    size_t tempdepth1, tempdepth2, tempdepth3, tempdepth4;
+    
+    DistanceTypeNode SumSpacings, SumSpacingsSq;
+    
+    tempdepth1 = tempdepth2 = tempdepth3 = tempdepth4 = localDepth;
+    
+    if ( pntn->m_ptRight != ULONG_MAX) 
+        InserterDelayed_FullFlip( pntn->m_ptRight, tempdepth1, objectStore, SumSpacings, SumSpacingsSq );
+    
+    if ( pntn->m_ptLeft != ULONG_MAX) 
+        InserterDelayed_FullFlip( pntn->m_ptLeft, tempdepth2, objectStore, SumSpacings, SumSpacingsSq );
+
+    if ( pntn->m_pLeftBranch ) ReInserter_Flip(pntn->m_pLeftBranch, tempdepth3, objectStore );
+
+    if ( pntn->m_pRightBranch ) ReInserter_Flip(pntn->m_pRightBranch, tempdepth4, objectStore );
+    
+    localDepth = tempdepth1>localDepth?tempdepth1:localDepth;
+    localDepth = tempdepth2>localDepth?tempdepth2:localDepth;
+    localDepth = tempdepth3>localDepth?tempdepth3:localDepth;
+    localDepth = tempdepth4>localDepth?tempdepth4:localDepth;
+    
+}  //  end ReInserter_Flip
+
 
 //=======================================================================
 //  bool Nearest ( DistanceTypeNode& dRadius,  TNode& tClosest,   const TNode& t,
@@ -5223,7 +5511,7 @@ long K_Near (
         std::vector <NearTreeNode* > sTemp;
         sTemp.swap( sStack );
     }
-    if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
+    if( tClosest.size( ) > 1 ) K_Resize( k, t, tClosest, dRadius );
     return ( (long)tClosest.size( ) );
     
 }   // end KNear
@@ -6048,14 +6336,18 @@ static bool K_Sorter3( const triple<DistanceTypeNode, T, size_t>& t1, const trip
 //=======================================================================
 void K_Resize( const size_t k, const TNode& t, std::vector<std::pair<DistanceTypeNode, T> >& tClosest, DistanceTypeNode& dRadius )
 {
+    size_t target = tClosest.size();
+    if (target > k ) target = k;
     std::sort( tClosest.begin(), tClosest.end(), &K_Sorter2 );
-    tClosest.resize( k );
+    tClosest.resize( target );
     dRadius = DistanceBetween( t, tClosest[tClosest.size()-1].second );
 }  // end K_Resize
 void K_Resize( const size_t k, const TNode& t, std::vector<triple<DistanceTypeNode, T, size_t> >& tClosest, DistanceTypeNode& dRadius )
 {
+    size_t target = tClosest.size();
+    if (target > k ) target = k;
     std::sort( tClosest.begin(), tClosest.end(), &K_Sorter3 );
-    tClosest.resize( k );
+    tClosest.resize( target );
     dRadius = DistanceBetween( t, tClosest[tClosest.size()-1].GetSecond() );
 }  // end K_Resize
 
