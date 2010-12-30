@@ -281,7 +281,7 @@ void testLinearTree( const int n )
     size_t estdim = (size_t)(0.5+tree.GetDimEstimate());
     if (n < 129 && estdim != 0) {
        ++g_errorCount;   
-       fprintf(stdout, "testLinearTree: dimension estimate %ld\n",estdim);
+       fprintf(stdout, "testLinearTree: dimension estimate %ld\n",(long)estdim);
     }
     
     /*
@@ -1289,7 +1289,7 @@ void testBigVector(  )
                     size_t estdim = (size_t)(0.5+tree.GetDimEstimate());
                     if ( estdim < 6) {
                     ++g_errorCount;   
-                    fprintf(stdout, "testBigVector: dimension estimate %ld <6 \n",estdim);
+                    fprintf(stdout, "testBigVector: dimension estimate %ld <6 \n",(long)estdim);
                     }    
                     
                     {
@@ -1472,7 +1472,7 @@ void testBigVector(  )
                     {size_t estdim = (size_t)(0.5+tree.GetDimEstimate());;
                     if ( estdim < 6) {
                     ++g_errorCount;   
-                    fprintf(stdout, "testBigVector: dimension estimate %ld <6 \n",estdim);
+                    fprintf(stdout, "testBigVector: dimension estimate %ld <6 \n",(long)estdim);
                     }    
                     
                     {
@@ -2222,7 +2222,7 @@ void testFindInAnnulus( void )
         size_t estdim = (size_t)(0.5+tree.GetDimEstimate());
         if ( estdim != 2) {
             ++g_errorCount;   
-            fprintf(stdout, "testFindInAnnulus: dimension estimate %ld != 2\n",estdim);
+            fprintf(stdout, "testFindInAnnulus: dimension estimate %ld != 2\n",(long)estdim);
         }    
         
         
@@ -2437,7 +2437,7 @@ void testBigIntVec( void )
     size_t estdim = (size_t)(0.5+tree.GetDimEstimate());
     if ( estdim < 4) {
         ++g_errorCount;   
-        fprintf(stdout, "testBigIntVec: dimension estimate %ld < 4\n",estdim);
+        fprintf(stdout, "testBigIntVec: dimension estimate %ld < 4\n",(long)estdim);
     }    
     
     timetreecommand(tree, "testBigIntVector",{
@@ -3145,6 +3145,7 @@ void testKNearFar( void )
     }
 
     {
+
         const int searchPoint = 50;
         const long nToFind1 = 13;
         const double radius1 = 1000.0;
@@ -3178,7 +3179,7 @@ void testKNearFar( void )
         {
             ++g_errorCount;
             fprintf(stdout, "testKNearFar, Near: #1: found wrong count %ld or wrong indices %ld\n",
-                    lFound1, outIndices.size());
+                    (long)lFound1, (long)outIndices.size());
         } else {
             for (size_t ii = 0; ii < outIndices.size(); ii++) {
                 if (tree[outIndices[ii]] != outTree[ii]) {
@@ -3206,7 +3207,7 @@ void testKNearFar( void )
         {
             ++g_errorCount;
             fprintf(stdout, "testKNearFar, Left Near: #1: found wrong count %ld or wrong indices %ld\n",
-                    lFound1, outIndices.size());
+                    (long)lFound1, (long)outIndices.size());
         } else {
             for (size_t ii = 0; ii < outIndices.size(); ii++) {
                 if (tree[outIndices[ii]] != outTree[ii]) {
@@ -3758,7 +3759,7 @@ void testLloyd( )
     size_t estdim = (size_t)(0.5+vdata.GetDimEstimate());
     if ( estdim != 1) {
         ++g_errorCount;   
-    fprintf(stdout, "testLloyd: dimension estimate %ld != 1\n",estdim);
+    fprintf(stdout, "testLloyd: dimension estimate %ld != 1\n",(long)estdim);
     }    
     
     vk.push_back( double(-12) );
