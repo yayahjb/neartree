@@ -52,6 +52,7 @@ class v
 {
 public:
    v  operator- ( const v& v ) const;
+   bool operator< ( const v& v ) const;
 
    operator double( ) const;
    v  ( const double& da, const double& db, const double& dc );

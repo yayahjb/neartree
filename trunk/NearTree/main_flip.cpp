@@ -65,6 +65,9 @@ int main ( int argc, char* argv[] )
     } else {
         rhr.srandom((unsigned int)atoi(argv[1]));
     }
+    
+    vTree.SetFlags(CNearTree <v>::NTF_ForceFlip,CNearTree <v>::NTF_ForceFlip|CNearTree <v>::NTF_NoFlip);
+    
     //---------------------------------------
     // build up a library of points to search among
     //---------------------------------------
