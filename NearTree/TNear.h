@@ -424,7 +424,6 @@ static const long        NTF_ForcePrePrune     = 2; //flag to force search prepr
 static const long        NTF_NoFlip            = 4; //flag to suppress flips on insert
 static const long        NTF_ForceFlip         = 8; //flag to force flips on insert
 static const long        NTF_NoDefer           =16; //flag to prevent deferred insert
-static const long        NTF_ForceDefer        =32; //flag to force deferred inserts
 
 private: // start of real definition of CNearTree
 std::vector<long> m_DelayedIndices;    // objects queued for insertion, possibly in random order
@@ -744,8 +743,14 @@ bool empty ( void ) const
 //=======================================================================
 void insert ( const T& t )
 {
-    m_ObjectStore    .push_back( t );
-    m_DelayedIndices .push_back( (long)m_ObjectStore.size( ) - 1 );
+    if ((m_Flags & NTF_NoDefer)) {
+        
+        ImmediateInsert(t);
+        
+    } else {
+        m_ObjectStore    .push_back( t );
+        m_DelayedIndices .push_back( (long)m_ObjectStore.size( ) - 1 );
+    }
 };
 
 //=======================================================================
@@ -777,6 +782,12 @@ void insert ( const InputContainer& o )
 {
     size_t localDepth = 0;
     typename InputContainer::const_iterator it;
+    
+    if ((m_Flags & NTF_NoDefer)) {
+        
+        ImmediateInsert( o) ;
+        
+    } else {
 
     for( it=o.begin(); it!=o.end(); ++it )
     {
@@ -786,6 +797,8 @@ void insert ( const InputContainer& o )
     m_DeepestDepth = std::max( localDepth, m_DeepestDepth );
     m_DimEstimate = 0;
     m_DimEstimateEsd= 0;
+        
+    }
 }
 
 //=======================================================================
@@ -2953,6 +2966,7 @@ void Inserter_FullFlip ( const TNode& t, size_t& localDepth, std::vector<TNode>&
     size_t tindex;
     size_t tempdepth;
     
+    tempdepth = localDepth;
     ++localDepth;
     
     if ( m_ptRight  != ULONG_MAX )
