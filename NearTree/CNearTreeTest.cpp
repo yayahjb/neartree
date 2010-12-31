@@ -1844,7 +1844,7 @@ void testDelayedInsertionRandom( void )
         else if( depth >= sqrt( (double)(nmax/2) ) )
         {
             ++g_errorCount;
-            fprintf(stdout, "testDelayedInsertionRandom: tree depth is too large, %lu is greater than %ld\n", (unsigned long)depth, nmax/2 );
+            fprintf(stdout, "testDelayedInsertionRandom: tree depth is too large, %lu is greater than %ld\n", (unsigned long)depth, (long)sqrt( (double)(nmax/2) ) );
         }
         fprintf(stdout, "testDelayedInsertionRandom: tree depth is  %ld\n", (unsigned long)depth );
     }
@@ -2219,10 +2219,10 @@ void testFindInAnnulus( void )
             }
         }
         
-        size_t estdim = (size_t)(0.5+tree.GetDimEstimate());
-        if ( estdim != 2) {
+        double estdim = tree.GetDimEstimate();
+        if ( estdim <= 1.4) {
             ++g_errorCount;   
-            fprintf(stdout, "testFindInAnnulus: dimension estimate %ld != 2\n",(long)estdim);
+            fprintf(stdout, "testFindInAnnulus: dimension estimate %g <= 1.4\n",estdim);
         }    
         
         
@@ -2837,133 +2837,171 @@ void test2Containers_InAnnulus( T1 t1, T2 t2 )
 /*=======================================================================*/
 void testSTLContainerInput( void )
 {
-    std::vector<int> v;
-    std::list<int>   l;
-    std::set<int>    s;
     
-    for( int i=0; i<10; ++i )
-    {
-        v.push_back( i );
-        l.push_back( i );
-        s.insert( i );
-    }
-    
-    {  // test the constructors
-        CNearTree<int> tv(v);
-        CNearTree<int> tl(l);
-        CNearTree<int> ts(s);
-        
-        if( tv.size() != 10 )
+    { std::vector<int> v;
+        for( int i=0; i<10; ++i )
         {
-            ++g_errorCount;
-            fprintf(stdout, "testSTLContainerInput: vector constructor has wrong count\n" );
+            v.push_back( i );
         }
         
-        if( tl.size() != 10 )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testSTLContainerInput: list constructor has wrong count\n" );
+        {  // test the constructors
+            CNearTree<int> tv(v);
+            
+            if( tv.size() != 10 )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testSTLContainerInput: vector constructor has wrong count\n" );
+            }
+            
         }
         
-        if( ts.size() != 10 )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testSTLContainerInput: set constructor has wrong count\n" );
-        }
-    }
-    
-    {  // test the inserters
-        CNearTree<int> tv;
-        CNearTree<int> tl;
-        CNearTree<int> ts;
-        
-        tv.insert( v );
-        ts.insert( s );
-        tl.insert( l );
-        
-        if( tv.size() != 10 )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testSTLContainerInput: vector insertion has wrong count\n" );
+        {  // test the inserters
+            CNearTree<int> tv;
+            
+            tv.insert( v );
+            
+            if( tv.size() != 10 )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testSTLContainerInput: vector insertion has wrong count\n" );
+            }
+            
         }
         
-        if( tl.size() != 10 )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testSTLContainerInput: list insertion has wrong count\n" );
+        {  // test the inserters
+            CNearTree<int> tv;
+            
+            tv.insert( v );
+            
+            CNearTree<int> t;
+            test2Containers_InSphere( t, t );
+            test2Containers_InSphere( t, v );
+            test2Containers_InSphere( v, t );
+            test2Containers_InSphere( v, v );
+            
+            test2Containers_OutSphere( t, t );
+            test2Containers_OutSphere( t, v );
+            test2Containers_OutSphere( v, t );
+            test2Containers_OutSphere( v, v );
+            
+            test2Containers_InAnnulus( t, t );
+            test2Containers_InAnnulus( t, v );
+            test2Containers_InAnnulus( v, t );
+            test2Containers_InAnnulus( v, v );
+            
         }
-        
-        if( ts.size() != 10 )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testSTLContainerInput: set insertion has wrong count\n" );
-        }
-    }
-    
-    
-    {  // test the inserters
-        CNearTree<int> tv;
-        CNearTree<int> tl;
-        CNearTree<int> ts;
-        
-        tv.insert( v );
-        ts.insert( s );
-        tl.insert( l );
-        
-        CNearTree<int> t;
-        test2Containers_InSphere( t, t );
-        test2Containers_InSphere( t, v );
-        test2Containers_InSphere( t, l );
-        test2Containers_InSphere( t, s );
-        test2Containers_InSphere( v, t );
-        test2Containers_InSphere( v, v );
-        test2Containers_InSphere( v, l );
-        test2Containers_InSphere( v, s );
-        test2Containers_InSphere( l, t );
-        test2Containers_InSphere( l, v );
-        test2Containers_InSphere( l, l );
-        test2Containers_InSphere( l, s );
-        test2Containers_InSphere( s, t );
-        test2Containers_InSphere( s, v );
-        test2Containers_InSphere( s, l );
-        test2Containers_InSphere( s, s );
-        
-        test2Containers_OutSphere( t, t );
-        test2Containers_OutSphere( t, v );
-        test2Containers_OutSphere( t, l );
-        test2Containers_OutSphere( t, s );
-        test2Containers_OutSphere( v, t );
-        test2Containers_OutSphere( v, v );
-        test2Containers_OutSphere( v, l );
-        test2Containers_OutSphere( v, s );
-        test2Containers_OutSphere( l, t );
-        test2Containers_OutSphere( l, v );
-        test2Containers_OutSphere( l, l );
-        test2Containers_OutSphere( l, s );
-        test2Containers_OutSphere( s, t );
-        test2Containers_OutSphere( s, v );
-        test2Containers_OutSphere( s, l );
-        test2Containers_OutSphere( s, s );
-        
-        test2Containers_InAnnulus( t, t );
-        test2Containers_InAnnulus( t, v );
-        test2Containers_InAnnulus( t, l );
-        test2Containers_InAnnulus( t, s );
-        test2Containers_InAnnulus( v, t );
-        test2Containers_InAnnulus( v, v );
-        test2Containers_InAnnulus( v, l );
-        test2Containers_InAnnulus( v, s );
-        test2Containers_InAnnulus( l, t );
-        test2Containers_InAnnulus( l, v );
-        test2Containers_InAnnulus( l, l );
-        test2Containers_InAnnulus( l, s );
-        test2Containers_InAnnulus( s, t );
-        test2Containers_InAnnulus( s, v );
-        test2Containers_InAnnulus( s, l );
-        test2Containers_InAnnulus( s, s );
         
     }
     
+    { std::list<int> l;
+        for( int i=0; i<10; ++i )
+        {
+            l.push_back( i );
+        }
+        
+        {  // test the constructors
+            CNearTree<int> tl(l);
+            
+            if( tl.size() != 10 )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testSTLContainerInput: list constructor has wrong count\n" );
+            }
+            
+        }
+        
+        {  // test the inserters
+            CNearTree<int> tl;
+            
+            tl.insert( l );
+            
+            if( tl.size() != 10 )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testSTLContainerInput: list insertion has wrong count\n" );
+            }
+            
+        }
+        
+        {  // test the inserters
+            CNearTree<int> tl;
+            
+            tl.insert( l );
+            
+            CNearTree<int> t;
+            test2Containers_InSphere( t, t );
+            test2Containers_InSphere( t, l );
+            test2Containers_InSphere( l, t );
+            test2Containers_InSphere( l, l );
+            
+            test2Containers_OutSphere( t, t );
+            test2Containers_OutSphere( t, l );
+            test2Containers_OutSphere( l, t );
+            test2Containers_OutSphere( l, l );
+            
+            test2Containers_InAnnulus( t, t );
+            test2Containers_InAnnulus( t, l );
+            test2Containers_InAnnulus( l, t );
+            test2Containers_InAnnulus( l, l );
+            
+        }
+        
+    }
+    
+    { std::set<int> s;
+        for( int i=0; i<10; ++i )
+        {
+            s.insert( i );
+        }
+        
+        {  // test the constructors
+            CNearTree<int> ts(s);
+            
+            if( ts.size() != 10 )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testSTLContainerInput: set constructor has wrong count\n" );
+            }
+            
+        }
+        
+        {  // test the inserters
+            CNearTree<int> ts;
+            
+            ts.insert( s );
+            
+            if( ts.size() != 10 )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testSTLContainerInput: set insertion has wrong count\n" );
+            }
+            
+        }
+        
+        {  // test the inserters
+            CNearTree<int> ts;
+            
+            ts.insert( s );
+            
+            CNearTree<int> t;
+            test2Containers_InSphere( t, t );
+            test2Containers_InSphere( t, s );
+            test2Containers_InSphere( s, t );
+            test2Containers_InSphere( s, s );
+            
+            test2Containers_OutSphere( t, t );
+            test2Containers_OutSphere( t, s );
+            test2Containers_OutSphere( s, t );
+            test2Containers_OutSphere( s, s );
+            
+            test2Containers_InAnnulus( t, t );
+            test2Containers_InAnnulus( t, s );
+            test2Containers_InAnnulus( s, t );
+            test2Containers_InAnnulus( s, s );
+            
+        }
+        
+    }
 } // testSTLContainerInput
 
 /*=======================================================================*/

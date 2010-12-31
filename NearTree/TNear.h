@@ -425,6 +425,42 @@ static const long        NTF_NoFlip            = 4; //flag to suppress flips on 
 static const long        NTF_ForceFlip         = 8; //flag to force flips on insert
 static const long        NTF_NoDefer           =16; //flag to prevent deferred insert
 
+#ifdef CNEARTREE_FORCEPREPRUNE
+static const long        NFT_FlagDefaultPrune  = NTF_ForcePrePrune;
+#ifdef CNEARTREE_NOPREPRUNE
+#error "CNEARTREE_NOPREPRUNE conflicts with  CNEARTREE_FORCEPREPRUNE"
+#endif
+#else
+#ifdef CNEARTREE_NOPREPRUNE
+static const long        NFT_FlagDefaultPrune  = NTF_NoPrePrune;
+#else
+static const long        NFT_FlagDefaultPrune  = 0;
+#endif
+#endif
+
+#ifdef CNEARTREE_FORCEFLIP
+static const long        NFT_FlagDefaultFlip  = NTF_ForceFlip;
+#ifdef CNEARTREE_NOFLIP
+#error "CNEARTREE_NOFLIP conflicts with  CNEARTREE_FORCEFLIP"
+#endif
+#else
+#ifdef CNEARTREE_NOFLIP
+static const long        NFT_FlagDefaultFlip  = NTF_NoPrePrune;
+#else
+static const long        NFT_FlagDefaultFlip  = 0;
+#endif
+#endif
+
+#ifdef CNEARTREE_NODEFER
+static const long        NFT_FlagDefaultDefer = NTF_NoDefer;
+#else
+static const long        NFT_FlagDefaultDefer = 0;
+#endif
+
+static const long        NTF_FlagsDefault      =  NFT_FlagDefaultPrune|NFT_FlagDefaultFlip|NFT_FlagDefaultDefer;
+
+
+
 private: // start of real definition of CNearTree
 std::vector<long> m_DelayedIndices;    // objects queued for insertion, possibly in random order
 std::vector<T>    m_ObjectStore;       // all inserted objects go here
@@ -459,7 +495,7 @@ CNearTree ( void )  // constructor
 , m_ObjectStore    (   )
 , m_DeepestDepth   ( 0 )
 , m_BaseNode       (   )
-, m_Flags          ( 0 )
+, m_Flags          ( NTF_FlagsDefault )
 , m_DiamEstimate  ( DistanceType( 0 ) )
 , m_SumSpacings   ( DistanceType( 0 ) )
 , m_SumSpacingsSq ( DistanceType( 0 ) )
@@ -485,7 +521,7 @@ CNearTree ( const InputContainer& o )  // constructor
 , m_ObjectStore    (   )
 , m_DeepestDepth   ( 0 )
 , m_BaseNode       (   )
-, m_Flags          ( 0 )
+, m_Flags          ( NTF_FlagsDefault )
 , m_DiamEstimate  ( DistanceType( 0 ) )
 , m_SumSpacings   ( DistanceType( 0 ) )
 , m_SumSpacingsSq ( DistanceType( 0 ) )
@@ -516,7 +552,7 @@ CNearTree ( const InputContainer1& o1, const InputContainer2& o2 ) // constructo
 , m_ObjectStore    (   )
 , m_DeepestDepth   ( 0 )
 , m_BaseNode       (   )
-, m_Flags          ( 0 )
+, m_Flags          ( NTF_FlagsDefault )
 , m_DiamEstimate  ( DistanceType( 0 ) )
 , m_SumSpacings   ( DistanceType( 0 ) )
 , m_SumSpacingsSq ( DistanceType( 0 ) )
@@ -743,7 +779,7 @@ bool empty ( void ) const
 //=======================================================================
 void insert ( const T& t )
 {
-    if ((m_Flags & NTF_NoDefer)) {
+    if ((m_Flags & NTF_NoDefer) && (m_DeepestDepth < 100)) {
         
         ImmediateInsert(t);
         
@@ -783,7 +819,7 @@ void insert ( const InputContainer& o )
     size_t localDepth = 0;
     typename InputContainer::const_iterator it;
     
-    if ((m_Flags & NTF_NoDefer)) {
+    if ((m_Flags & NTF_NoDefer) && (m_DeepestDepth < 100) ) {
         
         ImmediateInsert( o) ;
         
@@ -2995,7 +3031,7 @@ void Inserter_FullFlip ( const TNode& t, size_t& localDepth, std::vector<TNode>&
             SumSpacings += dTempRight;
             SumSpacingsSq += dTempRight*dTempRight;
         }
-        if (DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempRight) {
+        if (localDepth < 100 && DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempRight) {
             if (m_pRightBranch->m_ptLeft == ULONG_MAX || m_pRightBranch->m_ptRight == ULONG_MAX ) {
                 if ( dTempRight > m_dMaxRight ) m_dMaxRight = dTempRight;
                 tindex = m_ptRight;
@@ -3033,7 +3069,7 @@ void Inserter_FullFlip ( const TNode& t, size_t& localDepth, std::vector<TNode>&
             SumSpacings += dTempLeft;
             SumSpacingsSq += dTempLeft*dTempLeft;
         }
-        if (DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempLeft) {
+        if (localDepth < 100 && DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempLeft) {
             if (m_pLeftBranch->m_ptLeft == ULONG_MAX || m_pLeftBranch->m_ptRight == ULONG_MAX) {
                 if (dTempLeft > m_dMaxLeft) m_dMaxLeft = dTempLeft;
                 tindex = m_ptLeft;
@@ -3123,7 +3159,7 @@ void Inserter_Flip ( const TNode& t, size_t& localDepth, std::vector<TNode>& obj
             SumSpacings += dTempRight;
             SumSpacingsSq += dTempRight*dTempRight;
         }
-        if (DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempRight) {
+        if (localDepth < 100 && DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempRight) {
             if (m_pRightBranch->m_ptLeft == ULONG_MAX || m_pRightBranch->m_ptRight == ULONG_MAX ) {
                 if ( dTempRight > m_dMaxRight ) m_dMaxRight = dTempRight;
                 tindex = m_ptRight;
@@ -3146,7 +3182,7 @@ void Inserter_Flip ( const TNode& t, size_t& localDepth, std::vector<TNode>& obj
             SumSpacings += dTempLeft;
             SumSpacingsSq += dTempLeft*dTempLeft;
         }
-        if (DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempLeft) {
+        if (localDepth < 100 && DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempLeft) {
             if ( m_pLeftBranch->m_ptLeft == ULONG_MAX || m_pLeftBranch->m_ptRight == ULONG_MAX) {
                 if (dTempLeft > m_dMaxLeft) m_dMaxLeft = dTempLeft;
                 tindex = m_ptLeft;
@@ -3269,7 +3305,7 @@ void InserterDelayed_FullFlip ( const long n, size_t& localDepth, std::vector<TN
             SumSpacings += dTempRight;
             SumSpacingsSq += dTempRight*dTempRight;
         }
-        if (DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempRight) {
+        if (localDepth < 100 && DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempRight) {
             if ( m_pRightBranch->m_ptLeft == ULONG_MAX || m_pRightBranch->m_ptRight == ULONG_MAX) {
                 if ( dTempRight > m_dMaxRight ) m_dMaxRight = dTempRight;
                 tindex = m_ptRight;
@@ -3306,7 +3342,7 @@ void InserterDelayed_FullFlip ( const long n, size_t& localDepth, std::vector<TN
             SumSpacings += dTempLeft;
             SumSpacingsSq += dTempLeft*dTempLeft;
         }        
-        if (DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempLeft) {
+        if (localDepth < 100 && DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempLeft) {
             if ( m_pLeftBranch->m_ptLeft == ULONG_MAX || m_pLeftBranch->m_ptRight == ULONG_MAX) {
                 if ( dTempLeft > m_dMaxLeft ) m_dMaxLeft = dTempLeft;
                 tindex = m_ptLeft;
@@ -3371,7 +3407,7 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
             SumSpacings += dTempRight;
             SumSpacingsSq += dTempRight*dTempRight;
         }
-        if (DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempRight) {
+        if (localDepth < 100 && DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempRight) {
             if ( m_pRightBranch->m_ptLeft == ULONG_MAX || m_pRightBranch->m_ptRight == ULONG_MAX) {
                 if ( dTempRight > m_dMaxRight ) m_dMaxRight = dTempRight;
                 tindex = m_ptRight;
@@ -3394,7 +3430,7 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
             SumSpacings += dTempLeft;
             SumSpacingsSq += dTempLeft*dTempLeft;
         }        
-        if (DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempLeft) {
+        if (localDepth < 100 && DistanceBetween(objectStore[m_ptLeft], objectStore[m_ptRight]) < dTempLeft) {
             if ( m_pLeftBranch->m_ptLeft == ULONG_MAX || m_pLeftBranch->m_ptRight == ULONG_MAX) {
                 if ( dTempLeft > m_dMaxLeft ) m_dMaxLeft = dTempLeft;
                 tindex = m_ptLeft;
