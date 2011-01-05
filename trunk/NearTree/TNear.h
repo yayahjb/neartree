@@ -445,7 +445,7 @@ static const long        NFT_FlagDefaultFlip  = NTF_ForceFlip;
 #endif
 #else
 #ifdef CNEARTREE_NOFLIP
-static const long        NFT_FlagDefaultFlip  = NTF_NoPrePrune;
+static const long        NFT_FlagDefaultFlip  = NTF_NoFlip;
 #else
 static const long        NFT_FlagDefaultFlip  = 0;
 #endif
@@ -539,6 +539,36 @@ CNearTree ( const InputContainer& o )  // constructor
 }  //  CNearTree constructor
 
 //=======================================================================
+// CNearTree ( InputContainer& o )
+//
+// templated constructor for class CNearTree for input of containers.
+// The containers can be standard library containers or a CNearTree.
+//
+//=======================================================================
+template<typename InputContainer>
+CNearTree ( InputContainer& o )  // constructor
+: m_DelayedIndices (   )
+, m_ObjectStore    (   )
+, m_DeepestDepth   ( 0 )
+, m_BaseNode       (   )
+, m_Flags          ( NTF_FlagsDefault )
+, m_DiamEstimate  ( DistanceType( 0 ) )
+, m_SumSpacings   ( DistanceType( 0 ) )
+, m_SumSpacingsSq ( DistanceType( 0 ) )
+, m_DimEstimate   ( 0 )
+, m_DimEstimateEsd( 0 )
+#ifdef CNEARTREE_INSTRUMENTED
+, m_NodeVisits( 0 )
+#endif
+{
+    typename InputContainer::iterator it;
+    for( it=o.begin(); it!=o.end(); ++it )
+    {
+        insert( *it );
+    }
+}  //  CNearTree constructor
+
+//=======================================================================
 // CNearTree ( const InputContainer& o1, const InputContainer& o1 )
 //
 // templated constructor for class CNearTree for merging multiple 
@@ -614,6 +644,73 @@ void SetFlags( const long flags, const long mask )
     m_Flags = (flags&mask)|(m_Flags&(~mask));
 }
 
+//=======================================================================
+// Name: operator=()
+// Description: put container's contents into a NearTree,
+// wiping out the current contents
+//
+//=======================================================================
+template<typename InputContainer>
+CNearTree& operator= ( const InputContainer& o )
+{
+    if (this != &o) {
+
+        this->clear();
+        this->insert( o );
+    
+        this->CompleteDelayedInsert( );
+    
+    }
+    return( *this );
+}
+
+template<typename InputContainer>
+CNearTree& operator= ( InputContainer& o )
+{
+    if (this != &o) {
+
+        this->clear();
+        this->insert( o );
+    
+        this->CompleteDelayedInsert( );
+        
+    }
+    return( *this );
+}
+
+/*
+
+template<typename InputContainer>
+CNearTree& operator= ( const InputContainer& o ) const
+{
+    if (this != &o) {
+        
+        this->clear();
+        this->insert( o );
+        
+        this->CompleteDelayedInsert( );
+        
+    }
+    return( *this );
+}
+
+
+template<typename InputContainer>
+CNearTree& operator= ( InputContainer& o ) const
+{
+    if (this != &o) {
+        
+        this->clear();
+        this->insert( o );
+        
+        this->CompleteDelayedInsert( );
+        
+    }
+    return( *this );
+}
+ */
+
+
 
 //=======================================================================
 // Name: operator+=()
@@ -651,6 +748,39 @@ CNearTree& operator+= ( const InputContainer& o )
     return( *this );
 }
 
+template<typename InputContainer>
+CNearTree& operator+= ( InputContainer& o )
+{
+    
+    if ( this->empty( ) )
+    {  // if "this" is empty, all that will remain is "o"
+        this->insert( o );
+    }
+    else if ( o.empty( ) )
+    { // do nothing if there is nothing to be added to "this"
+    }
+    else
+    {
+        std::set<T> s1, s2, s3;
+        s1.insert( this->begin( ), this->end( ) );
+        
+        s2.insert( o.begin(), o.end( ) );
+        
+        this->clear( );
+        std::set_union(
+                       s1.begin( ), s1.end( ),
+                       s2.begin( ), s2.end( ),
+                       std::inserter( s3, s3.end( ) ) );
+        
+        this->insert( s3 );
+    }
+    
+    this->CompleteDelayedInsert( );
+    return( *this );
+}
+
+
+
 //=======================================================================
 // Name: operator-=()
 // Description: removes a container's contents from a NearTree
@@ -682,6 +812,36 @@ CNearTree& operator-= ( const InputContainer& o )
         this->insert( s3 );
     }
 
+    this->CompleteDelayedInsert( );
+    return( *this );
+}
+
+template<typename InputContainer>
+CNearTree& operator-= ( InputContainer& o )
+{
+    
+    if ( this->empty( ) )
+    {// nothing to do if there's nothing to remove from
+    }
+    else if ( o.empty( ) )
+    { // do nothing if there is nothing to be removed
+    }
+    else
+    {
+        std::set<T> s1, s2, s3;
+        s1.insert( this->begin( ), this->end( ) );
+        
+        s2.insert( o.begin(), o.end( ) );
+        
+        this->clear( );
+        std::set_difference(
+                            s1.begin( ), s1.end( ),
+                            s2.begin( ), s2.end( ),
+                            std::inserter( s3, s3.end( ) ) );
+        
+        this->insert( s3 );
+    }
+    
     this->CompleteDelayedInsert( );
     return( *this );
 }
@@ -726,6 +886,38 @@ CNearTree& set_symmetric_difference ( const InputContainer& o )
     return( *this );
 }
 
+template<typename InputContainer>
+CNearTree& set_symmetric_difference ( InputContainer& o )
+{
+    
+    if ( o.empty( ) )
+    { // do nothing if "this" is already complete
+    }
+    else if ( this->empty( ) )
+    { // all that will remain is the content of "o"
+        this->insert( o );
+    }
+    else
+    {
+        std::set<T> s1, s2, s3;
+        s1.insert( this->begin( ), this->end( ) );
+        
+        s2.insert( o.begin(), o.end( ) );
+        
+        this->clear( );
+        std::set_symmetric_difference(
+                                      s1.begin( ), s1.end( ),
+                                      s2.begin( ), s2.end( ),
+                                      std::inserter( s3, s3.end( ) ) );
+        
+        this->insert( s3 );
+    }
+    
+    this->CompleteDelayedInsert( );
+    return( *this );
+}
+
+
 //=======================================================================
 // clear( void )
 //
@@ -735,8 +927,16 @@ CNearTree& set_symmetric_difference ( const InputContainer& o )
 void clear ( void )
 {
     this->m_BaseNode       .clear( ); // clear the nodes of the tree
-    this->m_DelayedIndices .clear( ); // clear the delayed index list
-    this->m_ObjectStore    .clear( ); // clear the object store
+    if ( ! this->m_DelayedIndices.empty( ) )
+    {
+        std::vector<long> vtempLong;
+        m_DelayedIndices.swap( vtempLong );  // release any delayed indices list
+    }
+    if ( ! this->m_ObjectStore.empty( ) )
+    {
+        std::vector<T> vtempT;
+        this->m_ObjectStore.swap( vtempT );  // release the object store
+    }
     this->m_DeepestDepth   = 0;
     this->m_DiamEstimate   = DistanceType( 0 );
     this->m_SumSpacings    = DistanceType( 0 );
@@ -780,13 +980,10 @@ bool empty ( void ) const
 //=======================================================================
 void insert ( const T& t )
 {
+    m_ObjectStore    .push_back( t );
+    m_DelayedIndices .push_back( (long)m_ObjectStore.size( ) - 1 );
     if ((m_Flags & NTF_NoDefer) && (m_DeepestDepth < 100)) {
-        
-        ImmediateInsert(t);
-        
-    } else {
-        m_ObjectStore    .push_back( t );
-        m_DelayedIndices .push_back( (long)m_ObjectStore.size( ) - 1 );
+        this->CompleteDelayedInsert();
     }
     
     m_DimEstimate = 0;
@@ -822,24 +1019,23 @@ template< typename InputContainer >
 void insert ( const InputContainer& o )
 {
     typename InputContainer::const_iterator it;
-    
-    if ((m_Flags & NTF_NoDefer) && (m_DeepestDepth < 100) ) {
-        
-        ImmediateInsert( o) ;
-        
-    } else {
 
     for( it=o.begin(); it!=o.end(); ++it )
     {
         m_ObjectStore    .push_back( *it );
         m_DelayedIndices .push_back( (long)m_ObjectStore.size( ) - 1 );
     }
-
+        
+    if ((m_Flags & NTF_NoDefer) && (m_DeepestDepth < 100)) {
+        this->CompleteDelayedInsert();
+    }
+        
     m_DimEstimate = 0;
     m_DimEstimateEsd= 0;
         
-    }
 }
+
+
 
 //=======================================================================
 //  void ImmediateInsert ( const T& t )
@@ -2501,7 +2697,7 @@ inline void CompleteDelayedInsert ( void )
     // now get rid of the temporary storage that was used for delayed
     // insertions (fast way, faster than clear() )
     std::vector<long> DelayedPointersTemp;
-    m_DelayedIndices.clear();
+    DelayedPointersTemp  .swap( m_DelayedIndices );
     m_DiamEstimate = m_BaseNode.GetDiamEstimate();
 };
 //=======================================================================
@@ -2542,7 +2738,8 @@ inline void CompleteDelayedInsertRandom ( void )
 
     // now get rid of the temporary storage that was used for delayed
     // insertions (fast way, faster than clear() )
-    m_DelayedIndices.clear();
+    std::vector<long> DelayedPointersTemp;
+    DelayedPointersTemp.swap( m_DelayedIndices );
     m_DiamEstimate = m_BaseNode.GetDiamEstimate();
 };
 
@@ -2961,21 +3158,63 @@ m_pRightBranch      ( 0 )
 //=======================================================================
 ~NearTreeNode( void )  //  NearTreeNode destructor
 {
-    clear( );
+    NearTreeNode * left;
+    NearTreeNode * right;
+    std::vector<NearTreeNode *> desStack;
+    NearTreeNode * pc;
+    
+    pc = this;
+    
+    while ((void *)pc) {
+        if (pc->m_ptRight != ULONG_MAX) {
+            left = pc->m_pLeftBranch;
+            right = pc->m_pRightBranch;
+            pc->m_pLeftBranch  =0;
+            pc->m_pRightBranch =0;
+            if (pc != this) delete pc;
+            if ( left ) desStack.push_back(left);
+            if ( right ) desStack.push_back(right);
+        }
+        pc = 0;
+        if (!desStack.empty()){
+            pc = desStack.back();
+            desStack.pop_back();
+        }
+    }
 };  //  end NearTreeNode destructor
 
 //=======================================================================
 void clear( void )
 {
-    if ( m_pLeftBranch  ) m_pLeftBranch ->clear( );
-    if ( m_pRightBranch ) m_pRightBranch->clear( );
-    if ( m_pLeftBranch  ) delete m_pLeftBranch  ;  m_pLeftBranch  =0;
-    if ( m_pRightBranch ) delete m_pRightBranch ;  m_pRightBranch =0;
+    NearTreeNode * left;
+    NearTreeNode * right;
+    std::vector<NearTreeNode *> clearStack;
+    NearTreeNode * pc;
+    
+    pc = this;
+    
+    while ((void *)pc) {
+        if (pc->m_ptRight != ULONG_MAX) {
+        left = pc->m_pLeftBranch;
+        right = pc->m_pRightBranch;
+        pc->m_pLeftBranch  =0;
+        pc->m_pRightBranch =0;
+        pc->m_ptLeft     = ULONG_MAX;
+        pc->m_ptRight    = ULONG_MAX;
+        pc->m_dMaxLeft   = DistanceTypeNode( distMinValueNode );
+        pc->m_dMaxRight  = DistanceTypeNode( distMinValueNode );
+        if (pc != this) delete pc;
+        if ( left ) clearStack.push_back(left);
+        if ( right ) clearStack.push_back(right);
+        }
+        pc = 0;
+        if (!clearStack.empty()){
+           pc = clearStack.back();
+           clearStack.pop_back();
+        }
+    }
+    
 
-    m_ptLeft     = ULONG_MAX;
-    m_ptRight    = ULONG_MAX;
-    m_dMaxLeft   = DistanceTypeNode( distMinValueNode );
-    m_dMaxRight  = DistanceTypeNode( distMinValueNode );
 };  //  end clear
 
 //=======================================================================
@@ -3085,7 +3324,9 @@ void InserterDelayed_FullFlip ( const long nin, size_t& localDepth, std::vector<
     
     if ( dTempLeft > dTempRight )
     {
-        if ( m_pRightBranch == 0 ) m_pRightBranch = new NearTreeNode;
+        if ( m_pRightBranch == 0 ) {
+            m_pRightBranch = new NearTreeNode;
+        }
         // note that the next line assumes that m_dMaxRight is negative for a new node
         if ( m_dMaxRight < dTempRight ) m_dMaxRight = dTempRight;
         // if the new node is further from the left than the current right
@@ -3122,7 +3363,9 @@ void InserterDelayed_FullFlip ( const long nin, size_t& localDepth, std::vector<
     }
     else  // ((DistanceTypeNode)(t - *m_tLeft) <= (DistanceTypeNode)(t - *m_tRight) )
     {
-        if ( m_pLeftBranch  == 0 )  m_pLeftBranch  = new NearTreeNode;
+        if ( m_pLeftBranch  == 0 )  {
+            m_pLeftBranch  = new NearTreeNode;
+        }
         // note that the next line assumes that m_dMaxLeft is negative for a new node
         if ( m_dMaxLeft < dTempLeft ) m_dMaxLeft  = dTempLeft;
         // if the new node is further from the left than the current right
@@ -3192,7 +3435,9 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
 
     if ( dTempLeft > dTempRight )
     {
-        if ( m_pRightBranch == 0 ) m_pRightBranch = new NearTreeNode;
+        if ( m_pRightBranch == 0 ) {
+            m_pRightBranch = new NearTreeNode;
+        }
         // note that the next line assumes that m_dMaxRight is negative for a new node
         if ( m_dMaxRight < dTempRight ) m_dMaxRight = dTempRight;
         // If the left branch is empty, we are going to put something here
@@ -3215,7 +3460,9 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
     }
     else  // ((DistanceTypeNode)(t - *m_tLeft) <= (DistanceTypeNode)(t - *m_tRight) )
     {
-        if ( m_pLeftBranch  == 0 )  m_pLeftBranch  = new NearTreeNode;
+        if ( m_pLeftBranch  == 0 )  {
+            m_pLeftBranch  = new NearTreeNode;
+        }
         // note that the next line assumes that m_dMaxLeft is negative for a new node
         if ( m_dMaxLeft < dTempLeft ) m_dMaxLeft  = dTempLeft;
         // If the left branch is empty, we are going to put something here
@@ -3270,7 +3517,9 @@ void InserterDelayed ( const long n, size_t& localDepth, std::vector<TNode>& obj
 
     if ( dTempLeft > dTempRight )
     {
-        if ( m_pRightBranch == 0 ) m_pRightBranch = new NearTreeNode;
+        if ( m_pRightBranch == 0 ) {
+            m_pRightBranch = new NearTreeNode;
+        }
         // note that the next line assumes that m_dMaxRight is negative for a new node
         if ( m_dMaxRight < dTempRight ) m_dMaxRight = dTempRight;
         if ( m_pRightBranch->m_ptLeft == ULONG_MAX) {
@@ -3284,7 +3533,9 @@ void InserterDelayed ( const long n, size_t& localDepth, std::vector<TNode>& obj
     }
     else  // ((DistanceTypeNode)(t - *m_tLeft) <= (DistanceTypeNode)(t - *m_tRight) )
     {
-        if ( m_pLeftBranch  == 0 ) m_pLeftBranch  = new NearTreeNode;
+        if ( m_pLeftBranch  == 0 ) {
+            m_pLeftBranch  = new NearTreeNode;
+        }
         // note that the next line assumes that m_dMaxLeft is negative for a new node
         if ( m_dMaxLeft < dTempLeft ) m_dMaxLeft  = dTempLeft;
         if ( m_pLeftBranch->m_ptLeft == ULONG_MAX ) {
@@ -3478,7 +3729,8 @@ bool Nearest (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        sStack.clear();
+        std::vector <NearTreeNode* > sTemp;
+        sTemp.swap( sStack );
     }
     if ( pClosest != ULONG_MAX )
         tClosest = objectStore[pClosest];
@@ -3584,7 +3836,8 @@ bool LeftNearest (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        sStack.clear();
+        std::vector <NearTreeNode* > sTemp;
+        sTemp.swap( sStack );
     }
     if ( pClosest != ULONG_MAX )
         tClosest = objectStore[pClosest];
@@ -3728,7 +3981,8 @@ bool Farthest (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        sStack .clear();
+        std::vector <NearTreeNode* > sTemp;
+        sTemp.swap( sStack );
     }
     if ( pFarthest != ULONG_MAX )
         tFarthest = objectStore[pFarthest];
@@ -3831,7 +4085,8 @@ bool LeftFarthest (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        sStack .clear();
+        std::vector <NearTreeNode* > sTemp;
+        sTemp.swap( sStack );
     }
     if ( pFarthest != ULONG_MAX )
         tFarthest = objectStore[pFarthest];
@@ -3979,7 +4234,8 @@ long InSphere (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        sStack .clear();
+        std::vector <NearTreeNode* > sTemp;
+        sTemp.swap( sStack );
     }
     return ( (long)tClosest.size() );
     
@@ -4109,7 +4365,8 @@ long InSphere (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        sStack .clear();
+        std::vector <NearTreeNode* > sTemp;
+        sTemp.swap( sStack );
     }
     return ( (long)tClosest.size() );
     
@@ -4440,7 +4697,8 @@ long OutSphere (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        sStack .clear();
+        std::vector <NearTreeNode* > sTemp;
+        sTemp.swap( sStack );
     }
     return ( (long)tFarthest.size() );
 }   // end OutSphere
@@ -4569,7 +4827,8 @@ long OutSphere (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        sStack .clear();
+        std::vector <NearTreeNode* > sTemp;
+        sTemp.swap( sStack );
     }
     return ( (long)tFarthest.size() );
 }   // end OutSphere
@@ -4890,7 +5149,8 @@ long InAnnulus (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        sStack .clear();
+        std::vector <NearTreeNode* > sTemp;
+        sTemp.swap( sStack );
     }
     return ( (long)tAnnular.size() );
 }   // end InAnnulus
@@ -5020,7 +5280,8 @@ long InAnnulus (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        sStack .clear();
+        std::vector <NearTreeNode* > sTemp;
+        sTemp.swap( sStack );
     }
     return ( (long)tAnnular.size() );
 }   // end InAnnulus
@@ -5350,7 +5611,8 @@ long K_Near (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        sStack .clear();
+        std::vector <NearTreeNode* > sTemp;
+        sTemp.swap( sStack );
     }
     if( tClosest.size( ) > 1 ) K_Resize( k, t, tClosest, dRadius );
     return ( (long)tClosest.size( ) );
@@ -5479,7 +5741,8 @@ long K_Near (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        sStack .clear();
+        std::vector <NearTreeNode* > sTemp;
+        sTemp.swap( sStack );
     }
     if( tClosest.size( ) > 1 ) K_Resize( k, t, tClosest, dRadius );
     return ( (long)tClosest.size( ) );
@@ -5630,7 +5893,8 @@ long K_Far (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        sStack .clear();
+        std::vector <NearTreeNode* > sTemp;
+        sTemp.swap( sStack );
     }
     if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
     return ( (long)tFarthest.size( ) );
@@ -5758,7 +6022,8 @@ long K_Far (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        sStack .clear();
+        std::vector <NearTreeNode* > sTemp;
+        sTemp.swap( sStack );
     }
     if( tFarthest.size( ) > 1 ) K_Resize( k, t, tFarthest, dRadius );
     return ( (long)tFarthest.size( ) );

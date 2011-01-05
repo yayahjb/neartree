@@ -138,5 +138,8 @@ int main ( int argc, char* argv[] )
         std::cout << " -------------------------------------------------------------"<<std::endl;
     }  // for i
     
+    vTree.clear();
+    vReturn.clear();
+
     return ( EXIT_SUCCESS );
 }
