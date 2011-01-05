@@ -175,8 +175,10 @@ int main(int argc, char* argv[])
     fprintf( stdout, "testBackwardForward\n" );
     testDelayedInsertion( );
     fprintf( stdout, "testDelayedInsertion\n" );
+#ifndef CNEARTREE_NODEFER
     testDelayedInsertionRandom( );
     fprintf( stdout, "CompleteDelayedInsertRandom\n" );
+#endif
     testIterators( );
     fprintf( stdout, "testIterators\n" );
     testIntegerReturn( );
@@ -2277,7 +2279,8 @@ void testMisc( void )
         fprintf(stdout, "testMisc: wrong number of points %ld in vector\n", (long)v.size( ) );
     }
     
-    const CNearTree<int, double, -3> nt1 = nt;
+    CNearTree<int, double, -3> nt1;
+    nt1 = nt;
     if( nt1.size( ) != nt.size( ) )
     {
         ++g_errorCount;
@@ -2434,10 +2437,10 @@ void testBigIntVec( void )
         vAll[i] = v;
     }
     
-    size_t estdim = (size_t)(0.5+tree.GetDimEstimate());
-    if ( estdim < 4) {
+    double estdim = tree.GetDimEstimate(0.01);
+    if ( estdim < 3.25) {
         ++g_errorCount;   
-        fprintf(stdout, "testBigIntVec: dimension estimate %ld < 4\n",(long)estdim);
+        fprintf(stdout, "testBigIntVec: dimension estimate %g < 4\n",estdim);
     }    
     
     timetreecommand(tree, "testBigIntVector",{
@@ -2676,7 +2679,7 @@ void testBigIntVec( void )
 //  from a container and return of data using a container
 /*=======================================================================*/
 template< typename T1, typename T2 >
-void test2Containers_InSphere( T1 t1, T2 t2 )
+void test2Containers_InSphere( T1 & t1, T2 & t2 )
 /*=======================================================================*/
 {
     t1.clear( );
@@ -2690,36 +2693,36 @@ void test2Containers_InSphere( T1 t1, T2 t2 )
     CNearTree<int> nt(t1);
     nt.insert( t1 );
     
-    timetreecommand(nt, "test2Containers_InSphere",{
-                    const unsigned long nFound = nt.FindInSphere( 1.1, t2, 5 );
-                    
-                    if( nFound != 6 && nFound != 3 ) // sets do not allow duplicates
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "test2Containers_InSphere: Found wrong # points %lu, expected 3 or 6\n", (unsigned long)nFound );
-                    }
-                    
-                    if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "test2Containers_InSphere: size(t2) %lu !=nFound\n", (unsigned long)t2.size( ) );
-                    }
-                    });
-    timetreecommand(nt, "test2Containers_LeftInSphere",{
-                    const unsigned long nFound = nt.LeftFindInSphere( 1.1, t2, 5 );
-                    
-                    if( nFound != 6 && nFound != 3 ) // sets do not allow duplicates
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "test2Containers_LeftInSphere: Found wrong # points %lu, expected 3 or 6\n", (unsigned long)nFound );
-                    }
-                    
-                    if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "test2Containers_LeftInSphere: size(t2) %lu !=nFound\n", (unsigned long)t2.size( ) );
-                    }
-                    });
+    {
+        const unsigned long nFound = nt.FindInSphere( 1.1, t2, 5 );
+        
+        if( nFound != 6 && nFound != 3 ) // sets do not allow duplicates
+        {
+            ++g_errorCount;
+            fprintf(stdout, "test2Containers_InSphere: Found wrong # points %lu, expected 3 or 6\n", (unsigned long)nFound );
+        }
+        
+        if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
+        {
+            ++g_errorCount;
+            fprintf(stdout, "test2Containers_InSphere: size(t2) %lu !=nFound\n", (unsigned long)t2.size( ) );
+        }
+    }
+    {
+        const unsigned long nFound = nt.LeftFindInSphere( 1.1, t2, 5 );
+        
+        if( nFound != 6 && nFound != 3 ) // sets do not allow duplicates
+        {
+            ++g_errorCount;
+            fprintf(stdout, "test2Containers_LeftInSphere: Found wrong # points %lu, expected 3 or 6\n", (unsigned long)nFound );
+        }
+        
+        if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
+        {
+            ++g_errorCount;
+            fprintf(stdout, "test2Containers_LeftInSphere: size(t2) %lu !=nFound\n", (unsigned long)t2.size( ) );
+        }
+    }
     
 }  //  end test2Containers_InSphere
 
@@ -2731,7 +2734,7 @@ void test2Containers_InSphere( T1 t1, T2 t2 )
 //  from a container and return of data using a container
 /*=======================================================================*/
 template< typename T1, typename T2 >
-void test2Containers_OutSphere( T1 t1, T2 t2 )
+void test2Containers_OutSphere( T1 & t1, T2 & t2 )
 /*=======================================================================*/
 {
     t1.clear( );
@@ -2745,37 +2748,37 @@ void test2Containers_OutSphere( T1 t1, T2 t2 )
     CNearTree<int> nt(t1);
     nt.insert( t1 );
     
-    timetreecommand(nt, "test2Containers_OutSphere",{
-                    const unsigned long nFound = nt.FindOutSphere( 1.1, t2, 5 );
-                    
-                    if( nFound != 14 && nFound != 7 ) // sets do not allow duplicates
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "test2Containers_OutSphere: Found wrong # points %lu, expected 7 or 14\n", (unsigned long)nFound );
-                    }
-                    
-                    if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "test2Containers_OutSphere: size(t2) %lu !=nFound\n", (unsigned long)t2.size( ) );
-                    }
-                    });
+    {
+        const unsigned long nFound = nt.FindOutSphere( 1.1, t2, 5 );
+        
+        if( nFound != 14 && nFound != 7 ) // sets do not allow duplicates
+        {
+            ++g_errorCount;
+            fprintf(stdout, "test2Containers_OutSphere: Found wrong # points %lu, expected 7 or 14\n", (unsigned long)nFound );
+        }
+        
+        if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
+        {
+            ++g_errorCount;
+            fprintf(stdout, "test2Containers_OutSphere: size(t2) %lu !=nFound\n", (unsigned long)t2.size( ) );
+        }
+    };
     
-    timetreecommand(nt, "test2Containers_LeftOutSphere",{
-                    const unsigned long nFound = nt.LeftFindOutSphere( 1.1, t2, 5 );
-                    
-                    if( nFound != 14 && nFound != 7 ) // sets do not allow duplicates
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "test2Containers_LeftOutSphere: Found wrong # points %lu, expected 7 or 14\n", (unsigned long)nFound );
-                    }
-                    
-                    if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "test2Containers_LeftOutSphere: size(t2) %lu !=nFound\n", (unsigned long)t2.size( ) );
-                    }
-                    });
+    {
+        const unsigned long nFound = nt.LeftFindOutSphere( 1.1, t2, 5 );
+        
+        if( nFound != 14 && nFound != 7 ) // sets do not allow duplicates
+        {
+            ++g_errorCount;
+            fprintf(stdout, "test2Containers_LeftOutSphere: Found wrong # points %lu, expected 7 or 14\n", (unsigned long)nFound );
+        }
+        
+        if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
+        {
+            ++g_errorCount;
+            fprintf(stdout, "test2Containers_LeftOutSphere: size(t2) %lu !=nFound\n", (unsigned long)t2.size( ) );
+        }
+    };
     
 }  // end test2Containers_OutSphere
 
@@ -2787,7 +2790,7 @@ void test2Containers_OutSphere( T1 t1, T2 t2 )
 //  from a container and return of data using a container
 /*=======================================================================*/
 template< typename T1, typename T2 >
-void test2Containers_InAnnulus( T1 t1, T2 t2 )
+void test2Containers_InAnnulus( T1 & t1, T2 & t2 )
 /*=======================================================================*/
 {
     t1.clear( );
@@ -2800,37 +2803,37 @@ void test2Containers_InAnnulus( T1 t1, T2 t2 )
     
     CNearTree<int> nt(t1);
     nt.insert( t1 );
-    timetreecommand(nt, "test2Containers_InAnnulus",{
-                    const unsigned long nFound = nt.FindInAnnulus( 1.1, 3.9, t2, 5 );
-                    
-                    if( nFound != 8 && nFound != 4 )
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "test2Containers_InAnnulus: Found wrong # points %lu, expected 8 or 4\n", (unsigned long)nFound );
-                    }
-                    
-                    if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "test2Containers_InAnnulus: size(t2) %lu !=nFound\n", (unsigned long)t2.size( ) );
-                    }
-                    });
+    {
+        const unsigned long nFound = nt.FindInAnnulus( 1.1, 3.9, t2, 5 );
+        
+        if( nFound != 8 && nFound != 4 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "test2Containers_InAnnulus: Found wrong # points %lu, expected 8 or 4\n", (unsigned long)nFound );
+        }
+        
+        if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
+        {
+            ++g_errorCount;
+            fprintf(stdout, "test2Containers_InAnnulus: size(t2) %lu !=nFound\n", (unsigned long)t2.size( ) );
+        }
+    };
     
-    timetreecommand(nt, "test2Containers_LeftInAnnulus",{
-                    const unsigned long nFound = nt.LeftFindInAnnulus( 1.1, 3.9, t2, 5 );
-                    
-                    if( nFound != 8 && nFound != 4 )
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "test2Containers_LeftInAnnulus: Found wrong # points %lu, expected 8 or 4\n", (unsigned long)nFound );
-                    }
-                    
-                    if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "test2Containers_LeftInAnnulus: size(t2) %lu !=nFound\n", (unsigned long)t2.size( ) );
-                    }
-                    });
+    {
+        const unsigned long nFound = nt.LeftFindInAnnulus( 1.1, 3.9, t2, 5 );
+        
+        if( nFound != 8 && nFound != 4 )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "test2Containers_LeftInAnnulus: Found wrong # points %lu, expected 8 or 4\n", (unsigned long)nFound );
+        }
+        
+        if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
+        {
+            ++g_errorCount;
+            fprintf(stdout, "test2Containers_LeftInAnnulus: size(t2) %lu !=nFound\n", (unsigned long)t2.size( ) );
+        }
+    };
     
 }  //  end test2Containers_InAnnulus
 
@@ -2838,7 +2841,8 @@ void test2Containers_InAnnulus( T1 t1, T2 t2 )
 void testSTLContainerInput( void )
 {
     
-    { std::vector<int> v;
+    {   std::vector<int> v;
+        std::vector<int> vb;
         for( int i=0; i<10; ++i )
         {
             v.push_back( i );
@@ -2874,26 +2878,28 @@ void testSTLContainerInput( void )
             tv.insert( v );
             
             CNearTree<int> t;
-            test2Containers_InSphere( t, t );
+            CNearTree<int> tb;
+            test2Containers_InSphere( t, tb );
             test2Containers_InSphere( t, v );
-            test2Containers_InSphere( v, t );
-            test2Containers_InSphere( v, v );
+            test2Containers_InSphere( v, tb );
+            test2Containers_InSphere( v, vb );
             
-            test2Containers_OutSphere( t, t );
+            test2Containers_OutSphere( t, tb );
             test2Containers_OutSphere( t, v );
-            test2Containers_OutSphere( v, t );
-            test2Containers_OutSphere( v, v );
+            test2Containers_OutSphere( v, tb );
+            test2Containers_OutSphere( v, vb );
             
-            test2Containers_InAnnulus( t, t );
+            test2Containers_InAnnulus( t, tb );
             test2Containers_InAnnulus( t, v );
-            test2Containers_InAnnulus( v, t );
-            test2Containers_InAnnulus( v, v );
+            test2Containers_InAnnulus( v, tb );
+            test2Containers_InAnnulus( v, vb );
             
         }
         
     }
     
-    { std::list<int> l;
+    {   std::list<int> l;
+        std::list<int> lb;
         for( int i=0; i<10; ++i )
         {
             l.push_back( i );
@@ -2929,26 +2935,28 @@ void testSTLContainerInput( void )
             tl.insert( l );
             
             CNearTree<int> t;
-            test2Containers_InSphere( t, t );
+            CNearTree<int> tb;
+            test2Containers_InSphere( t, tb );
             test2Containers_InSphere( t, l );
-            test2Containers_InSphere( l, t );
-            test2Containers_InSphere( l, l );
+            test2Containers_InSphere( l, tb );
+            test2Containers_InSphere( l, lb );
             
-            test2Containers_OutSphere( t, t );
+            test2Containers_OutSphere( t, tb );
             test2Containers_OutSphere( t, l );
-            test2Containers_OutSphere( l, t );
-            test2Containers_OutSphere( l, l );
+            test2Containers_OutSphere( l, tb );
+            test2Containers_OutSphere( l, lb );
             
-            test2Containers_InAnnulus( t, t );
+            test2Containers_InAnnulus( t, tb );
             test2Containers_InAnnulus( t, l );
-            test2Containers_InAnnulus( l, t );
-            test2Containers_InAnnulus( l, l );
+            test2Containers_InAnnulus( l, tb );
+            test2Containers_InAnnulus( l, lb );
             
         }
         
     }
     
     { std::set<int> s;
+        std::set<int> sb;
         for( int i=0; i<10; ++i )
         {
             s.insert( i );
@@ -2984,20 +2992,21 @@ void testSTLContainerInput( void )
             ts.insert( s );
             
             CNearTree<int> t;
-            test2Containers_InSphere( t, t );
+            CNearTree<int> tb;
+            test2Containers_InSphere( t, tb );
             test2Containers_InSphere( t, s );
-            test2Containers_InSphere( s, t );
-            test2Containers_InSphere( s, s );
+            test2Containers_InSphere( s, tb );
+            test2Containers_InSphere( s, sb );
             
-            test2Containers_OutSphere( t, t );
+            test2Containers_OutSphere( t, tb );
             test2Containers_OutSphere( t, s );
-            test2Containers_OutSphere( s, t );
-            test2Containers_OutSphere( s, s );
+            test2Containers_OutSphere( s, tb );
+            test2Containers_OutSphere( s, sb );
             
-            test2Containers_InAnnulus( t, t );
+            test2Containers_InAnnulus( t, tb );
             test2Containers_InAnnulus( t, s );
-            test2Containers_InAnnulus( s, t );
-            test2Containers_InAnnulus( s, s );
+            test2Containers_InAnnulus( s, tb );
+            test2Containers_InAnnulus( s, sb );
             
         }
         
@@ -3600,7 +3609,8 @@ void testOperatorPlusEquals( void )
     {
         nt1.insert( count++ );
     }
-    const CNearTree<int> nt1a( nt1 );
+    
+    CNearTree<int> nt1a(nt1) ;
     
     for ( int i=0; i<nInTree; ++i )
     {
@@ -3677,7 +3687,8 @@ void testSetSymmetricDifference( void )
 
         nt1.insert( i );
     }
-    const CNearTree<int> nt1a = nt1;
+    
+    CNearTree<int> nt1a = nt1;
     
     for ( int i=0; i<nInTree; ++i )
     {
