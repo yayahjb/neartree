@@ -3166,7 +3166,7 @@ m_pRightBranch      ( 0 )
     pc = this;
     
     while ((void *)pc) {
-        if (pc->m_ptRight != ULONG_MAX) {
+        if (pc->m_ptRight != ULONG_MAX || pc->m_ptLeft !=ULONG_MAX ) {
             left = pc->m_pLeftBranch;
             right = pc->m_pRightBranch;
             pc->m_pLeftBranch  =0;
@@ -3194,7 +3194,7 @@ void clear( void )
     pc = this;
     
     while ((void *)pc) {
-        if (pc->m_ptRight != ULONG_MAX) {
+        if (pc->m_ptRight != ULONG_MAX || pc->m_ptLeft !=ULONG_MAX) {
         left = pc->m_pLeftBranch;
         right = pc->m_pRightBranch;
         pc->m_pLeftBranch  =0;
