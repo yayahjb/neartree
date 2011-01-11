@@ -53,8 +53,10 @@ RELEASE = 2.4
 CC	= gcc
 ifneq ($(MSYSTEM),MINGW32)
 CFLAGS  = -g -O2  -Wall  -ansi -pedantic -DCNEARTREE_SAFE_TRIANG=1
+TIME = time
 else
 CFLAGS  = -g -O2 -Wall  -DCNEARTREE_SAFE_TRIANG=1
+TIME = 
 endif
 
 #
@@ -330,15 +332,15 @@ tests:		$(LIB) $(BIN) $(BIN)/CPPMain $(BIN)/CPPMain_Flip $(BIN)/CPPNearTreeTest 
 				$(BIN)/CPPNearTreeTestInst $(BIN)/CMain $(BIN)/CNearTreeTest \
 				$(BIN)/CPPNearTreeTestInstFlip $(BIN)/CPPNearTreeTestInstNoDefer \
 				$(BIN)/CPPNearTreeTestInstNoFlip $(BIN)/CPPNearTreeTestInstNoFlipNoDefer
-			time $(BIN)/CPPMain 3458923 > $(TESTDATA)/CPPMain.lst
-			time $(BIN)/CPPMain_Flip 3458923 > $(TESTDATA)/CPPMain_Flip.lst
-			time $(BIN)/CMain 3458923 > $(TESTDATA)/CMain.lst
-			time $(BIN)/CPPNearTreeTest
-			time $(BIN)/CPPNearTreeTestInst
-			time $(BIN)/CPPNearTreeTestInstFlip
-			time $(BIN)/CPPNearTreeTestInstNoDefer
-			time $(BIN)/CPPNearTreeTestInstNoFlip
-			time $(BIN)/CNearTreeTest
+			$(TIME) $(BIN)/CPPMain 3458923 > $(TESTDATA)/CPPMain.lst
+			$(TIME) $(BIN)/CPPMain_Flip 3458923 > $(TESTDATA)/CPPMain_Flip.lst
+			$(TIME) $(BIN)/CMain 3458923 > $(TESTDATA)/CMain.lst
+			$(TIME) $(BIN)/CPPNearTreeTest
+			$(TIME) $(BIN)/CPPNearTreeTestInst
+			$(TIME) $(BIN)/CPPNearTreeTestInstFlip
+			$(TIME) $(BIN)/CPPNearTreeTestInstNoDefer
+			$(TIME) $(BIN)/CPPNearTreeTestInstNoFlip
+			$(TIME) $(BIN)/CNearTreeTest
 ifneq ($(MSYSTEM),MINGW32)
 			diff -b -c $(TESTDATA)/CPPMain_orig.lst $(TESTDATA)/CPPMain.lst
 			diff -b -c $(TESTDATA)/CPPMain_orig.lst $(TESTDATA)/CPPMain_Flip.lst
