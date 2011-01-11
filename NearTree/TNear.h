@@ -2833,7 +2833,7 @@ DistanceType GetDiamEstimate (  void )
 }
 
 //=======================================================================
-//  size_t GetDimEstimate (  void )
+//  double GetDimEstimate (  void )
 //
 //  Get an estimate of the dimension of the collection of points
 //  in the tree.  If no argument, estimate to within esd of 0.1
@@ -2844,6 +2844,21 @@ double GetDimEstimate ( void )
 {
     return GetDimEstimate(0.1);
 };
+
+
+//=======================================================================
+//  double GetDimEstimateEsd ( void )
+//
+//  Get the current best estimate of the dimension esd
+//
+//=======================================================================
+double GetDimEstimateEsd ( void )
+{
+    if (m_DimEstimate <= 0.) {
+      if (GetDimEstimate(0.1) <= 0.) return DBL_MAX;
+    }
+    return m_DimEstimateEsd;
+} 
 
 
 //=======================================================================

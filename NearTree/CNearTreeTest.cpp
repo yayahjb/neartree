@@ -2221,8 +2221,8 @@ void testFindInAnnulus( void )
             }
         }
         
-        double estdim = tree.GetDimEstimate();
-        if ( estdim <= 1.4) {
+        double estdim = tree.GetDimEstimate()+tree.GetDimEstimateEsd();
+        if ( estdim <= 1.5) {
             ++g_errorCount;   
             fprintf(stdout, "testFindInAnnulus: dimension estimate %g <= 1.4\n",estdim);
         }    
@@ -2437,10 +2437,10 @@ void testBigIntVec( void )
         vAll[i] = v;
     }
     
-    double estdim = tree.GetDimEstimate(0.01);
-    if ( estdim < 3.25) {
+    double estdim = tree.GetDimEstimate(0.01)+tree.GetDimEstimateEsd();
+    if ( estdim < 3.5) {
         ++g_errorCount;   
-        fprintf(stdout, "testBigIntVec: dimension estimate %g < 4\n",estdim);
+        fprintf(stdout, "testBigIntVec: dimension estimate %g < 3.5\n",estdim);
     }    
     
     timetreecommand(tree, "testBigIntVector",{
