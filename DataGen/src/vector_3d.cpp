@@ -1,4 +1,3 @@
-
 #include <cmath>
 #include <cfloat>
 
@@ -1227,6 +1226,7 @@ Line_3 Plane_3::Intersect( const Plane_3& p ) const
 
    return( result );
 }
+
 
 
 
