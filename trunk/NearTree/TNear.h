@@ -2917,7 +2917,7 @@ double GetDimEstimate ( const double DimEstimateEsd )
         n = (size_t)(((double)estsize-1u) * ((DistanceType)rhr.urand()));
         rhr.urand( ); rhr.urand( );
         probe = m_ObjectStore[n];
-        poptrial=FindInSphere((DistanceType)targetradius/shrinkfactor,sampledisklarge,probe);
+        poptrial=FindInSphere((DistanceType)(targetradius/shrinkfactor),sampledisklarge,probe);
     } while (poptrial < 256 && shrinkfactor > 1.);
     
     targetradius /= shrinkfactor;
@@ -3633,7 +3633,7 @@ bool Nearest (
               ) const
 {
     std::vector <NearTreeNode* > sStack;
-    DistanceTypeNode dDL=0., dDR=0.;
+    DistanceTypeNode dDL=DistanceTypeNode(0), dDR=DistanceTypeNode(0);
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
     pClosest = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
@@ -3885,7 +3885,7 @@ bool Farthest (
                ) const
 {
     std::vector <NearTreeNode* > sStack;
-    DistanceTypeNode dDL=0., dDR=0.;
+    DistanceTypeNode dDL=DistanceTypeNode(0), dDR=DistanceTypeNode(0);
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
     pFarthest = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
@@ -4141,7 +4141,7 @@ long InSphere (
                ) const
 {
     std::vector <NearTreeNode* > sStack;
-    DistanceTypeNode dDL=0., dDR=0.;
+    DistanceTypeNode dDL=DistanceTypeNode(0), dDR=DistanceTypeNode(0);
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
 #ifdef CNEARTREE_INSTRUMENTED
     ++VisitCount;
