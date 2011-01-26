@@ -109,7 +109,7 @@ class Vector_3
     friend std::ostream& operator<< ( std::ostream&, const Vector_3& );
 #endif
     friend Vector_3 operator* ( const double&, const Vector_3& );
-private:
+protected:
     double v[3];
 public:
     //CONSTRUCTORS, DESTRUCTOR
@@ -2716,6 +2716,7 @@ std::pair<double,Vector_3> CircleCenterFromThreePoints( const Vector_3& v1, cons
 
 
 #endif  //  vector_3_INCLUDED
+
 
 
 

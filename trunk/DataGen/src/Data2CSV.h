@@ -189,6 +189,8 @@ public:
     {
         return( pd.size( ) );
     }
+	
+    vecN& operator-= ( const vecN ) { return ( *this ); }; // just to keep LINT happy
 
 ////-----------------------------------------------------------------------------
 //// Name: operator+=()
@@ -209,6 +211,7 @@ public:
 
 };  // end vecN
 
-
+std::vector<vecN> ReadGeneralFile( std::istream& str );
 
 #endif  // DATA2CSV_H
+
