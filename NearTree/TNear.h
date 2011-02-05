@@ -2900,7 +2900,7 @@ double GetDimEstimate ( const double DimEstimateEsd )
     /* Estimate the number of points per unit distance
        and a target radius that would produce 4096 points
        in dimension 1.  If this would bring us beyond
-       the diameter/2, reduce to that size.  */
+       the diameter/1.1, reduce to that size.  */
     double pointdensity = ((double)estsize)/((double)m_DiamEstimate);
     double targetradius = 4096./pointdensity;
     double rat;
@@ -2912,20 +2912,25 @@ double GetDimEstimate ( const double DimEstimateEsd )
      contain a reasonable number of points*/
     
     shrinkfactor = 4.;
+    n = (size_t)(((double)estsize-1u) * ((DistanceType)rhr.urand()));
+    rhr.urand( ); rhr.urand( );
+    probe = m_ObjectStore[n];
+    poptrial=FindInSphere((DistanceType)targetradius/shrinkfactor,sampledisklarge,probe);
     do { 
-        shrinkfactor = shrinkfactor/1.2;
+        shrinkfactor = shrinkfactor/1.1;
+        popsmall=poptrial;
+        poptrial=FindInSphere((DistanceType)targetradius/shrinkfactor,sampledisklarge,probe);
         n = (size_t)(((double)estsize-1u) * ((DistanceType)rhr.urand()));
         rhr.urand( ); rhr.urand( );
         probe = m_ObjectStore[n];
-        poptrial=FindInSphere((DistanceType)(targetradius/shrinkfactor),sampledisklarge,probe);
-    } while (poptrial < 256 && shrinkfactor > 1.);
+    } while (poptrial < 256 && shrinkfactor > 1. && poptrial <= popsmall+10);
     
     targetradius /= shrinkfactor;
     targetradius *= 1.1;
 
     int goodtrials = 0;
     trials = (size_t)sqrt(0.5+(double)estsize);
-    if (trials < 20) trials = 20;
+    if (trials < 10) trials = 10;
         
     n = (size_t)(((double)estsize-1u) * ((DistanceType)rhr.urand()));
     rhr.urand( ); rhr.urand( );
@@ -2938,7 +2943,8 @@ double GetDimEstimate ( const double DimEstimateEsd )
         probe = m_ObjectStore[n];
         
         if ((poplarge=FindInSphere((DistanceType)targetradius,sampledisklarge,probe))>0
-            &&(popsmall=FindInSphere((DistanceType)(targetradius/1.1),sampledisksmall,probe))>0 )
+            &&(popsmall=FindInSphere((DistanceType)(targetradius/1.1),sampledisksmall,probe))>0 
+            && popsmall < poplarge)
         {
             rat = (double)poplarge/(double)popsmall;
             estd = log(rat)/log(1.1);
@@ -3349,8 +3355,6 @@ void InserterDelayed_FullFlip ( const long nin, size_t& localDepth, std::vector<
         if (localDepth < 100 && dTempLeftRight < dTempRight) {
             n = m_ptRight;
             m_ptRight = nin;
-            SumSpacings -= dTempLeftRight;
-            SumSpacingsSq -= dTempLeftRight*dTempLeftRight;
             if (m_pRightBranch->m_ptLeft != ULONG_MAX ) {
                 NearTreeNode * prevtree = m_pRightBranch;
                 m_pRightBranch = new NearTreeNode;
@@ -3374,7 +3378,7 @@ void InserterDelayed_FullFlip ( const long nin, size_t& localDepth, std::vector<
             ++localDepth;
             return;
         }        
-        m_pRightBranch->InserterDelayed_Flip( n, localDepth, objectStore, SumSpacings, SumSpacingsSq );
+        m_pRightBranch->InserterDelayed_FullFlip( n, localDepth, objectStore, SumSpacings, SumSpacingsSq );
     }
     else  // ((DistanceTypeNode)(t - *m_tLeft) <= (DistanceTypeNode)(t - *m_tRight) )
     {
@@ -3383,13 +3387,11 @@ void InserterDelayed_FullFlip ( const long nin, size_t& localDepth, std::vector<
         }
         // note that the next line assumes that m_dMaxLeft is negative for a new node
         if ( m_dMaxLeft < dTempLeft ) m_dMaxLeft  = dTempLeft;
-        // if the new node is further from the left than the current right
+        // if the new node is further from the left than the current left
         // node, we will swap them
         if (localDepth < 100 && dTempLeftRight < dTempLeft) {
             n = m_ptLeft;
             m_ptLeft = nin;
-            SumSpacings -= dTempLeftRight;
-            SumSpacingsSq -= dTempLeftRight*dTempLeftRight;
             if (m_pLeftBranch->m_ptLeft != ULONG_MAX ) {
                 NearTreeNode * prevtree = m_pLeftBranch;
                 m_pLeftBranch = new NearTreeNode;
@@ -3466,8 +3468,6 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
             if (localDepth < 100 && dTempLeftRight < dTempRight) {
                 m_pRightBranch->m_ptLeft = m_ptRight;
                 m_ptRight = n;
-                SumSpacings -= dTempLeftRight;
-                SumSpacingsSq -= dTempLeftRight*dTempLeftRight;
             }
             return;
         }        
@@ -3491,8 +3491,6 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
             if (localDepth < 100 && dTempLeftRight < dTempLeft) {
                 m_pLeftBranch->m_ptLeft = m_ptLeft;
                 m_ptLeft = n;
-                SumSpacings -= dTempLeftRight;
-                SumSpacingsSq -= dTempLeftRight*dTempLeftRight;
             }
             return;
         }        
@@ -3567,7 +3565,7 @@ void InserterDelayed ( const long n, size_t& localDepth, std::vector<TNode>& obj
 //=======================================================================
 //  void ReInserter_Flip ( const NearTreeNode * pntn, size_t& localDepth, std::vector<TNode>& objectStore ),
 //
-//  Function to reinsert the elements from the object store as an object into a 
+//  Function to reinsert the elements from the object store  
 //  contained in a NearTreeNode into a CNearTree for later searching
 //
 //     pntn is a point to a neartree node, the objects from which are to be re-inserted into a

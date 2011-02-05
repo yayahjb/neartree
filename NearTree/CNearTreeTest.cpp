@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
     {
         char tagstring[40];
         sprintf(tagstring,"testLinearTree %d",i);
-        timecommand("testLinearTree",{testLinearTree( i );})
+        testLinearTree( i );
     }
 
     timecommand("testSeparation",{testSeparation( );});
@@ -1291,8 +1291,10 @@ void testBigVector(  )
                     size_t estdim = (size_t)(0.5+tree.GetDimEstimate());
                     if ( estdim < 6) {
                     ++g_errorCount;   
-                    fprintf(stdout, "testBigVector: dimension estimate %ld <6 \n",(long)estdim);
-                    }    
+                    fprintf(stdout, "testBigVector: dimension estimate %ld < 6 \n",(long)estdim);
+                    } else {
+                    fprintf(stdout, "testBigVector: dimension estimate %ld\n",(long)estdim);
+                    }
                     
                     {
                     /* Find the point farthest from the point that was nearest the origin. */
@@ -1475,7 +1477,9 @@ void testBigVector(  )
                     if ( estdim < 6) {
                     ++g_errorCount;   
                     fprintf(stdout, "testBigVector: dimension estimate %ld <6 \n",(long)estdim);
-                    }    
+                    } else {
+                    fprintf(stdout, "testBigVector: dimension estimate %ld\n",(long)estdim);
+                    }
                     
                     {
                     /* Find the point farthest from the point that was nearest the origin. */
@@ -2224,8 +2228,10 @@ void testFindInAnnulus( void )
         double estdim = tree.GetDimEstimate()+tree.GetDimEstimateEsd();
         if ( estdim <= 1.5) {
             ++g_errorCount;   
-            fprintf(stdout, "testFindInAnnulus: dimension estimate %g <= 1.4\n",estdim);
-        }    
+            fprintf(stdout, "testFindInAnnulus: dimension estimate %g <= 1.5\n",estdim);
+        } else {
+            fprintf(stdout, "testFindInAnnulus: dimension estimate %g\n",estdim);
+        }
         
         
         const double r1 = 4.0;
@@ -2441,8 +2447,10 @@ void testBigIntVec( void )
     if ( estdim < 3.5) {
         ++g_errorCount;   
         fprintf(stdout, "testBigIntVec: dimension estimate %g < 3.5\n",estdim);
-    }    
-    
+    } else { 
+        fprintf(stdout, "testBigIntVec: dimension estimate %g\n",estdim);
+    }
+            
     timetreecommand(tree, "testBigIntVector",{
                     {
                     /* Find the point farthest from the point that was nearest the origin. */
@@ -3809,7 +3817,7 @@ void testLloyd( )
     if ( estdim != 1) {
         ++g_errorCount;   
     fprintf(stdout, "testLloyd: dimension estimate %ld != 1\n",(long)estdim);
-    }    
+    } 
     
     vk.push_back( double(-12) );
     vk.push_back( double(0) );
