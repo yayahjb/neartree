@@ -114,31 +114,78 @@ extern "C" {
      0 for n data, n children
      */
     
-#define CNEARTREE_FLAG_LEFT_DATA   1          /* 0x0001 */
-#define CNEARTREE_FLAG_RIGHT_DATA  2          /* 0x0002 */
-#define CNEARTREE_FLAG_LEFT_CHILD  4          /* 0x0004 */
-#define CNEARTREE_FLAG_RIGHT_CHILD 8          /* 0x0008 */
+#define CNEARTREE_FLAG_LEFT_DATA   1L          /* 0x0001 */
+#define CNEARTREE_FLAG_RIGHT_DATA  2L          /* 0x0002 */
+#define CNEARTREE_FLAG_LEFT_CHILD  4L          /* 0x0004 */
+#define CNEARTREE_FLAG_RIGHT_CHILD 8L          /* 0x0008 */
     
-#define CNEARTREE_DATA_OR_CHILDREN 15         /* 0x000F */
+#define CNEARTREE_DATA_OR_CHILDREN 15L         /* 0x000F */
     
-#define CNEARTREE_TYPE_DOUBLE      16         /* 0x0010 */
-#define CNEARTREE_TYPE_INTEGER     32         /* 0x0020 */
-#define CNEARTREE_TYPE_STRING      64         /* 0x0040 */
+#define CNEARTREE_TYPE_DOUBLE      16L         /* 0x0010 */
+#define CNEARTREE_TYPE_INTEGER     32L         /* 0x0020 */
+#define CNEARTREE_TYPE_STRING      64L         /* 0x0040 */
     
-#define CNEARTREE_TYPE            112         /* 0x0070 */
+#define CNEARTREE_TYPE            112L         /* 0x0070 */
     
-#define CNEARTREE_NORM_UNKNOWN    128         /* 0x0080 */
-#define CNEARTREE_NORM_L1         256         /* 0x0100 */
-#define CNEARTREE_NORM_L2         512         /* 0x0200 */
-#define CNEARTREE_NORM_LINF      1024         /* 0x0400 */
-#define CNEARTREE_NORM_SPHERE    2048         /* 0x0800 */
-#define CNEARTREE_NORM_HSPHERE   4096         /* 0x1000 */
-#define CNEARTREE_NORM_HAMMING   8192         /* 0x2000 */
+#define CNEARTREE_NORM_UNKNOWN    128L         /* 0x0080 */
+#define CNEARTREE_NORM_L1         256L         /* 0x0100 */
+#define CNEARTREE_NORM_L2         512L         /* 0x0200 */
+#define CNEARTREE_NORM_LINF      1024L         /* 0x0400 */
+#define CNEARTREE_NORM_SPHERE    2048L         /* 0x0800 */
+#define CNEARTREE_NORM_HSPHERE   4096L         /* 0x1000 */
+#define CNEARTREE_NORM_HAMMING   8192L         /* 0x2000 */
     
-#define CNEARTREE_NORM          16256         /* 0x3F80 */
+#define CNEARTREE_NORM          16256L         /* 0x3F80 */
     
-#define CNEARTREE_FLIP          16384         /* 0x4000 */
-#define CNEARTREE_DEFER_ALL     32768         /* 0x8000 */
+    
+/*  Execution Control Flags */
+    
+#define CNTF_NOPREPRUNE    0x10000L     /*flag to supress all search prepruning */
+#define CNTF_FORCEPREPRUNE 0x20000L     /*flag to force search prepruning       */
+#define CNTF_NOFLIP        0x40000L     /*flag to suppress flips on insert      */
+#define CNTF_FORCEFLIP     0x80000L     /*flag to force flips on insert         */
+#define CNTF_NODEFER      0x100000L     /*flag to prevent deferred insert       */
+
+    
+#define CNEARTREE_XFLAGS  0x1F0000L     /*mask for execution flags */
+    
+#ifdef CNEARTREE_FORCEPREPRUNE
+  #define CNFT_FLAGDEFAULTPRUNE  CNTF_FORCEPREPRUNE
+  #ifdef CNEARTREE_NOPREPRUNE
+    #error "CNEARTREE_NOPREPRUNE conflicts with  CNEARTREE_FORCEPREPRUNE"
+  #endif
+#else
+  #ifdef CNEARTREE_NOPREPRUNE
+    #define  CNFT_FLAGDEFAULTPRUNE  CNTF_NOPREPRUNE
+  #else
+    #define  CNFT_FLAGDEFAULTPRUNE  0
+  #endif
+#endif
+    
+#ifdef CNEARTREE_FORCEFLIP
+  #define CNFT_FLAGDEFAULTFLIP  CNTF_FORCEFLIP
+  #ifdef CNEARTREE_NOFLIP
+    #error "CNEARTREE_NOFLIP conflicts with  CNEARTREE_FORCEFLIP"
+  #endif
+#else
+  #ifdef CNEARTREE_NOFLIP
+    #define CNFT_FLAGDEFAULTFLIP CNTF_NOFLIP
+  #else
+    #define CNFT_FLAGDEFAULTFLIP 0
+  #endif
+#endif
+    
+#ifdef CNEARTREE_NODEFER
+    #define CNFT_FLAGDEFAULTDEFER CNTF_NODEFER
+#else
+    #define CNFT_FLAGDEFAULTDEFER 0
+#endif
+    
+#define CNTF_FLAGSDEFAULT  (CNFT_FLAGDEFAULTPRUNE|CNFT_FLAGDEFAULTFLIP|CNFT_FLAGDEFAULTDEFER)
+    
+    
+#define CNEARTREE_FLIP          0     /* Not used, defined for compatibility */
+#define CNEARTREE_DEFER_ALL     0     /* Not used, defined for compatibility */
     
     
     
@@ -155,7 +202,7 @@ extern "C" {
         /* tree descending from the left object        */
         struct _CNearTreeNode CNEARTREE_FAR * m_pRightBranch; 
         /* tree descending from the right object       */
-        int              m_iflags;       /* flags                                       */
+        long              m_iflags;       /* flags      */
     } CNearTreeNode;
     
     
@@ -166,13 +213,20 @@ extern "C" {
         size_t           m_szdimension;   /* dimension of the coordinates                */
         size_t           m_szsize;        /* size of this tree                           */
         size_t           m_szdepth;       /* depth of this tree                          */
-        int              m_iflags;        /* flags                                       */
+        long             m_iflags;        /* flags                                       */
         CVectorHandle    m_ObjectStore;   /* all inserted objects                        */
         CVectorHandle    m_CoordStore;    /* all inserted coordinates                    */
         CVectorHandle    m_DelayedIndices;/* objects queued for insertion                */
 
         CRHrand          m_rhr;           /* random number generator                     */
-
+        double           m_DiamEstimate;  /* estimated diameter */
+        double           m_SumSpacings;   /* sum of spacings at time of insertion */
+        double           m_SumSpacingsSq; /* sum of spacings squared at time of insertion */
+        double           m_DimEstimate;   /* estimated dimension */
+        double           m_DimEstimateEsd;/* estimated dimension estimated standard deviation */
+#ifdef CNEARTREE_INSTRUMENTED
+        size_t           m_NodeVisits;    /* number of node visits */
+#endif
     } CNearTree;
     
     typedef CNearTree     CNEARTREE_FAR * CNearTreeHandle;
@@ -201,7 +255,7 @@ extern "C" {
     double CNearTreeDistsq(void CNEARTREE_FAR * coord1,
                            void CNEARTREE_FAR * coord2, 
                            size_t treedim, 
-                           int treetype);
+                           long treetype);
     /*
      =======================================================================
      double CNearTreeDist(const CNearTreeHandle treehandle, void CNEARTREE_FAR * coord1, 
@@ -259,7 +313,7 @@ extern "C" {
     /*
      =======================================================================
      int CNearTreeCreate ( CNearTreeHandle CNEARTREE_FAR * treehandle, 
-     size_t treedim, int treetype)
+     size_t treedim, long treetype)
      
      Create a CNearTree
      
@@ -269,6 +323,7 @@ extern "C" {
      
      treedim -- the dimension of the vectors
      treetype -- double or integer flag for type of the vectors ored with norm
+                 and ored with execution flags
      CNEARTREE_TYPE_DOUBLE for double
      CNEARTREE_TYPE_INTEGER for integer
      CNEARTREE_TYPE_STRING for strings
@@ -279,7 +334,12 @@ extern "C" {
      CNEARTREE_NORM_SPHERE    for norm as spherical angular distance
      CNEARTREE_NORM_HSPHERE   for norm as hemispherical angular distance
      CNEARTREE_NORM_HAMMING   for norm as string hamming distance
-     
+     ored with
+     CNTF_NOPREPRUNE    0x10000L    flag to supress all search prepruning
+     CNTF_FORCEPREPRUNE 0x20000L    flag to force search prepruning
+     CNTF_NOFLIP        0x40000L    flag to suppress flips on insert
+     CNTF_FORCEFLIP     0x80000L    flag to force flips on insert
+     CNTF_NODEFER      0x100000L    flag to prevent deferred insert 
      
      creates an empty tree with no right or left node and with the dMax-below
      set to negative values so that any match found will be stored since it will
@@ -290,7 +350,7 @@ extern "C" {
     
     int CNearTreeCreate(CNearTreeHandle CNEARTREE_FAR * treehandle, 
                         size_t treedim, 
-                        int treetype);
+                        long treetype);
     
     /*
      =======================================================================
@@ -377,6 +437,40 @@ extern "C" {
      */
     
     int CNearTreeGetDepth (const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * depth);
+
+    
+    /*
+     =======================================================================
+
+     int CNearTreeGetFlags(const CNearTreeHandle treehandle, 
+     long CNEARTREE_FAR *flags, 
+     const long mask)
+     
+     int CNearTreeSetFlags(const CNearTreeHandle treehandle,
+     const long flags,
+     const long mask)
+     
+     functions to get or set the execution control flags:
+     
+        CNTF_NOPREPRUNE    to supress all search prepruning
+        CNTF_FORCEPREPRUNE to force search prepruning      
+        CNTF_NOFLIP        flag to suppress flips on insert
+        CNTF_FORCEFLIP     flag to force flips on insert
+        CNTF_NODEFER       flag to prevent deferred insert
+    
+     The desired flags may be ored.  If mask is no zero it is
+     used as a bit mask, so a call with a flags of zero and a
+     mask equal to a particular flag, clears that flag.
+     =======================================================================
+     */
+    
+    int CNearTreeGetFlags(const CNearTreeHandle treehandle, 
+                          long CNEARTREE_FAR *flags, 
+                          const long mask);
+    
+    int CNearTreeSetFlags(const CNearTreeHandle treehandle,
+                          const long flags,
+                          const long mask);
     
     /*
      =======================================================================
@@ -406,19 +500,53 @@ extern "C" {
                         const void CNEARTREE_FAR * coord, 
                         const void CNEARTREE_FAR * obj );
     
+    /*  
+     =======================================================================
+     int CNearTreeNodeReInsert_Flip ( const CNearTreeHandle treehandle,
+     const const CNearTreeNodeHandle treenodehandle, 
+     size_t CNEARTREE_FAR * depth)
+     
+     Function to reinsert the elements from a detached a node into a CNearTree 
+     for later searching
+     
+     treehandle is the handle of the overall neartree being used
+     
+     treenodehandle is the handle of the node in the existing tree at which to start
+     the insertion
+     
+     pntn is the handle of the previously detached node from which to 
+     extract the nodes for insertion
+     
+     depth is used to keep track of the depth at which the insertion is done
+     
+     return 0 for success, nonzero for an error
+     
+     =======================================================================
+     */
+    
+    int CNearTreeNodeReInsert_Flip( const CNearTreeHandle treehandle,
+                                   const CNearTreeNodeHandle treenodehandle,
+                                   const CNearTreeNodeHandle pntn,
+                                   size_t CNEARTREE_FAR * depth);
+        
+        
+    
     
     /*
      =======================================================================
-     int CNearTreeNodeInsert( const CNearTreeHandle treehandle,
-     const CNearTreeNodeHandle treenodehandle,
-     const size_t index,
-     size_t CNEARTREE_FAR * depth );
+     int CNearTreeNodeInsert ( const CNearTreeHandle treehandle,
+     const const CNearTreeNodeHandle treenodehandle, 
+     size_t index;
+     size_t CNEARTREE_FAR * depth)
      
-     Function to insert some "point" as an object into a CNearTree for
-     later searching, starting at a given treenode
+     Function to insert some "point" as an object into a node in a CNearTree for
+     later searching
      
-     coord is a coordinate vector for an object, obj, to be inserted into a
-     Neartree.  A static copy of the coordinates and a pointer to the
+     treenodehandle is the handle of the node at which to start the insertion
+     
+     index is the index of the object and coordinates to add from 
+     treehandle->m_ObjectStore and treehandle->CoordStore into a NearTree.
+     A static copy of the coordinates and a pointer to the
      object are inserted
      
      Three possibilities exist: put the datum into the left
@@ -431,9 +559,72 @@ extern "C" {
      return 0 for success, nonzero for an error
      
      =======================================================================
+     =======================================================================
+     int CNearTreeNodeInsert_Flip ( const CNearTreeHandle treehandle,
+     const const CNearTreeNodeHandle treenodehandle, 
+     size_t index;
+     size_t CNEARTREE_FAR * depth)
+     
+     Function to insert some "point" as an object into a node in a CNearTree for
+     later searching
+     
+     treenodehandle is the handle of the node at which to start the insertion
+     
+     index is the index of the object and coordinates to add from 
+     treehandle->m_ObjectStore and treehandle->CoordStore into a NearTree.
+     A static copy of the coordinates and a pointer to the
+     object are inserted
+     
+     Three possibilities exist: put the datum into the left
+     position (first test),into the right position, or else
+     into a node descending from the nearer of those positions
+     when they are both already used.
+     
+     depth is used to keep track of the depth at which the insertion is done
+     
+     return 0 for success, nonzero for an error
+     
+     =======================================================================
+     =======================================================================
+     int CNearTreeNodeInsert_FullFlip ( const CNearTreeHandle treehandle,
+     const const CNearTreeNodeHandle treenodehandle, 
+     size_t index;
+     size_t CNEARTREE_FAR * depth)
+     
+     Function to insert some "point" as an object into a node in a CNearTree for
+     later searching
+     
+     treenodehandle is the handle of the node at which to start the insertion
+     
+     index is the index of the object and coordinates to add from 
+     treehandle->m_ObjectStore and treehandle->CoordStore into a NearTree.
+     A static copy of the coordinates and a pointer to the
+     object are inserted
+     
+     Three possibilities exist: put the datum into the left
+     position (first test),into the right position, or else
+     into a node descending from the nearer of those positions
+     when they are both already used.
+     
+     This version will do a flip on insertions to try to drive the top pairs
+     apart, starting at any level in the tree.
+     
+     depth is used to keep track of the depth at which the insertion is done
+     
+     return 0 for success, nonzero for an error
+     
+     =======================================================================
      */
     
     int CNearTreeNodeInsert( const CNearTreeHandle treehandle,
+                            const CNearTreeNodeHandle treenodehandle,
+                            const size_t index, 
+                            size_t CNEARTREE_FAR * depth );
+    int CNearTreeNodeInsert_Flip( const CNearTreeHandle treehandle,
+                            const CNearTreeNodeHandle treenodehandle,
+                            const size_t index, 
+                            size_t CNEARTREE_FAR * depth );
+    int CNearTreeNodeInsert_FullFlip( const CNearTreeHandle treehandle,
                             const CNearTreeNodeHandle treenodehandle,
                             const size_t index, 
                             size_t CNEARTREE_FAR * depth );
@@ -461,6 +652,7 @@ extern "C" {
      return 0 for success, nonzero for an error
      
      =======================================================================
+     
      */
     
     int CNearTreeInsert( const CNearTreeHandle treehandle,
