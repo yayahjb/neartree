@@ -410,11 +410,23 @@ extern "C" {
      int CNearTreeGetDelayedSize (const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * size)
      
      Return the number of objects in the delay queue tree in size
+     This is a deprecated alternate name for CNearTreeGetDeferredSize
      
      =======================================================================
      */
     
     int CNearTreeGetDelayedSize (const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * size);
+
+    /*
+     =======================================================================
+     int CNearTreeGetDeferredSize (const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * size)
+     
+     Return the number of objects in the delay queue tree in size
+     
+     =======================================================================
+     */
+    
+    int CNearTreeGetDeferredSize ( const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * size );
     
     /*
      =======================================================================
@@ -471,6 +483,120 @@ extern "C" {
     int CNearTreeSetFlags(const CNearTreeHandle treehandle,
                           const long flags,
                           const long mask);
+    
+    /*
+     =======================================================================
+     int CNearTreeGetMeanSpacing ( const CNearTreeHandle treehandle, 
+     double CNEARTREE_FAR * spacing  )
+     
+     Get an estimate of the spacing of points
+     
+     
+     =======================================================================
+     */
+    
+    int CNearTreeGetMeanSpacing ( const CNearTreeHandle treehandle, 
+                                 double CNEARTREE_FAR * spacing  );
+    
+    /*
+     =======================================================================
+     int CNearTreeGetVarSpacing ( const CNearTreeHandle treehandle, 
+     double CNEARTREE_FAR * varspacing  )
+     
+     Get an estimate of variance of the spacing of points
+     
+     
+     =======================================================================
+     */
+    int CNearTreeGetVarSpacing ( const CNearTreeHandle treehandle, 
+                                double CNEARTREE_FAR * varspacing  );
+    
+    
+#ifndef CNEARTREE_INSTRUMENTED
+    /*
+     =======================================================================
+     int CNearTreeGetNodeVisits (  const CNearTreeHandle treehandle,
+     size_t CNEARTREE_FAR * visits)
+     
+     Get the number of visits to nodes
+     Dummy version to return 0
+     
+     
+     =======================================================================
+     */
+    int CNearTreeGetNodeVisits ( const CNearTreeHandle treehandle,
+                                size_t CNEARTREE_FAR * visits);
+    
+#endif
+    
+#ifdef CNEARTREE_INSTRUMENTED
+    /*
+     =======================================================================
+     int CNearTreeGetNodeVisits ( const CNearTreeHandle treehandle,
+     size_t CNEARTREE_FAR * visits)
+     
+     Get the number of visits to nodes
+     
+     
+     =======================================================================
+     */
+    int CNearTreeGetNodeVisits ( const CNearTreeHandle treehandle,
+                                size_t CNEARTREE_FAR * visits);
+    /*
+     =======================================================================
+     int CNearTreeSetNodeVisits (  const CNearTreeHandle treehandle,
+     const size_t visits )
+     
+     Set the number of visits to nodes
+     
+     
+     =======================================================================
+     */
+    int CNearTreeSetNodeVisits (  const CNearTreeHandle treehandle,
+                                const size_t visits );
+#endif    
+    
+    /*
+     =======================================================================
+     int CNearTreeGetDiamEstimate (  const CNearTreeHandle treehandle,
+     double CNEARTREE_FAR * diamest )
+     
+     Get an estimate of the diameter
+     
+     
+     =======================================================================
+     */
+    int CNearTreeGetDiamEstimate ( const CNearTreeHandle treehandle,
+                                  double CNEARTREE_FAR * diamest );
+    
+    /*
+     =======================================================================
+     int CNearTreeGetDimEstimateEsd ( const CNearTreeHandle treehandle,
+     double CNEARTREE_FAR * dimestesd )
+     
+     Get the current best estimate of the dimension esd
+     
+     =======================================================================
+     */
+    int CNearTreeGetDimEstimateEsd ( const CNearTreeHandle treehandle,
+                                    double CNEARTREE_FAR * dimestesd );
+    
+    
+    /*
+     =======================================================================
+     int CNearTreeGetDimEstimate ( const CNearTreeHandle treehandle,
+     double CNEARTREE_FAR * diamest,
+     const double DimEstimateEsd )
+     
+     Get an estimate of the dimension of the collection of points
+     in the tree, to within the specified esd
+     
+     
+     =======================================================================
+     */
+    int CNearTreeGetDimEstimate ( const CNearTreeHandle treehandle,
+                                 double CNEARTREE_FAR * dimest,
+                                 const double DimEstimateEsd );
     
     /*
      =======================================================================
@@ -738,6 +864,35 @@ extern "C" {
      
      the return value is true only if a point was found
      
+     this version searches down the shortest branch first
+     
+     =======================================================================
+ 
+     =======================================================================
+     int CNearTreeLeftNearestNeighbor ( const CNearTreeHandle treehandle, 
+     const double dRadius,  
+     void CNEARTREE_FAR *  CNEARTREE_FAR * coordClosest,
+     void CNEARTREE_FAR * CNEARTREE_FAR * objClosest,   
+     const void CNEARTREE_FAR * coord )
+     
+     Function to search a Neartree for the object closest to some probe point, coord. This function
+     is only here so that the function CNearTreeNearest can be called without having dRadius const
+     
+     dRadius is the maximum search radius - any point farther than dRadius from the probe
+     point will be ignored
+     
+     coordClosest is the coordinate vector into which the coordinates of the nearest point
+     will be stored
+     
+     objClosest is the address into which a pointer to the object associated with coordClosest
+     will be stored
+     
+     coord  is the probe point
+     
+     the return value is true only if a point was found
+     
+     this version searches down the left branch first
+     
      =======================================================================
      */
     
@@ -984,9 +1139,44 @@ extern "C" {
      
      the return value is 0 only if a point was found within dRadius
      
+     this version search down the shortest branch first
+     
      =======================================================================
+     =======================================================================
+     
+     int CNearTreeLeftNearest ( const CNearTreeHandle treehandle, 
+     double CNEARTREE_FAR *dRadius,  
+     void CNEARTREE_FAR * CNEARTREE_FAR * coordClosest,
+     void CNEARTREE_FAR * CNEARTREE_FAR * objClosest,
+     const void CNEARTREE_FAR * coord )
+     
+     Function to search a Neartree for the object closest to some probe point, coord.
+     This function is called by CNearTreeNearestNeighbor.
+     
+     *dRadius is the smallest currently known distance of an object from the probe point
+     and is modified as the search progresses.
+     
+     coordClosest is the returned closest point
+     to the probe point that can be found in the Neartree
+     
+     objClosest is a pointer to a pointer to hold the corresponding object or is NULL
+     
+     coord  is the probe point
+     
+     the return value is 0 only if a point was found within dRadius
+     
+     this version searches down the left branch first
+     
+     =======================================================================
+     
      */
     int CNearTreeNearest ( const CNearTreeHandle treehandle, 
+                          double CNEARTREE_FAR * dRadius,  
+                          void CNEARTREE_FAR * CNEARTREE_FAR * coordClosest,
+                          void CNEARTREE_FAR * CNEARTREE_FAR * objClosest,
+                          const void CNEARTREE_FAR * coord );
+
+    int CNearTreeLeftNearest ( const CNearTreeHandle treehandle, 
                           double CNEARTREE_FAR * dRadius,  
                           void CNEARTREE_FAR * CNEARTREE_FAR * coordClosest,
                           void CNEARTREE_FAR * CNEARTREE_FAR * objClosest,

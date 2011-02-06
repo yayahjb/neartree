@@ -764,11 +764,33 @@ extern "C" {
      int CNearTreeGetDelayedSize (const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * size)
      
      Return the number of objects in the delay queue tree in size
+     This is a deprecated alternate name for CNearTreeGetDeferredSize
      
      =======================================================================
      */
     
     int CNearTreeGetDelayedSize ( const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * size )
+    {
+        if (!treehandle || !size ) return CNEARTREE_BAD_ARGUMENT;
+        
+        *size = 0;
+        
+        if (treehandle->m_DelayedIndices) *size = CVectorSize(treehandle->m_DelayedIndices);
+        
+        return CNEARTREE_SUCCESS;
+        
+    }
+    
+    /*
+     =======================================================================
+     int CNearTreeGetDeferredSize (const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * size)
+     
+     Return the number of objects in the delay queue tree in size
+     
+     =======================================================================
+     */
+    
+    int CNearTreeGetDeferredSize ( const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * size )
     {
         if (!treehandle || !size ) return CNEARTREE_BAD_ARGUMENT;
         
@@ -850,6 +872,344 @@ extern "C" {
         }
         return CNEARTREE_SUCCESS;
     }
+    
+    
+    /*
+     =======================================================================
+      int CNearTreeGetMeanSpacing ( const CNearTreeHandle treehandle, 
+                                    double CNEARTREE_FAR * spacing  )
+    
+      Get an estimate of the spacing of points
+      
+    
+     =======================================================================
+     */
+     
+    int CNearTreeGetMeanSpacing ( const CNearTreeHandle treehandle, 
+                                 double CNEARTREE_FAR * spacing  )
+    {
+        if ( !treehandle || !spacing ) return CNEARTREE_BAD_ARGUMENT;
+        
+        *spacing = treehandle->m_SumSpacings/(double)((1+CVectorSize(treehandle->m_DelayedIndices)));
+        
+        return CNEARTREE_SUCCESS;
+    }
+    
+     /*
+     =======================================================================
+      int CNearTreeGetVarSpacing ( const CNearTreeHandle treehandle, 
+                                   double CNEARTREE_FAR * varspacing  )
+    
+      Get an estimate of variance of the spacing of points
+      
+    
+     =======================================================================
+      */
+    int CNearTreeGetVarSpacing ( const CNearTreeHandle treehandle, 
+                                 double CNEARTREE_FAR * varspacing  )
+
+    {
+        double meanSpacing;
+        
+        if ( !treehandle || !varspacing ) return CNEARTREE_BAD_ARGUMENT;
+
+        meanSpacing = 
+          treehandle->m_SumSpacings/(double)((1+CVectorSize(treehandle->m_DelayedIndices)));
+
+        *varspacing = treehandle->m_SumSpacingsSq/
+          (double)((1+CVectorSize(treehandle->m_DelayedIndices)))-meanSpacing*meanSpacing;
+
+        return CNEARTREE_SUCCESS;
+
+    }
+    
+#ifndef CNEARTREE_INSTRUMENTED
+     /*
+     =======================================================================
+      int CNearTreeGetNodeVisits (  const CNearTreeHandle treehandle,
+                                    size_t CNEARTREE_FAR * visits)
+    
+      Get the number of visits to nodes
+      Dummy version to return 0
+      
+    
+     =======================================================================
+      */
+    int CNearTreeGetNodeVisits ( const CNearTreeHandle treehandle,
+                                 size_t CNEARTREE_FAR * visits)
+    {
+        if ( !treehandle || !visits ) return CNEARTREE_BAD_ARGUMENT;
+        
+        visits = 0;
+        
+        return CNEARTREE_SUCCESS;
+        
+    }
+    
+#endif
+    
+#ifdef CNEARTREE_INSTRUMENTED
+     /*
+     =======================================================================
+      int CNearTreeGetNodeVisits ( const CNearTreeHandle treehandle,
+                                   size_t CNEARTREE_FAR * visits)
+      
+      Get the number of visits to nodes
+      
+    
+     =======================================================================
+      */
+    int CNearTreeGetNodeVisits ( const CNearTreeHandle treehandle,
+                                size_t CNEARTREE_FAR * visits)
+    {
+        if ( !treehandle || !visits ) return CNEARTREE_BAD_ARGUMENT;
+        
+        *visits = tree-handle->m_NodeVisits;
+        
+        return CNEARTREE_SUCCESS;
+
+    }
+     /*
+     =======================================================================
+      int CNearTreeSetNodeVisits (  const CNearTreeHandle treehandle,
+                                    const size_t visits )
+    
+      Set the number of visits to nodes
+      
+    
+     =======================================================================
+      */
+     int CNearTreeSetNodeVisits (  const CNearTreeHandle treehandle,
+                                  const size_t visits )
+    {
+        if ( !treehandle ) return CNEARTREE_BAD_ARGUMENT;
+        
+        treehandle->m_NodeVisits = visits;
+        
+        return CNEARTREE_SUCCESS;
+        
+    }
+#endif    
+    
+     /*
+     =======================================================================
+      int CNearTreeGetDiamEstimate (  const CNearTreeHandle treehandle,
+                                      double CNEARTREE_FAR * diamest )
+    
+      Get an estimate of the diameter
+      
+    
+     =======================================================================
+      */
+    int CNearTreeGetDiamEstimate ( const CNearTreeHandle treehandle,
+                                   double CNEARTREE_FAR * diamest )
+    {
+        if ( !treehandle || !diamest ) return CNEARTREE_BAD_ARGUMENT;
+
+        *diamest = treehandle->m_DiamEstimate;
+        
+        return CNEARTREE_SUCCESS;
+        
+    }
+
+    
+     /*
+     =======================================================================
+      int CNearTreeGetDimEstimateEsd ( const CNearTreeHandle treehandle,
+                                 double CNEARTREE_FAR * dimestesd )
+    
+      Get the current best estimate of the dimension esd
+    
+     =======================================================================
+      */
+     int CNearTreeGetDimEstimateEsd ( const CNearTreeHandle treehandle,
+                              double CNEARTREE_FAR * dimestesd )
+    {
+        double dimest;
+        
+        int errorcode;
+        
+        if ( !treehandle || !dimestesd ) return CNEARTREE_BAD_ARGUMENT;
+
+        if ( treehandle->m_DimEstimate == 0.) {
+            
+            if (!(errorcode=CNearTreeGetDimEstimate(treehandle,&dimest,0.1))) {
+                
+                *dimestesd = DBL_MAX;
+                
+                return errorcode;
+
+                
+            }
+
+        }
+        
+        *dimestesd = treehandle->m_DimEstimateEsd;
+        
+        return CNEARTREE_SUCCESS;
+    } 
+    
+    
+     /*
+     =======================================================================
+      int CNearTreeGetDimEstimate ( const CNearTreeHandle treehandle,
+                                       double CNEARTREE_FAR * diamest,
+                                       const double DimEstimateEsd )
+    
+      Get an estimate of the dimension of the collection of points
+      in the tree, to within the specified esd
+      
+    
+     =======================================================================
+      */
+    int CNearTreeGetDimEstimate ( const CNearTreeHandle treehandle,
+                                 double CNEARTREE_FAR * dimest,
+                                 const double DimEstimateEsd )
+    {
+        size_t estsize;
+        double estd;
+        double estdim = 0.;
+        double estdimsq = 0.;
+        size_t trials;
+        size_t n, ii;
+        size_t probe_index;
+        double testlim;
+        double meanSpacing;
+        double pointdensity;
+        double targetradius;
+        double rat;
+        double shrinkfactor;
+        double dummy;
+        int bResult;
+        size_t elsize;
+        int goodtrials;
+        
+        size_t poplarge, popsmall, poptrial;
+        CVectorHandle sampledisklarge;
+        
+        if ( !treehandle || !dimest ) return CNEARTREE_BAD_ARGUMENT;
+        CNearTreeCompleteDelayedInsert(treehandle);
+        
+        elsize = sizeof(double);
+        if ((treehandle->m_iflags)&CNEARTREE_TYPE_DOUBLE) {
+            elsize = sizeof(double);
+        } else if ((treehandle->m_iflags)&CNEARTREE_TYPE_INTEGER) {
+            elsize = sizeof(int);
+        } else elsize = sizeof(char);
+
+        if ( treehandle->m_DimEstimate == DBL_MAX ) {
+            *dimest = 0.;
+            return CNEARTREE_NOT_FOUND;
+        }
+        if ( treehandle->m_DimEstimate > 0. 
+            && (treehandle->m_DimEstimateEsd <= DimEstimateEsd || 
+                DimEstimateEsd <= 0.) ) {
+            *dimest = treehandle->m_DimEstimate;
+            return CNEARTREE_SUCCESS;
+        }
+        
+        estsize = CVectorSize(treehandle->m_CoordStore);
+                
+        testlim = (DimEstimateEsd<=0.)?0.01:(DimEstimateEsd*DimEstimateEsd);
+        meanSpacing = treehandle->m_SumSpacings/(double)((1+treehandle->m_szsize));
+        probe_index = 0;
+        
+        
+        /*  Do not try to get a dimension extimate with fewer than
+         32 points or a diameter less than DBL_EPSILON*/
+        
+        if (estsize < 32 || (double)treehandle->m_DiamEstimate < DBL_EPSILON) {
+            treehandle->m_DimEstimate = treehandle->m_DimEstimateEsd = DBL_MAX;
+            *dimest = 0.;
+           return CNEARTREE_NOT_FOUND;
+        }
+        
+        /* Estimate the number of points per unit distance
+         and a target radius that would produce 4096 points
+         in dimension 1.  If this would bring us beyond
+         the diameter/1.1, reduce to that size.  */
+        pointdensity = ((double)estsize)/((double)treehandle->m_DiamEstimate);
+        targetradius = 4096./pointdensity;
+        if (targetradius <  meanSpacing*10.) targetradius = meanSpacing*10.;
+        if (targetradius > (double)treehandle->m_DiamEstimate/1.1)
+            targetradius = (double)treehandle->m_DiamEstimate/1.1;
+        
+        /*  Now try to find a smaller adjusted target radius that will
+         contain a reasonable number of points*/
+        
+        shrinkfactor = 4.;
+        n = (size_t)(((double)estsize-1u) * (CRHrandUrand(&(treehandle->m_rhr))));
+        dummy = CRHrandUrand(&(treehandle->m_rhr)); dummy=CRHrandUrand(&(treehandle->m_rhr));
+        
+        if (CVectorCreate(&(sampledisklarge), (treehandle->m_szdimension)*elsize,10)) {
+                      return CNEARTREE_MALLOC_FAILED;
+        }
+                      
+        bResult=!CNearTreeFindInSphere( treehandle, (double)targetradius/shrinkfactor,
+                                       sampledisklarge, NULL, 
+                                       CVectorElementAt(treehandle->m_CoordStore,n), 1);
+        poptrial = CVectorSize(sampledisklarge);
+        do { 
+            shrinkfactor = shrinkfactor/1.1;
+            popsmall=poptrial;
+            bResult=!CNearTreeFindInSphere( treehandle, (double)targetradius/shrinkfactor,
+                                           sampledisklarge, NULL, 
+                                           CVectorElementAt(treehandle->m_CoordStore,n), 1);
+            poptrial = CVectorSize(sampledisklarge);
+            n = (size_t)(((double)estsize-1u) * (CRHrandUrand(&(treehandle->m_rhr))));
+            dummy = CRHrandUrand(&(treehandle->m_rhr)); dummy=CRHrandUrand(&(treehandle->m_rhr));
+        } while (poptrial < 256 && shrinkfactor > 1. && poptrial <= popsmall+10);
+        
+        targetradius /= shrinkfactor;
+        targetradius *= 1.1;
+        
+        goodtrials = 0;
+        trials = (size_t)sqrt(0.5+(double)estsize);
+        if (trials < 10) trials = 10;
+                
+        for(ii = 0; ii < trials; ii++) {
+            n = (size_t)(((double)estsize-1u) * (CRHrandUrand(&(treehandle->m_rhr))));
+            dummy=CRHrandUrand(&(treehandle->m_rhr)); dummy=CRHrandUrand(&(treehandle->m_rhr));
+
+            bResult=!CNearTreeFindInSphere( treehandle, (double)targetradius,
+                                           sampledisklarge, NULL, 
+                                           CVectorElementAt(treehandle->m_CoordStore,n), 1);
+            poplarge = CVectorSize(sampledisklarge);
+            if (poplarge > 0) {
+                bResult=!CNearTreeFindInSphere( treehandle, (double)targetradius/1.1,
+                                           sampledisklarge, NULL, 
+                                           CVectorElementAt(treehandle->m_CoordStore,n), 1);
+                popsmall = CVectorSize(sampledisklarge);
+                if (popsmall > 0 && popsmall< poplarge) {
+                    rat = (double)poplarge/(double)popsmall;
+                    estd = log(rat)/log(1.1);
+                    estdim += estd;
+                    estdimsq += estd*estd;
+                    goodtrials++;
+                    if (estdimsq/((double)goodtrials) - estdim*estdim/((double)(goodtrials*goodtrials)) <= testlim) break;                    
+                }
+            }
+        }
+        if (goodtrials < 1) {
+            treehandle->m_DimEstimate = treehandle->m_DimEstimateEsd = DBL_MAX;
+            *dimest = 0.;
+            CVectorFree(&sampledisklarge);
+            return CNEARTREE_NOT_FOUND;
+        }
+        treehandle->m_DimEstimate = estdim/((double)goodtrials);
+        treehandle->m_DimEstimateEsd = sqrt(estdimsq/((double)goodtrials) 
+                -  treehandle->m_DimEstimate*treehandle->m_DimEstimate);
+        if (treehandle->m_DimEstimate + 3.*treehandle->m_DimEstimateEsd< 0.) {
+            treehandle->m_DimEstimate = treehandle->m_DimEstimateEsd = DBL_MAX;
+            *dimest = 0.;
+            CVectorFree(&sampledisklarge);
+            return CNEARTREE_NOT_FOUND;
+        }
+        *dimest = estdim;
+        return CNEARTREE_SUCCESS;
+    }
+    
+    
     
     
     
@@ -1688,6 +2048,30 @@ extern "C" {
      coord  is the probe point
      the return value is true only if a point was found
      
+     This version does a balanced search
+
+     =======================================================================
+     =======================================================================
+
+     int CNearTreeLeftNearestNeighbor ( const CNearTreeHandle treehandle, 
+     const double dRadius,  
+     void CNEARTREE_FAR * CNEARTREE_FAR * coordClosest,
+     void CNEARTREE_FAR * CNEARTREE_FAR * objClosest,   
+     const void CNEARTREE_FAR * coord )
+     
+     Function to search a Neartree for the object closest to some probe point, coord. This function
+     is only here so that the function CNearTreeNearest can be called without having dRadius const
+     
+     dRadius is the maximum search radius - any point farther than dRadius from the probe
+     point will be ignored
+     coordClosest is a pointer to the coordinate vector of the nearest point
+     objClosest is the address into which a pointer to the object associated with coordClosest
+     will be stored
+     coord  is the probe point
+     the return value is true only if a point was found
+     
+     This version does a left search first
+     
      =======================================================================
      */
     int CNearTreeNearestNeighbor (const CNearTreeHandle treehandle, 
@@ -1704,6 +2088,22 @@ extern "C" {
         if (!(treehandle->m_ptTree->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) 
             return CNEARTREE_NOT_FOUND;
         return ( CNearTreeNearest ( treehandle, &dSearchRadius, coordClosest, objClosest, coord ) );
+    }
+    
+    int CNearTreeLeftNearestNeighbor (const CNearTreeHandle treehandle, 
+                                  const double dRadius,  
+                                  void CNEARTREE_FAR * CNEARTREE_FAR * coordClosest,
+                                  void CNEARTREE_FAR * CNEARTREE_FAR * objClosest, 
+                                  const void CNEARTREE_FAR * coord ) {
+        
+        double dSearchRadius = dRadius;
+        if (!treehandle || ! coord ) return CNEARTREE_BAD_ARGUMENT;
+        if ( treehandle->m_DelayedIndices ) {
+            if (CNearTreeCompleteDelayedInsert(treehandle)!=CNEARTREE_SUCCESS) return CNEARTREE_BAD_ARGUMENT;
+        }        
+        if (!(treehandle->m_ptTree->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) 
+            return CNEARTREE_NOT_FOUND;
+        return ( CNearTreeLeftNearest ( treehandle, &dSearchRadius, coordClosest, objClosest, coord ) );
     }
     
     
@@ -1801,6 +2201,10 @@ extern "C" {
         
         if (!(pt->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
         
+#ifdef CNEARTREE_INSTRUMENTED
+        (treehandle_>m_NodeVisits)++;
+#endif                                               
+        
         CVectorCreate(&sStack,sizeof(CNearTreeNodeHandle),10);
         
         /* clear the contents of the return vector so that things don't accidentally accumulate */
@@ -1831,6 +2235,9 @@ extern "C" {
                     (TRIANG(dDR,pt->m_dMaxRight,dRadius))){
                     /* we did the left and now we finished the right, go down */
                     pt = pt->m_pRightBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle_>m_NodeVisits)++;
+#endif                                                           
                     eDir = left;
                 } else {
                     eDir = end;
@@ -1857,6 +2264,9 @@ extern "C" {
                 if ((pt->m_iflags&CNEARTREE_FLAG_LEFT_CHILD)&&
                     (TRIANG(dDL,pt->m_dMaxLeft,dRadius))){
                     pt = pt->m_pLeftBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle_>m_NodeVisits)++;
+#endif                                                           
                 } else {
                     eDir = end;
                 }
@@ -2011,6 +2421,10 @@ extern "C" {
         if (!pt) return CNEARTREE_BAD_ARGUMENT;
         
         if (!(pt->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
+
+#ifdef CNEARTREE_INSTRUMENTED
+        (treehandle_>m_NodeVisits)++;
+#endif                                       
         
         CVectorCreate(&sStack,sizeof(CNearTreeNodeHandle),10);
         
@@ -2042,6 +2456,9 @@ extern "C" {
                     (TRIANG(dRadius,dDR,pt->m_dMaxRight))){
                     /* we did the left and now we finished the right, go down */
                     pt = pt->m_pRightBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle_>m_NodeVisits)++;
+#endif                                                           
                     eDir = left;
                 } else {
                     eDir = end;
@@ -2068,6 +2485,9 @@ extern "C" {
                 if ((pt->m_iflags&CNEARTREE_FLAG_LEFT_CHILD)&&
                     (TRIANG(dRadius,dDL,pt->m_dMaxLeft))){
                     pt = pt->m_pLeftBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle_>m_NodeVisits)++;
+#endif                                                           
                 } else {
                     eDir = end;
                 }
@@ -2220,6 +2640,10 @@ extern "C" {
         
         if (!(pt->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
         
+#ifdef CNEARTREE_INSTRUMENTED
+        (treehandle_>m_NodeVisits)++;
+#endif                                               
+        
         CVectorCreate(&sStack,sizeof(CNearTreeNodeHandle),10);
         
         /* clear the contents of the return vector so that things don't accidentally accumulate */
@@ -2251,6 +2675,10 @@ extern "C" {
                     (TRIANG(dRadiusInner,dDR,pt->m_dMaxRight))){
                     /* we did the left and now we finished the right, go down */
                     pt = pt->m_pRightBranch;
+
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle_>m_NodeVisits)++;
+#endif                                       
                     eDir = left;
                 } else {
                     eDir = end;
@@ -2278,6 +2706,9 @@ extern "C" {
                     (TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter))&&
                     (TRIANG(dRadiusInner,dDL,pt->m_dMaxRight))){
                     pt = pt->m_pLeftBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle_>m_NodeVisits)++;
+#endif                                                           
                 } else {
                     eDir = end;
                 }
@@ -2553,6 +2984,10 @@ extern "C" {
         
         if (!(pt->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
         
+#ifdef CNEARTREE_INSTRUMENTED
+        (treehandle_>m_NodeVisits)++;
+#endif                                               
+        
         if (CVectorCreate(&sStack,sizeof(CNearTreeNodeHandle),10) ||
             
             CVectorCreate(&dDs,sizeof(double),k) ||
@@ -2583,6 +3018,9 @@ extern "C" {
                     (TRIANG(dDR,pt->m_dMaxRight,dTarget))){
                     /* we did the left and now we finished the right, go down */
                     pt = pt->m_pRightBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle_>m_NodeVisits)++;
+#endif                                                           
                     eDir = left;
                 } else {
                     eDir = end;
@@ -2605,6 +3043,9 @@ extern "C" {
                 if ((pt->m_iflags&CNEARTREE_FLAG_LEFT_CHILD)&&
                     (TRIANG(dDL,pt->m_dMaxLeft,dTarget))){
                     pt = pt->m_pLeftBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle_>m_NodeVisits)++;
+#endif                                                           
                 } else {
                     eDir = end;
                 }
@@ -2791,6 +3232,10 @@ extern "C" {
         
         if (!(pt->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
         
+#ifdef CNEARTREE_INSTRUMENTED
+        (treehandle_>m_NodeVisits)++;
+#endif                                               
+        
         if (CVectorCreate(&sStack,sizeof(CNearTreeNodeHandle),10) ||
             
             CVectorCreate(&dDs,sizeof(double),k) ||
@@ -2822,6 +3267,9 @@ extern "C" {
                     (TRIANG(dTarget,dDR,pt->m_dMaxRight))){
                     /* we did the left and now we finished the right, go down */
                     pt = pt->m_pRightBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle_>m_NodeVisits)++;
+#endif                                                           
                     eDir = left;
                 } else {
                     eDir = end;
@@ -2845,6 +3293,9 @@ extern "C" {
                 if ((pt->m_iflags&CNEARTREE_FLAG_LEFT_CHILD)&&
                     (TRIANG(dTarget,dDL,pt->m_dMaxLeft))){
                     pt = pt->m_pLeftBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle_>m_NodeVisits)++;
+#endif                                                           
                 } else {
                     eDir = end;
                 }
@@ -2972,6 +3423,28 @@ extern "C" {
      coord  is the probe point
      the return value is 0 only if a point was found within dRadius
      
+     This version search down whichever branch seems shortest first
+     
+     =======================================================================
+     =======================================================================
+     int CNearTreeLdftNearest ( const CNearTreeHandle treehandle, 
+     double CNEARTREE_FAR *dRadius,  
+     void CNEARTREE_FAR * CNEARTREE_FAR * coordClosest,
+     void CNEARTREE_FAR * CNEARTREE_FAR * objClosest,
+     const void CNEARTREE_FAR * coord )
+     
+     Function to search a Neartree for the object closest to some probe point, coord.
+     This function is called by CNearTreeNearestNeighbor.
+     
+     *dRadius is the smallest currently known distance of an object from the probe point
+     and is modified as the search progresses.
+     coordClosest is a pointer to the coordinate vector of the nearest point
+     objClosest is a pointer to a pointer to hold the corresponding object or is NULL
+     coord  is the probe point
+     the return value is 0 only if a point was found within dRadius
+     
+     This version searches down the left branch first
+     
      =======================================================================
      */
     int CNearTreeNearest ( const CNearTreeHandle treehandle, 
@@ -2986,12 +3459,11 @@ extern "C" {
         CNearTreeNodeHandle pt;
         void CNEARTREE_FAR * pobjClosest;
         void CNEARTREE_FAR * pcoordClosest;
-        enum  { left, right, end } eDir;
-        
-        eDir = left; /* examine the left nodes first */
         
         pobjClosest = NULL;
         pcoordClosest = NULL;
+        
+        dDR = dDL = -1.;
         
         if ( !treehandle || !coord ) return CNEARTREE_BAD_ARGUMENT;
         
@@ -3011,56 +3483,221 @@ extern "C" {
         
         CVectorCreate(&sStack,sizeof(CNearTreeNodeHandle),10);
         
+#ifdef CNEARTREE_INSTRUMENTED
+        (treehandle_>m_NodeVisits)++;
+#endif          
+        if (!(pt->m_iflags&(CNEARTREE_FLAG_LEFT_DATA|CNEARTREE_FLAG_RIGHT_DATA))) {
+         
+           CVectorFree(&sStack);
+         
+           return CNEARTREE_NOT_FOUND;
+
+        }
         
-        while (!(eDir == end && CVectorSize(sStack) == 0)) {
-            
-            if ( eDir == right ) {
-                dDR = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord,  CVectorElementAt(coords,pt->m_indexRight));
-                if (dDR <= *dRadius ) {
-                    *dRadius = dDR;
-                    pobjClosest = CVectorElementAt(objs,pt->m_indexRight);
-                    pcoordClosest = CVectorElementAt(coords,pt->m_indexRight);
+        while ((pt->m_iflags&(CNEARTREE_FLAG_LEFT_DATA|CNEARTREE_FLAG_RIGHT_DATA))
+            || CVectorSize(sStack) != 0) {
+                
+                if (!(pt->m_iflags&(CNEARTREE_FLAG_LEFT_DATA|CNEARTREE_FLAG_RIGHT_DATA))) {                    
+                    if (CVectorSize(sStack) !=0 ) {
+                        CVectorGetElement(sStack,&pt,CVectorSize(sStack)-1);
+                        CVectorRemoveElement(sStack,CVectorSize(sStack)-1);
+#ifdef CNEARTREE_INSTRUMENTED
+                        (treehandle_>m_NodeVisits)++;
+#endif    
+                        continue;
+                    }
+                    break;
                 }
-                if ((pt->m_iflags&CNEARTREE_FLAG_RIGHT_CHILD)&& 
-                    (TRIANG(dDR,pt->m_dMaxRight,*dRadius))) {
-                    /* we did the left and now we finished the right, go down */
-                    pt = pt->m_pRightBranch;
-                    eDir = left;
-                } else {
-                    eDir = end;
+                
+                if ((pt->m_iflags&(CNEARTREE_FLAG_LEFT_DATA))) {
+                    dDL = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
+                    if (dDL <= *dRadius ) {
+                        *dRadius = dDL;
+                        pobjClosest = CVectorElementAt(objs,pt->m_indexLeft);
+                        pcoordClosest = CVectorElementAt(coords,pt->m_indexLeft);
+                    }                    
                 }
-            }
-            if ( eDir == left ) {
-                dDL = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
-                if (dDL <= *dRadius ) {
-                    *dRadius = dDL;
-                    pobjClosest = CVectorElementAt(objs,pt->m_indexLeft);
-                    pcoordClosest = CVectorElementAt(coords,pt->m_indexLeft);
+                if ((pt->m_iflags&(CNEARTREE_FLAG_RIGHT_DATA))) {
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle_>m_NodeVisits)++;
+#endif                      
+                    dDR = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexRight));
+                    if (dDR <= *dRadius ) {
+                        *dRadius = dDR;
+                        pobjClosest = CVectorElementAt(objs,pt->m_indexRight);
+                        pcoordClosest = CVectorElementAt(coords,pt->m_indexRight);
+                    }                    
                 }
-                if (pt->m_iflags&CNEARTREE_FLAG_RIGHT_DATA) {
-                    CVectorAddElement(sStack,&pt);
+                
+                /*
+                 See if both branches are populated.  In that case, save one branch
+                 on the stack, and process the other one based on which one seems
+                 smaller, but useful first]
+                 */
+                
+                if ((pt->m_iflags&CNEARTREE_FLAG_RIGHT_CHILD) && (pt->m_iflags&CNEARTREE_FLAG_LEFT_CHILD)){
+                    if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight ) {
+                        if ( TRIANG(dDL,pt->m_dMaxLeft,*dRadius)) {
+                            if ( TRIANG(dDR,pt->m_dMaxRight,*dRadius)) {
+                                CVectorAddElement(sStack,&(pt->m_pRightBranch));
+                            }
+                            pt = pt->m_pLeftBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                            (treehandle_>m_NodeVisits)++;
+#endif                                
+                            continue;
+                        }
+                        /* If we are here, the left branch was not useful
+                         Fall through to use the right
+                         */
+                    }
+                    
+                    /* We come here either because pursuing the left branch was not useful
+                     of the right branch look shorter
+                     */
+                    if ( TRIANG(dDR,pt->m_dMaxRight,*dRadius)) {
+                        if ( TRIANG(dDL,pt->m_dMaxLeft,*dRadius)) {
+                            CVectorAddElement(sStack,&(pt->m_pLeftBranch));
+                        }
+                        pt = pt->m_pRightBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                        (treehandle_>m_NodeVisits)++;
+#endif                
+                        continue;
+                    } 
+                    
                 }
-                if ((pt->m_iflags&CNEARTREE_FLAG_LEFT_CHILD)&&
-                    (TRIANG(dDL,pt->m_dMaxLeft,*dRadius))) {
+                
+                /* Only one branch is viable, try them one at a time
+                 */
+                if ( (pt->m_iflags&CNEARTREE_FLAG_LEFT_CHILD) && TRIANG(dDL,pt->m_dMaxLeft,*dRadius)) {
                     pt = pt->m_pLeftBranch;
-                } else {
-                    eDir = end;
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle_>m_NodeVisits)++;
+#endif                            
+                    continue;
                 }
-            }
-            if ( eDir == end && CVectorSize(sStack) != 0 ) {
-                CVectorGetElement(sStack,&pt,CVectorSize(sStack)-1);
-                CVectorRemoveElement(sStack,CVectorSize(sStack)-1);
-                eDir = right;
-            }
-            
-        }    
+                
+                if (  (pt->m_iflags&CNEARTREE_FLAG_RIGHT_CHILD) && TRIANG(dDR,pt->m_dMaxRight,*dRadius)) {
+                    pt = pt->m_pRightBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle_>m_NodeVisits)++;
+#endif                            
+                    continue;
+                }
+                if ( CVectorSize(sStack) != 0 ) {
+                    CVectorGetElement(sStack,&pt,CVectorSize(sStack)-1);
+                    CVectorRemoveElement(sStack,CVectorSize(sStack)-1);
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle_>m_NodeVisits)++;
+#endif                            
+                    continue;
+                }
+                    break;
+        }
         
         CVectorFree(&sStack);
         if (coordClosest) *coordClosest = pcoordClosest;
         if (objClosest) *objClosest = pobjClosest;
         return  pcoordClosest?CNEARTREE_SUCCESS:CNEARTREE_NOT_FOUND;
     }   /* Nearest */
-    
+         
+    int CNearTreeLeftNearest ( const CNearTreeHandle treehandle, 
+                               double CNEARTREE_FAR * dRadius,  
+                               void CNEARTREE_FAR * CNEARTREE_FAR * coordClosest,
+                               void CNEARTREE_FAR * CNEARTREE_FAR * objClosest,
+                               const void CNEARTREE_FAR * coord ) {
+         double   dDR, dDL;
+         CVectorHandle sStack;
+         CVectorHandle coords;
+         CVectorHandle objs;
+         CNearTreeNodeHandle pt;
+         void CNEARTREE_FAR * pobjClosest;
+         void CNEARTREE_FAR * pcoordClosest;
+         enum  { left, right, end } eDir;
+         
+         eDir = left; /* examine the left nodes first */
+         
+         pobjClosest = NULL;
+         pcoordClosest = NULL;
+         
+         if ( !treehandle || !coord ) return CNEARTREE_BAD_ARGUMENT;
+         
+         if ( treehandle->m_DelayedIndices ) {
+             if (CNearTreeCompleteDelayedInsert(treehandle)!=CNEARTREE_SUCCESS) return CNEARTREE_BAD_ARGUMENT;
+         }
+         
+         pt = treehandle->m_ptTree;
+         
+         if (!pt) return CNEARTREE_BAD_ARGUMENT;
+         
+         if (!(pt->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
+         
+         coords=treehandle->m_CoordStore;
+         
+         objs=treehandle->m_ObjectStore;        
+         
+         CVectorCreate(&sStack,sizeof(CNearTreeNodeHandle),10);
+         
+#ifdef CNEARTREE_INSTRUMENTED
+         (treehandle_>m_NodeVisits)++;
+#endif                            
+         
+         while (!(eDir == end && CVectorSize(sStack) == 0)) {
+             
+             if ( eDir == right ) {
+                 dDR = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord,  CVectorElementAt(coords,pt->m_indexRight));
+                 if (dDR <= *dRadius ) {
+                     *dRadius = dDR;
+                     pobjClosest = CVectorElementAt(objs,pt->m_indexRight);
+                     pcoordClosest = CVectorElementAt(coords,pt->m_indexRight);
+                 }
+                 if ((pt->m_iflags&CNEARTREE_FLAG_RIGHT_CHILD)&& 
+                     (TRIANG(dDR,pt->m_dMaxRight,*dRadius))) {
+                     /* we did the left and now we finished the right, go down */
+                     pt = pt->m_pRightBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                     (treehandle_>m_NodeVisits)++;
+#endif                                      
+                     eDir = left;
+                 } else {
+                     eDir = end;
+                 }
+             }
+             if ( eDir == left ) {
+                 dDL = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
+                 if (dDL <= *dRadius ) {
+                     *dRadius = dDL;
+                     pobjClosest = CVectorElementAt(objs,pt->m_indexLeft);
+                     pcoordClosest = CVectorElementAt(coords,pt->m_indexLeft);
+                 }
+                 if (pt->m_iflags&CNEARTREE_FLAG_RIGHT_DATA) {
+                     CVectorAddElement(sStack,&pt);
+                 }
+                 if ((pt->m_iflags&CNEARTREE_FLAG_LEFT_CHILD)&&
+                     (TRIANG(dDL,pt->m_dMaxLeft,*dRadius))) {
+                     pt = pt->m_pLeftBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                     (treehandle_>m_NodeVisits)++;
+#endif                                       
+                 } else {
+                     eDir = end;
+                 }
+             }
+             if ( eDir == end && CVectorSize(sStack) != 0 ) {
+                 CVectorGetElement(sStack,&pt,CVectorSize(sStack)-1);
+                 CVectorRemoveElement(sStack,CVectorSize(sStack)-1);
+                 eDir = right;
+             }
+             
+         }    
+         
+         CVectorFree(&sStack);
+         if (coordClosest) *coordClosest = pcoordClosest;
+         if (objClosest) *objClosest = pobjClosest;
+         return  pcoordClosest?CNEARTREE_SUCCESS:CNEARTREE_NOT_FOUND;
+     }   /* LeftNearest */
+          
     
     /*
      =======================================================================
@@ -3115,6 +3752,9 @@ extern "C" {
         
         if (!(pt->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
         
+#ifdef CNEARTREE_INSTRUMENTED
+         (treehandle_>m_NodeVisits)++;
+#endif                                                
         
         coords=treehandle->m_CoordStore;
         
@@ -3135,6 +3775,9 @@ extern "C" {
                     (TRIANG(*dRadius,dDR,pt->m_dMaxRight))) {
                     /* we did the left and now we finished the right, go down */
                     pt = pt->m_pRightBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle_>m_NodeVisits)++;
+#endif                                       
                     eDir = left;
                 } else {
                     eDir = end;
@@ -3153,6 +3796,9 @@ extern "C" {
                 if ((pt->m_iflags&CNEARTREE_FLAG_LEFT_CHILD)&&
                     (TRIANG(*dRadius,dDL,pt->m_dMaxLeft))) {
                     pt = pt->m_pLeftBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle_>m_NodeVisits)++;
+#endif                                       
                 } else {
                     eDir = end;
                 }

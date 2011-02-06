@@ -1379,7 +1379,7 @@ inline iterator ShortNearestNeighbor ( const DistanceType& radius, const T& t )
     {
         return ( iterator(end( )) );
     }
-} // sens ShortNeartestNeighbor
+} // end ShortNeartestNeighbor
 
 
 //=======================================================================
