@@ -3352,7 +3352,7 @@ void InserterDelayed_FullFlip ( const long nin, size_t& localDepth, std::vector<
         if ( m_dMaxRight < dTempRight ) m_dMaxRight = dTempRight;
         // if the new node is further from the left than the current right
         // node, we will swap them
-        if (localDepth < 100 && dTempLeftRight < dTempRight) {
+        if (localDepth < 100 && dTempLeftRight < dTempLeft) {
             n = m_ptRight;
             m_ptRight = nin;
             if (m_pRightBranch->m_ptLeft != ULONG_MAX ) {
@@ -3389,7 +3389,7 @@ void InserterDelayed_FullFlip ( const long nin, size_t& localDepth, std::vector<
         if ( m_dMaxLeft < dTempLeft ) m_dMaxLeft  = dTempLeft;
         // if the new node is further from the left than the current left
         // node, we will swap them
-        if (localDepth < 100 && dTempLeftRight < dTempLeft) {
+        if (localDepth < 100 && dTempLeftRight < dTempRight) {
             n = m_ptLeft;
             m_ptLeft = nin;
             if (m_pLeftBranch->m_ptLeft != ULONG_MAX ) {
@@ -3465,7 +3465,7 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
             ++localDepth;
             // See if it would be better to put the new node at this level and drop the current
             // Right node down one level
-            if (localDepth < 100 && dTempLeftRight < dTempRight) {
+            if (localDepth < 100 && dTempLeftRight < dTempLeft) {
                 m_pRightBranch->m_ptLeft = m_ptRight;
                 m_ptRight = n;
             }
@@ -3488,7 +3488,7 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
             ++localDepth;
             // See if it would be better to put the new node at this level and drop the current
             // Left node down one level
-            if (localDepth < 100 && dTempLeftRight < dTempLeft) {
+            if (localDepth < 100 && dTempLeftRight < dTempRight) {
                 m_pLeftBranch->m_ptLeft = m_ptLeft;
                 m_ptLeft = n;
             }
