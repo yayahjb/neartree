@@ -1280,7 +1280,7 @@ extern "C" {
         if (CVectorAddElement(treehandle->m_CoordStore,(void CNEARTREE_FAR *)coord)) return CNEARTREE_CVECTOR_FAILED;
         
         
-        depth = 1;
+        depth = 0;
         
         
         if ((treehandle->m_iflags& CNTF_FORCEFLIP)) {
@@ -1643,7 +1643,7 @@ extern "C" {
                 (*depth)++;
                 /* See if it would be better to put the new node at this level and drop the current
                    Right node down one level */
-                if (*depth < 100 && dTempLeftRight < dTempLeft) {
+                if (*depth < 10 && dTempLeft < dTempLeftRight && dTempRight < dTempLeftRight) {
                     treenodehandle->m_pRightBranch->m_indexLeft = treenodehandle->m_indexRight;
                     treenodehandle->m_indexRight = n;
                 }
@@ -1671,7 +1671,7 @@ extern "C" {
                 (*depth)++;
                 /* See if it would be better to put the new node at this level and drop the current
                  Left node down one level */
-                if (*depth < 100 && dTempLeftRight < dTempRight) {
+                if (*depth < 10 && dTempLeft < dTempLeftRight && dTempRight < dTempLeftRight) {
                     treenodehandle->m_pLeftBranch->m_indexLeft = treenodehandle->m_indexLeft;
                     treenodehandle->m_indexLeft = n;
                 }
@@ -1746,7 +1746,7 @@ extern "C" {
             
             /* if the new node is further from the left than the current right
              node, we will swap them */
-            if (*depth < 100 && dTempLeftRight < dTempRight) {
+            if (*depth < 5 && 1.5*dTempLeft < dTempLeftRight && 1.5*dTempRight < dTempLeftRight) {
                 n = treenodehandle->m_indexRight;
                 treenodehandle->m_indexRight = index;
                 if ((treenodehandle->m_pRightBranch->m_iflags) & CNEARTREE_FLAG_LEFT_DATA ) {
@@ -1772,6 +1772,12 @@ extern "C" {
                 treenodehandle->m_pRightBranch->m_dMaxLeft = -1.;
                 treenodehandle->m_pRightBranch->m_iflags |= CNEARTREE_FLAG_LEFT_DATA;
                 (*depth)++;
+                /* See if it would be better to put the new node at this level and drop the current
+                 Right node down one level */
+                if (*depth < 10 && dTempLeft < dTempLeftRight && dTempRight < dTempLeftRight) {
+                    treenodehandle->m_pRightBranch->m_indexLeft = treenodehandle->m_indexRight;
+                    treenodehandle->m_indexRight = n;
+                }
                 return CNEARTREE_SUCCESS;
             }
             return CNearTreeNodeInsert_FullFlip(treehandle, treenodehandle->m_pRightBranch, n, depth);
@@ -1787,7 +1793,7 @@ extern "C" {
             
             /* if the new node is further from the left than the current left
              node, we will swap them */
-            if (*depth < 100 && dTempLeftRight < dTempLeft) {
+            if (*depth < 5 && 1.5*dTempLeft < dTempLeftRight && 1.5*dTempRight < dTempLeftRight) {
                 n = treenodehandle->m_indexLeft;
                 treenodehandle->m_indexLeft = index;
                 if ((treenodehandle->m_pLeftBranch->m_iflags) & CNEARTREE_FLAG_LEFT_DATA ) {
@@ -1812,6 +1818,12 @@ extern "C" {
                 treenodehandle->m_pLeftBranch->m_dMaxLeft = -1.;
                 treenodehandle->m_pLeftBranch->m_iflags |= CNEARTREE_FLAG_LEFT_DATA;
                 (*depth)++;
+                /* See if it would be better to put the new node at this level and drop the current
+                 Left node down one level */
+                if (*depth < 10 && dTempLeft < dTempLeftRight && dTempRight < dTempLeftRight) {
+                    treenodehandle->m_pLeftBranch->m_indexLeft = treenodehandle->m_indexLeft;
+                    treenodehandle->m_indexLeft = n;
+                }
                 return CNEARTREE_SUCCESS;
             }
             return CNearTreeNodeInsert_FullFlip(treehandle, treenodehandle->m_pLeftBranch, n, depth);

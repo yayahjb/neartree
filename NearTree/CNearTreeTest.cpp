@@ -201,6 +201,10 @@ int main(int argc, char* argv[])
     {
         fprintf(stdout,  "No errors were detected while testing CNearTree\n" );
     }
+    else 
+    {
+        fprintf(stdout,  "%ld Errors were detected while testing CNearTree\n", g_errorCount );
+    }
     
     return g_errorCount;
 }  // end main
@@ -269,9 +273,9 @@ void testLinearTree( const int n )
     CNearTree<int> tree;
     
     /* generate an unbalanced tree*/
-    for( int i=1; i<=n; ++i )
+    for( int i1=1; i1<=n; ++i1 )
     {
-        tree.insert( i );
+        tree.insert( i1 );
     }
     
     if( tree.GetDepth( ) > (size_t)(n+1)/2 )
@@ -504,7 +508,7 @@ void testFindFirstObject( void )
             ++g_errorCount;
             fprintf(stdout, "testFindFirstObject: Near failed to find anything\n" );
         }
-        else if( closest != dFinal )
+        else if( closest-dFinal != 0.0 )
         {
             ++g_errorCount;
             fprintf(stdout, "testFindFirstObject: Near failed for double, got %f\n", closest );
@@ -617,7 +621,8 @@ void testFindLastObject( void )
         }
         
         float closest = 0.0;
-        const bool bReturn = tree.FarthestNeighbor( closest, -11.0 );
+        const float search = -11.0;
+        const bool bReturn = tree.FarthestNeighbor( closest, search );
         if( ! bReturn )
         {
             ++g_errorCount;
@@ -1255,7 +1260,7 @@ class vec17
 /*=======================================================================*/
 void testBigVector(  )
 {
-    const int vectorsize = 10000;   
+    const int vectorsize = 1000;   
     CNearTree<vec17> tree;
     vec17 vAll[vectorsize]; /* keep a list of all of the input so we can find particular entries */
     double rmax = -DBL_MAX;
@@ -3817,7 +3822,7 @@ void testLloyd( )
     if ( estdim != 1) {
         ++g_errorCount;   
     fprintf(stdout, "testLloyd: dimension estimate %ld != 1\n",(long)estdim);
-    } 
+    }
     
     vk.push_back( double(-12) );
     vk.push_back( double(0) );
@@ -3857,3 +3862,4 @@ void testLloyd( )
 //>   v[i] /= count[i]
 //>
 //> return (CNearTree(v));
+
