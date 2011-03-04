@@ -3701,7 +3701,7 @@ void testSetSymmetricDifference( void )
         nt1.insert( i );
     }
     
-    CNearTree<int> nt1a = nt1;
+    CNearTree<int> nt1a = CNearTree<int>(nt1);
     
     for ( int i=0; i<nInTree; ++i )
     {
@@ -3718,8 +3718,8 @@ void testSetSymmetricDifference( void )
         fprintf(stdout, "testSetSymmetricDifference, found wrong count \n" );
     } 
 
-    nt1 = nt1a;
-    nt1.set_symmetric_difference( v2 );
+    CNearTree<int> nt1b = CNearTree<int>(nt1a);
+    nt1b.set_symmetric_difference( v2 );
     const long lFounda = nt1a.size( );
 
     if( lFounda != nInTree )
