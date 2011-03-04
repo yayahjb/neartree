@@ -518,7 +518,7 @@ CNearTree ( void )  // constructor
 //
 //=======================================================================
 template<typename InputContainer>
-explicit CNearTree ( const InputContainer& o )  // constructor
+CNearTree ( const InputContainer& o )  // constructor
 : m_DelayedIndices (   )
 , m_ObjectStore    (   )
 , m_DeepestDepth   ( 0 )
@@ -1633,7 +1633,7 @@ const
 
     if( this->empty( ) )
     {
-        return ( end( ) );
+        return ( iterator(this->end( )) );
     }
     else if ( m_BaseNode.Farthest( radius, farthest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
@@ -1645,7 +1645,7 @@ const
     }
     else
     {
-        return ( end( ) );
+        return ( iterator(this->end( )) );
     }
 }
 //=======================================================================
@@ -2917,11 +2917,11 @@ double GetDimEstimate ( const double DimEstimateEsd )
     n = (size_t)(((double)estsize-1u) * ((DistanceType)rhr.urand()));
     rhr.urand( ); rhr.urand( );
     probe = m_ObjectStore[n];
-    poptrial=FindInSphere((DistanceType)targetradius/shrinkfactor,sampledisklarge,probe);
+    poptrial=FindInSphere((DistanceType)(targetradius/shrinkfactor),sampledisklarge,probe);
     do { 
         shrinkfactor = shrinkfactor/1.1;
         popsmall=poptrial;
-        poptrial=FindInSphere((DistanceType)targetradius/shrinkfactor,sampledisklarge,probe);
+        poptrial=FindInSphere((DistanceType)(targetradius/shrinkfactor),sampledisklarge,probe);
         n = (size_t)(((double)estsize-1u) * ((DistanceType)rhr.urand()));
         rhr.urand( ); rhr.urand( );
         probe = m_ObjectStore[n];
@@ -3322,6 +3322,7 @@ void InserterDelayed_FullFlip ( const long nin, size_t& localDepth, std::vector<
     DistanceTypeNode dTempRight =  DistanceTypeNode(0);
     DistanceTypeNode dTempLeft  =  DistanceTypeNode(0);
     DistanceTypeNode dTempLeftRight =  DistanceTypeNode(0);
+    DistanceTypeNode dTempTail = DistanceTypeNode(0);
     long n = nin;
     size_t tempdepth = localDepth;
     ++localDepth;
@@ -3350,11 +3351,13 @@ void InserterDelayed_FullFlip ( const long nin, size_t& localDepth, std::vector<
         if ( m_pRightBranch == 0 ) {
             m_pRightBranch = new NearTreeNode;
         }
+        dTempTail = m_dMaxRight>0?m_dMaxRight:DistanceTypeNode(0);
         // note that the next line assumes that m_dMaxRight is negative for a new node
         if ( m_dMaxRight < dTempRight ) m_dMaxRight = dTempRight;
         // if the new node is further from the left than the current right
         // node, we will swap them
-        if (localDepth < 5 && 2.*dTempLeft < dTempLeftRight && 2.*dTempRight < dTempLeftRight) {
+        if (localDepth < 20 && dTempLeft > dTempLeftRight+dTempTail
+            && dTempRight + 2*dTempTail < dTempLeftRight) {
             n = m_ptRight;
             m_ptRight = nin;
             if (m_pRightBranch->m_ptLeft != ULONG_MAX ) {
@@ -3380,7 +3383,7 @@ void InserterDelayed_FullFlip ( const long nin, size_t& localDepth, std::vector<
             ++localDepth;
             // See if it would be better to put the new node at this level and drop the current
             // Right node down one level
-            if (localDepth < 10 && dTempLeft < dTempLeftRight && dTempRight < dTempLeftRight) {
+            if (dTempLeft > dTempLeftRight+dTempTail && dTempRight + 2*dTempTail < dTempLeftRight) {
                 m_pRightBranch->m_ptLeft = m_ptRight;
                 m_ptRight = n;
             }
@@ -3393,11 +3396,12 @@ void InserterDelayed_FullFlip ( const long nin, size_t& localDepth, std::vector<
         if ( m_pLeftBranch  == 0 )  {
             m_pLeftBranch  = new NearTreeNode;
         }
+        dTempTail = m_dMaxLeft>0?m_dMaxLeft:DistanceTypeNode(0);
         // note that the next line assumes that m_dMaxLeft is negative for a new node
         if ( m_dMaxLeft < dTempLeft ) m_dMaxLeft  = dTempLeft;
         // if the new node is further from the left than the current left
         // node, we will swap them
-        if (localDepth < 5 && 2.*dTempLeft < dTempLeftRight && 2.*dTempRight < dTempLeftRight) {
+        if (localDepth < 20 && dTempRight > dTempLeftRight+dTempTail && dTempLeft + 2*dTempTail < dTempLeftRight) {
             n = m_ptLeft;
             m_ptLeft = nin;
             if (m_pLeftBranch->m_ptLeft != ULONG_MAX ) {
@@ -3423,7 +3427,7 @@ void InserterDelayed_FullFlip ( const long nin, size_t& localDepth, std::vector<
             ++localDepth;
             // See if it would be better to put the new node at this level and drop the current
             // Left node down one level
-            if (localDepth < 10 && dTempLeft < dTempLeftRight && dTempRight < dTempLeftRight) {
+            if (dTempRight > dTempLeftRight+dTempTail && dTempLeft + 2*dTempTail < dTempLeftRight) {
                 m_pLeftBranch->m_ptLeft = m_ptLeft;
                 m_ptLeft = n;
             }
@@ -3479,7 +3483,7 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
             ++localDepth;
             // See if it would be better to put the new node at this level and drop the current
             // Right node down one level
-            if (localDepth < 10 && dTempLeft < dTempLeftRight && dTempRight < dTempLeftRight) {
+            if (dTempLeft > dTempLeftRight && dTempLeftRight > dTempRight) {
                 m_pRightBranch->m_ptLeft = m_ptRight;
                 m_ptRight = n;
             }
@@ -3502,7 +3506,7 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
             ++localDepth;
             // See if it would be better to put the new node at this level and drop the current
             // Left node down one level
-            if (localDepth < 10 && dTempLeft < dTempLeftRight && dTempRight < dTempLeftRight) {
+            if (dTempRight > dTempLeftRight  && dTempLeftRight > dTempLeft) {
                 m_pLeftBranch->m_ptLeft = m_ptLeft;
                 m_ptLeft = n;
             }
@@ -3600,10 +3604,10 @@ void ReInserter_Flip ( const NearTreeNode * pntn, size_t& localDepth, std::vecto
     tempdepth1 = tempdepth2 = tempdepth3 = tempdepth4 = localDepth;
     
     if ( pntn->m_ptRight != ULONG_MAX) 
-        InserterDelayed_Flip( pntn->m_ptRight, tempdepth1, objectStore, SumSpacings, SumSpacingsSq );
+        InserterDelayed_FullFlip( pntn->m_ptRight, tempdepth1, objectStore, SumSpacings, SumSpacingsSq );
     
     if ( pntn->m_ptLeft != ULONG_MAX) 
-        InserterDelayed_Flip( pntn->m_ptLeft, tempdepth2, objectStore, SumSpacings, SumSpacingsSq );
+        InserterDelayed_FullFlip( pntn->m_ptLeft, tempdepth2, objectStore, SumSpacings, SumSpacingsSq );
 
     if ( pntn->m_pLeftBranch ) ReInserter_Flip(pntn->m_pLeftBranch, tempdepth3, objectStore );
 
@@ -6533,7 +6537,7 @@ public:
 
     public:
         iterator( void ) { }; // constructor
-        iterator( const const_iterator& s ) { position = ((const_iterator)s).get_position(); parent = ((const_iterator)s).get_parent(); };// constructor
+        explicit iterator( const const_iterator& s ) { position = ((const_iterator)s).get_position(); parent = ((const_iterator)s).get_parent(); };// constructor
 
         iterator& operator=  ( const iterator& s )       { position = s.position; parent = s.parent; return ( *this ); };
         iterator& operator=  ( const const_iterator& s ) { position = ((const_iterator&)s).get_position(); parent = ((const_iterator&)s).get_parent(); return ( *this ); };
@@ -6579,7 +6583,7 @@ class const_iterator
 
     public:
         const_iterator( void ) { }; // constructor
-        const_iterator( const iterator& s ) { position = ((iterator)s).get_position(); parent = ((iterator)s).get_parent(); }; // constructor
+        explicit const_iterator( const iterator& s ) { position = ((iterator)s).get_position(); parent = ((iterator)s).get_parent(); }; // constructor
 
         const_iterator& operator=  ( const const_iterator& s ) { position = s.position; parent = s.parent; return ( *this ); };
         const_iterator& operator=  ( const       iterator& s ) { position = ((iterator &)s).get_position(); parent = ((iterator &)s).get_parent(); return ( *this ); };
