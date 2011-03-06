@@ -224,6 +224,14 @@ void testEmptyTree( void )
     bool bTreeHasFarthest;
     long lFoundPointsInSphere;
     
+    long myflags = tree.GetFlags();
+    
+    if ((myflags&CNearTree<int>::NTF_NoPrePrune)) fprintf(stdout, "Flag NTF_NoPrePrune set \n");
+    if ((myflags&CNearTree<int>::NTF_ForcePrePrune)) fprintf(stdout, "Flag NTF_ForcePrePrune set \n");
+    if ((myflags&CNearTree<int>::NTF_NoFlip)) fprintf(stdout, "Flag NTF_NoFlip set \n");
+    if ((myflags&CNearTree<int>::NTF_ForceFlip)) fprintf(stdout, "Flag NTF_ForceFlip set \n");
+    if ((myflags&CNearTree<int>::NTF_NoDefer)) fprintf(stdout, "Flag NTF_NoDefer set \n");
+    
     bTreeEmpty = tree.empty( );
     if( ! bTreeEmpty )
     {
