@@ -1288,7 +1288,7 @@ extern "C" {
             errorcode = 
             CNearTreeNodeInsert_FullFlip( treehandle, treehandle->m_ptTree, index, &depth);
             
-        } else if ((treehandle->m_iflags& CNTF_NOFLIP)) {
+        } else if (!(treehandle->m_iflags& CNTF_NOFLIP)) {
             
             errorcode = 
             CNearTreeNodeInsert_Flip( treehandle, treehandle->m_ptTree, index, &depth);
@@ -1643,7 +1643,7 @@ extern "C" {
                 (*depth)++;
                 /* See if it would be better to put the new node at this level and drop the current
                    Right node down one level */
-                if (*depth < 10 && dTempLeft < dTempLeftRight && dTempRight < dTempLeftRight) {
+                if (dTempLeft > dTempLeftRight && dTempRight < dTempLeftRight) {
                     treenodehandle->m_pRightBranch->m_indexLeft = treenodehandle->m_indexRight;
                     treenodehandle->m_indexRight = n;
                 }
@@ -1671,7 +1671,7 @@ extern "C" {
                 (*depth)++;
                 /* See if it would be better to put the new node at this level and drop the current
                  Left node down one level */
-                if (*depth < 10 && dTempLeft < dTempLeftRight && dTempRight < dTempLeftRight) {
+                if (dTempRight > dTempLeftRight && dTempLeft  < dTempLeftRight) {
                     treenodehandle->m_pLeftBranch->m_indexLeft = treenodehandle->m_indexLeft;
                     treenodehandle->m_indexLeft = n;
                 }
@@ -1693,6 +1693,7 @@ extern "C" {
         double dTempRight =  0.;
         double dTempLeft  =  0.;
         double dTempLeftRight = 0;
+        double dTempTail = 0;
         int errorcode = 0;
         void CNEARTREE_FAR * coord;
         void CNEARTREE_FAR * coordLeft;
@@ -1739,14 +1740,17 @@ extern "C" {
             if (  !((treenodehandle->m_iflags)&CNEARTREE_FLAG_RIGHT_CHILD) ) {
                 if ( (errorcode = CNearTreeNodeCreate(treehandle, &(treenodehandle->m_pRightBranch)))) return errorcode;
                 treenodehandle->m_iflags |= CNEARTREE_FLAG_RIGHT_CHILD;
+                dTempTail = treenodehandle->m_dMaxRight;
                 treenodehandle->m_dMaxRight = dTempRight;
             } else if ( treenodehandle->m_dMaxRight < dTempRight ) {
+                dTempTail = 0;
                 treenodehandle->m_dMaxRight = dTempRight;
             }
             
             /* if the new node is further from the left than the current right
              node, we will swap them */
-            if (*depth < 5 && 1.5*dTempLeft < dTempLeftRight && 1.5*dTempRight < dTempLeftRight) {
+            if (dTempLeft > dTempLeftRight+dTempTail
+                && dTempRight + 2*dTempTail < dTempLeftRight) {
                 n = treenodehandle->m_indexRight;
                 treenodehandle->m_indexRight = index;
                 if ((treenodehandle->m_pRightBranch->m_iflags) & CNEARTREE_FLAG_LEFT_DATA ) {
@@ -1774,7 +1778,7 @@ extern "C" {
                 (*depth)++;
                 /* See if it would be better to put the new node at this level and drop the current
                  Right node down one level */
-                if (*depth < 10 && dTempLeft < dTempLeftRight && dTempRight < dTempLeftRight) {
+                if (dTempLeft > dTempLeftRight && dTempRight < dTempLeftRight) {
                     treenodehandle->m_pRightBranch->m_indexLeft = treenodehandle->m_indexRight;
                     treenodehandle->m_indexRight = n;
                 }
@@ -1786,14 +1790,17 @@ extern "C" {
             if (  !((treenodehandle->m_iflags)&CNEARTREE_FLAG_LEFT_CHILD) ) {
                 if ( (errorcode = CNearTreeNodeCreate(treehandle, &(treenodehandle->m_pLeftBranch)))) return errorcode;
                 treenodehandle->m_iflags |= CNEARTREE_FLAG_LEFT_CHILD;
+                dTempTail = treenodehandle->m_dMaxLeft;
                 treenodehandle->m_dMaxLeft = dTempLeft;
             } else if ( treenodehandle->m_dMaxLeft < dTempLeft ) {
+                dTempTail = 0;
                 treenodehandle->m_dMaxLeft = dTempLeft;
             }
             
             /* if the new node is further from the left than the current left
              node, we will swap them */
-            if (*depth < 5 && 1.5*dTempLeft < dTempLeftRight && 1.5*dTempRight < dTempLeftRight) {
+            if (dTempRight > dTempLeftRight+dTempTail 
+                && dTempLeft + 2*dTempTail < dTempLeftRight) {
                 n = treenodehandle->m_indexLeft;
                 treenodehandle->m_indexLeft = index;
                 if ((treenodehandle->m_pLeftBranch->m_iflags) & CNEARTREE_FLAG_LEFT_DATA ) {
@@ -1820,7 +1827,7 @@ extern "C" {
                 (*depth)++;
                 /* See if it would be better to put the new node at this level and drop the current
                  Left node down one level */
-                if (*depth < 10 && dTempLeft < dTempLeftRight && dTempRight < dTempLeftRight) {
+                if (dTempRight > dTempLeftRight && dTempLeft  < dTempLeftRight) {
                     treenodehandle->m_pLeftBranch->m_indexLeft = treenodehandle->m_indexLeft;
                     treenodehandle->m_indexLeft = n;
                 }
@@ -1988,47 +1995,118 @@ extern "C" {
         
         dummyindex = CVectorSize(treehandle->m_ObjectStore);
         
-        if (treehandle->m_iflags&CNEARTREE_DEFER_ALL) {
-            nrandom = nqueued;
-        } else {
-            nrandom = (size_t)sqrt((double)nqueued);
-        }
+        nrandom = (size_t)sqrt((double)nqueued);
         
-        for (ielement = 0; ielement < nrandom; ielement++) {
-
-            kelement = (int)(CRHrandUrand(&(treehandle->m_rhr))*((double)(nqueued)));
-
-            oelement = kelement;
-            do {
-                if (kelement >= nqueued) {
-                    kelement = 0;
-                    CVectorSetSize(treehandle->m_DelayedIndices,oelement);
-                    nqueued = oelement;
+        if ((treehandle->m_iflags& CNTF_FORCEFLIP)) {
+            for (ielement = 0; ielement < nrandom; ielement++) {
+                
+                kelement = (int)(CRHrandUrand(&(treehandle->m_rhr))*((double)(nqueued)));
+                
+                oelement = kelement;
+                do {
+                    if (kelement >= nqueued) {
+                        kelement = 0;
+                        CVectorSetSize(treehandle->m_DelayedIndices,oelement);
+                        nqueued = oelement;
+                    }
+                    if (CVectorGetElement(treehandle->m_DelayedIndices,&index,kelement)) return  CNEARTREE_BAD_ARGUMENT;
+                    kelement ++;
+                } while (index == dummyindex);
+                if (kelement == nqueued) {
+                    nqueued--;
+                    CVectorSetSize(treehandle->m_DelayedIndices,nqueued);
                 }
-                if (CVectorGetElement(treehandle->m_DelayedIndices,&index,kelement)) return  CNEARTREE_BAD_ARGUMENT;
-                kelement ++;
-            } while (index == dummyindex);
-            if (kelement == nqueued) {
-                nqueued--;
-                CVectorSetSize(treehandle->m_DelayedIndices,nqueued);
+                kelement--;
+                if (CVectorSetElement(treehandle->m_DelayedIndices,&dummyindex,kelement)) errorcode |= CNEARTREE_CVECTOR_FAILED;
+                depth = 1;
+                errorcode |= CNearTreeNodeInsert_FullFlip(treehandle,treehandle->m_ptTree,index,&depth);
+                if (depth > treehandle->m_szdepth) treehandle->m_szdepth = depth;
+                (treehandle->m_szsize)++;
             }
-            kelement--;
-            if (CVectorSetElement(treehandle->m_DelayedIndices,&dummyindex,kelement)) errorcode |= CNEARTREE_CVECTOR_FAILED;
-            depth = 1;
-            errorcode |= CNearTreeNodeInsert(treehandle,treehandle->m_ptTree,index,&depth);
-            if (depth > treehandle->m_szdepth) treehandle->m_szdepth = depth;
-            (treehandle->m_szsize)++;
+            
+            for (ielement = 0; ielement < nqueued; ielement++) {
+                if (CVectorGetElement(treehandle->m_DelayedIndices,&index,ielement)) return CNEARTREE_CVECTOR_FAILED;
+                if (index == dummyindex) continue;
+                depth = 1;
+                errorcode |= CNearTreeNodeInsert_FullFlip(treehandle,treehandle->m_ptTree,index,&depth);
+                if (depth > treehandle->m_szdepth) treehandle->m_szdepth = depth;
+                (treehandle->m_szsize)++;
+            }
+            
+        } else if(!(treehandle->m_iflags& CNTF_NOFLIP)) {
+            
+            for (ielement = 0; ielement < nrandom; ielement++) {
+                
+                kelement = (int)(CRHrandUrand(&(treehandle->m_rhr))*((double)(nqueued)));
+                
+                oelement = kelement;
+                do {
+                    if (kelement >= nqueued) {
+                        kelement = 0;
+                        CVectorSetSize(treehandle->m_DelayedIndices,oelement);
+                        nqueued = oelement;
+                    }
+                    if (CVectorGetElement(treehandle->m_DelayedIndices,&index,kelement)) return  CNEARTREE_BAD_ARGUMENT;
+                    kelement ++;
+                } while (index == dummyindex);
+                if (kelement == nqueued) {
+                    nqueued--;
+                    CVectorSetSize(treehandle->m_DelayedIndices,nqueued);
+                }
+                kelement--;
+                if (CVectorSetElement(treehandle->m_DelayedIndices,&dummyindex,kelement)) errorcode |= CNEARTREE_CVECTOR_FAILED;
+                depth = 1;
+                errorcode |= CNearTreeNodeInsert_Flip(treehandle,treehandle->m_ptTree,index,&depth);
+                if (depth > treehandle->m_szdepth) treehandle->m_szdepth = depth;
+                (treehandle->m_szsize)++;
+            }
+            
+            for (ielement = 0; ielement < nqueued; ielement++) {
+                if (CVectorGetElement(treehandle->m_DelayedIndices,&index,ielement)) return CNEARTREE_CVECTOR_FAILED;
+                if (index == dummyindex) continue;
+                depth = 1;
+                errorcode |= CNearTreeNodeInsert_Flip(treehandle,treehandle->m_ptTree,index,&depth);
+                if (depth > treehandle->m_szdepth) treehandle->m_szdepth = depth;
+                (treehandle->m_szsize)++;
+            }
+            
+        } else {
+            
+            for (ielement = 0; ielement < nrandom; ielement++) {
+                
+                kelement = (int)(CRHrandUrand(&(treehandle->m_rhr))*((double)(nqueued)));
+                
+                oelement = kelement;
+                do {
+                    if (kelement >= nqueued) {
+                        kelement = 0;
+                        CVectorSetSize(treehandle->m_DelayedIndices,oelement);
+                        nqueued = oelement;
+                    }
+                    if (CVectorGetElement(treehandle->m_DelayedIndices,&index,kelement)) return  CNEARTREE_BAD_ARGUMENT;
+                    kelement ++;
+                } while (index == dummyindex);
+                if (kelement == nqueued) {
+                    nqueued--;
+                    CVectorSetSize(treehandle->m_DelayedIndices,nqueued);
+                }
+                kelement--;
+                if (CVectorSetElement(treehandle->m_DelayedIndices,&dummyindex,kelement)) errorcode |= CNEARTREE_CVECTOR_FAILED;
+                depth = 1;
+                errorcode |= CNearTreeNodeInsert(treehandle,treehandle->m_ptTree,index,&depth);
+                if (depth > treehandle->m_szdepth) treehandle->m_szdepth = depth;
+                (treehandle->m_szsize)++;
+            }
+            
+            for (ielement = 0; ielement < nqueued; ielement++) {
+                if (CVectorGetElement(treehandle->m_DelayedIndices,&index,ielement)) return CNEARTREE_CVECTOR_FAILED;
+                if (index == dummyindex) continue;
+                depth = 1;
+                errorcode |= CNearTreeNodeInsert(treehandle,treehandle->m_ptTree,index,&depth);
+                if (depth > treehandle->m_szdepth) treehandle->m_szdepth = depth;
+                (treehandle->m_szsize)++;
+            }
         }
-        
-        for (ielement = 0; ielement < nqueued; ielement++) {
-            if (CVectorGetElement(treehandle->m_DelayedIndices,&index,ielement)) return CNEARTREE_CVECTOR_FAILED;
-            if (index == dummyindex) continue;
-            depth = 1;
-            errorcode |= CNearTreeNodeInsert(treehandle,treehandle->m_ptTree,index,&depth);
-            if (depth > treehandle->m_szdepth) treehandle->m_szdepth = depth;
-            (treehandle->m_szsize)++;
-        }
-        
         if (CVectorFree(&(treehandle->m_DelayedIndices))) errorcode |= CNEARTREE_CVECTOR_FAILED;
         
         return (errorcode != 0)?errorcode:CNEARTREE_SUCCESS;
