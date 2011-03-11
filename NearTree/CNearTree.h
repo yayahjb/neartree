@@ -134,8 +134,9 @@ extern "C" {
 #define CNEARTREE_NORM_SPHERE    2048L         /* 0x0800 */
 #define CNEARTREE_NORM_HSPHERE   4096L         /* 0x1000 */
 #define CNEARTREE_NORM_HAMMING   8192L         /* 0x2000 */
+#define CNEARTREE_NORM_L2LAZY   16384L         /* 0x4000 */
     
-#define CNEARTREE_NORM          16256L         /* 0x3F80 */
+#define CNEARTREE_NORM          32640L         /* 0x7F80 */
     
     
 /*  Execution Control Flags */
@@ -278,6 +279,7 @@ extern "C" {
      treenorm should be one of CNEARTREE_NORM_L1 for an L-1 norm
      CNEARTREE_NORM_L2 for an L-2 norm
      CNEARTREE_NORM_LINF for an L-infinity norm
+     CNEARTREE_NORM_LAZY for an L-1 norm used for L-2 searching
      
      the function returns CNEARTREE_BAD_ARGUMENT for an invalid argument
      CNEARTREE_SUCCESS (0) otherwise
@@ -711,36 +713,7 @@ extern "C" {
      return 0 for success, nonzero for an error
      
      =======================================================================
-     =======================================================================
-     int CNearTreeNodeInsert_FullFlip ( const CNearTreeHandle treehandle,
-     const const CNearTreeNodeHandle treenodehandle, 
-     size_t index;
-     size_t CNEARTREE_FAR * depth)
-     
-     Function to insert some "point" as an object into a node in a CNearTree for
-     later searching
-     
-     treenodehandle is the handle of the node at which to start the insertion
-     
-     index is the index of the object and coordinates to add from 
-     treehandle->m_ObjectStore and treehandle->CoordStore into a NearTree.
-     A static copy of the coordinates and a pointer to the
-     object are inserted
-     
-     Three possibilities exist: put the datum into the left
-     position (first test),into the right position, or else
-     into a node descending from the nearer of those positions
-     when they are both already used.
-     
-     This version will do a flip on insertions to try to drive the top pairs
-     apart, starting at any level in the tree.
-     
-     depth is used to keep track of the depth at which the insertion is done
-     
-     return 0 for success, nonzero for an error
-     
-     =======================================================================
-     */
+        */
     
     int CNearTreeNodeInsert( const CNearTreeHandle treehandle,
                             const CNearTreeNodeHandle treenodehandle,
@@ -749,12 +722,7 @@ extern "C" {
     int CNearTreeNodeInsert_Flip( const CNearTreeHandle treehandle,
                             const CNearTreeNodeHandle treenodehandle,
                             const size_t index, 
-                            size_t CNEARTREE_FAR * depth );
-    int CNearTreeNodeInsert_FullFlip( const CNearTreeHandle treehandle,
-                            const CNearTreeNodeHandle treenodehandle,
-                            const size_t index, 
-                            size_t CNEARTREE_FAR * depth );
-    
+                            size_t CNEARTREE_FAR * depth );    
     
     /*
      =======================================================================
