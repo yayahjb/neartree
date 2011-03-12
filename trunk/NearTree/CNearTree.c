@@ -923,6 +923,23 @@ extern "C" {
 
     }
     
+    /*
+     =======================================================================
+     int CNearTreeCount(const CNearTreeHandle treehandle, 
+                        size_t CNEARTREE_FAR * count)
+     =======================================================================
+     */
+    
+     int CNearTreeCount(const CNearTreeHandle treehandle, 
+                        size_t CNEARTREE_FAR * count){
+         
+         *count = 0;
+         
+         return (CNearTreeNodeCount(treehandle->m_ptTree,count));
+                
+     }
+    
+    
 #ifndef CNEARTREE_INSTRUMENTED
      /*
      =======================================================================
@@ -940,7 +957,7 @@ extern "C" {
     {
         if ( !treehandle || !visits ) return CNEARTREE_BAD_ARGUMENT;
         
-        visits = 0;
+        *visits = 0;
         
         return CNEARTREE_SUCCESS;
         
@@ -964,7 +981,7 @@ extern "C" {
     {
         if ( !treehandle || !visits ) return CNEARTREE_BAD_ARGUMENT;
         
-        *visits = tree-handle->m_NodeVisits;
+        *visits = treehandle->m_NodeVisits;
         
         return CNEARTREE_SUCCESS;
 
@@ -1311,10 +1328,36 @@ extern "C" {
         
     }
     
+    /* int CNearTreeNodeCount(const CNearTreeNodeHandle treenodehandle, size_t CNEARTREE_FAR * count)
+     */
+    int CNearTreeNodeCount(const CNearTreeNodeHandle treenodehandle, size_t CNEARTREE_FAR * count){
+        
+        int errorcode=0;
+        
+        if ( (treenodehandle->m_iflags)&CNEARTREE_FLAG_RIGHT_DATA ) {
+            (*count)++;
+        }
+        
+        if ( (treenodehandle->m_iflags)&CNEARTREE_FLAG_LEFT_DATA ) {
+            (*count)++;
+        }
+        
+        if ( (treenodehandle->m_iflags)&CNEARTREE_FLAG_RIGHT_CHILD ) {
+            errorcode |= CNearTreeNodeCount(treenodehandle->m_pRightBranch, count);
+        }
+        
+        if ( (treenodehandle->m_iflags)&CNEARTREE_FLAG_LEFT_CHILD ) {
+            errorcode |= CNearTreeNodeCount(treenodehandle->m_pLeftBranch,count);
+        }
+        
+        return errorcode;
+        
+    }
   /*  
     =======================================================================
     int CNearTreeNodeReInsert_Flip ( const CNearTreeHandle treehandle,
-                                      const const CNearTreeNodeHandle treenodehandle, 
+                                     const CNearTreeNodeHandle treenodehandle,
+                                     const CNearTreeNodeHandle pntn,
                                       size_t CNEARTREE_FAR * depth)
     
     Function to reinsert the elements from a detached a node into a CNearTree 
@@ -1371,8 +1414,8 @@ extern "C" {
                                        &tempdepth3);
         }
 
-        if ( (pntn->m_iflags)&CNEARTREE_FLAG_RIGHT_CHILD ) {
-             errorcode |= CNearTreeNodeReInsert_Flip(treehandle, treenodehandle, pntn->m_pRightBranch,
+        if ( (pntn->m_iflags)&CNEARTREE_FLAG_LEFT_CHILD ) {
+             errorcode |= CNearTreeNodeReInsert_Flip(treehandle, treenodehandle, pntn->m_pLeftBranch,
                                        &tempdepth4);
         }
         
@@ -2064,7 +2107,7 @@ extern "C" {
         if (!(pt->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
         
 #ifdef CNEARTREE_INSTRUMENTED
-        (treehandle_>m_NodeVisits)++;
+        (treehandle->m_NodeVisits)++;
 #endif                                               
         
         CVectorCreate(&sStack,sizeof(CNearTreeNodeHandle),10);
@@ -2098,7 +2141,7 @@ extern "C" {
                     /* we did the left and now we finished the right, go down */
                     pt = pt->m_pRightBranch;
 #ifdef CNEARTREE_INSTRUMENTED
-                    (treehandle_>m_NodeVisits)++;
+                    (treehandle->m_NodeVisits)++;
 #endif                                                           
                     eDir = left;
                 } else {
@@ -2127,7 +2170,7 @@ extern "C" {
                     (TRIANG(dDL,pt->m_dMaxLeft,dRadius))){
                     pt = pt->m_pLeftBranch;
 #ifdef CNEARTREE_INSTRUMENTED
-                    (treehandle_>m_NodeVisits)++;
+                    (treehandle->m_NodeVisits)++;
 #endif                                                           
                 } else {
                     eDir = end;
@@ -2285,7 +2328,7 @@ extern "C" {
         if (!(pt->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
 
 #ifdef CNEARTREE_INSTRUMENTED
-        (treehandle_>m_NodeVisits)++;
+        (treehandle->m_NodeVisits)++;
 #endif                                       
         
         CVectorCreate(&sStack,sizeof(CNearTreeNodeHandle),10);
@@ -2319,7 +2362,7 @@ extern "C" {
                     /* we did the left and now we finished the right, go down */
                     pt = pt->m_pRightBranch;
 #ifdef CNEARTREE_INSTRUMENTED
-                    (treehandle_>m_NodeVisits)++;
+                    (treehandle->m_NodeVisits)++;
 #endif                                                           
                     eDir = left;
                 } else {
@@ -2348,7 +2391,7 @@ extern "C" {
                     (TRIANG(dRadius,dDL,pt->m_dMaxLeft))){
                     pt = pt->m_pLeftBranch;
 #ifdef CNEARTREE_INSTRUMENTED
-                    (treehandle_>m_NodeVisits)++;
+                    (treehandle->m_NodeVisits)++;
 #endif                                                           
                 } else {
                     eDir = end;
@@ -2503,7 +2546,7 @@ extern "C" {
         if (!(pt->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
         
 #ifdef CNEARTREE_INSTRUMENTED
-        (treehandle_>m_NodeVisits)++;
+        (treehandle->m_NodeVisits)++;
 #endif                                               
         
         CVectorCreate(&sStack,sizeof(CNearTreeNodeHandle),10);
@@ -2539,7 +2582,7 @@ extern "C" {
                     pt = pt->m_pRightBranch;
 
 #ifdef CNEARTREE_INSTRUMENTED
-                    (treehandle_>m_NodeVisits)++;
+                    (treehandle->m_NodeVisits)++;
 #endif                                       
                     eDir = left;
                 } else {
@@ -2569,7 +2612,7 @@ extern "C" {
                     (TRIANG(dRadiusInner,dDL,pt->m_dMaxRight))){
                     pt = pt->m_pLeftBranch;
 #ifdef CNEARTREE_INSTRUMENTED
-                    (treehandle_>m_NodeVisits)++;
+                    (treehandle->m_NodeVisits)++;
 #endif                                                           
                 } else {
                     eDir = end;
@@ -2847,7 +2890,7 @@ extern "C" {
         if (!(pt->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
         
 #ifdef CNEARTREE_INSTRUMENTED
-        (treehandle_>m_NodeVisits)++;
+        (treehandle->m_NodeVisits)++;
 #endif                                               
         
         if (CVectorCreate(&sStack,sizeof(CNearTreeNodeHandle),10) ||
@@ -2881,7 +2924,7 @@ extern "C" {
                     /* we did the left and now we finished the right, go down */
                     pt = pt->m_pRightBranch;
 #ifdef CNEARTREE_INSTRUMENTED
-                    (treehandle_>m_NodeVisits)++;
+                    (treehandle->m_NodeVisits)++;
 #endif                                                           
                     eDir = left;
                 } else {
@@ -2906,7 +2949,7 @@ extern "C" {
                     (TRIANG(dDL,pt->m_dMaxLeft,dTarget))){
                     pt = pt->m_pLeftBranch;
 #ifdef CNEARTREE_INSTRUMENTED
-                    (treehandle_>m_NodeVisits)++;
+                    (treehandle->m_NodeVisits)++;
 #endif                                                           
                 } else {
                     eDir = end;
@@ -3095,7 +3138,7 @@ extern "C" {
         if (!(pt->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
         
 #ifdef CNEARTREE_INSTRUMENTED
-        (treehandle_>m_NodeVisits)++;
+        (treehandle->m_NodeVisits)++;
 #endif                                               
         
         if (CVectorCreate(&sStack,sizeof(CNearTreeNodeHandle),10) ||
@@ -3130,7 +3173,7 @@ extern "C" {
                     /* we did the left and now we finished the right, go down */
                     pt = pt->m_pRightBranch;
 #ifdef CNEARTREE_INSTRUMENTED
-                    (treehandle_>m_NodeVisits)++;
+                    (treehandle->m_NodeVisits)++;
 #endif                                                           
                     eDir = left;
                 } else {
@@ -3156,7 +3199,7 @@ extern "C" {
                     (TRIANG(dTarget,dDL,pt->m_dMaxLeft))){
                     pt = pt->m_pLeftBranch;
 #ifdef CNEARTREE_INSTRUMENTED
-                    (treehandle_>m_NodeVisits)++;
+                    (treehandle->m_NodeVisits)++;
 #endif                                                           
                 } else {
                     eDir = end;
@@ -3346,7 +3389,7 @@ extern "C" {
         CVectorCreate(&sStack,sizeof(CNearTreeNodeHandle),10);
         
 #ifdef CNEARTREE_INSTRUMENTED
-        (treehandle_>m_NodeVisits)++;
+        (treehandle->m_NodeVisits)++;
 #endif          
         if (!(pt->m_iflags&(CNEARTREE_FLAG_LEFT_DATA|CNEARTREE_FLAG_RIGHT_DATA))) {
          
@@ -3364,7 +3407,7 @@ extern "C" {
                         CVectorGetElement(sStack,&pt,CVectorSize(sStack)-1);
                         CVectorRemoveElement(sStack,CVectorSize(sStack)-1);
 #ifdef CNEARTREE_INSTRUMENTED
-                        (treehandle_>m_NodeVisits)++;
+                        (treehandle->m_NodeVisits)++;
 #endif    
                         continue;
                     }
@@ -3381,7 +3424,7 @@ extern "C" {
                 }
                 if ((pt->m_iflags&(CNEARTREE_FLAG_RIGHT_DATA))) {
 #ifdef CNEARTREE_INSTRUMENTED
-                    (treehandle_>m_NodeVisits)++;
+                    (treehandle->m_NodeVisits)++;
 #endif                      
                     dDR = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexRight));
                     if (dDR <= *dRadius ) {
@@ -3405,7 +3448,7 @@ extern "C" {
                             }
                             pt = pt->m_pLeftBranch;
 #ifdef CNEARTREE_INSTRUMENTED
-                            (treehandle_>m_NodeVisits)++;
+                            (treehandle->m_NodeVisits)++;
 #endif                                
                             continue;
                         }
@@ -3423,7 +3466,7 @@ extern "C" {
                         }
                         pt = pt->m_pRightBranch;
 #ifdef CNEARTREE_INSTRUMENTED
-                        (treehandle_>m_NodeVisits)++;
+                        (treehandle->m_NodeVisits)++;
 #endif                
                         continue;
                     } 
@@ -3435,7 +3478,7 @@ extern "C" {
                 if ( (pt->m_iflags&CNEARTREE_FLAG_LEFT_CHILD) && TRIANG(dDL,pt->m_dMaxLeft,*dRadius)) {
                     pt = pt->m_pLeftBranch;
 #ifdef CNEARTREE_INSTRUMENTED
-                    (treehandle_>m_NodeVisits)++;
+                    (treehandle->m_NodeVisits)++;
 #endif                            
                     continue;
                 }
@@ -3443,7 +3486,7 @@ extern "C" {
                 if (  (pt->m_iflags&CNEARTREE_FLAG_RIGHT_CHILD) && TRIANG(dDR,pt->m_dMaxRight,*dRadius)) {
                     pt = pt->m_pRightBranch;
 #ifdef CNEARTREE_INSTRUMENTED
-                    (treehandle_>m_NodeVisits)++;
+                    (treehandle->m_NodeVisits)++;
 #endif                            
                     continue;
                 }
@@ -3451,7 +3494,7 @@ extern "C" {
                     CVectorGetElement(sStack,&pt,CVectorSize(sStack)-1);
                     CVectorRemoveElement(sStack,CVectorSize(sStack)-1);
 #ifdef CNEARTREE_INSTRUMENTED
-                    (treehandle_>m_NodeVisits)++;
+                    (treehandle->m_NodeVisits)++;
 #endif                            
                     continue;
                 }
@@ -3502,7 +3545,7 @@ extern "C" {
          CVectorCreate(&sStack,sizeof(CNearTreeNodeHandle),10);
          
 #ifdef CNEARTREE_INSTRUMENTED
-         (treehandle_>m_NodeVisits)++;
+         (treehandle->m_NodeVisits)++;
 #endif                            
          
          while (!(eDir == end && CVectorSize(sStack) == 0)) {
@@ -3519,7 +3562,7 @@ extern "C" {
                      /* we did the left and now we finished the right, go down */
                      pt = pt->m_pRightBranch;
 #ifdef CNEARTREE_INSTRUMENTED
-                     (treehandle_>m_NodeVisits)++;
+                     (treehandle->m_NodeVisits)++;
 #endif                                      
                      eDir = left;
                  } else {
@@ -3540,7 +3583,7 @@ extern "C" {
                      (TRIANG(dDL,pt->m_dMaxLeft,*dRadius))) {
                      pt = pt->m_pLeftBranch;
 #ifdef CNEARTREE_INSTRUMENTED
-                     (treehandle_>m_NodeVisits)++;
+                     (treehandle->m_NodeVisits)++;
 #endif                                       
                  } else {
                      eDir = end;
@@ -3550,6 +3593,9 @@ extern "C" {
                  CVectorGetElement(sStack,&pt,CVectorSize(sStack)-1);
                  CVectorRemoveElement(sStack,CVectorSize(sStack)-1);
                  eDir = right;
+#ifdef CNEARTREE_INSTRUMENTED
+                 (treehandle->m_NodeVisits)++;
+#endif    
              }
              
          }    
@@ -3615,7 +3661,7 @@ extern "C" {
         if (!(pt->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
         
 #ifdef CNEARTREE_INSTRUMENTED
-         (treehandle_>m_NodeVisits)++;
+         (treehandle->m_NodeVisits)++;
 #endif                                                
         
         coords=treehandle->m_CoordStore;
@@ -3638,7 +3684,7 @@ extern "C" {
                     /* we did the left and now we finished the right, go down */
                     pt = pt->m_pRightBranch;
 #ifdef CNEARTREE_INSTRUMENTED
-                    (treehandle_>m_NodeVisits)++;
+                    (treehandle->m_NodeVisits)++;
 #endif                                       
                     eDir = left;
                 } else {
@@ -3659,7 +3705,7 @@ extern "C" {
                     (TRIANG(*dRadius,dDL,pt->m_dMaxLeft))) {
                     pt = pt->m_pLeftBranch;
 #ifdef CNEARTREE_INSTRUMENTED
-                    (treehandle_>m_NodeVisits)++;
+                    (treehandle->m_NodeVisits)++;
 #endif                                       
                 } else {
                     eDir = end;

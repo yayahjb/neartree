@@ -513,6 +513,16 @@ extern "C" {
     int CNearTreeGetVarSpacing ( const CNearTreeHandle treehandle, 
                                 double CNEARTREE_FAR * varspacing  );
     
+    /*
+     =======================================================================
+     int CNearTreeCount(const CNearTreeHandle treehandle, 
+     size_t CNEARTREE_FAR * count)
+     =======================================================================
+     */
+    
+    int CNearTreeCount(const CNearTreeHandle treehandle, 
+                       size_t CNEARTREE_FAR * count);
+                        
     
 #ifndef CNEARTREE_INSTRUMENTED
     /*
@@ -600,6 +610,15 @@ extern "C" {
                                  double CNEARTREE_FAR * dimest,
                                  const double DimEstimateEsd );
     
+    /*
+     =======================================================================
+    int CNearTreeNodeCount(const CNearTreeNodeHandle treenodehandle, 
+                           size_t CNEARTREE_FAR * count)
+     =======================================================================
+     */
+    
+    int CNearTreeNodeCount(const CNearTreeNodeHandle treenodehandle, 
+                           size_t CNEARTREE_FAR * count);
     /*
      =======================================================================
      int CNearTreeImmediateInsert ( const CNearTreeHandle treehandle, 
@@ -865,6 +884,11 @@ extern "C" {
      */
     
     int CNearTreeNearestNeighbor (const CNearTreeHandle treehandle, 
+                                  const double dRadius,  
+                                  void CNEARTREE_FAR * CNEARTREE_FAR * coordClosest,
+                                  void CNEARTREE_FAR * CNEARTREE_FAR * objClosest, 
+                                  const void CNEARTREE_FAR * coord );
+    int CNearTreeLeftNearestNeighbor (const CNearTreeHandle treehandle, 
                                   const double dRadius,  
                                   void CNEARTREE_FAR * CNEARTREE_FAR * coordClosest,
                                   void CNEARTREE_FAR * CNEARTREE_FAR * objClosest, 
