@@ -232,6 +232,123 @@ extern "C" {
     
     typedef CNearTree     CNEARTREE_FAR * CNearTreeHandle;
     
+/* Distance Macros for L2LAZY */
+    
+    
+#define CNTM_Abs(x) (((x)<0.)?(-(x)):(x))
+#define CNTM_DistL2sq(distsq,treehandle,coord1,coord2) {     \
+        size_t index;                                     \
+        size_t treedim; \
+        long treetype;  \
+        double CNEARTREE_FAR * dcoord1 = NULL; \
+        double CNEARTREE_FAR * dcoord2 = NULL; \
+        int CNEARTREE_FAR * icoord1 = NULL; \
+        int CNEARTREE_FAR * icoord2 = NULL; \
+        treedim = (treehandle)->m_szdimension; \
+        treetype = (treehandle)->m_iflags&CNEARTREE_TYPE; \
+        if (treetype == CNEARTREE_TYPE_DOUBLE) { \
+            dcoord1 = (double CNEARTREE_FAR *)(coord1);\
+            dcoord2 = (double CNEARTREE_FAR *)(coord2);\
+        } else if (treetype == CNEARTREE_TYPE_INTEGER) { \
+            icoord1 = (int CNEARTREE_FAR *)(coord1); \
+            icoord2 = (int CNEARTREE_FAR *)(coord2); \
+        } \
+        distsq = 0.; \
+        if (treetype == CNEARTREE_TYPE_DOUBLE) { \
+            distsq = (dcoord1[0]-dcoord2[0])*(dcoord1[0]-dcoord2[0]); \
+            \
+            for (index=1; index < treedim; index++) { \
+                distsq += (dcoord1[index]-dcoord2[index]) \
+                *(dcoord1[index]-dcoord2[index]); \
+            } \
+        } else if (treetype == CNEARTREE_TYPE_INTEGER) { \
+            distsq = ((double)(icoord1[0]-icoord2[0]))*((double)(icoord1[0]-icoord2[0])); \
+            \
+            for (index=1; index < treedim; index++) { \
+                distsq += ((double)(icoord1[index]-icoord2[index])) \
+                *((double)(icoord1[index]-icoord2[index])); \
+            } \
+        }  \
+        }
+
+#define CNTM_DistL2(dist,treehandle,coord1,coord2) {     \
+        size_t index;                                     \
+        double distsq=0.;                                    \
+        size_t treedim; \
+        long treetype;  \
+        double CNEARTREE_FAR * dcoord1 = NULL; \
+        double CNEARTREE_FAR * dcoord2 = NULL; \
+        int CNEARTREE_FAR * icoord1 = NULL; \
+        int CNEARTREE_FAR * icoord2 = NULL; \
+        treedim = (treehandle)->m_szdimension; \
+        treetype = (treehandle)->m_iflags&CNEARTREE_TYPE; \
+        if (treetype == CNEARTREE_TYPE_DOUBLE) { \
+            dcoord1 = (double CNEARTREE_FAR *)(coord1);\
+            dcoord2 = (double CNEARTREE_FAR *)(coord2);\
+        } else if (treetype == CNEARTREE_TYPE_INTEGER) { \
+            icoord1 = (int CNEARTREE_FAR *)(coord1); \
+            icoord2 = (int CNEARTREE_FAR *)(coord2); \
+        } \
+        if (treedim == 1) { \
+            if (treetype == CNEARTREE_TYPE_DOUBLE) { \
+                (dist) = CNTM_Abs(dcoord1[0]-dcoord2[0]); \
+            } else if (treetype == CNEARTREE_TYPE_INTEGER) { \
+                (dist) = CNTM_Abs((double)(icoord1[0]-icoord2[0])); \
+            } \
+        } else { \
+            if (treetype == CNEARTREE_TYPE_DOUBLE) { \
+                distsq = (dcoord1[0]-dcoord2[0])*(dcoord1[0]-dcoord2[0]); \
+                \
+                for (index=1; index < treedim; index++) { \
+                    distsq += (dcoord1[index]-dcoord2[index]) \
+                    *(dcoord1[index]-dcoord2[index]); \
+                } \
+            } else if (treetype == CNEARTREE_TYPE_INTEGER) { \
+                distsq = ((double)(icoord1[0]-icoord2[0]))*((double)(icoord1[0]-icoord2[0])); \
+                \
+                for (index=1; index < treedim; index++) { \
+                    distsq += ((double)(icoord1[index]-icoord2[index])) \
+                    *((double)(icoord1[index]-icoord2[index])); \
+                } \
+            }  \
+            (dist) = sqrt(distsq);\
+        }\
+        }
+  
+#define CNTM_DistL1(dist,treehandle,coord1,coord2) {\
+        size_t index;   \
+        size_t treedim; \
+        long treetype;  \
+        double CNEARTREE_FAR * dcoord1 = NULL; \
+        double CNEARTREE_FAR * dcoord2 = NULL; \
+        int CNEARTREE_FAR * icoord1 = NULL; \
+        int CNEARTREE_FAR * icoord2 = NULL; \
+        \
+        treedim = treehandle->m_szdimension; \
+        treetype = treehandle->m_iflags&CNEARTREE_TYPE; \
+        (dist) = 0.; \
+        \
+        if (treetype == CNEARTREE_TYPE_DOUBLE) { \
+            dcoord1 = (double CNEARTREE_FAR *)(coord1);\
+            dcoord2 = (double CNEARTREE_FAR *)(coord2);\
+        } else if (treetype == CNEARTREE_TYPE_INTEGER) { \
+            icoord1 = (int CNEARTREE_FAR *)(coord1); \
+            icoord2 = (int CNEARTREE_FAR *)(coord2); \
+        } \
+       if (treetype == CNEARTREE_TYPE_DOUBLE) { \
+            (dist)= fabs(dcoord1[0]-dcoord2[0]); \
+            for (index=1; index < treedim; index++) { \
+                (dist) += CNTM_Abs(dcoord1[index]-dcoord2[index]); \
+            } \
+        } else if (treetype == CNEARTREE_TYPE_INTEGER) { \
+            (dist) = fabs((double)(icoord1[0]-icoord2[0])); \
+            for (index=1; index < treedim; index++) { \
+                (dist) += CNTM_Abs((double)(dcoord1[index]-dcoord2[index])); \
+            } \
+        }   \
+    }
+
+    
     /*
      =======================================================================
      double CNearTreeDistsq(void CNEARTREE_FAR * coord1, 
@@ -257,19 +374,23 @@ extern "C" {
                            void CNEARTREE_FAR * coord2, 
                            size_t treedim, 
                            long treetype);
-    /*
+
+     /*
      =======================================================================
-     double CNearTreeDist(const CNearTreeHandle treehandle, void CNEARTREE_FAR * coord1, 
+     double CNearTreeDist(const CNearTreeHandle treehandle, 
+     void CNEARTREE_FAR * coord1, 
      void CNEARTREE_FAR * coord2)
      
      function to return the distance (L1, L2 or L-infinity) between two 
      coordinate vectors according to the parameters of the given tree  
+     For L2LAZY tree this returns the L2 norm distance.
      
      =======================================================================
      */
-    double CNearTreeDist(const CNearTreeHandle treehandle, void CNEARTREE_FAR * coord1, 
-                         void CNEARTREE_FAR * coord2);
     
+    double CNearTreeDist(const CNearTreeHandle treehandle, 
+                              void CNEARTREE_FAR * coord1,
+                              void CNEARTREE_FAR * coord2);
     /*
      =======================================================================
      int CNearTreeSetNorm(const CNearTreeHandle treehandle, int treenorm);
