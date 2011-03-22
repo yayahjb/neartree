@@ -403,7 +403,6 @@ static inline DistanceType DistanceBetween( const short t1, const short t2 )
     return( (DistanceType)abs(t1-t2) ); // encourage the compiler to get the correct abs
 }
 
-
 private:
 
 RHrand rhr;
@@ -477,7 +476,7 @@ DistanceType      m_SumSpacingsSq;     // sum of squares of spacings at time of 
 double            m_DimEstimate;       // estimated dimension
 double            m_DimEstimateEsd;    // estimated dimension estimated standard deviation
 #ifdef CNEARTREE_INSTRUMENTED
-size_t            m_NodeVisits;        // number of node visits
+mutable size_t            m_NodeVisits;        // number of node visits
 #endif
 
 public:
@@ -1128,10 +1127,7 @@ void ImmediateInsert ( const InputContainer& o )
 //
 //  This version used the balanced search
 //=======================================================================
-inline iterator NearestNeighbor ( const DistanceType& radius, const T& t )
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+inline iterator NearestNeighbor ( const DistanceType& radius, const T& t ) const
 {
     T closest;
     size_t index = ULONG_MAX;
@@ -1173,10 +1169,7 @@ const
 //
 //  This version used the left-first search
 //=======================================================================
-inline iterator LeftNearestNeighbor ( const DistanceType& radius, const T& t )
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+inline iterator LeftNearestNeighbor ( const DistanceType& radius, const T& t ) const
 {
     T closest;
     size_t index = ULONG_MAX;
@@ -1220,10 +1213,7 @@ const
 //
 //  This version used the balanced search
 //=======================================================================
-inline bool NearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const T& t )
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+inline bool NearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const T& t ) const
 {
     const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
     
@@ -1265,10 +1255,7 @@ const
 //
 //  This version used the left-first search
 //=======================================================================
-inline bool LeftNearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const T& t )
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+inline bool LeftNearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const T& t ) const
 {
     const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
     
@@ -1611,10 +1598,7 @@ inline bool LeftShortNearestNeighbor ( const DistanceType& dRadius,  T& tClosest
 //
 // This version uses the balanced search
 //=======================================================================
-iterator FarthestNeighbor ( const T& t )
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+iterator FarthestNeighbor ( const T& t ) const
 {
     T farthest;
     size_t index = ULONG_MAX;
@@ -1653,10 +1637,7 @@ const
 //
 // This version uses the left-first search
 //=======================================================================
-iterator LeftFarthestNeighbor ( const T& t )
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+iterator LeftFarthestNeighbor ( const T& t ) const
 {
     T farthest;
     size_t index = ULONG_MAX;
@@ -1697,10 +1678,7 @@ const
 //             an empty tree)
 //
 //=======================================================================
-bool FarthestNeighbor ( T& tFarthest, const T& t )
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+bool FarthestNeighbor ( T& tFarthest, const T& t ) const
 {
     const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
 
@@ -1737,10 +1715,7 @@ const
 //
 //  This version uses the left-first search
 //=======================================================================
-bool LeftFarthestNeighbor ( T& tFarthest, const T& t )
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+bool LeftFarthestNeighbor ( T& tFarthest, const T& t ) const
 {
     const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
     
@@ -1876,10 +1851,7 @@ void SeparateByRadius( const DistanceType radius, const T& probe,
 //
 //=======================================================================
 template<typename OutputContainerType>
-inline long FindInSphere ( const DistanceType& dRadius,  OutputContainerType& tClosest,   const T& t ) 
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+inline long FindInSphere ( const DistanceType& dRadius,  OutputContainerType& tClosest,   const T& t ) const
 {
     // clear the contents of the return vector so that things don't accidentally accumulate
     tClosest.clear( );
@@ -1900,10 +1872,7 @@ const
 }  //  FindInSphere
 template<typename OutputContainerType>
 inline long FindInSphere ( const DistanceType& dRadius,  OutputContainerType& tClosest, 
-                          std::vector<size_t>& tIndices, const T& t ) 
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+                          std::vector<size_t>& tIndices, const T& t ) const
 {
     // clear the contents of the return vector so that things don't accidentally accumulate
     tClosest.clear( );
@@ -1943,10 +1912,7 @@ const
 // This version used the left-first search
 //=======================================================================
 template<typename OutputContainerType>
-inline long LeftFindInSphere ( const DistanceType& dRadius,  OutputContainerType& tClosest,   const T& t ) 
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+inline long LeftFindInSphere ( const DistanceType& dRadius, OutputContainerType& tClosest, const T& t ) const
 {
     // clear the contents of the return vector so that things don't accidentally accumulate
     tClosest.clear( );
@@ -1968,10 +1934,7 @@ const
 
 template<typename OutputContainerType>
 inline long LeftFindInSphere ( const DistanceType& dRadius,  OutputContainerType& tClosest, 
-                          std::vector<size_t>& tIndices, const T& t ) 
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+                          std::vector<size_t>& tIndices, const T& t ) const
 {
     // clear the contents of the return vector so that things don't accidentally accumulate
     tClosest.clear( );
@@ -2015,10 +1978,7 @@ long FindOutSphere (
                     const DistanceType& dRadius,
                     OutputContainerType& tFarthest,
                     const T& t
-                    ) 
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+                    ) const
 {
     // clear the contents of the return vector so that things don't accidentally accumulate
     tFarthest.clear( );
@@ -2043,10 +2003,7 @@ long FindOutSphere (
                     OutputContainerType& tFarthest,
                     std::vector<size_t>& tIndices,
                     const T& t
-                    )
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+                    ) const
 {
     // clear the contents of the return vector so that things don't accidentally accumulate
     tFarthest.clear( );
@@ -2090,10 +2047,7 @@ long LeftFindOutSphere (
                     const DistanceType& dRadius,
                     OutputContainerType& tFarthest,
                     const T& t
-                    ) 
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+                    ) const
 {
     // clear the contents of the return vector so that things don't accidentally accumulate
     tFarthest.clear( );
@@ -2119,10 +2073,7 @@ long LeftFindOutSphere (
                     OutputContainerType& tFarthest,
                     std::vector<size_t>& tIndices,
                     const T& t
-                    )
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+                    ) const
 {
     // clear the contents of the return vector so that things don't accidentally accumulate
     tFarthest.clear( );
@@ -2169,10 +2120,7 @@ long FindInAnnulus (
                     const DistanceType& dRadius2,
                     OutputContainerType& tAnnular,
                     const T& t
-                    )
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+                    ) const
 {
     long lReturn = 0;
     // clear the contents of the return vector so that things don't accidentally accumulate
@@ -2205,10 +2153,7 @@ long FindInAnnulus (
                     OutputContainerType& tAnnular,
                     std::vector<size_t>& tIndices,
                     const T& t
-                    ) 
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+                    ) const
 {
     long lReturn = 0;
     // clear the contents of the return vector so that things don't accidentally accumulate
@@ -2261,10 +2206,7 @@ long LeftFindInAnnulus (
                     const DistanceType& dRadius2,
                     OutputContainerType& tAnnular,
                     const T& t
-                    )
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+                    ) const
 {
     long lReturn = 0;
     // clear the contents of the return vector so that things don't accidentally accumulate
@@ -2297,10 +2239,7 @@ long LeftFindInAnnulus (
                     OutputContainerType& tAnnular,
                     std::vector<size_t>& tIndices,
                     const T& t
-                    ) 
-#ifndef CNEARTREE_INSTRUMENTED
-const
-#endif
+                    ) const
 {
     long lReturn = 0;
     // clear the contents of the return vector so that things don't accidentally accumulate
@@ -2771,34 +2710,24 @@ DistanceType GetVarSpacing (  void )
     return m_SumSpacingsSq/DistanceType((1+m_ObjectStore.size()))-meanSpacing*meanSpacing;
 }
 
-#ifndef CNEARTREE_INSTRUMENTED
 //=======================================================================
 //  size_t GetNodeVisits (  void )
 //
 //  Get the number of visits to nodes
-//  Dummy version to return 0
+//  Uninstrumented returns 0
 //  
 //
 //=======================================================================
 inline size_t GetNodeVisits (  void )
 {
+#ifdef CNEARTREE_INSTRUMENTED
+    return m_NodeVisits;
+#else
     return 0;
-}
-
 #endif
+}
 
 #ifdef CNEARTREE_INSTRUMENTED
-//=======================================================================
-//  size_t GetNodeVisits (  void )
-//
-//  Get the number of visits to nodes
-//  
-//
-//=======================================================================
-inline size_t GetNodeVisits (  void )
-{
-    return m_NodeVisits;
-}
 //=======================================================================
 //  void SetNodeVisits (  const size_t visits )
 //
@@ -6463,6 +6392,7 @@ class const_iterator
 }; // template class CNearTree
 
 #endif // !defined(TNEAR_H_INCLUDED)
+
 
 
 
