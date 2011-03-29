@@ -504,7 +504,7 @@ extern "C" {
      CNEARTREE_NORM_HSPHERE   for norm as hemispherical angular distance
      CNEARTREE_NORM_HAMMING   for norm as string hamming distance
      ored with
-     CNTF_NOPREPRUNE    0x10000L    flag to supress all search prepruning
+     CNTF_NOPREPRUNE    0x10000L    flag to suppress all search prepruning
      CNTF_FORCEPREPRUNE 0x20000L    flag to force search prepruning
      CNTF_NOFLIP        0x40000L    flag to suppress flips on insert
      CNTF_FORCEFLIP     0x80000L    flag to force flips on insert
@@ -843,7 +843,7 @@ extern "C" {
      
      functions to get or set the execution control flags:
      
-     CNTF_NOPREPRUNE    to supress all search prepruning
+     CNTF_NOPREPRUNE    to suppress all search prepruning
      CNTF_FORCEPREPRUNE to force search prepruning      
      CNTF_NOFLIP        flag to suppress flips on insert
      CNTF_FORCEFLIP     flag to force flips on insert

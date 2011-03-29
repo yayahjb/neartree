@@ -82,7 +82,7 @@ This is a release of an API for finding nearest neighbors among points in spaces
 arbitrary dimensions.  This release provides a C++ template, TNear.h, and a
 C library, CNearTree.c, with example/test programs.
 <font size="-1">
-<p>Release 3.0 (formerly named Release 2.4) is a major change to NearTree, restructing
+<p>Release 3.0 (formerly named Release 2.4) is a major change to NearTree, restructuring
 the default search from left-first to balanced and adding hooks to collect information
 about the tree.
 <p>Release 2.3.2 adds optional returns of vectors of ordinals of found objects
@@ -93,7 +93,7 @@ primarily for MINGW use.
 <p>Release 2.2 added support for C code for fixed length string searches using a hamming distance norm,
 and for spherical and hemispherical geodesic norm based searches.  Because of the
 addition of new type and norm flags, the version 2.2 shared libraries cannot be used
-to support binaries copiled against earlier headers and vice-versa.
+to support binaries compiled against earlier headers and vice-versa.
 <p>Release 2.1.5 was a cleanup update to the 2.1 release of 30 May 2009 to increase
 portability, in five stages (2.1.1 on 4 June 2009, 2.1.2 on 7 June 2009, 2.1.3 on 7 July 2009,
 2.1.4 on 29 November 2009 and 2.1.5 on 23 April 2010)
@@ -121,7 +121,7 @@ following issues:
 <li>Replace use recursion with a stack, except in insertion logic
 <li>Replace use of double with templated DistanceType (usually double)
 <li>Provide constuctors to build NearTree from vectors, lists or sets
-<li>Change &quot;Insert&quot; to &quot;insert&quot for consistentcy with
+<li>Change &quot;Insert&quot; to &quot;insert&quot; for consistency with
 other containers
 <li>Add access function &quot;at&quot; or array type references [], and provide
 contents of a neartree as a vector
@@ -239,19 +239,19 @@ in bash
 <p>
 export LIBTOOL=$HOME/bin/libtool
 <p>
-or in the Makefie
+or in the Makefile
 <p>
 LIBTOOL = $(HOME)/bin/libtool
 <p>
 If you need to include local header files using #include &quot;...&quot; instead of #include &lt;...&gt;,
 define the variable USE_LOCAL_HEADERS.  USE_LOCAL_HEADERS is the default for Visual
-Studio under MicroSoft Windows.
+Studio under Microsoft Windows.
 <p>
 Optionally, you may also define CNEARTREE_FORCEFLIP to maximize
 tree reorganization on insertion, CNEARTREE_NOFLIP to suppress
 tree reorganization on insertion, CNEARTREE_NODEFER to make
 all insertions immediate, CNEARTREE_FORCEPREPUNE to do searches
-first with a tigher estimate on the search radius, and CNEARTREE_NOPREPRUNE
+first with a tighter estimate on the search radius, and CNEARTREE_NOPREPRUNE
 to suppress that behavior.  The defaults are to do tree reorganization
 on insertion, to defer insertions, but not to preprune the search radius.
 <p>
@@ -413,7 +413,7 @@ The provided interface is:
                                                                            
     // The available execution flags are
     
-    <b>static const long</b>        NTF_NoPrePrune        = 1; //flag to supress all search prepruning
+    <b>static const long</b>        NTF_NoPrePrune        = 1; //flag to suppress all search prepruning
     <b>static const long</b>        NTF_ForcePrePrune     = 2; //flag to force search prepruning
     <b>static const long</b>        NTF_NoFlip            = 4; //flag to suppress flips on insert
     <b>static const long</b>        NTF_ForceFlip         = 8; //flag to force flips on insert
@@ -575,7 +575,7 @@ The provided interface is:
        <i>t</i> is the probe point, used to search in the group of points Insert'ed
 
        return value is the count of the number of points found within the search radius
-       the "Left..." versions are deprecated versions provided for compatibilty with
+       the "Left..." versions are deprecated versions provided for compatibility with
        earlier NearTree releases.
 
     <b>long FindOutSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,
@@ -600,7 +600,7 @@ The provided interface is:
        <i>t</i> is the probe point, used to search in the group of points Insert'ed
 
        return value is the count of the number of points found outside the search radius
-       the "Left..." versions are deprecated versions provided for compatibilty with
+       the "Left..." versions are deprecated versions provided for compatibility with
        earlier NearTree releases.
     
     <b>long FindInAnnulus</b> ( <b>const DistanceType&amp;</b> <i>dRadius1</i>,
@@ -631,7 +631,7 @@ The provided interface is:
        <i>t</i> is the probe point, used to search in the group of points Insert'ed
 
        return value is the count of the number of points found within the annulus
-       the "Left..." versions are deprecated versions provided for compatibilty with
+       the "Left..." versions are deprecated versions provided for compatibility with
        earlier NearTree releases.
     
     <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>,
@@ -656,7 +656,7 @@ The provided interface is:
        <i>t</i> is the probe point, used to search in the group of points insert'ed
 
        return value is the count of the number of points found within the sphere
-       the "Left..." versions are deprecated versions provided for compatibilty with
+       the "Left..." versions are deprecated versions provided for compatibility with
        earlier NearTree releases.
 
 
@@ -681,7 +681,7 @@ The provided interface is:
        <i>t</i> is the probe point, used to search in the group of points insert'ed
 
        return value is the count of the number of points found within the sphere
-       the "Left..." versions are deprecated versions provided for compatibilty with
+       the "Left..." versions are deprecated versions provided for compatibility with
        earlier NearTree releases.
 
    
@@ -753,7 +753,7 @@ Information and special operation functions:
      <b>DistanceType GetVarSpacing</b> ( <b>void</b> )   // returns an estimate object spacing variance
      
      <b>size_t GetNodeVisits</b> ( <b>void</b> )   // returns the number of node visits if
-                                                   // CNEARTREE_INSTRUMENTED as deifined, 0 otherwise
+                                                   // CNEARTREE_INSTRUMENTED as defined, 0 otherwise
      <b>void SetNodeVisits,/b> ( <b>const size_t</b> <i>visits</b>)
                                                    // set the number of node visits
      
@@ -775,7 +775,7 @@ Iterators:
      
      They should function in a fashion essentially the same as STL iterators. There is no assurance
      that data will be returned in the order it was loaded, just that it is accessible.  This is the
-     list of iterators. The same set is avaiable for const_iterator.
+     list of iterators. The same set is available for const_iterator.
 
      <b>iterator</b> ( <b>void</b> ) { }; // constructor
      <b>iterator</b> ( <b>const const_iterator&amp;</b> <i>s</i> )
@@ -1114,7 +1114,7 @@ nodes of type CNearTreeNode:
     
     /*  Execution Control Flags */
     
-#define CNTF_NOPREPRUNE    0x10000L     /*flag to supress all search prepruning */
+#define CNTF_NOPREPRUNE    0x10000L     /*flag to suppress all search prepruning */
 #define CNTF_FORCEPREPRUNE 0x20000L     /*flag to force search prepruning       */
 #define CNTF_NOFLIP        0x40000L     /*flag to suppress flips on insert      */
 #define CNTF_FORCEFLIP     0x80000L     /*flag to force flips on insert         */
@@ -1137,7 +1137,7 @@ is one of the three predefined constants <b>CNEARTREE_TYPE_DOUBLE</b> for double
 or <b>CNEARTREE_TYPE_INTEGER</b> for integer or <b>CNEARTREE_TYPE_STRING</b>, 
 optionally ORed with <b>CNEARTREE_NORM_L1</b>, <b>CNEARTREE_NORM_L2</b> or CNEARTREE_NORM_LINF</b> 
 for L1, L2 or L-infinity norms, <b>CNEARTREE_NORM_SPHERE</b> or <b>CNEARTREE_NORM_HSPHERE</b> for
-a spherical or hemispherical norm (L1-norm combination of radial and spherical/hemisppherical 
+a spherical or hemispherical norm (L1-norm combination of radial and spherical/hemispherical 
 triangle distances), or <b>CNEARTREE_NORM_HAMMING</b> for the string-Hamming distance norm
 (add one for each differing character position).
 
@@ -1153,7 +1153,7 @@ default. or for the entire queue if the flag <b>CNEARTREE_DEFER_ALL</b> is ored 
 <b>CNEARTREE_FORCEFLIP</b> to maximize tree reorganization on insertion, 
 <b>CNEARTREE_NOFLIP</b> to suppress tree reorganization on insertion, <b>CNEARTREE_NODEFER</b> 
 to make all insertions immediate, <b>CNEARTREE_FORCEPREPUNE</b> to do searches first with a 
-tigher estimate on the search radius, and <b>CNEARTREE_NOPREPRUNE</b> to suppress that behavior. 
+tighter estimate on the search radius, and <b>CNEARTREE_NOPREPRUNE</b> to suppress that behavior. 
 The defaults are to do tree reorganization on insertion, to defer insertions, but not 
 to preprune the search radius.
 
@@ -1174,7 +1174,7 @@ and then the nearer child, working from a randomized selection from the items qu
 for insertion.
 <p>
 Optionally, the actual insertions may done immediately by calling <b>CNearTreeImmediateInsert</b>
-instead of <b>CNearTreeInsert</b>.  For upwards compatability of the library for existing
+instead of <b>CNearTreeInsert</b>.  For upwards compatibility of the library for existing
 code, the deprecated <b>CNearTreeDelayedInsert</b> is provided as an deprecated alternate
 call to <b>CNearTreeInsert</b>. 
 <p>
