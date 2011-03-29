@@ -403,6 +403,7 @@ static inline DistanceType DistanceBetween( const short t1, const short t2 )
     return( (DistanceType)abs(t1-t2) ); // encourage the compiler to get the correct abs
 }
 
+
 private:
 
 RHrand rhr;
@@ -2783,7 +2784,7 @@ double GetDimEstimateEsd ( void )
 
 
 //=======================================================================
-//  size_t GetDimEstimate (  const double DimEstimateEsd )
+//  double GetDimEstimate (  const double DimEstimateEsd )
 //
 //  Get an estimate of the dimension of the collection of points
 //  in the tree, to within the specified esd
