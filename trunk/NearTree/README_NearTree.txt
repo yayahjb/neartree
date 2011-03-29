@@ -52,7 +52,7 @@
    TNear.h, and a C library, CNearTree.c, with example/test programs.
 
    Release 3.0 (formerly named Release 2.4) is a major change to NearTree,
-   restructing the default search from left-first to balanced and adding
+   restructuring the default search from left-first to balanced and adding
    hooks to collect information about the tree.
 
    Release 2.3.2 adds optional returns of vectors of ordinals of found
@@ -69,7 +69,7 @@
    using a hamming distance norm, and for spherical and hemispherical
    geodesic norm based searches. Because of the addition of new type and norm
    flags, the version 2.2 shared libraries cannot be used to support binaries
-   copiled against earlier headers and vice-versa.
+   compiled against earlier headers and vice-versa.
 
    Release 2.1.5 was a cleanup update to the 2.1 release of 30 May 2009 to
    increase portability, in five stages (2.1.1 on 4 June 2009, 2.1.2 on 7
@@ -96,7 +96,7 @@
      * Replace use recursion with a stack, except in insertion logic
      * Replace use of double with templated DistanceType (usually double)
      * Provide constuctors to build NearTree from vectors, lists or sets
-     * Change "Insert" to "insert" for consistentcy with other containers
+     * Change "Insert" to "insert" for consistency with other containers
      * Add access function "at" or array type references [], and provide
        contents of a neartree as a vector
      * Add iterator support
@@ -216,18 +216,18 @@
 
    export LIBTOOL=$HOME/bin/libtool
 
-   or in the Makefie
+   or in the Makefile
 
    LIBTOOL = $(HOME)/bin/libtool
 
    If you need to include local header files using #include "..." instead of
    #include <...>, define the variable USE_LOCAL_HEADERS. USE_LOCAL_HEADERS
-   is the default for Visual Studio under MicroSoft Windows.
+   is the default for Visual Studio under Microsoft Windows.
 
    Optionally, you may also define CNEARTREE_FORCEFLIP to maximize tree
    reorganization on insertion, CNEARTREE_NOFLIP to suppress tree
    reorganization on insertion, CNEARTREE_NODEFER to make all insertions
-   immediate, CNEARTREE_FORCEPREPUNE to do searches first with a tigher
+   immediate, CNEARTREE_FORCEPREPUNE to do searches first with a tighter
    estimate on the search radius, and CNEARTREE_NOPREPRUNE to suppress that
    behavior. The defaults are to do tree reorganization on insertion, to
    defer insertions, but not to preprune the search radius.
@@ -369,7 +369,7 @@ operator- ( );        // geometrical (vector) difference of two objects
                                                                            
      // The available execution flags are
     
-     static const long        NTF_NoPrePrune        = 1; //flag to supress all search prepruning
+     static const long        NTF_NoPrePrune        = 1; //flag to suppress all search prepruning
      static const long        NTF_ForcePrePrune     = 2; //flag to force search prepruning
      static const long        NTF_NoFlip            = 4; //flag to suppress flips on insert
      static const long        NTF_ForceFlip         = 8; //flag to force flips on insert
@@ -531,7 +531,7 @@ operator- ( );        // geometrical (vector) difference of two objects
         t is the probe point, used to search in the group of points Insert'ed
 
         return value is the count of the number of points found within the search radius
-        the "Left..." versions are deprecated versions provided for compatibilty with
+        the "Left..." versions are deprecated versions provided for compatibility with
         earlier NearTree releases.
 
      long FindOutSphere ( const DistanceType& dRadius,
@@ -556,7 +556,7 @@ operator- ( );        // geometrical (vector) difference of two objects
         t is the probe point, used to search in the group of points Insert'ed
 
         return value is the count of the number of points found outside the search radius
-        the "Left..." versions are deprecated versions provided for compatibilty with
+        the "Left..." versions are deprecated versions provided for compatibility with
         earlier NearTree releases.
     
      long FindInAnnulus ( const DistanceType& dRadius1,
@@ -587,7 +587,7 @@ operator- ( );        // geometrical (vector) difference of two objects
         t is the probe point, used to search in the group of points Insert'ed
 
         return value is the count of the number of points found within the annulus
-        the "Left..." versions are deprecated versions provided for compatibilty with
+        the "Left..." versions are deprecated versions provided for compatibility with
         earlier NearTree releases.
     
      long FindK_NearestNeighbors ( const size_t k, const DistanceType& dRadius,
@@ -612,7 +612,7 @@ operator- ( );        // geometrical (vector) difference of two objects
         t is the probe point, used to search in the group of points insert'ed
 
         return value is the count of the number of points found within the sphere
-        the "Left..." versions are deprecated versions provided for compatibilty with
+        the "Left..." versions are deprecated versions provided for compatibility with
         earlier NearTree releases.
 
 
@@ -637,7 +637,7 @@ operator- ( );        // geometrical (vector) difference of two objects
         t is the probe point, used to search in the group of points insert'ed
 
         return value is the count of the number of points found within the sphere
-        the "Left..." versions are deprecated versions provided for compatibilty with
+        the "Left..." versions are deprecated versions provided for compatibility with
         earlier NearTree releases.
 
    
@@ -713,7 +713,7 @@ operator- ( );        // geometrical (vector) difference of two objects
       DistanceType GetVarSpacing ( void )   // returns an estimate object spacing variance
      
       size_t GetNodeVisits ( void )   // returns the number of node visits if
-                                                    // CNEARTREE_INSTRUMENTED as deifined, 0 otherwise
+                                                    // CNEARTREE_INSTRUMENTED as defined, 0 otherwise
       void SetNodeVisits,/b> ( const size_t visits)
                                                     // set the number of node visits
      
@@ -737,7 +737,7 @@ operator- ( );        // geometrical (vector) difference of two objects
      
       They should function in a fashion essentially the same as STL iterators. There is no assurance
       that data will be returned in the order it was loaded, just that it is accessible.  This is the
-      list of iterators. The same set is avaiable for const_iterator.
+      list of iterators. The same set is available for const_iterator.
 
       iterator ( void ) { }; // constructor
       iterator ( const const_iterator& s )
@@ -1005,7 +1005,7 @@ operator- ( );        // geometrical (vector) difference of two objects
     
      /*  Execution Control Flags */
     
- #define CNTF_NOPREPRUNE    0x10000L     /*flag to supress all search prepruning */
+ #define CNTF_NOPREPRUNE    0x10000L     /*flag to suppress all search prepruning */
  #define CNTF_FORCEPREPRUNE 0x20000L     /*flag to force search prepruning       */
  #define CNTF_NOFLIP        0x40000L     /*flag to suppress flips on insert      */
  #define CNTF_FORCEFLIP     0x80000L     /*flag to force flips on insert         */
@@ -1028,7 +1028,7 @@ operator- ( );        // geometrical (vector) difference of two objects
    ORed with CNEARTREE_NORM_L1, CNEARTREE_NORM_L2 or CNEARTREE_NORM_LINF for
    L1, L2 or L-infinity norms, CNEARTREE_NORM_SPHERE or
    CNEARTREE_NORM_HSPHERE for a spherical or hemispherical norm (L1-norm
-   combination of radial and spherical/hemisppherical triangle distances), or
+   combination of radial and spherical/hemispherical triangle distances), or
    CNEARTREE_NORM_HAMMING for the string-Hamming distance norm (add one for
    each differing character position).
 
@@ -1044,7 +1044,7 @@ operator- ( );        // geometrical (vector) difference of two objects
    also define CNEARTREE_FORCEFLIP to maximize tree reorganization on
    insertion, CNEARTREE_NOFLIP to suppress tree reorganization on insertion,
    CNEARTREE_NODEFER to make all insertions immediate, CNEARTREE_FORCEPREPUNE
-   to do searches first with a tigher estimate on the search radius, and
+   to do searches first with a tighter estimate on the search radius, and
    CNEARTREE_NOPREPRUNE to suppress that behavior. The defaults are to do
    tree reorganization on insertion, to defer insertions, but not to preprune
    the search radius. If you define CNEARTREE_INSTRUMENTED, code will be
@@ -1065,7 +1065,7 @@ operator- ( );        // geometrical (vector) difference of two objects
 
    Optionally, the actual insertions may done immediately by calling
    CNearTreeImmediateInsert instead of CNearTreeInsert. For upwards
-   compatability of the library for existing code, the deprecated
+   compatibility of the library for existing code, the deprecated
    CNearTreeDelayedInsert is provided as an deprecated alternate call to
    CNearTreeInsert.
 
