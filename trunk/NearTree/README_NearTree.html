@@ -21,10 +21,10 @@ NearTree -- function library efficiently solving the Nearest Neighbor Problem
 <hr>
 <center>
 <h2 align=center>NearTree</h2>
-Release 2.3.2<br />
+Release 3.0<br />
 <font size="-1">
-30 October 2010<br />
-&#169; Copyright 2001, 2008, 2009, 2010 Larry Andrews.  All rights reserved
+22 March 2011<br />
+&#169; Copyright 2001, 2008, 2009, 2010, 2011 Larry Andrews.  All rights reserved
 <br />
 based on<br />
 Larry Andrews, &quot;<i>A template for the nearest neighbor problem</i>&quot;,<br />
@@ -47,6 +47,7 @@ Revised 12 Dec 2008, for sourceforge release, Larry Andrews and Herbert J. Berns
 31 August 2010 Release 2.3 LCA<br />
 7 September 2010 Release 2.3.1 LCA<br />
 30 October 2010 Release 2.3.2 LCA<br />
+22 March 2011 Release 3.0 LCA and HJB<br />
 </font>
 <P>
 
@@ -81,6 +82,9 @@ This is a release of an API for finding nearest neighbors among points in spaces
 arbitrary dimensions.  This release provides a C++ template, TNear.h, and a
 C library, CNearTree.c, with example/test programs.
 <font size="-1">
+<p>Release 3.0 (formerly named Release 2.4) is a major change to NearTree, restructing
+the default search from left-first to balanced and adding hooks to collect information
+about the tree.
 <p>Release 2.3.2 adds optional returns of vectors of ordinals of found objects
 <p>Release 2.3.1 adds  Centroid method for Lloyd clustering.
 <p>Release 2.3 added methods for clustering.
@@ -148,15 +152,16 @@ insertions before parallel execution of parallel searches.
 <h4><a name="Installation">Installation</a></h4>
 <p>
 The NearTree package is available at <a href="http://www.sourceforge.net/projects/neartree">www.sourceforge.net/projects/neartree</a>.
-A source tarball is available at <a href="http://downloads.sourceforge.net/neartree/NearTree-2.3.2.tar.gz">downloads.sourceforge.net/neartree/NearTree-2.3.2.tar.gz</a>.
+A source tarball is available at <a href="http://downloads.sourceforge.net/neartree/NearTree-3.0.tar.gz">downloads.sourceforge.net/neartree/NearTree-3.0.tar.gz</a>.
 Later tarballs may be available.
 <p>
 If you decide to simply use the TNear.h header to add nearest neighbor support to C++ code under Visual
-Studio, be sure to also use the rhrand.h and triple.h headers, and to define USE_LOCAL_HEADERS.  For
+Studio, be sure to also use the rhrand.h and triple.h headers.   It is no longer necessary to define 
+USE_LOCAL_HEADERS, which is automatically defined if _MSC_VER is defined.  For
 unix or MINGW, you will need to use the Makefile and to have libtool on your system.  Be warned that
 the default libtool under Mac OS X will not work for this installation.
 <P>
-When the source tarball is downloaded and unpacked, you should have a directory NearTree-2.3.2.  To see the current settings for a build
+When the source tarball is downloaded and unpacked, you should have a directory NearTree-3.0.  To see the current settings for a build
 execute
 <p>
 make
@@ -182,7 +187,7 @@ which should give the following information:
 
  The current library link command is:
  
-   libtool --mode=link  gcc -version-info 3:0:0  \
+   libtool --mode=link  gcc -version-info 5:0:0  \
      -no-undefined -rpath /usr/local/lib
  
  The current C++ and C library local, and C dynamic and static build commands are:
@@ -239,7 +244,19 @@ or in the Makefie
 LIBTOOL = $(HOME)/bin/libtool
 <p>
 If you need to include local header files using #include &quot;...&quot; instead of #include &lt;...&gt;,
-define the variable USE_LOCAL_HEADERS
+define the variable USE_LOCAL_HEADERS.  USE_LOCAL_HEADERS is the default for Visual
+Studio under MicroSoft Windows.
+<p>
+Optionally, you may also define CNEARTREE_FORCEFLIP to maximize
+tree reorganization on insertion, CNEARTREE_NOFLIP to suppress
+tree reorganization on insertion, CNEARTREE_NODEFER to make
+all insertions immediate, CNEARTREE_FORCEPREPUNE to do searches
+first with a tigher estimate on the search radius, and CNEARTREE_NOPREPRUNE
+to suppress that behavior.  The defaults are to do tree reorganization
+on insertion, to defer insertions, but not to preprune the search radius.
+<p>
+If you define CNEARTREE_INSTRUMENTED, code will be enabled to track
+node visits in searching the tree.
 <p>
  The triangle inequality that must be evaluated in building trees and
 retrieving data may not be evaluated correctly if the range of the three values 
@@ -282,10 +299,12 @@ implementing the Nearest Neighbor algorithm after Kalantari and McDonald,
 modified to use recursion for insertions and recursion (original version) 
 or a stack (current version) for searches
 instead of a double-linked tree
-and simplified so that it does a bit less checking for
+and simplified.  The default search algorithm no longer favors the left
+branch first, but follows the more balanced Kalantari and McDonald
+approach.  The prior search algorithm is available in &quot;Left&quot;
+versions of the search routines doing a bit less checking for
 things like is the distance to the right less than the
-distance to the left; it was found that these checks made little
-to no difference.
+distance to the left.
 <p>
 This template is used to contain a collection of objects. After the
 collection has been loaded into this structure, it can be quickly
@@ -303,7 +322,7 @@ The types of objects that can be stored in the tree is quite broad. The
 biggest limitation is that the objects must reside in some sort of metric
 space and must obey the triangle rule. They must also be all of the same
 size because they are stored in an std::vector. If your application
-requires object of varying storage, then your best way to use this
+requires objects of varying storage, then your best way to use this
 code is to store pointers or handles and to write your own distance functions.
 Note  that std::string is a pointer type variable and so can be stored directly.
 <p>
@@ -371,26 +390,52 @@ The provided interface is:
        instantiated by something like:      CNearTree &lt;T&gt; vTree;
        for some type T
        
-    <b>CNearTree</b>( <b>const ContainerType&lt;T&gt;</b> )   // constructor from containers, e.g. ...
+    <b>CNearTree</b>( <b>const ContainerType&lt;T&gt;</b> &amp; <i>o</i>)    // constructor from containers, e.g. ...
 
-    <b>CNearTree</b>( <b>const std::vector&lt;T&gt;</b> )     // constructor
-    <b>CNearTree</b>( <b>const std::list&lt;T&gt;</b> )       // constructor
-    <b>CNearTree</b>( <b>const std::set&lt;T&gt;</b> )        // constructor
-    <b>CNearTree</b>( <b>const CNearTree&lt;T&gt;</b> )       // constructor
+    <b>CNearTree</b>( <b>const std::vector&lt;T&gt;</b> &amp; <i>o</i> )     // constructor
+    <b>CNearTree</b>( <b>const std::list&lt;T&gt;</b> &amp; <i>o</i> )       // constructor
+    <b>CNearTree</b>( <b>const std::set&lt;T&gt;</b> &amp; <i>o</i> )        // constructor
+    <b>CNearTree</b>( <b>const CNearTree&lt;T&gt;</b> &amp; <i>o</i> )       // constructor
 
-    <b>CNearTree</b>( <b>const ContainerType&lt;T&gt;</b>, <b>const ContainerType&lt;T&gt;</b> ) 
+    <b>CNearTree</b>( <b>const ContainerType&lt;T&gt;</b> &amp; <i>o1</i>,
+                      <b>const ContainerType&lt;T&gt;</b> &amp; <i>o2</i>) 
                                                               // constructor merging 2 containers, e.g. ...
     
     <b>~CNearTree</b>( <b>void</b> )  // destructor
     
     <b>void clear</b>( <b>void</b> )  // clear the NearTree
     
+    <b>long GetFlags</b>( <b>void</b> ) <b>const</b>                       // Get all execution flags
+    <b>void SetFlags</b>( <b>const long</b> <i>flags</i> )                 // Set all execution flags
+    <b>long GetFlags</b>( <b>const long</b> <i>mask</i> ) <b>const</b>     // Get execution flags within mask
+    <b>void SetFlags</b>( <b>const long</b> <i>flags</i>, <b>const long</b> <i>mask</i> )
+                                                                           // Set execution flags within mask
+                                                                           
+    // The available execution flags are
+    
+    <b>static const long</b>        NTF_NoPrePrune        = 1; //flag to supress all search prepruning
+    <b>static const long</b>        NTF_ForcePrePrune     = 2; //flag to force search prepruning
+    <b>static const long</b>        NTF_NoFlip            = 4; //flag to suppress flips on insert
+    <b>static const long</b>        NTF_ForceFlip         = 8; //flag to force flips on insert
+    <b>static const long</b>        NTF_NoDefer           =16; //flag to prevent deferred insert
+
+    
     <b>template&lt;typename</b> <i>InputContainer</i>&gt;
-    <b>CNearTree&amp; operator+=</b>( <b>const InputContainer&amp;</b>, <i>o</i> )
+    <b>CNearTree&amp; operator=</b>( <b>const InputContainer&amp;</b> <i>o</i> )
+                                                              // put container's contents into a NearTree,
+                                                              // wiping out the current contents
+    
+    <b>template&lt;typename</b> <i>InputContainer</i>&gt;
+    <b>CNearTree&amp; operator=</b>( <b>InputContainer&amp;</b> <i>o</i> )
+                                                              // put container's contents into a NearTree,
+                                                              // wiping out the current contents
+
+    <b>template&lt;typename</b> <i>InputContainer</i>&gt;
+    <b>CNearTree&amp; operator+=</b>( <b>const InputContainer&amp;</b> <i>o</i> )
                                                               // add a container's contents to a NearTree
 
     <b>template&lt;typename</b> <i>InputContainer</i>&gt;
-    <b>CNearTree&amp; operator-=</b>( <b>const InputContainer&amp;</b>, <i>o</i> )
+    <b>CNearTree&amp; operator-=</b>( <b>const InputContainer&amp;</b> <i>o</i> )
                                                               // remove a container's contents from a NearTree
 
     <b>template&lt;typename</b> <i>InputContainer</i>&gt;
@@ -422,13 +467,15 @@ The provided interface is:
 
 
     <b>template&lt; typename</b> <i>InputContainer</i> &gt;
-    <b>void insert</b>( <b>ContainerType</b> )      // e. g. ...
+    <b>void insert</b>( <b>ContainerType</b> &amp; <i>o</i> )      // e. g. ...
 
-    <b>void insert</b>( <b>const std::vector&lt;T&gt;</b> )
-    <b>void insert</b>( <b>const std::list&lt;T&gt;</b> )
-    <b>void insert</b>( <b>const std::set&lt;T&gt;</b> ) 
-    <b>void insert</b>( <b>const CNearTree&lt;T&gt;</b> ) 
+    <b>void insert</b>( <b>const std::vector&lt;T&gt;</b> &amp; <i>o</i> )
+    <b>void insert</b>( <b>const std::list&lt;T&gt;</b> &amp; <i>o</i> )
+    <b>void insert</b>( <b>const std::set&lt;T&gt;</b> &amp; <i>o</i> ) 
+    <b>void insert</b>( <b>const CNearTree&lt;T&gt;</b> &amp; <i>o</i> ) 
 
+    <b>iterator NearestNeighbor</b> ( <b>const DistanceType &amp;</b> <i>dRadius</i>, <b>const T&amp;</b> <i>t</i> ) <b>const</b>
+       returns an iterator to the nearest point to the probe point <i>t</i> or end() if there is none
     <b>bool NearestNeighbor</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,  <b>T&amp;</b> <i>tClosest</i>,   <b>const T&amp;</b> <i>t</i> ) <b>const</b>
        <i>dRadius</i> is the largest radius within which to search; make it
           very large if you want to include every point that was loaded.
@@ -439,9 +486,9 @@ The provided interface is:
        return value is true if some object was found within the search radius, false otherwise.
            If false is returned, tClosest is invalid (at best).
 
-    <b>iterator NearestNeighbor</b> ( <b>const DistanceType &amp;</b> <i>dRadius</i>, <b>const T&amp;</b> <i>t</i> ) <b>const</b>
-       returns an iterator to the nearest point to the probe point <i>t</i> or end() if there is none
 
+    <b>iterator FarthestNeighbor</b> ( <b>T&amp;</b> <b>const T&amp;</b> <i>t</i> ) <b>const</b>
+       returns an iterator to the nearest point to the probe point <i>t</i> or end() if there is none
     <b>bool FarthestNeighbor</b> ( <b>T&amp;</b> <i>tFarthest</i>,   <b>const T&amp;</b> <i>t</i> ) <b>const</b>
        <i>tFarthest</i> is returned as the object that was found farthest from the probe
           point
@@ -449,10 +496,32 @@ The provided interface is:
        return value is true if some object was found, false otherwise
           If false is returned, tFarthest is invalid (at best).
 
-    <b>iterator FarthestNeighbor</b> ( <b>T&amp;</b> <b>const T&amp;</b> <i>t</i> ) <b>const</b>
+    <b>iterator LeftNearestNeighbor</b> ( <b>const DistanceType &amp;</b> <i>dRadius</i>, <b>const T&amp;</b> <i>t</i> ) <b>const</b>
        returns an iterator to the nearest point to the probe point <i>t</i> or end() if there is none
+    <b>bool LeftNearestNeighbor</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,  <b>T&amp;</b> <i>tClosest</i>,   <b>const T&amp;</b> <i>t</i> ) <b>const</b>
+       <i>dRadius</i> is the largest radius within which to search; make it
+          very large if you want to include every point that was loaded.
+       <i>tClosest</i> is returned as the object that was found closest to the probe
+          point (if any were within radius dRadius of the probe)
+       <i>t</i> is the probe point, used to search in the group of points insert'ed
 
-    <b>bool FarthestNeighbor</b> ( <b>T&amp;</b> <i>tFarthest</i>, <b>const T&amp;</b> <i>t</i> ) <b>const</b>
+       return value is true if some object was found within the search radius, false otherwise.
+           If false is returned, tClosest is invalid (at best).
+
+
+    <b>iterator LeftFarthestNeighbor</b> ( <b>T&amp;</b> <b>const T&amp;</b> <i>t</i> ) <b>const</b>
+       returns an iterator to the nearest point to the probe point <i>t</i> or end() if there is none
+    <b>bool LeftFarthestNeighbor</b> ( <b>T&amp;</b> <i>tFarthest</i>,   <b>const T&amp;</b> <i>t</i> ) <b>const</b>
+       <i>tFarthest</i> is returned as the object that was found farthest from the probe
+          point
+       <i>t</i> is the probe point, used to search in the group of points Insert'ed
+       return value is true if some object was found, false otherwise
+          If false is returned, tFarthest is invalid (at best).
+
+    The "Left..." versions of NearestNeighbor and FarthestNeighbor are deprecated versions
+    provided for compatibility with earlier releases of NearTree.  There are also "Short..."
+    and "LeftShort..." versions of NearestNeighbor to support experimental prepruning logic.
+
 
     The following functions (BelongsToPoints, SeparateByRadius, FindInSphere, FindOutSphere, 
     and FindInAnnulus) all return a container (ContainerType) that can be any standard library 
@@ -466,7 +535,7 @@ The provided interface is:
     <b>template&lt;typename</b> <i>ContainerType</i>&gt;
     <b>void BelongsToPoints</b> ( <b>const T&amp;</b> <i>t1</i>, <b>const T&amp;</b> <i>t2</i>, 
         <b>ContainerType&amp;</b> <i>group1</i>, <b>ContainerType&amp;</b> <i>group2</i>,
-        <b>std::vector&lt;size_t&gt;&amp; <i>group1_ordinals</i>, <b>std::vector&lt;size_t&gt;&amp; <i>group2_ordinals</i>)
+        <b>std::vector&lt;size_t&gt;&amp;</b> <i>group1_ordinals</i>, <b>std::vector&lt;size_t&gt;&amp;</b> <i>group2_ordinals</i>)
        returns the points closer to t1 than to t2 in group1 and the rest in group 2
        if group1_ordinals and group2_ordinals are provided the ordinals of the
        found objects in the object store are put into those vectors.
@@ -477,7 +546,7 @@ The provided interface is:
     <b>template&lt;typename</b> <i>ContainerTypeInside</i>, <b>typename</b> <i>ContainerTypeOutside</i>&gt;
     <b>void SeparateByRadius</b> ( <b>const DistanceType</b> <i>radius</i>, <b>const T&amp;</b> <i>probe</i>, 
         <b>ContainerTypeInside&amp;</b> <i>inside</i>, <b>ContainerTypeOutside&amp;</b> <i>outside</i>,
-        <b>std::vector&lt;size_t&gt;&amp; <i>inside_ordinals</i>, <b>std::vector&lt;size_t&gt;&amp; <i>outside_ordinals</i>)
+        <b>std::vector&lt;size_t&gt;&amp;</b> <i>inside_ordinals</i>, <b>std::vector&lt;size_t&gt;&amp;</b> <i>outside_ordinals</i>)
        return the points within radius of the probe in inside and the rest in outside
        if inside_ordinals and outside_ordinals are provided the ordinals of the
        found objects in the object store are put into those vectors.
@@ -487,49 +556,52 @@ The provided interface is:
          <b>ContainerType&amp;</b> <i>tInside</i>,   <b>const T&amp;</b> t ) <b>const</b>
     <b>long FindInSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,  
          <b>ContainerType&amp;</b> <i>tInside</i>,   
-         <b>std::vector&lt;size_t&gt;&amp; tIndices, <b>const T&amp;</b> t ) <b>const</b>
+         <b>std::vector&lt;size_t&gt;&amp;</b> tIndices, <b>const T&amp;</b> t ) <b>const</b>
+    <b>long FindInSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>CNearTree&lt;  T &gt;&amp;</b> <i>tInside</i>,  <b>const T&amp;</b> t ) <b>const</b>
+    <b>long LeftFindInSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,  
+         <b>ContainerType&amp;</b> <i>tInside</i>,   <b>const T&amp;</b> t ) <b>const</b>
+    <b>long LeftFindInSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,  
+         <b>ContainerType&amp;</b> <i>tInside</i>,   
+         <b>std::vector&lt;size_t&gt;&amp;</b> tIndices, <b>const T&amp;</b> t ) <b>const</b>
+    <b>long LeftFindInSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>CNearTree&lt;  T &gt;&amp;</b> <i>tInside</i>,  <b>const T&amp;</b> t ) <b>const</b>
        <i>dRadius</i> is the radius within which to search; make it very large if you want to
            include every point that was loaded;
-       <i>tInside</i> is returned as the container of objects that were found within a radius dRadius
+       <i>tInside</i> is returned as the NearTree or container of objects that were found within a radius dRadius
           of the probe point
        if the <i>tIndices</i> argument is given it will ve returned as a parallel vector
           of indices in the near tree of the objects returned.
        <i>t</i> is the probe point, used to search in the group of points Insert'ed
 
        return value is the count of the number of points found within the search radius
-
-    <b>long FindInSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,
-         <b>CNearTree&lt;  T &gt;&amp;</b> <i>tInside</i>,   <b>const T&amp;</b> t ) <b>const</b>
-       <i>dRadius</i> is the radius within which to search; make it very large if you want to
-           include every point that was loaded;
-       <i>tInside</i> is returned as the CNearTree of objects that were found within a radius dRadius
-          of the probe point
-       <i>t</i> is the probe point, used to search in the group of points Insert'ed
-
-       return value is the count of the number of points found within the search radius
+       the "Left..." versions are deprecated versions provided for compatibilty with
+       earlier NearTree releases.
 
     <b>long FindOutSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,
          <b>ContainerType&amp;</b> <i>tOutside</i>,   <b>const T&amp;</b> t ) <b>const</b>
     <b>long FindOutSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,
          <b>ContainerType&amp;</b> <i>tOutside</i>,
-         <b>std::vector&lt;size_t&gt;&amp; tIndices, <b>const T&amp;</b> t ) <b>const</b>
+         <b>std::vector&lt;size_t&gt;&amp;</b> tIndices, <b>const T&amp;</b> t ) <b>const</b>
+    <b>long FindOutSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>CNearTree&lt;  T &gt;&amp;</b> <i>tOutside</i>,   <b>const T&amp;</b> t ) <b>const</b>
+    <b>long LeftFindOutSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>ContainerType&amp;</b> <i>tOutside</i>,   <b>const T&amp;</b> t ) <b>const</b>
+    <b>long LeftFindOutSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>ContainerType&amp;</b> <i>tOutside</i>,
+         <b>std::vector&lt;size_t&gt;&amp;</b> tIndices, <b>const T&amp;</b> t ) <b>const</b>
+    <b>long LeftFindOutSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>CNearTree&lt;  T &gt;&amp;</b> <i>tOutside</i>,   <b>const T&amp;</b> t ) <b>const</b>
        <i>dRadius</i> is the radius outside of which to search
-       <i>tOutside</i> is returned as the container of objects that were found at or outside of radius dRadius
-          of the probe point
+       <i>tOutside</i> is returned as the NearTree or container of objects that were found at
+          or outside of radius dRadius of the probe point
        if the <i>tIndices</i> argument is given it will ve returned as a parallel vector
           of indices in the near tree of the objects returned.
        <i>t</i> is the probe point, used to search in the group of points Insert'ed
 
-       return value is the count of the number of points found within the search radius
-
-    <b>long FindOutSphere</b> ( <b>const DistanceType&amp;</b> <i>dRadius</i>,
-         <b>CNearTree&lt;  T &gt;&amp;</b> <i>tOutside</i>,   <b>const T&amp;</b> t ) <b>const</b>
-       <i>dRadius</i> is the radius outside of which to search.
-       <i>tClosest</i> is returned as the CNearTree of objects that were found at or outside of a radius dRadius
-          of the probe point
-       <i>t</i> is the probe point, used to search in the group of points Insert'ed
-
-       return value is the count of the number of points found within the search radius
+       return value is the count of the number of points found outside the search radius
+       the "Left..." versions are deprecated versions provided for compatibilty with
+       earlier NearTree releases.
     
     <b>long FindInAnnulus</b> ( <b>const DistanceType&amp;</b> <i>dRadius1</i>,
          <b>const DistanceType&amp;</b> <i>dRadius2</i>, 
@@ -537,68 +609,81 @@ The provided interface is:
     <b>long FindInAnnulus</b> ( <b>const DistanceType&amp;</b> <i>dRadius1</i>,
          <b>const DistanceType&amp;</b> <i>dRadius2</i>, 
          <b>ContainerType&amp;</b> <i>tInRing</i>,
-         <b>std::vector&lt;size_t&gt;&amp; tIndices,  <b>const T&amp;</b> t ) <b>const</b>
+         <b>std::vector&lt;size_t&gt;&amp;</b> tIndices,  <b>const T&amp;</b> t ) <b>const</b>
+    <b>long FindInAnnulus</b> ( <b>const DistanceType&amp;</b> <i>dRadius1</i>, 
+         <b>const DistanceType&amp;</b> <i>dRadius2</i>,
+         <b>CNearTree&lt;  T &gt;&amp;</b> <i>tInRing</i>,   <b>const T&amp;</b> t ) <b>const</b>
+    <b>long LeftFindInAnnulus</b> ( <b>const DistanceType&amp;</b> <i>dRadius1</i>,
+         <b>const DistanceType&amp;</b> <i>dRadius2</i>, 
+         <b>ContainerType&amp;</b> <i>tInRing</i>,   <b>const T&amp;</b> t ) <b>const</b>
+    <b>long LeftFindInAnnulus</b> ( <b>const DistanceType&amp;</b> <i>dRadius1</i>,
+         <b>const DistanceType&amp;</b> <i>dRadius2</i>, 
+         <b>ContainerType&amp;</b> <i>tInRing</i>,
+         <b>std::vector&lt;size_t&gt;&amp;</b> tIndices,  <b>const T&amp;</b> t ) <b>const</b>
+    <b>long LeftFindInAnnulus</b> ( <b>const DistanceType&amp;</b> <i>dRadius1</i>, 
+         <b>const DistanceType&amp;</b> <i>dRadius2</i>,
+         <b>CNearTree&lt;  T &gt;&amp;</b> <i>tInRing</i>,   <b>const T&amp;</b> t ) <b>const</b>
        <i>dRadius1</i> and  <i>dRadius2</i> are the two radii between which to find data points
-       <i>tInRing</i> is returned as the container of objects that were found at or outside of a radius dRadius1
-          and at or inside of radius dRadius2 of the probe point
+       <i>tInRing</i> is returned as the NearTree or container of objects that were found at 
+          or outside of a radius dRadius1 and at or inside of radius dRadius2 of the probe point
        if the <i>tIndices</i> argument is given it will ve returned as a parallel vector
           of indices in the near tree of the objects returned.
        <i>t</i> is the probe point, used to search in the group of points Insert'ed
 
        return value is the count of the number of points found within the annulus
-
-    <b>long FindInAnnulus</b> ( <b>const DistanceType&amp;</b> <i>dRadius1</i>, 
-         <b>const DistanceType&amp;</b> <i>dRadius2</i>,
-         <b>CNearTree&lt;  T &gt;&amp;</b> <i>tInRing</i>,   <b>const T&amp;</b> t ) <b>const</b>
-       <i>dRadius1</i> and  <i>dRadius2</i> are the two radii between which to find data points
-       <i>tInRing</i> is returned as the CNearTree of objects that were found at or outside of a radius dRadius1
-          and at or inside of radius dRadius2 of the probe point
-       <i>t</i> is the probe point, used to search in the group of points Insert'ed
-
-       return value is the count of the number of points found within the annulus
+       the "Left..." versions are deprecated versions provided for compatibilty with
+       earlier NearTree releases.
     
     <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>,
          <b>ContainerType&amp;</b> <i>tClosest</i>, <b>const T&amp;</b> t )
     <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>,
          <b>ContainerType&amp;</b> <i>tClosest</i>,
-         <b>std::vector&lt;size_t&gt;&amp; tIndices, <b>const T&amp;</b> t )
+         <b>std::vector&lt;size_t&gt;&amp;</b> tIndices, <b>const T&amp;</b> t )
+    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>CNearTree&lt;  T &gt;&amp;</b> <i>tClosest</i>, <b>const T&amp;</b> t )
+    <b>long LeftFindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>ContainerType&amp;</b> <i>tClosest</i>, <b>const T&amp;</b> t )
+    <b>long LeftFindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>ContainerType&amp;</b> <i>tClosest</i>,
+         <b>std::vector&lt;size_t&gt;&amp;</b> tIndices, <b>const T&amp;</b> t )
+    <b>long LeftFindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>CNearTree&lt;  T &gt;&amp;</b> <i>tClosest</i>, <b>const T&amp;</b> t )
        <i>k</i> is the maximum number of nearest neighbors to return. Finds this many if possible
        <i>dRadius</i> within a sphere defined by dRadius, search for the k-nearest-neighbors
-       <i>tClosest</i> is returned ContainerType of the objects found within the sphere
-       if the <i>tIndices</i> argument is given it will ve returned as a parallel vector
+       <i>tClosest</i> is returned ContainerType or NearTree of the objects found
+       if the <i>tIndices</i> argument is given it will be returned as a parallel vector
           of indices in the near tree of the objects returned.
        <i>t</i> is the probe point, used to search in the group of points insert'ed
 
        return value is the count of the number of points found within the sphere
+       the "Left..." versions are deprecated versions provided for compatibilty with
+       earlier NearTree releases.
 
-    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>,
-         <b>CNearTree&lt;  T &gt;&amp;</b> <i>tClosest</i>, <b>const T&amp;</b> t )
-       <i>k</i> is the maximum number of nearest neighbors to return. Finds this many if possible
-       <i>dRadius</i> within a sphere defined by dRadius, search for the k-nearest-neighbors
-       <i>tClosest</i> is returned as the CNearTree of objects found within the sphere
-       <i>t</i> is the probe point, used to search in the group of points Insert'ed
-
-       return value is the count of the number of points found within the sphere
 
     <b>long FindK_FarthestNeighbors</b> ( <b>const size_t</b> <i>k</i>,
          <b>ContainerType&amp;</b> <i>tFarthest</i>, <b>const T&amp;</b> t )
     <b>long FindK_FarthestNeighbors</b> ( <b>const size_t</b> <i>k</i>,
          <b>ContainerType&amp;</b> <i>tFarthest</i>,
-         <b>std::vector&lt;size_t&gt;&amp; tIndices, <b>const T&amp;</b> t )
+         <b>std::vector&lt;size_t&gt;&amp;</b> tIndices, <b>const T&amp;</b> t )
+    <b>long FindK_FarthestNeighbors</b> ( <b>const size_t</b> <i>k</i>, 
+          <b>CNearTree&lt;  T &gt;&amp;</b> <i>tFarthest</i>, <b>const T&amp;</b> t )
+    <b>long LeftFindK_FarthestNeighbors</b> ( <b>const size_t</b> <i>k</i>,
+         <b>ContainerType&amp;</b> <i>tFarthest</i>, <b>const T&amp;</b> t )
+    <b>long LeftFindK_FarthestNeighbors</b> ( <b>const size_t</b> <i>k</i>,
+         <b>ContainerType&amp;</b> <i>tFarthest</i>,
+         <b>std::vector&lt;size_t&gt;&amp;</b> tIndices, <b>const T&amp;</b> t )
+    <b>long LeftFindK_FarthestNeighbors</b> ( <b>const size_t</b> <i>k</i>, 
+          <b>CNearTree&lt;  T &gt;&amp;</b> <i>tFarthest</i>, <b>const T&amp;</b> t )
        <i>k</i> is the maximum number of farthest neighbors to return. Finds this many if possible
-       <i>tFarthest</i> is returned ContainerType of the objects found
-       if the <i>tIndices</i> argument is given it will ve returned as a parallel vector
+       <i>tFarthest</i> is returned ContainerType or NearTree of the objects found
+       if the <i>tIndices</i> argument is given it will be returned as a parallel vector
           of indices in the near tree of the objects returned.
        <i>t</i> is the probe point, used to search in the group of points insert'ed
 
        return value is the count of the number of points found within the sphere
+       the "Left..." versions are deprecated versions provided for compatibilty with
+       earlier NearTree releases.
 
-    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>CNearTree&lt;  T &gt;&amp;</b> <i>tFarthest</i>, <b>const T&amp;</b> t )
-       <i>k</i> is the maximum number of farthest neighbors to return. Finds this many if possible
-       <i>tFarthest</i> is returned as the CNearTree of objects found
-       <i>t</i> is the probe point, used to search in the group of points Insert'ed
-
-       return value is the count of the number of points found within the sphere
    
 <hr>
 
@@ -655,6 +740,25 @@ Information and special operation functions:
         returns the maximum tree layers from the root.  This is mainly for information about 
         details of the tree.
         
+     <b>double GetDimEstimate</b> ( <b>void</b> )  // returns an estimate of the Hausdorff dimension
+     <b>double GetDimEstimate</b> ( <b>const double</b> <i>DimEstimateEsd</i> )
+                                                    // returns an estimate of the Hausdorff dimension
+                                                    // to within the given esd
+     <b>double GetDimEstimateEsd</b> ( <b>void</b> )
+                                                    // returns an estimate of the esd
+
+     <b>double GetDiamEstimate</b> ( <b>void</b> )  // returns an estimate of the diameter
+
+     <b>DistanceType GetMeanSpacing</b> ( <b>void</b> )   // returns an estimate object spacing
+     <b>DistanceType GetVarSpacing</b> ( <b>void</b> )   // returns an estimate object spacing variance
+     
+     <b>size_t GetNodeVisits</b> ( <b>void</b> )   // returns the number of node visits if
+                                                   // CNEARTREE_INSTRUMENTED as deifined, 0 otherwise
+     <b>void SetNodeVisits,/b> ( <b>const size_t</b> <i>visits</b>)
+                                                   // set the number of node visits
+     
+
+        
      <b>T Centroid</b> ( <b>void</b> )
         returns the centroid of a neartree.
 
@@ -676,6 +780,7 @@ Iterators:
      <b>iterator</b> ( <b>void</b> ) { }; // constructor
      <b>iterator</b> ( <b>const const_iterator&amp;</b> <i>s</i> )
      <b>iterator&amp; operator=  </b> ( <b>const iterator&amp;</b> <i>s</i> )      
+     <b>iterator&amp; operator=  </b> ( <b>const const_iterator&amp;</b> <i>s</i> )      
      <b>iterator  operator++ </b> ( <b>const int</b> <i>n</i> )            
      <b>iterator  operator-- </b> ( <b>const int</b> <i>n</i> )            
      <b>iterator&amp; operator++ </b> ( <b>void</b> )                   
@@ -731,6 +836,9 @@ So a complete program is:
 <b>#include &lt;CNearTree.h&gt;</b>
 <P>
 <p>   
+     <b>double</b> <b>CNearTreeDistsq</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>, <b>void *</b> <i>coord1</i>,
+                           <b>void *</b> <i>coord2</i> );
+<p>   
      <b>double</b> <b>CNearTreeDist</b> ( <b>CNearTreeHandle</b> <i>treehandle</i>, <b>void *</b> <i>coord1</i>,
                            <b>void *</b> <i>coord2</i> );
 <p>
@@ -759,11 +867,6 @@ So a complete program is:
                         <b>const</b> <b>void *</b> <i>coord</i>, 
                         <b>const</b> <b>void *</b> <i>obj</i> );
 <p>
-    <b>int</b> <b>CNearTreeNodeInsert</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
-                        <b>CNearTreeNodeHandle</b> <i>treenodehandle</i>, 
-                        <b>size_t</b> <i>index</i>;
-                        <b>size_t *</b> <i>depth</i> );
-<p>
     <b>int</b> <b>CNearTreeImmediateInsert</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
                         <b>const</b> <b>void *</b> <i>coord</i>, 
                         <b>const</b> <b>void *</b> <i>obj</i> );
@@ -772,6 +875,22 @@ So a complete program is:
                         <b>const</b> <b>void *</b> <i>coord</i>, 
                         <b>const</b> <b>void *</b> <i>obj</i> ); /* ***DEPRECATED*** */
 <p>
+   <b>int</b> <b>CNearTreeNodeInsert</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
+                        <b>CNearTreeNodeHandle</b> <i>treenodehandle</i>, 
+                        <b>size_t</b> <i>index</i>;
+                        <b>size_t *</b> <i>depth</i> );
+<p>
+   <b>int</b> <b>CNearTreeNodeInsert_Flip</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
+                        <b>CNearTreeNodeHandle</b> <i>treenodehandle</i>, 
+                        <b>size_t</b> <i>index</i>;
+                        <b>size_t *</b> <i>depth</i> );
+<p>
+   <b>int CNearTreeNodeReInsert_Flip</b> ( <b>const CNearTreeHandle</b> <i>treehandle</i>,
+                                   <b>const CNearTreeNodeHandle</b> <i>treenodehandle</i>,
+                                   <b>const CNearTreeNodeHandle</b> <i>pntn</i>,
+                                   <b>size_t *</b> <i>depth</i> );
+
+<p>
     <b>int</b> <b>CNearTreeCompleteDelayedInsert</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i> )
 
     
@@ -779,18 +898,75 @@ So a complete program is:
 <p>
  
     <b>int</b> <b>CNearTreeGetSize</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, <b>size_t *</b> <i>size</i> );
+<p>
+ 
+    <b>int</b> <b>CNearTreeGetTotalSize</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, <b>size_t *</b> <i>size</i> ); /* ***DEPRECATED*** */
+
     
 <p>
-    <b>int</b> <b>CNearTreeGetDelayedSize</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, <b>size_t *</b> <i>size</i> );
+ 
+    <b>size_t</b> <b>CNearTreeSize</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>);
+    
+<p>
+    <b>int</b> <b>CNearTreeGetDeferredSize</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, <b>size_t *</b> <i>size</i> );
+<p>
+    <b>int</b> <b>CNearTreeGetDelayedSize</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, <b>size_t *</b> <i>size</i> ); /* ***DEPRECATED*** */
+
 <p>
     <b>int</b> <b>CNearTreeGetDepth</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, <b>size_t *</b> <i>depth</i> )
     
+<p>
+    <b>int</b> <b>CNearTreeGetFlags</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, <b>long  *</b> <i>flags</i>, <b>const long</b> <i>mask</i> )
+     
+<p>
+    <b>int</b> <b>CNearTreeSetFlags</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, <b>const long</b> <i>flags</i>, <b>const long</b> <i>mask</i> )
+
+<p>
+    <b>int</b> <b>CNearTreeGetMeanSpacing</b> ( <b>const CNearTreeHandle</b> <i>treehandle</i>, 
+                                 <b>double *</b> <i>spacing</i>  );
+<p>
+    <b>int</b> <b>CNearTreeGetVarSpacing</b> ( <b>const CNearTreeHandle</b> <i>treehandle</i>, 
+                                <b>double *</b> <i>varspacing</i>  );
+<p>
+    <b>int</b> <b>CNearTreeCount</b> ( <b>const CNearTreeHandle</b> <i>treehandle</i>, 
+                       <b>size_t  *</b> <i>count</i> );
+<p>
+    <b>int</b> <b>CNearTreeNodeCount</b> ( <b>const CNearTreeNodeHandle</b> <i>treenodehandle</i>, 
+                        <b>size_t  *</b> <i>count</i> );
+<p>
+ 
+#ifdef CNEARTREE_INSTRUMENTED
+<p>
+    <b>int</b> <b>CNearTreeGetNodeVisits</b> ( <b>const CNearTreeHandle</b> <i>treehandle</i>,
+                                <b>size_t *</b> <i>visits</i>);
+<p>
+    <b>int</b> <b>CNearTreeSetNodeVisits</b> ( <b>const CNearTreeHandle</b> <i>treehandle</i>,
+                                <b>const size_t</b> <i>visits</i> );
+<p>
+#endif    
+<p>
+
+    <b>int</b> <b>CNearTreeGetDiamEstimate</b> ( <b>const CNearTreeHandle</b> <i>treehandle</i>,
+                                  <b>double *</b> <i>diamest</i> );
+<p>     
+    <b>int</b> <b>CNearTreeGetDimEstimateEsd</b> ( <b>const CNearTreeHandle</b> <i>treehandle</i>,
+                                  <b>double *</b> <i>dimestesd</i> );
+<p>
+    <b>int CNearTreeGetDimEstimate</b> ( <b>const CNearTreeHandle</b> <i>treehandle</i>,
+                                 <b>double *</b> <i>dimest</i>,
+                                 <b>const double</b> <i>DimEstimateEsd</i> );
 <p>     
     <b>int</b> <b>CNearTreeNearestNeighbor</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, 
                                   <b>const</b> <b>double</b> dRadius,  
                                   <b>void * *</b> <i>coordClosest</i>,
                                   <b>void * *</b>  <i>objClosest</i>, 
                                   <b>const</b> <b>void *</b> <i>coord</i> );
+<p>     
+    <b>int</b> <b>CNearLeftTreeNearestNeighbor</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, 
+                                  <b>const</b> <b>double</b> dRadius,  
+                                  <b>void * *</b> <i>coordClosest</i>,
+                                  <b>void * *</b>  <i>objClosest</i>, 
+                                  <b>const</b> <b>void *</b> <i>coord</i> );  /* ***DEPRECATED*** */
 <p>     
     <b>int</b> <b>CNearTreeFarthestNeighbor</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, 
                                    <b>void *</b> * <i>coordFarthest</i>,
@@ -873,6 +1049,12 @@ So a complete program is:
                           <b>void *</b> * <i>coordClosest</i>,
                           <b>void *</b> * <i>objClosest</i>,
                           <b>const</b> <b>void *</b> <i>coord</i> );
+<p> 
+    <b>int</b> <b>CNearTreeLeftNearest</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>, 
+                          <b>double</b> * dRadius,  
+                          <b>void *</b> * <i>coordClosest</i>,
+                          <b>void *</b> * <i>objClosest</i>,
+                          <b>const</b> <b>void *</b> <i>coord</i> );  /* ***DEPRECATED*** */
 <p>     
     <b>int</b> <b>CNearTreeFindFarthest</b> ( <b>const</b> <b>CNearTreeHandle</b> <i>treehandle</i>,
                                <b>double</b> * dRadius,  
@@ -929,6 +1111,15 @@ nodes of type CNearTreeNode:
     } CNearTree;
     
     typedef CNearTree     FAR * CNearTreeHandle;
+    
+    /*  Execution Control Flags */
+    
+#define CNTF_NOPREPRUNE    0x10000L     /*flag to supress all search prepruning */
+#define CNTF_FORCEPREPRUNE 0x20000L     /*flag to force search prepruning       */
+#define CNTF_NOFLIP        0x40000L     /*flag to suppress flips on insert      */
+#define CNTF_FORCEFLIP     0x80000L     /*flag to force flips on insert         */
+#define CNTF_NODEFER      0x100000L     /*flag to prevent deferred insert       */
+
 
 </pre></tt>
 </p>
@@ -949,16 +1140,29 @@ for L1, L2 or L-infinity norms, <b>CNEARTREE_NORM_SPHERE</b> or <b>CNEARTREE_NOR
 a spherical or hemispherical norm (L1-norm combination of radial and spherical/hemisppherical 
 triangle distances), or <b>CNEARTREE_NORM_HAMMING</b> for the string-Hamming distance norm
 (add one for each differing character position).
+
 <p>
 Starting with release 2.1, all insertions are delayed by default, unless the insertions is
 done by a call to <b>CNearTreeImmediateInsert</b>.   The insertions that have been queued
 are completed by a call to <b>CNearTreeCompleteDelayedInsert</b> or by any search.  The insertions
 are actually done in a randomized order, either for an initial block of sqrt(#queue) by
-default, or for the entire queue if the flag <b>CNEARTREE_DEFER_ALL</b> is ored with
-<i>treetype</i>.  In addition, if the flag <b>CNEARTREE_DEFER_ALL</b> is set, all inserts
-will be deferred, even in calls to <b>CNearTreeImmediateInsert</b>.  Alteratively, if minimal reorganization of
-the order of the tree is desired on each insertion, <b>CNEARTREE_FLIP</b> should
-be ored with <i>treetype</i>.
+default. or for the entire queue if the flag <b>CNEARTREE_DEFER_ALL</b> is ored with
+<i>treetype</i>. 
+
+<p>Starting with release 3 (formerly called release 2.4) optionally, you may also define 
+<b>CNEARTREE_FORCEFLIP</b> to maximize tree reorganization on insertion, 
+<b>CNEARTREE_NOFLIP</b> to suppress tree reorganization on insertion, <b>CNEARTREE_NODEFER</b> 
+to make all insertions immediate, <b>CNEARTREE_FORCEPREPUNE</b> to do searches first with a 
+tigher estimate on the search radius, and <b>CNEARTREE_NOPREPRUNE</b> to suppress that behavior. 
+The defaults are to do tree reorganization on insertion, to defer insertions, but not 
+to preprune the search radius.
+
+If you define CNEARTREE_INSTRUMENTED, code will be enabled to track node visits in 
+searching the tree. 
+<p>
+The flags <b>CNEARTREE_DEFER_ALL</b> and <b>CNEARTREE_FLIP</b> used in prior releases
+are deprecated, but are still defined.  They have no effect.
+<p>
 When first created, a neartree has no right or left node and with the dMax-below
 set to negative values so that any match found will be stored since it will
 greater than the negative value.  The tree is then populated by calls to
@@ -976,7 +1180,10 @@ call to <b>CNearTreeInsert</b>.
 <p>
 The neartree is searched for the nearest or farthest coordinate vector in the neartree to a given
 probe coordinate vector <i>coord</i> by <b>CNearTreeNearestNeighbor</b> and 
-<b>CNearTreeFarthestNeighbor</b>, respectively.  The given radius confines the search
+<b>CNearTreeFarthestNeighbor</b>, respectively.  Starting with release 3, the search is
+balanced, following the left or right branch first depending on which branch seems
+closest.  The former left-first behavior is deprecated, but still available in
+<b>CNearLeftTreeNearestNeighbor</b>.  The given radius confines the search
 to a sphere around the probe.  If more than a single extremal coordinate point is
 needed, <b>CNearTreeFindInSphere</b> can be used to obtain a CVector result vector of 
 all the coordinate vectors that satisfy the constraint of being within a specified
@@ -998,7 +1205,17 @@ Aternatives the forms <b>CNearTreeFindTreeInSphere</b>, <b>CNearTreeFindTreeOutS
 can be used to obtain CNearTrees rather than CVectors of results.  The functions
 <b>CNearTreeNearest</b> and <b>CNearTreeFindFarthest</b> implement <b>CNearTreeNearestNeighbor</b> and 
 <b>CNearTreeFarthestNeighbor</b>, respectively, adjusting the radius of the search while
-the search is in progress, and are not normally used by users
+the search is in progress, and are not normally used by users.
+<p>
+<p>The size of the tree as a count of objects can be obtained using the function
+<b>NearTreeGetSize</b> or the macro <b>NearTreeSize</b>.  The size of the tree
+as a count of nodes and the depth of the tree can be obtained using the functions
+<b>CNearTreeCount</b> and <b>CNearTreeGetDepth</b>.  Estimates of the Hausdorff
+dimension, the esd of that estimate, the diameter, the spacing and the variance
+of the spacing can be obtained with <b>CNearTreeGetDimEstimate</b>, 
+<b>CNearTreeGetDimEstimateEsd</b>,
+<b>CNearTreeGetDiamEstimate</b>, <b>CNearTreeGetMeanSpacing</b> and 
+<b>CNearTreeGetVarSpacing</b>.
 <P>
 <h4>Returns</h4>
 If <b>CNearTreeDist</b> fails, it returns -1.  Except for <b>CNearTreeDist</b>, all the functions 
@@ -1008,7 +1225,7 @@ If a call is made with an improper argument, <b>CNEARTREE_BAD_ARGUMENT</b> is re
 If a search fails to find anything, <b>CNEARTREE_NOT_FOUND</b> is returned.  If there is
 a failure in an attempt to free a CNearTree, <b>CNEARTREE_FREE_FAILED</b> is returned.  If
 any of the internal call to CVector fail, <b>CNEARTREE_CVECTOR_FAILED</b> is returned.  For
-convenience in debugging, the formerly negative values of this returns are now positive.
+convenience in debugging, the formerly negative values of these returns are now positive.
 <p>
 <h4>Examples</h4>
 <P>
@@ -1155,7 +1372,7 @@ Typical use is
 <hr>
 <hr>
 <font size="-1">
-Updated 31 September 2010<br />
+Updated 28 March 2011<br />
 <script language="javascript" type="text/javascript">
 <!-- 
       var name = "andrewsL@";
