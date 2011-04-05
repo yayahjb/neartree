@@ -330,10 +330,11 @@
    functionality for the template to work. For the built-in numerics of C++,
    they are provided by the system.
 
-                      // conversion constructor from the templated class to      
-DistanceType Norm( ); DistanceType                                               
-                      // (usually will return a "length" of type double)         
-operator- ( );        // geometrical (vector) difference of two objects          
+ DistanceType Norm( void ); 
+                            // a function "Norm( void )" of the templated class 
+                            // to return DistanceType (usually will return a    
+                            // "length" of type double)                         
+ operator- ( );             // geometrical (vector) difference of two objects   
                       // a copy constructor would be nice                        
                       // a constructor would be nice                             
                       // a destructor would be nice                              
@@ -494,7 +495,8 @@ operator- ( );        // geometrical (vector) difference of two objects
          std::vector<size_t>& group1_ordinals, std::vector<size_t>& group2_ordinals)
         returns the points closer to t1 than to t2 in group1 and the rest in group 2
         if group1_ordinals and group2_ordinals are provided the ordinals of the
-        found objects in the object store are put into those vectors.
+        found objects in the object store are put into those vectors. The ordinals
+        can be used as indices into the CNearTree itself.
        
      template<typename ContainerTypeInside, typename ContainerTypeOutside>
      void SeparateByRadius ( const DistanceType radius, const T& probe,
@@ -505,7 +507,8 @@ operator- ( );        // geometrical (vector) difference of two objects
          std::vector<size_t>& inside_ordinals, std::vector<size_t>& outside_ordinals)
         return the points within radius of the probe in inside and the rest in outside
         if inside_ordinals and outside_ordinals are provided the ordinals of the
-        found objects in the object store are put into those vectors.
+        found objects in the object store are put into those vectors.  The ordinals
+        can be used as indices into the CNearTree itself.
 
 
      long FindInSphere ( const DistanceType& dRadius, 
@@ -526,7 +529,7 @@ operator- ( );        // geometrical (vector) difference of two objects
             include every point that was loaded;
         tInside is returned as the NearTree or container of objects that were found within a radius dRadius
            of the probe point
-        if the tIndices argument is given it will ve returned as a parallel vector
+        if the tIndices argument is given it will be returned as a vector
            of indices in the near tree of the objects returned.
         t is the probe point, used to search in the group of points Insert'ed
 
@@ -551,7 +554,7 @@ operator- ( );        // geometrical (vector) difference of two objects
         dRadius is the radius outside of which to search
         tOutside is returned as the NearTree or container of objects that were found at
            or outside of radius dRadius of the probe point
-        if the tIndices argument is given it will ve returned as a parallel vector
+        if the tIndices argument is given it will be returned as a vector
            of indices in the near tree of the objects returned.
         t is the probe point, used to search in the group of points Insert'ed
 
@@ -582,7 +585,7 @@ operator- ( );        // geometrical (vector) difference of two objects
         dRadius1 and  dRadius2 are the two radii between which to find data points
         tInRing is returned as the NearTree or container of objects that were found at
            or outside of a radius dRadius1 and at or inside of radius dRadius2 of the probe point
-        if the tIndices argument is given it will ve returned as a parallel vector
+        if the tIndices argument is given it will be returned as a vector
            of indices in the near tree of the objects returned.
         t is the probe point, used to search in the group of points Insert'ed
 
@@ -605,9 +608,9 @@ operator- ( );        // geometrical (vector) difference of two objects
      long LeftFindK_NearestNeighbors ( const size_t k, const DistanceType& dRadius,
           CNearTree<  T >& tClosest, const T& t )
         k is the maximum number of nearest neighbors to return. Finds this many if possible
-        dRadius within a sphere defined by dRadius, search for the k-nearest-neighbors
-        tClosest is returned ContainerType or NearTree of the objects found
-        if the tIndices argument is given it will be returned as a parallel vector
+        dRadius within a sphere defined by dRadius, to search for the k-nearest-neighbors
+        tClosest is returned as the ContainerType or NearTree of the objects found
+        if the tIndices argument is given it will be returned as a vector
            of indices in the near tree of the objects returned.
         t is the probe point, used to search in the group of points insert'ed
 
@@ -631,8 +634,8 @@ operator- ( );        // geometrical (vector) difference of two objects
      long LeftFindK_FarthestNeighbors ( const size_t k,
            CNearTree<  T >& tFarthest, const T& t )
         k is the maximum number of farthest neighbors to return. Finds this many if possible
-        tFarthest is returned ContainerType or NearTree of the objects found
-        if the tIndices argument is given it will be returned as a parallel vector
+        tFarthest is returned as the ContainerType or NearTree of the objects found
+        if the tIndices argument is given it will be returned as a vector
            of indices in the near tree of the objects returned.
         t is the probe point, used to search in the group of points insert'ed
 
@@ -648,10 +651,12 @@ operator- ( );        // geometrical (vector) difference of two objects
  Access Functions:
 
       T at ( const size_t n ) const
-         returns the n'th item of the internal data store
+         returns the n'th item of the internal data store.  This is not
+         guaranteed to be in the order of insertion.
 
       T operator[] ( const size_t n )
-         returns the n'th item of the internal data store
+         returns the n'th item of the internal data store.  This is not
+         guaranteed to be in the order of insertion.
 
       template<typename ContainerType>
       operator ContainerType ( void ) const
@@ -1073,7 +1078,7 @@ operator- ( );        // geometrical (vector) difference of two objects
    the neartree to a given probe coordinate vector coord by
    CNearTreeNearestNeighbor and CNearTreeFarthestNeighbor, respectively.
    Starting with release 3, the search is balanced, following the left or
-   right branch first depending on which branch seems closest. The former
+   right branch first depending on which branch is closest. The former
    left-first behavior is deprecated, but still available in
    CNearLeftTreeNearestNeighbor. The given radius confines the search to a
    sphere around the probe. If more than a single extremal coordinate point
@@ -1091,16 +1096,15 @@ operator- ( );        // geometrical (vector) difference of two objects
    probe point such that all results are at or outside the specified radius
    of the probe point. The vectors themselves are not copied into the result
    vector. If the parameter resetcount is true (non zero) the result vector
-   is cleared before the search. A parallel CVector result vector of the
-   matching object pointers is returned if objs is not NULL. Aternatives the
-   forms CNearTreeFindTreeInSphere, CNearTreeFindTreeOutSphere,
+   is cleared before the search. A CVector result vector of the matching
+   object pointers is returned if objs is not NULL. Aternatives the forms
+   CNearTreeFindTreeInSphere, CNearTreeFindTreeOutSphere,
    CNearTreeFindTreeInAnnulus, CNearTreeFindKTreeNearest,
    CNearTreeFindKTreeFarthest can be used to obtain CNearTrees rather than
    CVectors of results. The functions CNearTreeNearest and
    CNearTreeFindFarthest implement CNearTreeNearestNeighbor and
    CNearTreeFarthestNeighbor, respectively, adjusting the radius of the
-   search while the search is in progress, and are not normally used by
-   users.
+   search while the search is in progress and are not normally used by users.
 
    The size of the tree as a count of objects can be obtained using the
    function NearTreeGetSize or the macro NearTreeSize. The size of the tree
@@ -1253,4 +1257,4 @@ operator- ( );        // geometrical (vector) difference of two objects
      ----------------------------------------------------------------------
 
    Updated 28 March 2011
-   andrewsl@ix.netcom.com.com
+   andrewsl@ix.netcom.com

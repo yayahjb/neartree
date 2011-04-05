@@ -1069,7 +1069,7 @@ void ImmediateInsert ( const T& t )
         m_BaseNode.InserterDelayed( n, localDepth, m_ObjectStore, m_SumSpacings, m_SumSpacingsSq );
     }
     m_DeepestDepth = std::max( localDepth, m_DeepestDepth );
-    m_DiamEstimate = m_BaseNode.GetDiamEstimate();
+    m_DiamEstimate = m_BaseNode.GetDiamEstimate(m_ObjectStore);
     m_DimEstimate = 0;
     m_DimEstimateEsd= 0;
 }
@@ -1106,7 +1106,7 @@ void ImmediateInsert ( const InputContainer& o )
             m_DeepestDepth = std::max( localDepth, m_DeepestDepth );
         }
     }
-    m_DiamEstimate = m_BaseNode.GetDiamEstimate();
+    m_DiamEstimate = m_BaseNode.GetDiamEstimate(m_ObjectStore);
     m_DimEstimate = 0;
     m_DimEstimateEsd= 0;
 }
@@ -2630,7 +2630,7 @@ inline void CompleteDelayedInsert ( void )
     // insertions (fast way, faster than clear() )
     std::vector<long> DelayedPointersTemp;
     DelayedPointersTemp  .swap( m_DelayedIndices );
-    m_DiamEstimate = m_BaseNode.GetDiamEstimate();
+    m_DiamEstimate = m_BaseNode.GetDiamEstimate(m_ObjectStore);
 };
 //=======================================================================
 //  void CompleteDelayedInsertRandom ( void )
@@ -2672,7 +2672,7 @@ inline void CompleteDelayedInsertRandom ( void )
     // insertions (fast way, faster than clear() )
     std::vector<long> DelayedPointersTemp;
     DelayedPointersTemp.swap( m_DelayedIndices );
-    m_DiamEstimate = m_BaseNode.GetDiamEstimate();
+    m_DiamEstimate = m_BaseNode.GetDiamEstimate(m_ObjectStore);
 };
 
 //=======================================================================
@@ -3159,11 +3159,14 @@ void clear( void )
 };  //  end clear
 
 //=======================================================================
-DistanceTypeNode GetDiamEstimate( void ) const
+DistanceTypeNode GetDiamEstimate( std::vector<TNode>& objectStore ) const
 {
-    DistanceTypeNode temp = m_dMaxLeft;
-    if ( m_dMaxRight > temp ) temp = m_dMaxRight;
-    if ( DistanceTypeNode(0) > temp ) temp = DistanceTypeNode(0);
+    DistanceTypeNode temp = DistanceTypeNode(0);
+    if (m_dMaxRight > temp) temp=m_dMaxRight;
+    if (m_dMaxLeft >temp) temp=m_dMaxLeft;
+    if (m_ptLeft != ULONG_MAX && m_ptRight != ULONG_MAX &&
+        DistanceBetween(objectStore[m_ptLeft],objectStore[m_ptRight])> temp)
+        temp= DistanceBetween(objectStore[m_ptLeft],objectStore[m_ptRight]);
     return temp;
 }
 
