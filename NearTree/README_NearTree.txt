@@ -1,7 +1,8 @@
+
                                     NearTree
 
-                                  Release 3.0
-                                 22 March 2011
+                                 Release 3.0.1
+                                  5 April 2011
  (c) Copyright 2001, 2008, 2009, 2010, 2011 Larry Andrews. All rights reserved
                                     based on
          Larry Andrews, "A template for the nearest neighbor problem",
@@ -26,6 +27,7 @@
                        7 September 2010 Release 2.3.1 LCA
                        30 October 2010 Release 2.3.2 LCA
                      22 March 2011 Release 3.0 LCA and HJB
+                     5 April 2011 Release 3.0.1 LCA and HJB
 
     YOU MAY REDISTRIBUTE NearTree UNDER THE TERMS OF THE LGPL
 
@@ -50,6 +52,9 @@
    This is a release of an API for finding nearest neighbors among points in
    spaces of arbitrary dimensions. This release provides a C++ template,
    TNear.h, and a C library, CNearTree.c, with example/test programs.
+
+   Release 3.0.1 updated the diameter calculation and fixed some
+   documentation errors.
 
    Release 3.0 (formerly named Release 2.4) is a major change to NearTree,
    restructuring the default search from left-first to balanced and adding
@@ -129,8 +134,8 @@
 
    The NearTree package is available at
    www.sourceforge.net/projects/neartree. A source tarball is available at
-   downloads.sourceforge.net/neartree/NearTree-3.0.tar.gz. Later tarballs may
-   be available.
+   downloads.sourceforge.net/neartree/NearTree-3.0.1tar.gz. Later tarballs
+   may be available.
 
    If you decide to simply use the TNear.h header to add nearest neighbor
    support to C++ code under Visual Studio, be sure to also use the rhrand.h
@@ -141,7 +146,7 @@
    work for this installation.
 
    When the source tarball is downloaded and unpacked, you should have a
-   directory NearTree-3.0. To see the current settings for a build execute
+   directory NearTree-3.0.1. To see the current settings for a build execute
 
    make
 
@@ -1078,7 +1083,7 @@
    the neartree to a given probe coordinate vector coord by
    CNearTreeNearestNeighbor and CNearTreeFarthestNeighbor, respectively.
    Starting with release 3, the search is balanced, following the left or
-   right branch first depending on which branch is closest. The former
+   right branch first depending on which child node is closest. The former
    left-first behavior is deprecated, but still available in
    CNearLeftTreeNearestNeighbor. The given radius confines the search to a
    sphere around the probe. If more than a single extremal coordinate point
@@ -1097,7 +1102,7 @@
    of the probe point. The vectors themselves are not copied into the result
    vector. If the parameter resetcount is true (non zero) the result vector
    is cleared before the search. A CVector result vector of the matching
-   object pointers is returned if objs is not NULL. Aternatives the forms
+   object pointers is returned if objs is not NULL. Aternatively the forms
    CNearTreeFindTreeInSphere, CNearTreeFindTreeOutSphere,
    CNearTreeFindTreeInAnnulus, CNearTreeFindKTreeNearest,
    CNearTreeFindKTreeFarthest can be used to obtain CNearTrees rather than

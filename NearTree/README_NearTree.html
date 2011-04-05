@@ -21,9 +21,9 @@ NearTree -- function library efficiently solving the Nearest Neighbor Problem
 <hr>
 <center>
 <h2 align=center>NearTree</h2>
-Release 3.0<br />
+Release 3.0.1<br />
 <font size="-1">
-22 March 2011<br />
+5 April 2011<br />
 &#169; Copyright 2001, 2008, 2009, 2010, 2011 Larry Andrews.  All rights reserved
 <br />
 based on<br />
@@ -48,6 +48,7 @@ Revised 12 Dec 2008, for sourceforge release, Larry Andrews and Herbert J. Berns
 7 September 2010 Release 2.3.1 LCA<br />
 30 October 2010 Release 2.3.2 LCA<br />
 22 March 2011 Release 3.0 LCA and HJB<br />
+5 April 2011 Release 3.0.1 LCA and HJB<br />
 </font>
 <P>
 
@@ -82,6 +83,7 @@ This is a release of an API for finding nearest neighbors among points in spaces
 arbitrary dimensions.  This release provides a C++ template, TNear.h, and a
 C library, CNearTree.c, with example/test programs.
 <font size="-1">
+<p>Release 3.0.1 updated the diameter calculation and fixed some documentation errors. 
 <p>Release 3.0 (formerly named Release 2.4) is a major change to NearTree, restructuring
 the default search from left-first to balanced and adding hooks to collect information
 about the tree.
@@ -152,7 +154,7 @@ insertions before parallel execution of parallel searches.
 <h4><a name="Installation">Installation</a></h4>
 <p>
 The NearTree package is available at <a href="http://www.sourceforge.net/projects/neartree">www.sourceforge.net/projects/neartree</a>.
-A source tarball is available at <a href="http://downloads.sourceforge.net/neartree/NearTree-3.0.tar.gz">downloads.sourceforge.net/neartree/NearTree-3.0.tar.gz</a>.
+A source tarball is available at <a href="http://downloads.sourceforge.net/neartree/NearTree-3.0.1.tar.gz">downloads.sourceforge.net/neartree/NearTree-3.0.1tar.gz</a>.
 Later tarballs may be available.
 <p>
 If you decide to simply use the TNear.h header to add nearest neighbor support to C++ code under Visual
@@ -161,7 +163,7 @@ USE_LOCAL_HEADERS, which is automatically defined if _MSC_VER is defined.  For
 unix or MINGW, you will need to use the Makefile and to have libtool on your system.  Be warned that
 the default libtool under Mac OS X will not work for this installation.
 <P>
-When the source tarball is downloaded and unpacked, you should have a directory NearTree-3.0.  To see the current settings for a build
+When the source tarball is downloaded and unpacked, you should have a directory NearTree-3.0.1.  To see the current settings for a build
 execute
 <p>
 make
