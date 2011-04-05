@@ -1031,6 +1031,38 @@ extern "C" {
     {
         if ( !treehandle || !diamest ) return CNEARTREE_BAD_ARGUMENT;
 
+        if ( treehandle->m_DelayedIndices ) {
+            if (CNearTreeCompleteDelayedInsert(treehandle)!=CNEARTREE_SUCCESS) return CNEARTREE_BAD_ARGUMENT;
+        }        
+        
+        if (treehandle->m_DiamEstimate<=0.) {
+            
+            CNearTreeNodeHandle pt = treehandle->m_ptTree;
+            
+            treehandle->m_DiamEstimate = 0.;
+            
+            if (pt) {
+                
+                if ((pt->m_iflags&CNEARTREE_FLAG_LEFT_DATA)
+                    &&(pt->m_iflags&CNEARTREE_FLAG_RIGHT_DATA)){
+                    
+                    CNTM_DistL2(treehandle->m_DiamEstimate,treehandle, 
+                                CVectorElementAt(treehandle->m_CoordStore,pt->m_indexLeft),
+                                CVectorElementAt(treehandle->m_CoordStore,pt->m_indexRight));
+                }
+                
+                if ((pt->m_iflags&CNEARTREE_FLAG_LEFT_CHILD) &&
+                    pt->m_dMaxLeft > treehandle->m_DiamEstimate)
+                    treehandle->m_DiamEstimate = pt->m_dMaxLeft;
+                
+                if ((pt->m_iflags&CNEARTREE_FLAG_RIGHT_CHILD) &&
+                    pt->m_dMaxRight > treehandle->m_DiamEstimate)
+                    treehandle->m_DiamEstimate = pt->m_dMaxRight;                
+            
+            }
+            
+        }
+
         *diamest = treehandle->m_DiamEstimate;
         
         return CNEARTREE_SUCCESS;
@@ -1055,6 +1087,10 @@ extern "C" {
         int errorcode;
         
         if ( !treehandle || !dimestesd ) return CNEARTREE_BAD_ARGUMENT;
+        
+        if ( treehandle->m_DelayedIndices ) {
+            if (CNearTreeCompleteDelayedInsert(treehandle)!=CNEARTREE_SUCCESS) return CNEARTREE_BAD_ARGUMENT;
+        }        
 
         if ( treehandle->m_DimEstimate == 0.) {
             
@@ -1113,7 +1149,10 @@ extern "C" {
         CVectorHandle sampledisklarge;
         
         if ( !treehandle || !dimest ) return CNEARTREE_BAD_ARGUMENT;
-        CNearTreeCompleteDelayedInsert(treehandle);
+        
+        if ( treehandle->m_DelayedIndices ) {
+            if (CNearTreeCompleteDelayedInsert(treehandle)!=CNEARTREE_SUCCESS) return CNEARTREE_BAD_ARGUMENT;
+        }
         
         elsize = sizeof(double);
         if ((treehandle->m_iflags)&CNEARTREE_TYPE_DOUBLE) {
