@@ -473,6 +473,7 @@ extern "C" {
         (*treenodehandle)->m_iflags      |= treexflags;
         (*treenodehandle)->m_pLeftBranch  = NULL;
         (*treenodehandle)->m_pRightBranch = NULL;
+        (*treenodehandle)->m_iTreeSize    = 0;
         return CNEARTREE_SUCCESS;
     }
     
@@ -1583,6 +1584,7 @@ extern "C" {
         if ( dTempLeft > dTempRight ) {
             if (  !((treenodehandle->m_iflags)&CNEARTREE_FLAG_RIGHT_CHILD) ) {
                 if ( (errorcode = CNearTreeNodeCreate(treehandle, &(treenodehandle->m_pRightBranch)))) return errorcode;
+                if (treenodehandle->m_iHeight == 0) treenodehandle->m_iHeight = 1;
                 treenodehandle->m_iflags |= CNEARTREE_FLAG_RIGHT_CHILD;
                 treenodehandle->m_dMaxRight = dTempRight;
             } else if ( treenodehandle->m_dMaxRight < dTempRight ) {
