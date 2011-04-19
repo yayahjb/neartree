@@ -2598,6 +2598,8 @@ inline void CompleteDelayedInsert ( void )
 
     // insert a random selection of the objects
     const size_t vectorSize = m_DelayedIndices.size( );
+    size_t ntarget = vectorSize;
+    long npass;
     const size_t toRandomlyInsert = (size_t)::sqrt( (double)vectorSize );
     for ( size_t i=0; i<toRandomlyInsert; ++i )
     {
@@ -2615,14 +2617,43 @@ inline void CompleteDelayedInsert ( void )
         }
         insertDelayed( (long)m_DelayedIndices[n] );
         m_DelayedIndices[n] = -1;
+        ntarget--;
     }
 
-    // finish by inserting all the remaining objects
-    for ( size_t i=0; i<vectorSize; ++i )
-    {
-        if ( m_DelayedIndices[i] != -1 )
+    npass=0;
+    while (ntarget > 0) {
+        size_t sizeLeft, sizeRight;
+        sizeLeft = m_BaseNode.GetLeftTreeSize();
+        sizeRight = m_BaseNode.GetRightTreeSize();
+        npass++;
+        if (sizeLeft > sizeRight+4*npass || sizeRight > sizeLeft+4*npass) {
+            size_t n = (size_t)((double)(vectorSize-1u) * (DistanceType)(rhr.urand()));
+            rhr.urand( ); rhr.urand( );
+            
+            // Find the next pointer that hasn't already had its object "insert"ed
+            // We can do this blindly since sqrt(n)<=n for all cases. n=1 would be the only
+            // bad case here, and that will not trigger the later loop.
+            while ( m_DelayedIndices[n] == -1 )
+            {
+                ++n;
+                n = n% vectorSize;
+            }
+            insertDelayed( (long)m_DelayedIndices[n] );
+            m_DelayedIndices[n] = -1;
+            ntarget--;            
+        }
+        // finish by inserting all the remaining objects
+        for ( size_t i=0; i<vectorSize; ++i )
         {
-            insertDelayed( (long)m_DelayedIndices[i] );
+            if ( m_DelayedIndices[i] != -1 )
+            {
+                insertDelayed( (long)m_DelayedIndices[i] );
+                m_DelayedIndices[i] = -1;
+                ntarget--;
+                sizeLeft = m_BaseNode.GetLeftTreeSize();
+                sizeRight = m_BaseNode.GetRightTreeSize();
+                if (sizeLeft > sizeRight+8*npass || sizeRight > sizeLeft+8*npass) break;            
+            }
         }
     }
 
@@ -3160,6 +3191,19 @@ void clear( void )
     
 
 };  //  end clear
+
+//=======================================================================
+
+inline size_t GetLeftTreeSize( void ) const
+{
+    return (!m_pLeftBranch)?0:(m_pLeftBranch->m_iTreeSize);
+}
+
+inline size_t GetRightTreeSize( void ) const
+{
+    return (!m_pRightBranch)?0:(m_pRightBranch->m_iTreeSize);
+}
+
 
 //=======================================================================
 DistanceTypeNode GetDiamEstimate( std::vector<TNode>& objectStore ) const
