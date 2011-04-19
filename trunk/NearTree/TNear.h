@@ -3083,6 +3083,7 @@ DistanceTypeNode      m_dMaxRight;     // longest distance from the right object
 // anything below it in the tree
 NearTreeNode *    m_pLeftBranch;       // tree descending from the left object
 NearTreeNode *    m_pRightBranch;      // tree descending from the right object
+size_t            m_iTreeSize;         // size of this node tree
 
 public:
 
@@ -3092,7 +3093,8 @@ m_ptRight           ( ULONG_MAX ),
 m_dMaxLeft          ( DistanceTypeNode( distMinValueNode ) ),
 m_dMaxRight         ( DistanceTypeNode( distMinValueNode ) ),
 m_pLeftBranch       ( 0 ),
-m_pRightBranch      ( 0 )
+m_pRightBranch      ( 0 ),
+m_iTreeSize         ( 0 )
 {
 };  //  NearTreeNode constructor
 
@@ -3144,6 +3146,7 @@ void clear( void )
         pc->m_ptRight    = ULONG_MAX;
         pc->m_dMaxLeft   = DistanceTypeNode( distMinValueNode );
         pc->m_dMaxRight  = DistanceTypeNode( distMinValueNode );
+        pc->m_iTreeSize  = 0;
         if (pc != this) delete pc;
         if ( left ) clearStack.push_back(left);
         if ( right ) clearStack.push_back(right);
@@ -3221,6 +3224,7 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
     DistanceTypeNode dTempLeftRight =  DistanceTypeNode(0);
 
     ++localDepth;
+    ++m_iTreeSize;
     
 
     if ( m_ptLeft == ULONG_MAX )
@@ -3255,6 +3259,7 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
             SumSpacings += dTempRight;
             SumSpacingsSq += dTempRight*dTempRight;
             ++localDepth;
+            ++(m_pRightBranch->m_iTreeSize);
             // See if it would be better to put the new node at this level and drop the current
             // Right node down one level
             if (dTempRight > dTempLeftRight) {
@@ -3278,6 +3283,7 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
             SumSpacings += dTempLeft;
             SumSpacingsSq += dTempLeft*dTempLeft;
             ++localDepth;
+            ++(m_pLeftBranch->m_iTreeSize);
             // See if it would be better to put the new node at this level and drop the current
             // Left node down one level
             if (dTempLeft > dTempLeftRight) {
@@ -3300,6 +3306,7 @@ void InserterDelayed ( const long n, size_t& localDepth, std::vector<TNode>& obj
     DistanceTypeNode dTempRight =  DistanceTypeNode(0);
     DistanceTypeNode dTempLeft  =  DistanceTypeNode(0);
     ++localDepth;
+    ++m_iTreeSize;
     
     if ( m_ptLeft == ULONG_MAX )
     {
@@ -3332,6 +3339,7 @@ void InserterDelayed ( const long n, size_t& localDepth, std::vector<TNode>& obj
             SumSpacings += dTempRight;
             SumSpacingsSq += dTempRight*dTempRight;
             ++localDepth;
+            ++(m_pRightBranch->m_iTreeSize);
             return;
         }
         m_pRightBranch->InserterDelayed( n, localDepth, objectStore, SumSpacings, SumSpacingsSq );
@@ -3348,6 +3356,7 @@ void InserterDelayed ( const long n, size_t& localDepth, std::vector<TNode>& obj
             SumSpacings += dTempLeft;
             SumSpacingsSq += dTempLeft*dTempLeft;
             ++localDepth;
+            ++(m_pLeftBranch->m_iTreeSize);
             return;
         }        
         m_pLeftBranch->InserterDelayed( n, localDepth, objectStore, SumSpacings, SumSpacingsSq );

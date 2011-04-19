@@ -412,7 +412,7 @@ void testFindFirstObject( void )
     
     /* build the double tree starting with 1.0 */
     f[0] = 1.0;
-    while( f[0]*f[0] > 0.0 )
+    while( f[0]*f[0] > DBL_MIN )
     {
         bReturn = !CNearTreeImmediateInsert(tree,f, NULL);
         fFinal = f[0];
@@ -439,10 +439,11 @@ void testFindFirstObject( void )
         fprintf(stdout, "CNearTreeTest: testFindFirstObject: failed for double\n" );
     }
     
-    if( bReturnNear && closest[0] != fFinal )
+    if( bReturnNear && fabs(closest[0]-fFinal)> fFinal*DBL_EPSILON )
     {
         ++g_errorCount;
-        fprintf(stdout, "CNearTreeTest: testFindFirstObject: failed for double, got %g\n", closest[0] );
+        fprintf(stdout, "CNearTreeTest: testFindFirstObject: failed for double, got %g != %g, abs error %g\n", closest[0],
+                fFinal, fabs(closest[0]-fFinal));
     }
     
     /*
@@ -452,10 +453,11 @@ void testFindFirstObject( void )
     f[0] = 100.0;
     bReturnFar = !CNearTreeFarthestNeighbor(tree, &vfarthest, NULL,f);
     farthest = (double CNEARTREE_FAR *)vfarthest;
-    if( ! bReturnFar || farthest[0] != fFinal )
+    if( ! bReturnFar || fabs(farthest[0]-fFinal)> fabs(f[0]-fFinal)*DBL_EPSILON )
     {
         ++g_errorCount;
-        fprintf(stdout, "CNearTreeTest: testFindFirstObject: failed for double, got %g\n", farthest[0] );
+        fprintf(stdout, "CNearTreeTest: testFindFirstObject: failed for double, got %g != %g, abs error %g\n", farthest[0],  
+                fFinal, fabs(farthest[0]-fFinal) );
     }
     
     /*

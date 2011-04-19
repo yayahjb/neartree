@@ -191,19 +191,20 @@ extern "C" {
     
     
     typedef struct _CNearTreeNode {
-        size_t           m_indexLeft;    /* index of left coords in m_CoordStore  
-         and of left object in m_ObjectStore     */
-        size_t           m_indexRight;   /* index of right coords in m_CoordStore 
-         and of right object in m_ObjectStore     */
-        double           m_dMaxLeft;     /* longest distance from the left object
-         to anything below it in the tree            */
-        double           m_dMaxRight;    /* longest distance from the right object 
-         to anything below it in the tree            */
+        size_t           m_indexLeft;     /* index of left coords in m_CoordStore  
+                                             and of left object in m_ObjectStore   */
+        size_t           m_indexRight;    /* index of right coords in m_CoordStore 
+                                             and of right object in m_ObjectStore  */
+        double           m_dMaxLeft;      /* longest distance from the left object
+                                             to anything below it in the tree      */
+        double           m_dMaxRight;     /* longest distance from the right object 
+                                             to anything below it in the tree      */
         struct _CNearTreeNode CNEARTREE_FAR * m_pLeftBranch;  
-        /* tree descending from the left object        */
+                                          /* tree descending from the left object  */
         struct _CNearTreeNode CNEARTREE_FAR * m_pRightBranch; 
-        /* tree descending from the right object       */
-        long              m_iflags;       /* flags      */
+                                          /* tree descending from the right object */
+        long              m_iflags;       /* flags                   */
+        size_t            m_iTreeSize;    /* size of this node tree  */
     } CNearTreeNode;
     
     
