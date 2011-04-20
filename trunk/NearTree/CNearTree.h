@@ -1229,6 +1229,27 @@ extern "C" {
                                     CNearTreeHandle foundInRing,
                                     const void CNEARTREE_FAR * coord,
                                     int resetcount);
+    
+    
+    /*
+     =======================================================================
+
+     int CNearTreeSortIn(CVectorHandle metrics, 
+     CVectorHandle indices, 
+     double metric, 
+     size_t index, 
+     size_t k);
+     
+     CNearTreeSortIn inserts a new metric and index into the vectors
+     metrics and indices, sorted on non-decreasing metric,
+     with the size of the vectors capped at k, or uncapped if k = 0;
+
+     =======================================================================
+     */
+
+    int CNearTreeSortIn(CVectorHandle metrics, CVectorHandle indices, double metric, size_t index, size_t k);
+    
+    
     /*
      =======================================================================
      

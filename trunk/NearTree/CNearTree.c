@@ -1981,7 +1981,7 @@ extern "C" {
                         if (index == dummyindex) continue;
                         depth = 0;
                         errorcode |= CNearTreeNodeInsert_Flip(treehandle,treehandle->m_ptTree,index,&depth);
-                        if (CVectorSetElement(treehandle->m_DelayedIndices,&dummyindex,kelement)) errorcode |= CNEARTREE_CVECTOR_FAILED;
+                        if (CVectorSetElement(treehandle->m_DelayedIndices,&dummyindex,ielement)) errorcode |= CNEARTREE_CVECTOR_FAILED;
                         if (depth > treehandle->m_szdepth) treehandle->m_szdepth = depth;
                         (treehandle->m_szsize)++;
                         sizeLeft = (!(treehandle->m_ptTree->m_iflags&CNEARTREE_FLAG_LEFT_CHILD))?0:(treehandle->m_ptTree->m_pLeftBranch->m_iTreeSize);
@@ -1996,6 +1996,8 @@ extern "C" {
             for (ielement = 0; ielement < nrandom; ielement++) {
                 
                 kelement = (int)(CRHrandUrand(&(treehandle->m_rhr))*((double)(nqueued)));
+                
+                dummyrand = CRHrandUrand(&(treehandle->m_rhr)) + CRHrandUrand(&(treehandle->m_rhr));
                 
                 oelement = kelement;
                 do {
@@ -2038,7 +2040,7 @@ extern "C" {
                             CVectorSetSize(treehandle->m_DelayedIndices,oelement);
                             nqueued = oelement;
                         }
-                        if (CVectorGetElement(treehandle->m_DelayedIndices,&index,kelement)) return  CNEARTREE_BAD_ARGUMENT;
+                        if (CVectorGetElement(treehandle->m_DelayedIndices,&index,ielement)) return  CNEARTREE_BAD_ARGUMENT;
                         kelement ++;
                     } while (index == dummyindex);
                     if (kelement == nqueued) {
@@ -2048,7 +2050,7 @@ extern "C" {
                     kelement--;
                     if (CVectorSetElement(treehandle->m_DelayedIndices,&dummyindex,kelement)) errorcode |= CNEARTREE_CVECTOR_FAILED;
                     depth = 0;
-                    errorcode |= CNearTreeNodeInsert_Flip(treehandle,treehandle->m_ptTree,index,&depth);
+                    errorcode |= CNearTreeNodeInsert(treehandle,treehandle->m_ptTree,index,&depth);
                     if (depth > treehandle->m_szdepth) treehandle->m_szdepth = depth;
                     (treehandle->m_szsize)++;
                     
@@ -2058,8 +2060,8 @@ extern "C" {
                         if (CVectorGetElement(treehandle->m_DelayedIndices,&index,ielement)) return CNEARTREE_CVECTOR_FAILED;
                         if (index == dummyindex) continue;
                         depth = 0;
-                        errorcode |= CNearTreeNodeInsert_Flip(treehandle,treehandle->m_ptTree,index,&depth);
-                        if (CVectorSetElement(treehandle->m_DelayedIndices,&dummyindex,kelement)) errorcode |= CNEARTREE_CVECTOR_FAILED;
+                        errorcode |= CNearTreeNodeInsert(treehandle,treehandle->m_ptTree,index,&depth);
+                        if (CVectorSetElement(treehandle->m_DelayedIndices,&dummyindex,ielement)) errorcode |= CNEARTREE_CVECTOR_FAILED;
                         if (depth > treehandle->m_szdepth) treehandle->m_szdepth = depth;
                         (treehandle->m_szsize)++;
                         sizeLeft = (!(treehandle->m_ptTree->m_iflags&CNEARTREE_FLAG_LEFT_CHILD))?0:(treehandle->m_ptTree->m_pLeftBranch->m_iTreeSize);
@@ -3350,7 +3352,7 @@ extern "C" {
      
      */ 
     
-    static int CNearTreeSortIn(CVectorHandle metrics, CVectorHandle indices, double metric, size_t index, size_t k) {
+    int CNearTreeSortIn(CVectorHandle metrics, CVectorHandle indices, double metric, size_t index, size_t k) {
         
         double localmetric=metric;
         double tempmetric;
@@ -3379,7 +3381,7 @@ extern "C" {
             
             tempmetric =  ((double *)localmetrics)[high];
             tempindex =  ((size_t *)localindices)[high];
-            for (mid = high; mid > 0; mid--) {
+            for (mid = high; mid > low; mid--) {
                 ((double *)localmetrics)[mid] = ((double *)localmetrics)[mid-1];
                 ((size_t *)localindices)[mid] = ((size_t *)localindices)[mid-1];
             }
