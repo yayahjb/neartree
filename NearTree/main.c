@@ -59,7 +59,10 @@ int main ( int argc, char** argv )
     double * vBest;
     void * vvBest;
     CVectorHandle vReturn;
+    CVectorHandle dDs;
+    CVectorHandle stIndices;
     CVectorHandle oReturn;
+    double xdist;
     long i,j,k;
     const long lMaxRow = 10;
     double   dRad = 0.6;
@@ -68,6 +71,8 @@ int main ( int argc, char** argv )
     CNearTreeCreate(&treehandle,3,CNEARTREE_TYPE_DOUBLE);
     CVectorCreate(&vReturn,sizeof(void *),10);
     CVectorCreate(&oReturn,sizeof(void *),10);
+    CVectorCreate(&dDs,sizeof(double),10);
+    CVectorCreate(&stIndices,sizeof(size_t),10);
     
     if (argc <= 1) {
         CRHrandSrandom(&rhr, (int)time( NULL ) );  /* use the current time to seed the
@@ -133,15 +138,26 @@ int main ( int argc, char** argv )
         
         /* search for all points within a "sphere" out to radius dRad */
         
+        CVectorClear( dDs );
+        CVectorClear( stIndices );
+        CVectorClear( vReturn );
+        CVectorClear( oReturn );
         if ( !CNearTreeFindInSphere( treehandle, dRad, vReturn, oReturn, vSearch,1 ) ) 
         {
-            size_t index;
+            size_t index, jndex;
             void * foundpoint;
             
             fprintf(stdout," Returned %lu items within %g of [%g,%g,%g]\n",
                     (long unsigned int)vReturn->size, dRad, vSearch[0], vSearch[1], vSearch[2]);
             for (index=0; index < CVectorSize(vReturn); index++) {
                 CVectorGetElement(vReturn,&foundpoint,index);
+                xdist = CNearTreeDist(treehandle,(void CNEARTREE_FAR *)foundpoint,
+                                      (void CNEARTREE_FAR *)vSearch);
+                CNearTreeSortIn(dDs,stIndices,xdist,index,CVectorSize(vReturn));
+            }
+            for (index=0; index < CVectorSize(stIndices); index++) {
+                CVectorGetElement(stIndices,&jndex,index);
+                CVectorGetElement(vReturn,&foundpoint,jndex);
                 fprintf (stdout,"\t [%g,%g,%g]\n",((double *)foundpoint)[0],
                          ((double *)foundpoint)[1],
                          ((double *)foundpoint)[2]);

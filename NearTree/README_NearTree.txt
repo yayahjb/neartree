@@ -1,8 +1,8 @@
 
                                     NearTree
 
-                                 Release 3.0.1
-                                  5 April 2011
+                                 Release 3.0.2
+                                 19 April 2011
  (c) Copyright 2001, 2008, 2009, 2010, 2011 Larry Andrews. All rights reserved
                                     based on
          Larry Andrews, "A template for the nearest neighbor problem",
@@ -28,6 +28,7 @@
                        30 October 2010 Release 2.3.2 LCA
                      22 March 2011 Release 3.0 LCA and HJB
                      5 April 2011 Release 3.0.1 LCA and HJB
+                        19 April 2011 Release 3.0.2 HJB
 
     YOU MAY REDISTRIBUTE NearTree UNDER THE TERMS OF THE LGPL
 
@@ -52,6 +53,9 @@
    This is a release of an API for finding nearest neighbors among points in
    spaces of arbitrary dimensions. This release provides a C++ template,
    TNear.h, and a C library, CNearTree.c, with example/test programs.
+
+   Release 3.0.2 added to randomization on insertion when the tree is not
+   well balanced.
 
    Release 3.0.1 updated the diameter calculation and fixed some
    documentation errors.
@@ -134,7 +138,7 @@
 
    The NearTree package is available at
    www.sourceforge.net/projects/neartree. A source tarball is available at
-   downloads.sourceforge.net/neartree/NearTree-3.0.1tar.gz. Later tarballs
+   downloads.sourceforge.net/neartree/NearTree-3.0.2tar.gz. Later tarballs
    may be available.
 
    If you decide to simply use the TNear.h header to add nearest neighbor
@@ -146,7 +150,7 @@
    work for this installation.
 
    When the source tarball is downloaded and unpacked, you should have a
-   directory NearTree-3.0.1. To see the current settings for a build execute
+   directory NearTree-3.0.2. To see the current settings for a build execute
 
    make
 
@@ -340,9 +344,9 @@
                             // to return DistanceType (usually will return a    
                             // "length" of type double)                         
  operator- ( );             // geometrical (vector) difference of two objects   
-                      // a copy constructor would be nice                        
-                      // a constructor would be nice                             
-                      // a destructor would be nice                              
+                            // a copy constructor would be nice                 
+                            // a constructor would be nice                      
+                            // a destructor would be nice                       
 
    The provided interface is:
 
@@ -386,7 +390,7 @@
      CNearTree& operator=( const InputContainer& o )
                                                                // put container's contents into a NearTree,
                                                                // wiping out the current contents
-
+    
      template<typename InputContainer>
      CNearTree& operator=( InputContainer& o )
                                                                // put container's contents into a NearTree,
@@ -521,7 +525,7 @@
      long FindInSphere ( const DistanceType& dRadius, 
           ContainerType& tInside,  
           std::vector<size_t>& tIndices, const T& t ) const
-     long FindInSphere ( const DistanceType& dRadius, 
+     long FindInSphere ( const DistanceType& dRadius,
           CNearTree<  T >& tInside,  const T& t ) const
      long LeftFindInSphere ( const DistanceType& dRadius, 
           ContainerType& tInside,   const T& t ) const
@@ -649,7 +653,7 @@
         earlier NearTree releases.
 
    
-   
+
      ----------------------------------------------------------------------
 
 
