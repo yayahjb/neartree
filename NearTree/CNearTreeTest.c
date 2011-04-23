@@ -534,6 +534,9 @@ void testFindLastObject( void )
     
     if (dbgflg) {
         size_t depth, size;
+#ifdef CNEARTREE_INSTRUMENTED
+        size_t height;
+#endif
         bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
         if (bResult) {
             fprintf(stderr,"CNearTreeTest:  testFindLastObject: depth=%lu, size=%lu\n",
@@ -541,6 +544,15 @@ void testFindLastObject( void )
         } else {
             fprintf(stderr,"CNearTreeTest:  testFindLastObject: get size and depth failed\n");
         }
+#ifdef CNEARTREE_INSTRUMENTED
+        bResult = !(CNearTreeGetDepth(tree,&height));
+        if (bResult) {
+            fprintf(stderr,"CNearTreeTest:  testFindLastObject: height=%lu\n",
+                    (unsigned long)height);
+        } else {
+            fprintf(stderr,"CNearTreeTest:  testFindLastObject: get height failed\n");
+        }
+#endif
     }
     
     
@@ -986,6 +998,9 @@ void testRandomTree1( const int nRequestedRandoms )
     
     if (dbgflg) {
         size_t depth, size;
+#ifdef CNEARTREE_INSTRUMENTED
+        size_t height;
+#endif        
         bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
         if (bResult) {
             fprintf(stderr,"CNearTreeTest:  testRandomTree1: depth=%lu, size=%lu\n",
@@ -993,6 +1008,15 @@ void testRandomTree1( const int nRequestedRandoms )
         } else {
             fprintf(stderr,"CNearTreeTest:  testRandomTree1: get size and depth failed\n");
         }
+#ifdef CNEARTREE_INSTRUMENTED
+        bResult = !(CNearTreeGetDepth(tree,&height));
+        if (bResult) {
+            fprintf(stderr,"CNearTreeTest:  testRandomTree1: height=%lu\n",
+                    (unsigned long)height);
+        } else {
+            fprintf(stderr,"CNearTreeTest:  testRandomTree1: get height failed\n");
+        }
+#endif
     }
     
     {
@@ -1126,6 +1150,9 @@ void testRandomTree1( const int nRequestedRandoms )
     
     if (dbgflg) {
         size_t depth, size;
+#ifdef CNEARTREE_INSTRUMENTED
+        size_t height;
+#endif        
         bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
         if (bResult) {
             fprintf(stderr,"CNearTreeTest:  testRandomTree1: with flip depth=%lu, size=%lu\n",
@@ -1133,6 +1160,15 @@ void testRandomTree1( const int nRequestedRandoms )
         } else {
             fprintf(stderr,"CNearTreeTest:  testRandomTree1: with flip get size and depth failed\n");
         }
+#ifdef CNEARTREE_INSTRUMENTED
+        bResult = !(CNearTreeGetDepth(tree,&height));
+        if (bResult) {
+            fprintf(stderr,"CNearTreeTest:  testRandomTree1: height=%lu\n",
+                    (unsigned long)height);
+        } else {
+            fprintf(stderr,"CNearTreeTest:  testRandomTree1: get height failed\n");
+        }
+#endif        
     }
     
     {
@@ -1549,6 +1585,9 @@ void testBackwardForward( void )
     
     if (dbgflg) {
         size_t depth, size;
+#ifdef CNEARTREE_INSTRUMENTED
+        size_t height;
+#endif
         bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
         if (bResult) {
             fprintf(stderr,"CNearTreeTest:  testBackwardForward: depth=%lu, size=%lu\n",
@@ -1556,7 +1595,15 @@ void testBackwardForward( void )
         } else {
             fprintf(stderr,"CNearTreeTest:  testBackwardForward: get size and depth failed\n");
         }
-        
+#ifdef CNEARTREE_INSTRUMENTED
+        bResult = !(CNearTreeGetDepth(tree,&height));
+        if (bResult) {
+            fprintf(stderr,"CNearTreeTest:  testBackwardForward: height=%lu\n",
+                    (unsigned long)height);
+        } else {
+            fprintf(stderr,"CNearTreeTest:  testBackwardForward: get height failed\n");
+        }
+#endif        
     }
     
     for( i=100; i<300; ++i )
@@ -1599,6 +1646,9 @@ void testBackwardForward( void )
     
     if (dbgflg) {
         size_t depth, size;
+#ifdef CNEARTREE_INSTRUMENTED
+        size_t height;
+#endif        
         bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
         if (bResult) {
             fprintf(stderr,"CNearTreeTest:  testBackwardForward: with flip depth=%lu, size=%lu\n",
@@ -1606,7 +1656,15 @@ void testBackwardForward( void )
         } else {
             fprintf(stderr,"CNearTreeTest:  testBackwardForward: with flip get size and depth failed\n");
         }
-        
+#ifdef CNEARTREE_INSTRUMENTED
+        bResult = !(CNearTreeGetDepth(tree,&height));
+        if (bResult) {
+            fprintf(stderr,"CNearTreeTest:  testBackForward: height=%lu\n",
+                    (unsigned long)height);
+        } else {
+            fprintf(stderr,"CNearTreeTest:  testBackForward: get height failed\n");
+        }
+#endif        
     }
     
     for( i=100; i<300; ++i )
@@ -1687,6 +1745,9 @@ void testDelayedInsertion( void )
         radius = 1000.0;
         if (dbgflg) {
             size_t depth, size;
+#ifdef CNEARTREE_INSTRUMENTED
+            size_t height;
+#endif
             bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
             if (bResult) {
                 fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: before CNearTreeCompleteDelayedInsert depth=%lu, size=%lu\n",
@@ -1694,7 +1755,15 @@ void testDelayedInsertion( void )
             } else {
                 fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: before CNearTreeCompleteDelayedInsert get size and depth failed\n");
             }
-            
+#ifdef CNEARTREE_INSTRUMENTED
+            bResult = !(CNearTreeGetDepth(tree,&height));
+            if (bResult) {
+                fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: height=%lu\n",
+                        (unsigned long)height);
+            } else {
+                fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: get height failed\n");
+            }
+#endif            
         }
         bResult = !CNearTreeCompleteDelayedInsert(tree);
         if (!bResult)
@@ -1704,6 +1773,9 @@ void testDelayedInsertion( void )
         }
         if (dbgflg) {
             size_t depth, size;
+#ifdef CNEARTREE_INSTRUMENTED
+            size_t height;
+#endif
             bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
             if (bResult) {
                 fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: after CNearTreeCompleteDelayedInsert depth=%lu, size=%lu\n",
@@ -1711,7 +1783,15 @@ void testDelayedInsertion( void )
             } else {
                 fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: after CNearTreeCompleteDelayedInsert get size and depth failed\n");
             }
-            
+#ifdef CNEARTREE_INSTRUMENTED
+            bResult = !(CNearTreeGetDepth(tree,&height));
+            if (bResult) {
+                fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: height=%lu\n",
+                        (unsigned long)height);
+            } else {
+                fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: get height failed\n");
+            }
+#endif            
         }
         probe[0] = 0.9;
         bResult = !CNearTreeFindInSphere(tree, radius,v,NULL,probe,1);
@@ -1783,6 +1863,9 @@ void testDelayedInsertion( void )
         radius = 1000.0;
         if (dbgflg) {
             size_t depth, size;
+#ifdef CNEARTREE_INSTRUMENTED
+            size_t height;
+#endif
             bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
             if (bResult) {
                 fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: before CNearTreeCompleteDelayedInsert with flip depth=%lu, size=%lu\n",
@@ -1790,7 +1873,15 @@ void testDelayedInsertion( void )
             } else {
                 fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: before CNearTreeCompleteDelayedInsert with flip get size and depth failed\n");
             }
-            
+#ifdef CNEARTREE_INSTRUMENTED
+            bResult = !(CNearTreeGetDepth(tree,&height));
+            if (bResult) {
+                fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: height=%lu\n",
+                        (unsigned long)height);
+            } else {
+                fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: get height failed\n");
+            }
+#endif            
         }
         bResult = !CNearTreeCompleteDelayedInsert(tree);
         if (!bResult)
@@ -1800,6 +1891,9 @@ void testDelayedInsertion( void )
         }
         if (dbgflg) {
             size_t depth, size;
+#ifdef CNEARTREE_INSTRUMENTED
+            size_t height;
+#endif
             bResult = !(CNearTreeGetDepth(tree,&depth)) && !(CNearTreeGetSize(tree,&size));
             if (bResult) {
                 fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: after CNearTreeCompleteDelayedInsert depth=%lu, size=%lu\n",
@@ -1807,6 +1901,15 @@ void testDelayedInsertion( void )
             } else {
                 fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: after CNearTreeCompleteDelayedInsert get size and depth failed\n");
             }
+#ifdef CNEARTREE_INSTRUMENTED
+            bResult = !(CNearTreeGetDepth(tree,&height));
+            if (bResult) {
+                fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: height=%lu\n",
+                        (unsigned long)height);
+            } else {
+                fprintf(stderr,"CNearTreeTest:  testDelayedInsertion: get height failed\n");
+            }
+#endif
         }
         probe[0] = 0.9;
         bResult = !CNearTreeFindInSphere(tree, radius,v,NULL,probe,1);

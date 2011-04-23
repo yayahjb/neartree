@@ -466,7 +466,7 @@ static const long        NTF_FlagsDefault      =  NFT_FlagDefaultPrune|NFT_FlagD
 private: // start of real definition of CNearTree
 std::vector<long> m_DelayedIndices;    // objects queued for insertion, possibly in random order
 std::vector<T>    m_ObjectStore;       // all inserted objects go here
-size_t            m_DeepestDepth;      // maximum diameter of the tree
+size_t            m_DeepestDepth;      // maximum depth of the tree
 
 
 NearTreeNode<T, DistanceType, distMinValue>      m_BaseNode; // the tree's data is stored down from here
@@ -2600,6 +2600,8 @@ inline void CompleteDelayedInsert ( void )
     const size_t vectorSize = m_DelayedIndices.size( );
     size_t ntarget = vectorSize;
     long npass;
+    size_t errsize;
+    long added;
     const size_t toRandomlyInsert = (size_t)::sqrt( (double)vectorSize );
     for ( size_t i=0; i<toRandomlyInsert; ++i )
     {
@@ -2622,11 +2624,9 @@ inline void CompleteDelayedInsert ( void )
 
     npass=0;
     while (ntarget > 0) {
-        size_t sizeLeft, sizeRight;
-        sizeLeft = m_BaseNode.GetLeftTreeSize();
-        sizeRight = m_BaseNode.GetRightTreeSize();
         npass++;
-        if (sizeLeft > sizeRight+4*npass || sizeRight > sizeLeft+4*npass) {
+        errsize = (m_BaseNode.GetTreeSize())>>(-1+m_DeepestDepth);
+        if ( errsize < 1 ) {
             size_t n = (size_t)((double)(vectorSize-1u) * (DistanceType)(rhr.urand()));
             rhr.urand( ); rhr.urand( );
             
@@ -2643,6 +2643,7 @@ inline void CompleteDelayedInsert ( void )
             ntarget--;            
         }
         // finish by inserting all the remaining objects
+        added=0;
         for ( size_t i=0; i<vectorSize; ++i )
         {
             if ( m_DelayedIndices[i] != -1 )
@@ -2650,9 +2651,11 @@ inline void CompleteDelayedInsert ( void )
                 insertDelayed( (long)m_DelayedIndices[i] );
                 m_DelayedIndices[i] = -1;
                 ntarget--;
-                sizeLeft = m_BaseNode.GetLeftTreeSize();
-                sizeRight = m_BaseNode.GetRightTreeSize();
-                if (sizeLeft > sizeRight+8*npass || sizeRight > sizeLeft+8*npass) break;            
+                added++;
+                if (added > 100 || added > npass*8) {
+                    errsize = (m_BaseNode.GetTreeSize())>>(-1+m_DeepestDepth);
+                    if (errsize < 1) break; 
+                }
             }
         }
     }
@@ -2955,6 +2958,21 @@ size_t GetDepth ( void ) const
     return ( m_DeepestDepth );
 };
 
+//=======================================================================
+//  size_t GetHeight( void ) const
+//
+//  The greatest the height of the root.
+//
+//=======================================================================
+size_t GetHeight ( void ) const
+{
+#ifdef CNEARTREE_INSTRUMENTED
+    return ( m_BaseNode.GetTreeHeight() );
+#else
+    return ( m_DeepestDepth );
+#endif
+};
+
 
 //=======================================================================
 //  T Centroid ( void ) const
@@ -3115,17 +3133,25 @@ DistanceTypeNode      m_dMaxRight;     // longest distance from the right object
 NearTreeNode *    m_pLeftBranch;       // tree descending from the left object
 NearTreeNode *    m_pRightBranch;      // tree descending from the right object
 size_t            m_iTreeSize;         // size of this node tree
+#ifdef CNEARTREE_INSTRUMENTED
+mutable size_t    m_iHeight;           // height of the tree
+#endif
+
 
 public:
 
-NearTreeNode( void ) :  //  NearTreeNode constructor
-m_ptLeft            ( ULONG_MAX ),
-m_ptRight           ( ULONG_MAX ),
-m_dMaxLeft          ( DistanceTypeNode( distMinValueNode ) ),
-m_dMaxRight         ( DistanceTypeNode( distMinValueNode ) ),
-m_pLeftBranch       ( 0 ),
-m_pRightBranch      ( 0 ),
-m_iTreeSize         ( 0 )
+NearTreeNode( void )   //  NearTreeNode constructor
+: m_ptLeft            ( ULONG_MAX )
+, m_ptRight           ( ULONG_MAX )
+, m_dMaxLeft          ( DistanceTypeNode( distMinValueNode ) )
+, m_dMaxRight         ( DistanceTypeNode( distMinValueNode ) )
+, m_pLeftBranch       ( 0 )
+, m_pRightBranch      ( 0 )
+, m_iTreeSize         ( 0 )
+#ifdef CNEARTREE_INSTRUMENTED
+, m_iHeight           ( 0 )
+#endif
+
 {
 };  //  NearTreeNode constructor
 
@@ -3178,6 +3204,10 @@ void clear( void )
         pc->m_dMaxLeft   = DistanceTypeNode( distMinValueNode );
         pc->m_dMaxRight  = DistanceTypeNode( distMinValueNode );
         pc->m_iTreeSize  = 0;
+#ifdef CNEARTREE_INSTRUMENTED
+        pc->m_iHeight    = 0;
+#endif
+            
         if (pc != this) delete pc;
         if ( left ) clearStack.push_back(left);
         if ( right ) clearStack.push_back(right);
@@ -3194,6 +3224,11 @@ void clear( void )
 
 //=======================================================================
 
+inline size_t GetTreeSize( void ) const
+{
+    return m_iTreeSize;
+}
+
 inline size_t GetLeftTreeSize( void ) const
 {
     return (!m_pLeftBranch)?0:(m_pLeftBranch->m_iTreeSize);
@@ -3202,6 +3237,15 @@ inline size_t GetLeftTreeSize( void ) const
 inline size_t GetRightTreeSize( void ) const
 {
     return (!m_pRightBranch)?0:(m_pRightBranch->m_iTreeSize);
+}
+
+inline size_t GetTreeHeight( void ) const
+{
+#ifdef CNEARTREE_INSTRUMENTED
+    return m_iHeight;
+#else
+    return 0;
+#endif
 }
 
 
@@ -3274,6 +3318,9 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
     if ( m_ptLeft == ULONG_MAX )
     {
         m_ptLeft = n;
+#ifdef CNEARTREE_INSTRUMENTED
+        m_iHeight = 1;
+#endif        
         return;
     }
     
@@ -3304,6 +3351,10 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
             SumSpacingsSq += dTempRight*dTempRight;
             ++localDepth;
             ++(m_pRightBranch->m_iTreeSize);
+#ifdef CNEARTREE_INSTRUMENTED
+            m_pRightBranch->m_iHeight = 1;
+            if (m_iHeight < 2) m_iHeight = 2;
+#endif            
             // See if it would be better to put the new node at this level and drop the current
             // Right node down one level
             if (dTempRight > dTempLeftRight) {
@@ -3313,6 +3364,10 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
             return;
         }        
         m_pRightBranch->InserterDelayed_Flip( n, localDepth, objectStore, SumSpacings, SumSpacingsSq );
+#ifdef CNEARTREE_INSTRUMENTED
+        m_iHeight = 1+m_pRightBranch->m_iHeight;
+        if (m_pLeftBranch && m_pLeftBranch->m_iHeight >= m_iHeight) m_iHeight = 1+m_pLeftBranch->m_iHeight;
+#endif
     }
     else  // ((DistanceTypeNode)(t - *m_tLeft) <= (DistanceTypeNode)(t - *m_tRight) )
     {
@@ -3328,6 +3383,10 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
             SumSpacingsSq += dTempLeft*dTempLeft;
             ++localDepth;
             ++(m_pLeftBranch->m_iTreeSize);
+#ifdef CNEARTREE_INSTRUMENTED
+            m_pLeftBranch->m_iHeight = 1;
+            if (m_iHeight < 2) m_iHeight = 2;
+#endif            
             // See if it would be better to put the new node at this level and drop the current
             // Left node down one level
             if (dTempLeft > dTempLeftRight) {
@@ -3338,6 +3397,10 @@ void InserterDelayed_Flip ( const long n, size_t& localDepth, std::vector<TNode>
         }        
         
         m_pLeftBranch->InserterDelayed_Flip( n, localDepth, objectStore, SumSpacings, SumSpacingsSq );
+#ifdef CNEARTREE_INSTRUMENTED
+        m_iHeight = 1+m_pLeftBranch->m_iHeight;
+        if (m_pRightBranch && m_pRightBranch->m_iHeight >= m_iHeight) m_iHeight = 1+m_pRightBranch->m_iHeight;
+#endif
     }
 }  //   end InserterDelayed_Flip
 
@@ -3355,6 +3418,9 @@ void InserterDelayed ( const long n, size_t& localDepth, std::vector<TNode>& obj
     if ( m_ptLeft == ULONG_MAX )
     {
         m_ptLeft = n;
+#ifdef CNEARTREE_INSTRUMENTED
+        m_iHeight = 1;
+#endif        
         return;
     }
     
@@ -3384,9 +3450,17 @@ void InserterDelayed ( const long n, size_t& localDepth, std::vector<TNode>& obj
             SumSpacingsSq += dTempRight*dTempRight;
             ++localDepth;
             ++(m_pRightBranch->m_iTreeSize);
+#ifdef CNEARTREE_INSTRUMENTED
+            m_pRightBranch->m_iHeight = 1;
+            if (m_iHeight < 2) m_iHeight = 2;
+#endif                        
             return;
         }
         m_pRightBranch->InserterDelayed( n, localDepth, objectStore, SumSpacings, SumSpacingsSq );
+#ifdef CNEARTREE_INSTRUMENTED
+        m_iHeight = 1+m_pRightBranch->m_iHeight;
+        if (m_pLeftBranch && m_pLeftBranch->m_iHeight >= m_iHeight) m_iHeight = 1+m_pLeftBranch->m_iHeight;
+#endif
     }
     else  // ((DistanceTypeNode)(t - *m_tLeft) <= (DistanceTypeNode)(t - *m_tRight) )
     {
@@ -3401,9 +3475,17 @@ void InserterDelayed ( const long n, size_t& localDepth, std::vector<TNode>& obj
             SumSpacingsSq += dTempLeft*dTempLeft;
             ++localDepth;
             ++(m_pLeftBranch->m_iTreeSize);
+#ifdef CNEARTREE_INSTRUMENTED
+            m_pLeftBranch->m_iHeight = 1;
+            if (m_iHeight < 2) m_iHeight = 2;
+#endif            
             return;
         }        
         m_pLeftBranch->InserterDelayed( n, localDepth, objectStore, SumSpacings, SumSpacingsSq );
+#ifdef CNEARTREE_INSTRUMENTED
+        m_iHeight = 1+m_pLeftBranch->m_iHeight;
+        if (m_pRightBranch && m_pRightBranch->m_iHeight >= m_iHeight) m_iHeight = 1+m_pRightBranch->m_iHeight;
+#endif
     }
 }  //   end InserterDelayed
 

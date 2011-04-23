@@ -144,8 +144,12 @@ int main ( int argc, char** argv )
         CVectorClear( oReturn );
         if ( !CNearTreeFindInSphere( treehandle, dRad, vReturn, oReturn, vSearch,1 ) ) 
         {
-            size_t index, jndex;
+            size_t index, jndex, kndex, tndex;
+            void * prevpoint;
             void * foundpoint;
+            void * localmetrics;
+            void * localindices;
+            int redo;
             
             fprintf(stdout," Returned %lu items within %g of [%g,%g,%g]\n",
                     (long unsigned int)vReturn->size, dRad, vSearch[0], vSearch[1], vSearch[2]);
@@ -155,6 +159,38 @@ int main ( int argc, char** argv )
                                       (void CNEARTREE_FAR *)vSearch);
                 CNearTreeSortIn(dDs,stIndices,xdist,index,CVectorSize(vReturn));
             }
+            
+            CVectorGetElementptr(dDs, &localmetrics,0);
+            CVectorGetElementptr(stIndices, &localindices,0);
+            
+            redo = 1;
+            while (redo == 1) {
+                redo = 0;
+                for (index=1; index < CVectorSize(stIndices); index++) {
+                    CVectorGetElement(stIndices,&jndex,index-1);
+                    CVectorGetElement(stIndices,&kndex,index);
+                    CVectorGetElement(vReturn,&prevpoint,jndex);
+                    CVectorGetElement(vReturn,&foundpoint,kndex);
+                    if (fabs(((double *)localmetrics)[jndex]-((double *)localmetrics)[kndex])
+                        <=DBL_EPSILON*fabs(((double*)localmetrics)[jndex]+((double*)localmetrics)[kndex])) {
+                        if ( ( ((double *)foundpoint)[0] < ((double *)prevpoint)[0] )
+                            ||( ((double *)foundpoint)[0] == ((double *)prevpoint)[0]
+                               && ((double *)foundpoint)[1] < ((double *)prevpoint)[1])
+                            || ( ((double *)foundpoint)[0] == ((double *)prevpoint)[0]
+                                && ((double *)foundpoint)[1] == ((double *)prevpoint)[1]
+                                && ((double *)foundpoint)[1] < ((double *)prevpoint)[1])
+                            ) {
+                            
+                            tndex = ((size_t *)localindices)[index-1];
+                            ((size_t *)localindices)[index-1] = ((size_t *)localindices)[index];
+                            ((size_t *)localindices)[index] = tndex;
+                            CVectorSetFlags(stIndices,0);
+                            redo = 1;
+                        }
+                    }
+                }
+            }
+            
             for (index=0; index < CVectorSize(stIndices); index++) {
                 CVectorGetElement(stIndices,&jndex,index);
                 CVectorGetElement(vReturn,&foundpoint,jndex);
