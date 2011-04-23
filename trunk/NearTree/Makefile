@@ -43,8 +43,8 @@
 #**********************************************************************/
 
 # Version string
-VERSION = 5:0:0
-RELEASE = 3.0
+VERSION = 5:0:1
+RELEASE = 3.1
 
 
 #
@@ -223,7 +223,7 @@ endif
 #
 all:	$(LIB) $(BIN) $(SOURCE) $(HEADERS) \
 		$(LIB)/libCNearTree.$(LIB_EXT) \
-		$(BIN)/CPPMain $(BIN)/CMain $(BIN)/CPPNearTreeTest $(BIN)/CNearTreeTest
+		$(BIN)/CPPMain $(BIN)/CMain $(BIN)/CPPNearTreeTest $(BIN)/CNearTreeTest $(BIN)/CNearTreeTestInst 
 		
 install:  all $(INSTALL_PREFIX) $(INSTALL_PREFIX)/lib $(INSTALL_PREFIX)/include \
           $(INC) $(LIB)/libCNearTree.$(LIB_EXT)  $(INC)/TNear.h $(INC)/CNearTree.h \
@@ -324,6 +324,10 @@ $(BIN)/CNearTreeTest: $(INC)/CNearTree.h $(EXAMPLES)/CNearTreeTest.c $(SRC)/CNea
 	$(BUILD_COMMAND_LOCAL) $(EXAMPLES)/CNearTreeTest.c $(SRC)/CNearTree.c $(LIB)/libCNearTree.$(LIB_EXT) $(CLIBRARIES) \
 		      -o $@
 
+$(BIN)/CNearTreeTestInst: $(INC)/CNearTree.h $(EXAMPLES)/CNearTreeTest.c $(SRC)/CNearTree.c $(BIN) $(LIB)/libCNearTree.$(LIB_EXT)
+	$(BUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED $(EXAMPLES)/CNearTreeTest.c $(SRC)/CNearTree.c $(LIB)/libCNearTree.$(LIB_EXT) $(CLIBRARIES) \
+		      -o $@
+
 
 #
 # Tests
@@ -331,7 +335,8 @@ $(BIN)/CNearTreeTest: $(INC)/CNearTree.h $(EXAMPLES)/CNearTreeTest.c $(SRC)/CNea
 tests:		$(LIB) $(BIN) $(BIN)/CPPMain $(BIN)/CPPMain_Flip $(BIN)/CPPNearTreeTest \
 				$(BIN)/CPPNearTreeTestInst $(BIN)/CMain $(BIN)/CNearTreeTest \
 				$(BIN)/CPPNearTreeTestInstFlip $(BIN)/CPPNearTreeTestInstNoDefer \
-				$(BIN)/CPPNearTreeTestInstNoFlip $(BIN)/CPPNearTreeTestInstNoFlipNoDefer
+				$(BIN)/CPPNearTreeTestInstNoFlip $(BIN)/CPPNearTreeTestInstNoFlipNoDefer \
+				$(BIN)/CNearTreeTestInst
 			$(TIME) $(BIN)/CPPMain 3458923 > $(TESTDATA)/CPPMain.lst
 			$(TIME) $(BIN)/CPPMain_Flip 3458923 > $(TESTDATA)/CPPMain_Flip.lst
 			$(TIME) $(BIN)/CMain 3458923 > $(TESTDATA)/CMain.lst
@@ -340,7 +345,8 @@ tests:		$(LIB) $(BIN) $(BIN)/CPPMain $(BIN)/CPPMain_Flip $(BIN)/CPPNearTreeTest 
 			$(TIME) $(BIN)/CPPNearTreeTestInstFlip
 			$(TIME) $(BIN)/CPPNearTreeTestInstNoDefer
 			$(TIME) $(BIN)/CPPNearTreeTestInstNoFlip
-			$(TIME) $(BIN)/CNearTreeTest
+			$(TIME) $(BIN)/CNearTreeTest --debug
+			$(TIME) $(BIN)/CNearTreeTestInst --debug
 ifneq ($(MSYSTEM),MINGW32)
 			diff -b -c $(TESTDATA)/CPPMain_orig.lst $(TESTDATA)/CPPMain.lst
 			diff -b -c $(TESTDATA)/CPPMain_orig.lst $(TESTDATA)/CPPMain_Flip.lst

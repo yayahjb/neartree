@@ -292,6 +292,14 @@ void testLinearTree( const int n )
         fprintf(stdout, "testLinearTree: tree depth is too large, %lu is greater than %d\n", (unsigned long)tree.GetDepth( ), (n+1)/2 );
     }
     
+#ifdef CNEARTREE_INSTRUMENTED
+    if( tree.GetHeight( ) !=  tree.GetDepth( ) )
+    {
+        ++g_errorCount;
+        fprintf(stdout, "testLinearTree: tree depth != tree height, %lu != %lu\n", (unsigned long)tree.GetDepth( ), (unsigned long)tree.GetHeight( ) );
+    }
+#endif
+    
     size_t estdim = (size_t)(0.5+tree.GetDimEstimate());
     if (n < 129 && estdim != 0) {
        ++g_errorCount;   
@@ -1735,6 +1743,14 @@ void testDelayedInsertion( void )
             fprintf(stdout, "testDelayedInsertion: tree depth is too large, %lu is greater than %ld\n", (unsigned long)depth, nmax/2 );
         }
         fprintf(stdout, "testDelayedInsertionRandom: tree depth is  %ld\n", (unsigned long)depth );
+#ifdef CNEARTREE_INSTRUMENTED
+        if( tree.GetHeight( ) !=  tree.GetDepth( ) )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testDelayedInsertionRandom: tree depth != tree height, %lu != %lu\n", (unsigned long)tree.GetDepth( ), (unsigned long)tree.GetHeight( ) );
+        }
+#endif
+        
     }
     
     {
@@ -1866,6 +1882,13 @@ void testDelayedInsertionRandom( void )
             fprintf(stdout, "testDelayedInsertionRandom: tree depth is too large, %lu is greater than %ld\n", (unsigned long)depth, (long)sqrt( (double)(nmax/2) ) );
         }
         fprintf(stdout, "testDelayedInsertionRandom: tree depth is  %ld\n", (unsigned long)depth );
+#ifdef CNEARTREE_INSTRUMENTED
+        if( tree.GetHeight( ) !=  tree.GetDepth( ) )
+        {
+            ++g_errorCount;
+            fprintf(stdout, "testDelayedInsertionRandom: tree depth != tree height, %lu != %lu\n", (unsigned long)tree.GetDepth( ), (unsigned long)tree.GetHeight( ) );
+        }
+#endif        
     }
     
 }  // end testDelayedInsertionRandom

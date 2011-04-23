@@ -205,6 +205,10 @@ extern "C" {
                                           /* tree descending from the right object */
         long              m_iflags;       /* flags                   */
         size_t            m_iTreeSize;    /* size of this node tree  */
+#ifdef CNEARTREE_INSTRUMENTED
+        size_t            m_Height;        /* height of this node     */
+#endif
+
     } CNearTreeNode;
     
     
@@ -573,6 +577,18 @@ extern "C" {
      */
     
     int CNearTreeGetDepth (const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * depth);
+
+    /*
+     =======================================================================
+     int CNearTreeGetHeight (const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * height)
+     
+     Return the height of the tree in height, of instrumented, otherwise the depth
+     
+     =======================================================================
+     */
+    
+    
+    int CNearTreeGetHeight ( const CNearTreeHandle treehandle, size_t CNEARTREE_FAR * height );
 
     
     /*
