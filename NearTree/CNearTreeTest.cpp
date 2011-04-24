@@ -1650,7 +1650,7 @@ void testBigVector(  )
                     /* Using minimal radius, check that at least 2 points are found when a point is searched
      with FindInSphere */
                     sphereReturn.clear( );
-                    const long iFound = tree.LeftFindInSphere( (vCloseToNearCenter-vNearCenter).Norm( ), sphereReturn, vNearCenter );
+                    const long iFound = tree.LeftFindInSphere( (1.+DBL_EPSILON)*(vCloseToNearCenter-vNearCenter).Norm( ), sphereReturn, vNearCenter );
                     if( iFound < 2 )
                     {
                     ++g_errorCount;
