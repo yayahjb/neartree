@@ -2884,7 +2884,7 @@ double GetDimEstimate ( const double DimEstimateEsd )
     targetradius /= shrinkfactor;
     targetradius *= 1.1;
 
-    int goodtrials = 0;
+    long goodtrials = 0;
     trials = (size_t)sqrt(0.5+(double)estsize);
     if (trials < 10) trials = 10;
         
@@ -2907,7 +2907,8 @@ double GetDimEstimate ( const double DimEstimateEsd )
             estdim += estd;
             estdimsq += estd*estd;
             goodtrials++;
-            if (estdimsq/((double)goodtrials) - estdim*estdim/((double)(goodtrials*goodtrials)) <= testlim) break;
+            if (goodtrials > (1L+(long)(trials))/2 && 
+                fabs(estdimsq/((double)goodtrials) - estdim*estdim/((double)(goodtrials*goodtrials))) <= testlim) break;
         }
     }
     if (goodtrials < 1) {
@@ -2915,11 +2916,11 @@ double GetDimEstimate ( const double DimEstimateEsd )
         return(0);
     }
     m_DimEstimate = estdim/((double)goodtrials);
-    m_DimEstimateEsd = sqrt(estdimsq/((double)goodtrials) -  m_DimEstimate*m_DimEstimate);
+    m_DimEstimateEsd = sqrt(fabs(estdimsq/((double)goodtrials) -  m_DimEstimate*m_DimEstimate));
     if (m_DimEstimate + 3.*m_DimEstimateEsd< 0.) {
         m_DimEstimate = m_DimEstimateEsd = DBL_MAX;
     }
-    return(estdim);
+    return(m_DimEstimate);
 };
 
 

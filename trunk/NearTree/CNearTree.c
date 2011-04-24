@@ -1178,7 +1178,7 @@ extern "C" {
         double dummy;
         int bResult;
         size_t elsize;
-        int goodtrials;
+        long goodtrials;
         
         size_t poplarge, popsmall, poptrial;
         CVectorHandle sampledisklarge;
@@ -1285,7 +1285,8 @@ extern "C" {
                     estdim += estd;
                     estdimsq += estd*estd;
                     goodtrials++;
-                    if (estdimsq/((double)goodtrials) - estdim*estdim/((double)(goodtrials*goodtrials)) <= testlim) break;                    
+                    if (goodtrials > (1L+(long)(trials))/2 && 
+                        fabs(estdimsq/((double)goodtrials) - estdim*estdim/((double)(goodtrials*goodtrials))) <= testlim) break;                    
                 }
             }
         }
@@ -1296,15 +1297,15 @@ extern "C" {
             return CNEARTREE_NOT_FOUND;
         }
         treehandle->m_DimEstimate = estdim/((double)goodtrials);
-        treehandle->m_DimEstimateEsd = sqrt(estdimsq/((double)goodtrials) 
-                -  treehandle->m_DimEstimate*treehandle->m_DimEstimate);
+        treehandle->m_DimEstimateEsd = sqrt(fabs(estdimsq/((double)goodtrials) 
+                -  treehandle->m_DimEstimate*treehandle->m_DimEstimate));
         if (treehandle->m_DimEstimate + 3.*treehandle->m_DimEstimateEsd< 0.) {
             treehandle->m_DimEstimate = treehandle->m_DimEstimateEsd = DBL_MAX;
             *dimest = 0.;
             CVectorFree(&sampledisklarge);
             return CNEARTREE_NOT_FOUND;
         }
-        *dimest = estdim;
+        *dimest = treehandle->m_DimEstimate;
         return CNEARTREE_SUCCESS;
     }
     
