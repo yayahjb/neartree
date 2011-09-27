@@ -1,7 +1,13 @@
+   +------------------------------------------------------------------------+
+   | CVector | Get NearTree at SourceForge.net. Fast, secure and Free Open  |
+   |         |                  Source software downloads                   |
+   +------------------------------------------------------------------------+
+
+     ----------------------------------------------------------------------
 
                                     NearTree
 
-                                  Release 3.1
+                                 Release 3.1.1
                                  23 April 2011
  (c) Copyright 2001, 2008, 2009, 2010, 2011 Larry Andrews. All rights reserved
                                     based on
@@ -30,6 +36,7 @@
                      5 April 2011 Release 3.0.1 LCA and HJB
                         19 April 2011 Release 3.0.2 HJB
                          23 April 2011 Release 3.1 HJB
+                      27 September 2011 Release 3.1.1 HJB
 
     YOU MAY REDISTRIBUTE NearTree UNDER THE TERMS OF THE LGPL
 
@@ -54,6 +61,10 @@
    This is a release of an API for finding nearest neighbors among points in
    spaces of arbitrary dimensions. This release provides a C++ template,
    TNear.h, and a C library, CNearTree.c, with example/test programs.
+
+   Release 3.1.1 adjusted the libtool version from 5.0.1 to 6.0.1 to avoid
+   confusion on the SONAME of the library as requested by Teemu Ikonen for
+   use as a Debian package.
 
    Release 3.1 adjusted the randomization to be based on the depth rather
    than the population and added an optional detailed height calculation.
@@ -142,8 +153,8 @@
 
    The NearTree package is available at
    www.sourceforge.net/projects/neartree. A source tarball is available at
-   downloads.sourceforge.net/neartree/NearTree-3.1.tar.gz. Later tarballs may
-   be available.
+   downloads.sourceforge.net/neartree/NearTree-3.1.1.tar.gz. Later tarballs
+   may be available.
 
    If you decide to simply use the TNear.h header to add nearest neighbor
    support to C++ code under Visual Studio, be sure to also use the rhrand.h
@@ -154,7 +165,7 @@
    work for this installation.
 
    When the source tarball is downloaded and unpacked, you should have a
-   directory NearTree-3.1. To see the current settings for a build execute
+   directory NearTree-3.1.1. To see the current settings for a build execute
 
    make
 
@@ -1269,5 +1280,5 @@
 
      ----------------------------------------------------------------------
 
-   Updated 28 March 2011
+   Updated 27 September 2011
    andrewsl@ix.netcom.com
