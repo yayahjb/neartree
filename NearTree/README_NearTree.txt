@@ -1,8 +1,7 @@
-
                                     NearTree
 
                                  Release 3.1.1
-                                 23 April 2011
+                   23 April 2011 (revised 27 September 2011)
  (c) Copyright 2001, 2008, 2009, 2010, 2011 Larry Andrews. All rights reserved
                                     based on
          Larry Andrews, "A template for the nearest neighbor problem",
