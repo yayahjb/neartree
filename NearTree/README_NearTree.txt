@@ -1,9 +1,3 @@
-   +------------------------------------------------------------------------+
-   | CVector | Get NearTree at SourceForge.net. Fast, secure and Free Open  |
-   |         |                  Source software downloads                   |
-   +------------------------------------------------------------------------+
-
-     ----------------------------------------------------------------------
 
                                     NearTree
 
@@ -62,7 +56,7 @@
    spaces of arbitrary dimensions. This release provides a C++ template,
    TNear.h, and a C library, CNearTree.c, with example/test programs.
 
-   Release 3.1.1 adjusted the libtool version from 5.0.1 to 6.0.1 to avoid
+   Release 3.1.1 adjusted the libtool version from 5:0:1 to 6:0:1 to avoid
    confusion on the SONAME of the library as requested by Teemu Ikonen for
    use as a Debian package.
 
@@ -189,7 +183,7 @@
 
   The current library link command is:
  
-    libtool --mode=link  gcc -version-info 5:0:0  \
+    libtool --mode=link  gcc -version-info 6:0:1  \
       -no-undefined -rpath /usr/local/lib
  
   The current C++ and C library local, and C dynamic and static build commands are:
