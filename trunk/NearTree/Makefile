@@ -15,6 +15,8 @@
 #
 #  Revised 31 October 2009, adding triple.h
 #
+#  Revised 8 Octber 2012, remove duplicate library load
+#
 
 
 #**********************************************************************
@@ -51,6 +53,7 @@ RELEASE = 3.1
 # Compiler and compilation flags
 #
 CC	= gcc
+CXX     = g++
 ifneq ($(MSYSTEM),MINGW32)
 CFLAGS  = -g -O2  -Wall  -ansi -pedantic -DCNEARTREE_SAFE_TRIANG=1
 TIME = time
@@ -317,15 +320,15 @@ $(BIN)/CPPNearTreeTestInstNoFlipNoDefer: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTes
 		      -o $@
 			  
 $(BIN)/CMain: $(INC)/CNearTree.h $(EXAMPLES)/main.c $(SRC)/CNearTree.c $(BIN) $(LIB)/libCNearTree.$(LIB_EXT)
-	$(BUILD_COMMAND_LOCAL) $(EXAMPLES)/main.c $(SRC)/CNearTree.c $(LIB)/libCNearTree.$(LIB_EXT) $(CLIBRARIES) \
+	$(BUILD_COMMAND_LOCAL) $(EXAMPLES)/main.c  $(LIB)/libCNearTree.$(LIB_EXT) $(CLIBRARIES) \
 		      -o $@
 
 $(BIN)/CNearTreeTest: $(INC)/CNearTree.h $(EXAMPLES)/CNearTreeTest.c $(SRC)/CNearTree.c $(BIN) $(LIB)/libCNearTree.$(LIB_EXT)
-	$(BUILD_COMMAND_LOCAL) $(EXAMPLES)/CNearTreeTest.c $(SRC)/CNearTree.c $(LIB)/libCNearTree.$(LIB_EXT) $(CLIBRARIES) \
+	$(BUILD_COMMAND_LOCAL) $(EXAMPLES)/CNearTreeTest.c $(LIB)/libCNearTree.$(LIB_EXT) $(CLIBRARIES) \
 		      -o $@
 
 $(BIN)/CNearTreeTestInst: $(INC)/CNearTree.h $(EXAMPLES)/CNearTreeTest.c $(SRC)/CNearTree.c $(BIN) $(LIB)/libCNearTree.$(LIB_EXT)
-	$(BUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED $(EXAMPLES)/CNearTreeTest.c $(SRC)/CNearTree.c $(LIB)/libCNearTree.$(LIB_EXT) $(CLIBRARIES) \
+	$(BUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED $(EXAMPLES)/CNearTreeTest.c $(LIB)/libCNearTree.$(LIB_EXT) $(CLIBRARIES) \
 		      -o $@
 
 
