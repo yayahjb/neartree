@@ -432,6 +432,7 @@ RHrand rhr;
 // forward declaration of nested class NearTreeNode
 template <typename TNode, typename DistanceTypeNode, int distMinValueNode >
 class NearTreeNode;
+
 public:
 // Forward declaration for the nested classes, iterator and const_iterator. Friend is necessary
 // for the access to the appropriate data elements
@@ -490,9 +491,13 @@ std::vector<T>    m_ObjectStore;       // all inserted objects go here
 std::vector<size_t>
                   m_ObjectCollide;     // overflow chain of colliding objects
 size_t            m_DeepestDepth;      // maximum depth of the tree
+std::vector< NearTreeNode<T, DistanceType, distMinValue> * >
+                  m_NearTreeNodes;     // vector of pointers to nodes to build the tree
+NearTreeNode<T, DistanceType, distMinValue>
+                  m_BaseNode;          // the tree's data is stored down
+                                       // this node in m_NearTreeNodes
 
 
-NearTreeNode<T, DistanceType, distMinValue>      m_BaseNode; // the tree's data is stored down from here
 long              m_Flags;             // flags for operational control (mainly for testing)
 DistanceType      m_DiamEstimate;      // estimated diameter
 DistanceType      m_SumSpacings;       // sum of spacings at time of insertion
@@ -520,7 +525,8 @@ CNearTree ( void )  // constructor
 , m_ObjectStore    (   )
 , m_ObjectCollide  (   )
 , m_DeepestDepth   ( 0 )
-, m_BaseNode       (   )
+, m_NearTreeNodes  (   )
+, m_BaseNode       ( m_NearTreeNodes, m_ObjectStore, m_ObjectCollide )
 , m_Flags          ( NTF_FlagsDefault )
 , m_DiamEstimate  ( DistanceType( 0 ) )
 , m_SumSpacings   ( DistanceType( 0 ) )
@@ -547,7 +553,8 @@ CNearTree ( const InputContainer& o )  // constructor
 , m_ObjectStore    (   )
 , m_ObjectCollide  (   )
 , m_DeepestDepth   ( 0 )
-, m_BaseNode       (   )
+, m_NearTreeNodes  (   )
+, m_BaseNode       ( m_NearTreeNodes, m_ObjectStore, m_ObjectCollide )
 , m_Flags          ( NTF_FlagsDefault )
 , m_DiamEstimate  ( DistanceType( 0 ) )
 , m_SumSpacings   ( DistanceType( 0 ) )
@@ -559,6 +566,7 @@ CNearTree ( const InputContainer& o )  // constructor
 #endif
 {
     typename InputContainer::const_iterator it;
+
     for( it=o.begin(); it!=o.end(); ++it )
     {
         insert( *it );
@@ -578,7 +586,8 @@ explicit CNearTree ( InputContainer& o )  // constructor
 , m_ObjectStore    (   )
 , m_ObjectCollide  (   )
 , m_DeepestDepth   ( 0 )
-, m_BaseNode       (   )
+, m_NearTreeNodes  (   )
+, m_BaseNode       ( m_NearTreeNodes, m_ObjectStore, m_ObjectCollide )
 , m_Flags          ( NTF_FlagsDefault )
 , m_DiamEstimate  ( DistanceType( 0 ) )
 , m_SumSpacings   ( DistanceType( 0 ) )
@@ -590,6 +599,7 @@ explicit CNearTree ( InputContainer& o )  // constructor
 #endif
 {
     typename InputContainer::iterator it;
+
     for( it=o.begin(); it!=o.end(); ++it )
     {
         insert( *it );
@@ -610,7 +620,8 @@ CNearTree ( const InputContainer1& o1, const InputContainer2& o2 ) // constructo
 , m_ObjectStore    (   )
 , m_ObjectCollide  (   )
 , m_DeepestDepth   ( 0 )
-, m_BaseNode       (   )
+, m_NearTreeNodes  (   )
+, m_BaseNode       ( m_NearTreeNodes, m_ObjectStore, m_ObjectCollide )
 , m_Flags          ( NTF_FlagsDefault )
 , m_DiamEstimate  ( DistanceType( 0 ) )
 , m_SumSpacings   ( DistanceType( 0 ) )
@@ -622,6 +633,8 @@ CNearTree ( const InputContainer1& o1, const InputContainer2& o2 ) // constructo
 #endif
 {
     typename InputContainer1::const_iterator it1;
+
+    
     for( it1=o1.begin(); it1!=o1.end(); ++it1 )
     {
         insert( *it1 );
@@ -955,7 +968,17 @@ CNearTree& set_symmetric_difference ( InputContainer& o )
 //=======================================================================
 void clear ( void )
 {
-    this->m_BaseNode       .clear( ); // clear the nodes of the tree
+     (this->m_BaseNode).clear( ); // clear the nodes of the tree
+    if ( ! this->m_NearTreeNodes.empty() )
+    {
+        size_t intn;
+        std::vector < NearTreeNode<T, DistanceType, distMinValue> * > vtempNTN;
+        for (intn=0; intn < m_NearTreeNodes.size(); intn++){
+            delete m_NearTreeNodes[intn];
+            m_NearTreeNodes[intn] = NULL;
+        }
+        m_NearTreeNodes.swap( vtempNTN );
+    }
     if ( ! this->m_DelayedIndices.empty( ) )
     {
         std::vector<long> vtempLong;
@@ -965,6 +988,9 @@ void clear ( void )
     {
         std::vector<T> vtempT;
         this->m_ObjectStore.swap( vtempT );  // release the object store
+    }
+    if ( ! this->m_ObjectCollide.empty( ) )
+    {
         std::vector<size_t> vtempOC;
         this->m_ObjectCollide.swap( vtempOC); // release the object collision store;
     }
@@ -1094,17 +1120,17 @@ void ImmediateInsert ( const T& t )
     m_ObjectStore.push_back(t);
     m_ObjectCollide.push_back(ULONG_MAX);
     if ( (m_Flags & NTF_ForceFlip) ) {
-        m_BaseNode.InserterDelayed_Flip( n, localDepth, m_ObjectStore,
+        (this->m_BaseNode).InserterDelayed_Flip( n, localDepth, m_ObjectStore,
             m_ObjectCollide, m_SumSpacings, m_SumSpacingsSq );
     } else if ( !(m_Flags & NTF_NoFlip) ) { 
-        m_BaseNode.InserterDelayed_Flip( n, localDepth, m_ObjectStore,
+        (this->m_BaseNode).InserterDelayed_Flip( n, localDepth, m_ObjectStore,
             m_ObjectCollide, m_SumSpacings, m_SumSpacingsSq );
     } else {
-        m_BaseNode.InserterDelayed( n, localDepth, m_ObjectStore,
+        (this->m_BaseNode).InserterDelayed( n, localDepth, m_ObjectStore,
             m_ObjectCollide, m_SumSpacings, m_SumSpacingsSq );
     }
     m_DeepestDepth = std::max( localDepth, m_DeepestDepth );
-    m_DiamEstimate = m_BaseNode.GetDiamEstimate(m_ObjectStore);
+    m_DiamEstimate = (this->m_BaseNode).GetDiamEstimate(m_ObjectStore);
     m_DimEstimate = 0;
     m_DimEstimateEsd= 0;
 }
@@ -1129,7 +1155,7 @@ void ImmediateInsert ( const InputContainer& o )
             m_ObjectStore.push_back(*it);
             m_ObjectCollide.push_back(ULONG_MAX);
             localDepth = 0;
-            m_BaseNode.InserterDelayed_Flip( n, localDepth, m_ObjectStore,
+            (this->m_BaseNode).InserterDelayed_Flip( n, localDepth, m_ObjectStore,
                 m_ObjectCollide, m_SumSpacings, m_SumSpacingsSq );
             m_DeepestDepth = std::max( localDepth, m_DeepestDepth );
         }
@@ -1139,12 +1165,12 @@ void ImmediateInsert ( const InputContainer& o )
             n = m_ObjectStore.size();
             m_ObjectStore.push_back(*it);
             localDepth = 0;
-            m_BaseNode.InserterDelayed( n, localDepth, m_ObjectStore,
+            (this->m_BaseNode).InserterDelayed( n, localDepth, m_ObjectStore,
                 m_ObjectCollide, m_SumSpacings, m_SumSpacingsSq );
             m_DeepestDepth = std::max( localDepth, m_DeepestDepth );
         }
     }
-    m_DiamEstimate = m_BaseNode.GetDiamEstimate(m_ObjectStore);
+    m_DiamEstimate = (this->m_BaseNode).GetDiamEstimate(m_ObjectStore);
     m_DimEstimate = 0;
     m_DimEstimateEsd= 0;
 }
@@ -1177,7 +1203,7 @@ inline iterator NearestNeighbor ( const DistanceType& radius, const T& t ) const
     {
         return ( iterator(end( )) );
     }
-    else if ( m_BaseNode.Nearest( tempRadius, closest, t, index, m_ObjectStore
+    else if ( (this->m_BaseNode).Nearest( tempRadius, closest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
 , m_NodeVisits
 #endif
@@ -1219,7 +1245,7 @@ inline iterator LeftNearestNeighbor ( const DistanceType& radius, const T& t ) c
     {
         return ( iterator(end( )) );
     }
-    else if ( m_BaseNode.LeftNearest( tempRadius, closest, t, index, m_ObjectStore
+    else if ( (this->m_BaseNode).LeftNearest( tempRadius, closest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
                                  , m_NodeVisits
 #endif
@@ -1268,7 +1294,8 @@ inline bool NearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const
     {
         DistanceType dSearchRadius = dRadius;
         size_t index = ULONG_MAX;
-        return ( this->m_BaseNode.Nearest ( dSearchRadius, tClosest, t, index, m_ObjectStore
+        return ( (this->m_BaseNode).Nearest (
+                dSearchRadius, tClosest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
                                            , m_NodeVisits
 #endif
@@ -1310,7 +1337,8 @@ inline bool LeftNearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   c
     {
         DistanceType dSearchRadius = dRadius;
         size_t index = ULONG_MAX;
-        return ( this->m_BaseNode.LeftNearest ( dSearchRadius, tClosest, t, index, m_ObjectStore
+        return ( (this->m_BaseNode).LeftNearest (
+                dSearchRadius, tClosest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
                                            , m_NodeVisits
 #endif
@@ -1363,7 +1391,7 @@ inline iterator ShortNearestNeighbor ( const DistanceType& radius, const T& t )
             DistanceType testRadius;
             while (shortRadius <= limitRadius) {
                 testRadius = shortRadius;
-                if (m_BaseNode.Nearest ( testRadius, closest, t, index, m_ObjectStore
+                if ((this->m_BaseNode).Nearest ( testRadius, closest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
                                         , m_NodeVisits
 #endif
@@ -1372,7 +1400,7 @@ inline iterator ShortNearestNeighbor ( const DistanceType& radius, const T& t )
                 shortRadius *= DistanceType(10);
             }
         }
-        if ( m_BaseNode.Nearest( tempRadius, closest, t, index, m_ObjectStore
+        if ( (this->m_BaseNode).Nearest( tempRadius, closest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
                                 , m_NodeVisits
 #endif
@@ -1385,7 +1413,7 @@ inline iterator ShortNearestNeighbor ( const DistanceType& radius, const T& t )
             return ( iterator(end( )) );
         }        
     }
-    else if ( m_BaseNode.Nearest( tempRadius, closest, t, index, m_ObjectStore
+    else if ( (this->m_BaseNode).Nearest( tempRadius, closest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
                                  , m_NodeVisits
 #endif
@@ -1454,7 +1482,7 @@ inline bool ShortNearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   
             DistanceType testRadius;
             while (shortRadius <= limitRadius) {
                 testRadius = shortRadius;
-                if (bReturn = this->m_BaseNode.Nearest ( testRadius, tClosest, t, index, m_ObjectStore
+                if (bReturn = (this->m_BaseNode).Nearest ( testRadius, tClosest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
                                                         , m_NodeVisits
 #endif
@@ -1463,7 +1491,7 @@ inline bool ShortNearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   
             }
           }
         }
-        return ( this->m_BaseNode.Nearest ( dSearchRadius, tClosest, t, index, m_ObjectStore
+        return ( (this->m_BaseNode).Nearest ( dSearchRadius, tClosest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
                                            , m_NodeVisits
 #endif
@@ -1516,7 +1544,7 @@ inline iterator LeftShortNearestNeighbor ( const DistanceType& radius, const T& 
             DistanceType testRadius;
             while (shortRadius <= limitRadius) {
                 testRadius = shortRadius;
-                if (m_BaseNode.Nearest ( testRadius, closest, t, index, m_ObjectStore
+                if ( (this->m_BaseNode).Nearest ( testRadius, closest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
                                         , m_NodeVisits
 #endif
@@ -1525,7 +1553,7 @@ inline iterator LeftShortNearestNeighbor ( const DistanceType& radius, const T& 
                 shortRadius *= DistanceType(10);
             }
         }
-        if ( m_BaseNode.LeftNearest( tempRadius, closest, t, index, m_ObjectStore
+        if ( (this->m_BaseNode).LeftNearest( tempRadius, closest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
                                 , m_NodeVisits
 #endif
@@ -1538,7 +1566,7 @@ inline iterator LeftShortNearestNeighbor ( const DistanceType& radius, const T& 
             return ( iterator(end( )) );
         }        
     }
-    else if ( m_BaseNode.LeftNearest( tempRadius, closest, t, index, m_ObjectStore
+    else if ( (this->m_BaseNode).LeftNearest( tempRadius, closest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
                                  , m_NodeVisits
 #endif
@@ -1604,7 +1632,7 @@ inline bool LeftShortNearestNeighbor ( const DistanceType& dRadius,  T& tClosest
                 DistanceType testRadius;
                 while (shortRadius <= limitRadius) {
                     testRadius = shortRadius;
-                    if (bReturn = this->m_BaseNode.LeftNearest ( testRadius, tClosest, t, index, m_ObjectStore
+                    if (bReturn = (this->m_BaseNode).LeftNearest ( testRadius, tClosest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
                                                             , m_NodeVisits
 #endif
@@ -1613,7 +1641,7 @@ inline bool LeftShortNearestNeighbor ( const DistanceType& dRadius,  T& tClosest
                 }
             }
         }
-        return ( this->m_BaseNode.LeftNearest ( dSearchRadius, tClosest, t, index, m_ObjectStore
+        return (  (this->m_BaseNode).LeftNearest ( dSearchRadius, tClosest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
                                            , m_NodeVisits
 #endif
@@ -1648,7 +1676,7 @@ iterator FarthestNeighbor ( const T& t ) const
     {
         return ( iterator(this->end( )) );
     }
-    else if ( m_BaseNode.Farthest( radius, farthest, t, index, m_ObjectStore
+    else if ( (this->m_BaseNode).Farthest( radius, farthest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
                                   , m_NodeVisits
 #endif
@@ -1687,7 +1715,7 @@ iterator LeftFarthestNeighbor ( const T& t ) const
     {
         return ( end( ) );
     }
-    else if ( m_BaseNode.LeftFarthest( radius, farthest, t, index, m_ObjectStore
+    else if ( (this->m_BaseNode).LeftFarthest( radius, farthest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
                                   , m_NodeVisits
 #endif
@@ -1729,7 +1757,7 @@ bool FarthestNeighbor ( T& tFarthest, const T& t ) const
     {
         DistanceType dSearchRadius = DistanceType( distMinValue );
         size_t index = ULONG_MAX;
-        return ( this->m_BaseNode.Farthest ( dSearchRadius, tFarthest, t, index, m_ObjectStore
+        return (  (this->m_BaseNode).Farthest ( dSearchRadius, tFarthest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
                                             , m_NodeVisits
 #endif
@@ -1766,7 +1794,7 @@ bool LeftFarthestNeighbor ( T& tFarthest, const T& t ) const
     {
         DistanceType dSearchRadius = DistanceType( distMinValue );
         size_t index = ULONG_MAX;
-        return ( this->m_BaseNode.LeftFarthest ( dSearchRadius, tFarthest, t, index, m_ObjectStore
+        return (  (this->m_BaseNode).LeftFarthest ( dSearchRadius, tFarthest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
                                             , m_NodeVisits
 #endif
@@ -1902,7 +1930,7 @@ inline long FindInSphere ( const DistanceType& dRadius,  OutputContainerType& tC
     }
     else
     {
-        return ( m_BaseNode.InSphere( dRadius, tClosest, t,
+        return ( (this->m_BaseNode).InSphere( dRadius, tClosest, t,
                                      m_ObjectStore, m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                      , m_NodeVisits
@@ -1925,7 +1953,7 @@ inline long FindInSphere ( const DistanceType& dRadius,  OutputContainerType& tC
     }
     else
     {
-        return ( m_BaseNode.InSphere( dRadius, tClosest, tIndices, t, m_ObjectStore, m_ObjectCollide
+        return ( (this->m_BaseNode).InSphere( dRadius, tClosest, tIndices, t, m_ObjectStore, m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                      , m_NodeVisits
 #endif
@@ -1964,7 +1992,7 @@ inline long LeftFindInSphere ( const DistanceType& dRadius, OutputContainerType&
     }
     else
     {
-        return ( m_BaseNode.LeftInSphere( dRadius, tClosest, t,
+        return ( (this->m_BaseNode).LeftInSphere( dRadius, tClosest, t,
                         m_ObjectStore, m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                      , m_NodeVisits
@@ -1988,7 +2016,7 @@ inline long LeftFindInSphere ( const DistanceType& dRadius,  OutputContainerType
     }
     else
     {
-        return ( m_BaseNode.LeftInSphere( dRadius, tClosest, tIndices, t, m_ObjectStore, m_ObjectCollide
+        return ( (this->m_BaseNode).LeftInSphere( dRadius, tClosest, tIndices, t, m_ObjectStore, m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                      , m_NodeVisits
 #endif
@@ -2031,7 +2059,7 @@ long FindOutSphere (
     }
     else
     {
-        return ( m_BaseNode.OutSphere( dRadius, tFarthest, t,
+        return ( (this->m_BaseNode).OutSphere( dRadius, tFarthest, t,
                         m_ObjectStore, m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                       , m_NodeVisits
@@ -2058,7 +2086,7 @@ long FindOutSphere (
     }
     else
     {
-        return ( m_BaseNode.OutSphere( dRadius, tFarthest, tIndices, t, m_ObjectStore, m_ObjectCollide
+        return ( (this->m_BaseNode).OutSphere( dRadius, tFarthest, tIndices, t, m_ObjectStore, m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                       , m_NodeVisits
 #endif
@@ -2101,7 +2129,7 @@ long LeftFindOutSphere (
     }
     else
     {
-        return ( m_BaseNode.LeftOutSphere( dRadius, tFarthest, t,
+        return ( (this->m_BaseNode).LeftOutSphere( dRadius, tFarthest, t,
                     m_ObjectStore, m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                       , m_NodeVisits
@@ -2129,7 +2157,7 @@ long LeftFindOutSphere (
     }
     else
     {
-        return ( m_BaseNode.LeftOutSphere( dRadius, tFarthest, tIndices, t, m_ObjectStore, m_ObjectCollide
+        return ( (this->m_BaseNode).LeftOutSphere( dRadius, tFarthest, tIndices, t, m_ObjectStore, m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                       , m_NodeVisits
 #endif
@@ -2180,7 +2208,7 @@ long FindInAnnulus (
     }
     else
     {
-        lReturn = this->m_BaseNode.InAnnulus( dRadius1, dRadius2, tAnnular, t, m_ObjectStore, m_ObjectCollide
+        lReturn =  (this->m_BaseNode).InAnnulus( dRadius1, dRadius2, tAnnular, t, m_ObjectStore, m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                              , m_NodeVisits
 #endif
@@ -2214,7 +2242,7 @@ long FindInAnnulus (
     }
     else
     {
-        lReturn = this->m_BaseNode.InAnnulus( dRadius1, dRadius2, tAnnular, tIndices, t, m_ObjectStore, m_ObjectCollide
+        lReturn =  (this->m_BaseNode).InAnnulus( dRadius1, dRadius2, tAnnular, tIndices, t, m_ObjectStore, m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                              , m_NodeVisits
 #endif
@@ -2266,7 +2294,7 @@ long LeftFindInAnnulus (
     }
     else
     {
-        lReturn = this->m_BaseNode.LeftInAnnulus( dRadius1, dRadius2, tAnnular, t, m_ObjectStore, m_ObjectCollide
+        lReturn =  (this->m_BaseNode).LeftInAnnulus( dRadius1, dRadius2, tAnnular, t, m_ObjectStore, m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                              , m_NodeVisits
 #endif
@@ -2300,7 +2328,7 @@ long LeftFindInAnnulus (
     }
     else
     {
-        lReturn = this->m_BaseNode.LeftInAnnulus( dRadius1, dRadius2, tAnnular, tIndices, t, m_ObjectStore, m_ObjectCollide
+        lReturn =  (this->m_BaseNode).LeftInAnnulus( dRadius1, dRadius2, tAnnular, tIndices, t, m_ObjectStore, m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                              , m_NodeVisits
 #endif
@@ -2346,7 +2374,7 @@ long FindK_NearestNeighbors ( const size_t k, const DistanceType& radius,  Outpu
     {
         std::vector<std::pair<DistanceType, T> > K_Storage;
         DistanceType dRadius = radius;
-        const long lFound = m_BaseNode.K_Near( k, dRadius, K_Storage, t, this->m_ObjectStore, this->m_ObjectCollide
+        const long lFound = (this->m_BaseNode).K_Near( k, dRadius, K_Storage, t, this->m_ObjectStore, this->m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                               , m_NodeVisits
 #endif
@@ -2376,7 +2404,7 @@ long FindK_NearestNeighbors ( const size_t k, const DistanceType& radius,
     {
         std::vector<triple<DistanceType, T, size_t> > K_Storage;
         DistanceType dRadius = radius;
-        const long lFound = m_BaseNode.K_Near( k, dRadius, K_Storage, t, this->m_ObjectStore, this->m_ObjectCollide
+        const long lFound = (this->m_BaseNode).K_Near( k, dRadius, K_Storage, t, this->m_ObjectStore, this->m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                               , m_NodeVisits
 #endif
@@ -2425,7 +2453,7 @@ long LeftFindK_NearestNeighbors ( const size_t k, const DistanceType& radius,  O
     {
         std::vector<std::pair<DistanceType, T> > K_Storage;
         DistanceType dRadius = radius;
-        const long lFound = m_BaseNode.LeftK_Near( k, dRadius, K_Storage, t, this->m_ObjectStore, this->m_ObjectCollide
+        const long lFound = (this->m_BaseNode).LeftK_Near( k, dRadius, K_Storage, t, this->m_ObjectStore, this->m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                               , m_NodeVisits
 #endif
@@ -2455,7 +2483,7 @@ long LeftFindK_NearestNeighbors ( const size_t k, const DistanceType& radius,
     {
         std::vector<triple<DistanceType, T, size_t> > K_Storage;
         DistanceType dRadius = radius;
-        const long lFound = m_BaseNode.LeftK_Near( k, dRadius, K_Storage, t, this->m_ObjectStore, this->m_ObjectCollide
+        const long lFound = (this->m_BaseNode).LeftK_Near( k, dRadius, K_Storage, t, this->m_ObjectStore, this->m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                               , m_NodeVisits
 #endif
@@ -2502,7 +2530,7 @@ long FindK_FarthestNeighbors ( const size_t k, OutputContainerType& tFarthest,  
     {
         std::vector<std::pair<DistanceType, T> > K_Storage;
         DistanceType dRadius = 0;
-        const long lFound = m_BaseNode.K_Far( k, dRadius, K_Storage, t, this->m_ObjectStore, this->m_ObjectCollide
+        const long lFound = (this->m_BaseNode).K_Far( k, dRadius, K_Storage, t, this->m_ObjectStore, this->m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                              , m_NodeVisits
 #endif
@@ -2530,7 +2558,7 @@ long FindK_FarthestNeighbors ( const size_t k, OutputContainerType& tFarthest, s
     {
         std::vector<triple<DistanceType, T, size_t> > K_Storage;
         DistanceType dRadius = 0;
-        const long lFound = m_BaseNode.K_Far( k, dRadius, K_Storage, t, this->m_ObjectStore, this->m_ObjectCollide
+        const long lFound = (this->m_BaseNode).K_Far( k, dRadius, K_Storage, t, this->m_ObjectStore, this->m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                              , m_NodeVisits
 #endif
@@ -2576,7 +2604,7 @@ long LeftFindK_FarthestNeighbors ( const size_t k, OutputContainerType& tFarthes
     {
         std::vector<std::pair<DistanceType, T> > K_Storage;
         DistanceType dRadius = 0;
-        const long lFound = m_BaseNode.LeftK_Far( k, dRadius, K_Storage, t, this->m_ObjectStore, this->m_ObjectCollide
+        const long lFound = (this->m_BaseNode).LeftK_Far( k, dRadius, K_Storage, t, this->m_ObjectStore, this->m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                              , m_NodeVisits
 #endif
@@ -2605,7 +2633,7 @@ long LeftFindK_FarthestNeighbors ( const size_t k, OutputContainerType& tFarthes
     {
         std::vector<triple<DistanceType, T, size_t> > K_Storage;
         DistanceType dRadius = 0;
-        const long lFound = m_BaseNode.LeftK_Far( k, dRadius, K_Storage, t, this->m_ObjectStore, this->m_ObjectCollide
+        const long lFound = (this->m_BaseNode).LeftK_Far( k, dRadius, K_Storage, t, this->m_ObjectStore, this->m_ObjectCollide
 #ifdef CNEARTREE_INSTRUMENTED
                                              , m_NodeVisits
 #endif
@@ -2667,7 +2695,7 @@ inline void CompleteDelayedInsert ( void )
     npass=0;
     while (ntarget > 0) {
         npass++;
-        errsize = (m_BaseNode.GetTreeSize())>>(-1+m_DeepestDepth);
+        errsize =  ((this->m_BaseNode).GetTreeSize())>>(-1+m_DeepestDepth);
         if ( errsize < 1 ) {
             size_t n = (size_t)((double)(vectorSize-1u) * (DistanceType)(rhr.urand()));
             rhr.urand( ); rhr.urand( );
@@ -2695,7 +2723,7 @@ inline void CompleteDelayedInsert ( void )
                 ntarget--;
                 added++;
                 if (added > 100 || added > npass*8) {
-                    errsize = (m_BaseNode.GetTreeSize())>>(-1+m_DeepestDepth);
+                    errsize =  ((this->m_BaseNode).GetTreeSize())>>(-1+m_DeepestDepth);
                     if (errsize < 1) break; 
                 }
             }
@@ -2706,7 +2734,7 @@ inline void CompleteDelayedInsert ( void )
     // insertions (fast way, faster than clear() )
     std::vector<long> DelayedPointersTemp;
     DelayedPointersTemp  .swap( m_DelayedIndices );
-    m_DiamEstimate = m_BaseNode.GetDiamEstimate(m_ObjectStore);
+    m_DiamEstimate = (this->m_BaseNode).GetDiamEstimate(m_ObjectStore);
 };
 //=======================================================================
 //  void CompleteDelayedInsertRandom ( void )
@@ -2748,7 +2776,7 @@ inline void CompleteDelayedInsertRandom ( void )
     // insertions (fast way, faster than clear() )
     std::vector<long> DelayedPointersTemp;
     DelayedPointersTemp.swap( m_DelayedIndices );
-    m_DiamEstimate = m_BaseNode.GetDiamEstimate(m_ObjectStore);
+    m_DiamEstimate = (this->m_BaseNode).GetDiamEstimate(m_ObjectStore);
 };
 
 //=======================================================================
@@ -3010,7 +3038,7 @@ size_t GetDepth ( void ) const
 size_t GetHeight ( void ) const
 {
 #ifdef CNEARTREE_INSTRUMENTED
-    return ( m_BaseNode.GetTreeHeight() );
+    return ( (this->m_BaseNode).GetTreeHeight() );
 #else
     return ( m_DeepestDepth );
 #endif
@@ -3113,10 +3141,10 @@ void insertDelayed ( const long n )
 {
     size_t localDepth = 0;
     if ((m_Flags & NTF_ForceFlip) || !(m_Flags & NTF_NoFlip)) {
-        m_BaseNode.InserterDelayed_Flip( n, localDepth, m_ObjectStore,
+        (this->m_BaseNode).InserterDelayed_Flip( n, localDepth, m_ObjectStore,
                     m_ObjectCollide, m_SumSpacings, m_SumSpacingsSq );
     } else {
-        m_BaseNode.InserterDelayed( n, localDepth, m_ObjectStore,
+        (this->m_BaseNode).InserterDelayed( n, localDepth, m_ObjectStore,
                     m_ObjectCollide, m_SumSpacings, m_SumSpacingsSq );
     }
     if ( localDepth > m_DeepestDepth ) m_DeepestDepth = localDepth;
@@ -3175,31 +3203,42 @@ DistanceTypeNode      m_dMaxLeft;      // longest distance from the left object 
 // anything below it in the tree
 DistanceTypeNode      m_dMaxRight;     // longest distance from the right object to
 // anything below it in the tree
-NearTreeNode *    m_pLeftBranch;       // tree descending from the left object
-NearTreeNode *    m_pRightBranch;      // tree descending from the right object
+size_t            m_pLeftBranch;       // tree descending from the left object
+size_t            m_pRightBranch;      // tree descending from the right object
 size_t            m_iTreeSize;         // size of this node tree
 #ifdef CNEARTREE_INSTRUMENTED
 mutable size_t    m_iHeight;           // height of the tree
 size_t            m_imultLeft;         // multiplicity at the left object position
 size_t            m_imultRight;        // multiplicity at the right object position
 #endif
+std::vector<NearTreeNode<T, DistanceType, distMinValue> * > &
+                    m_NearTreeNodes;     // vector of nodes to build the tree
+std::vector<T> &  m_ObjectStore;       // all inserted objects go here
+std::vector<size_t> &
+                    m_ObjectCollide;     // overflow chain of colliding objects
+
 
 
 public:
 
-NearTreeNode( void )   //  NearTreeNode constructor
+NearTreeNode( std::vector<NearTreeNode<T, DistanceType, distMinValue> * > & NearTreeNodes,
+             std::vector<T> &  ObjectStore,
+             std::vector<size_t> & ObjectCollide)
 : m_ptLeft            ( ULONG_MAX )
 , m_ptRight           ( ULONG_MAX )
 , m_dMaxLeft          ( DistanceTypeNode( distMinValueNode ) )
 , m_dMaxRight         ( DistanceTypeNode( distMinValueNode ) )
-, m_pLeftBranch       ( 0 )
-, m_pRightBranch      ( 0 )
+, m_pLeftBranch       ( ULONG_MAX )
+, m_pRightBranch      ( ULONG_MAX )
 , m_iTreeSize         ( 0 )
 #ifdef CNEARTREE_INSTRUMENTED
 , m_iHeight           ( 0 )
 , m_imultLeft         ( 0 )
 , m_imultRight        ( 0 )
 #endif
+, m_NearTreeNodes     (  NearTreeNodes )
+, m_ObjectStore       (  ObjectStore )
+, m_ObjectCollide     (  ObjectCollide )
 
 {
 };  //  NearTreeNode constructor
@@ -3207,68 +3246,23 @@ NearTreeNode( void )   //  NearTreeNode constructor
 //=======================================================================
 ~NearTreeNode( void )  //  NearTreeNode destructor
 {
-    NearTreeNode * left;
-    NearTreeNode * right;
-    std::vector<NearTreeNode *> desStack;
-    NearTreeNode * pc;
-    
-    pc = this;
-    
-    while ((void *)pc) {
-        if (pc->m_ptRight != ULONG_MAX || pc->m_ptLeft !=ULONG_MAX ) {
-            left = pc->m_pLeftBranch;
-            right = pc->m_pRightBranch;
-            pc->m_pLeftBranch  =0;
-            pc->m_pRightBranch =0;
-            if (pc != this) delete pc;
-            if ( left ) desStack.push_back(left);
-            if ( right ) desStack.push_back(right);
-        }
-        pc = 0;
-        if (!desStack.empty()){
-            pc = desStack.back();
-            desStack.pop_back();
-        }
-    }
 };  //  end NearTreeNode destructor
 
 //=======================================================================
 void clear( void )
 {
-    NearTreeNode * left;
-    NearTreeNode * right;
-    std::vector<NearTreeNode *> clearStack;
-    NearTreeNode * pc;
-    
-    pc = this;
-    
-    while ((void *)pc) {
-        if (pc->m_ptRight != ULONG_MAX || pc->m_ptLeft !=ULONG_MAX) {
-        left = pc->m_pLeftBranch;
-        right = pc->m_pRightBranch;
-        pc->m_pLeftBranch  =0;
-        pc->m_pRightBranch =0;
-        pc->m_ptLeft       = ULONG_MAX;
-        pc->m_ptRight      = ULONG_MAX;
-        pc->m_dMaxLeft     = DistanceTypeNode( distMinValueNode );
-        pc->m_dMaxRight    = DistanceTypeNode( distMinValueNode );
-        pc->m_iTreeSize    = 0;
+    this->m_pLeftBranch  =ULONG_MAX;
+    this->m_pRightBranch =ULONG_MAX;
+    this->m_ptLeft     = ULONG_MAX;
+    this->m_ptRight    = ULONG_MAX;
+    this->m_dMaxLeft   = DistanceTypeNode( distMinValueNode );
+    this->m_dMaxRight  = DistanceTypeNode( distMinValueNode );
+    this->m_iTreeSize  = 0;
 #ifdef CNEARTREE_INSTRUMENTED
-        pc->m_iHeight      = 0;
-        pc->m_imultLeft    = 0;
-        pc->m_imultRight   = 0;
+    this->m_iHeight    = 0;
+    this->m_imultLeft  = 0;
+    this->m_imultRight = 0;
 #endif
-            
-        if (pc != this) delete pc;
-        if ( left ) clearStack.push_back(left);
-        if ( right ) clearStack.push_back(right);
-        }
-        pc = 0;
-        if (!clearStack.empty()){
-           pc = clearStack.back();
-           clearStack.pop_back();
-        }
-    }
     
 
 };  //  end clear
@@ -3282,12 +3276,12 @@ inline size_t GetTreeSize( void ) const
 
 inline size_t GetLeftTreeSize( void ) const
 {
-    return (!m_pLeftBranch)?0:(m_pLeftBranch->m_iTreeSize);
+    return (m_pLeftBranch==ULONG_MAX)?0:(m_NearTreeNodes[m_pLeftBranch]->m_iTreeSize);
 }
 
 inline size_t GetRightTreeSize( void ) const
 {
-    return (!m_pRightBranch)?0:(m_pRightBranch->m_iTreeSize);
+    return (m_pRightBranch==ULONG_MAX)?0:(m_NearTreeNodes[m_pRightBranch]->m_iTreeSize);
 }
 
 inline size_t GetTreeHeight( void ) const
@@ -3364,6 +3358,7 @@ void InserterDelayed_Flip ( const long n, size_t & localDepth,
     DistanceTypeNode dTempRight =  DistanceTypeNode(0);
     DistanceTypeNode dTempLeft  =  DistanceTypeNode(0);
     DistanceTypeNode dTempLeftRight =  DistanceTypeNode(0);
+
     ++localDepth;
     ++m_iTreeSize;
 
@@ -3418,69 +3413,73 @@ void InserterDelayed_Flip ( const long n, size_t & localDepth,
 
     if ( dTempLeft > dTempRight )
     {
-        if ( m_pRightBranch == 0 ) {
-            m_pRightBranch = new NearTreeNode;
+        if ( m_pRightBranch == ULONG_MAX ) {
+            NearTreeNode * NTNnew =new NearTreeNode(m_NearTreeNodes,m_ObjectStore,m_ObjectCollide);
+            m_pRightBranch = m_NearTreeNodes.size();
+            m_NearTreeNodes.push_back(NTNnew);
         }
         // note that the next line assumes that m_dMaxRight is negative for a new node
         if ( m_dMaxRight < dTempRight ) m_dMaxRight = dTempRight;
         // If the left branch is empty, we are going to put something here
-        if ( m_pRightBranch->m_ptLeft == ULONG_MAX ) {
-            m_pRightBranch->m_ptLeft = n;
+        if ( m_NearTreeNodes[m_pRightBranch]->m_ptLeft == ULONG_MAX ) {
+            m_NearTreeNodes[m_pRightBranch]->m_ptLeft = n;
             objectCollide[n] = ULONG_MAX;
             SumSpacings += dTempRight;
             SumSpacingsSq += dTempRight*dTempRight;
             ++localDepth;
-            ++(m_pRightBranch->m_iTreeSize);
+            ++(m_NearTreeNodes[m_pRightBranch]->m_iTreeSize);
 #ifdef CNEARTREE_INSTRUMENTED
-            m_pRightBranch->m_iHeight = 1;
+            m_NearTreeNodes[m_pRightBranch]->m_iHeight = 1;
             if (m_iHeight < 2) m_iHeight = 2;
-            m_pRightBranch->m_imultLeft = 1;
+            m_NearTreeNodes[m_pRightBranch]->m_imultLeft = 1;
 #endif
             // See if it would be better to put the new node at this level and drop the current
             // Right node down one level
             if (dTempRight > dTempLeftRight) {
-                m_pRightBranch->m_ptLeft = m_ptRight;
+                m_NearTreeNodes[m_pRightBranch]->m_ptLeft = m_ptRight;
 #ifdef CNEARTREE_INSTRUMENTED
-                m_pRightBranch->m_imultLeft = m_imultRight;
+                m_NearTreeNodes[m_pRightBranch]->m_imultLeft = m_imultRight;
                 m_imultRight = 1;
 #endif
                 m_ptRight = n;
             }
             return;
         }        
-        m_pRightBranch->InserterDelayed_Flip( n, localDepth,
+        m_NearTreeNodes[m_pRightBranch]->InserterDelayed_Flip( n, localDepth,
                 objectStore, objectCollide, SumSpacings, SumSpacingsSq );
 #ifdef CNEARTREE_INSTRUMENTED
-        m_iHeight = 1+m_pRightBranch->m_iHeight;
-        if (m_pLeftBranch && m_pLeftBranch->m_iHeight >= m_iHeight) m_iHeight = 1+m_pLeftBranch->m_iHeight;
+        m_iHeight = 1+m_NearTreeNodes[m_pRightBranch]->m_iHeight;
+        if (m_pLeftBranch!=ULONG_MAX && m_NearTreeNodes[m_pLeftBranch]->m_iHeight >= m_iHeight) m_iHeight = 1+m_NearTreeNodes[m_pLeftBranch]->m_iHeight;
 #endif
     }
     else  // ((DistanceTypeNode)(t - *m_tLeft) <= (DistanceTypeNode)(t - *m_tRight) )
     {
-        if ( m_pLeftBranch  == 0 )  {
-            m_pLeftBranch  = new NearTreeNode;
+        if ( m_pLeftBranch  == ULONG_MAX )  {
+            NearTreeNode * NTNnew =new NearTreeNode(m_NearTreeNodes,m_ObjectStore,m_ObjectCollide);
+            m_pLeftBranch = m_NearTreeNodes.size();
+            m_NearTreeNodes.push_back(NTNnew);
         }
         // note that the next line assumes that m_dMaxLeft is negative for a new node
         if ( m_dMaxLeft < dTempLeft ) m_dMaxLeft  = dTempLeft;
         // If the left branch is empty, we are going to put something here
-        if ( m_pLeftBranch->m_ptLeft == ULONG_MAX ) {
-            m_pLeftBranch->m_ptLeft = n;
+        if ( m_NearTreeNodes[m_pLeftBranch]->m_ptLeft == ULONG_MAX ) {
+            m_NearTreeNodes[m_pLeftBranch]->m_ptLeft = n;
             objectCollide[n] = ULONG_MAX;
             SumSpacings += dTempLeft;
             SumSpacingsSq += dTempLeft*dTempLeft;
             ++localDepth;
-            ++(m_pLeftBranch->m_iTreeSize);
+            ++(m_NearTreeNodes[m_pLeftBranch]->m_iTreeSize);
 #ifdef CNEARTREE_INSTRUMENTED
-            m_pLeftBranch->m_iHeight = 1;
+            m_NearTreeNodes[m_pLeftBranch]->m_iHeight = 1;
             if (m_iHeight < 2) m_iHeight = 2;
-            m_pLeftBranch->m_imultLeft = 1;
+            m_NearTreeNodes[m_pLeftBranch]->m_imultLeft = 1;
 #endif
             // See if it would be better to put the new node at this level and drop the current
             // Left node down one level
             if (dTempLeft > dTempLeftRight) {
-                m_pLeftBranch->m_ptLeft = m_ptLeft;
+                m_NearTreeNodes[m_pLeftBranch]->m_ptLeft = m_ptLeft;
 #ifdef CNEARTREE_INSTRUMENTED
-                m_pLeftBranch->m_imultLeft = m_imultLeft;
+                m_NearTreeNodes[m_pLeftBranch]->m_imultLeft = m_imultLeft;
                 m_imultLeft = 1;
 #endif
                 m_ptLeft = n;
@@ -3488,11 +3487,11 @@ void InserterDelayed_Flip ( const long n, size_t & localDepth,
             return;
         }        
         
-        m_pLeftBranch->InserterDelayed_Flip( n, localDepth,
+        m_NearTreeNodes[m_pLeftBranch]->InserterDelayed_Flip( n, localDepth,
                 objectStore, objectCollide, SumSpacings, SumSpacingsSq );
 #ifdef CNEARTREE_INSTRUMENTED
-        m_iHeight = 1+m_pLeftBranch->m_iHeight;
-        if (m_pRightBranch && m_pRightBranch->m_iHeight >= m_iHeight) m_iHeight = 1+m_pRightBranch->m_iHeight;
+        m_iHeight = 1+m_NearTreeNodes[m_pLeftBranch]->m_iHeight;
+        if (m_pRightBranch!=ULONG_MAX && m_NearTreeNodes[m_pRightBranch]->m_iHeight >= m_iHeight) m_iHeight = 1+m_NearTreeNodes[m_pRightBranch]->m_iHeight;
 #endif
     }
 }  //   end InserterDelayed_Flip
@@ -3562,60 +3561,64 @@ void InserterDelayed_Flip ( const long n, size_t & localDepth,
     if ( dTempLeft > dTempRight )
     {
 
-        if ( m_pRightBranch == 0 ) {
-            m_pRightBranch = new NearTreeNode;
+        if ( m_pRightBranch == ULONG_MAX ) {
+            NearTreeNode * NTNnew =new NearTreeNode(m_NearTreeNodes,m_ObjectStore,m_ObjectCollide);
+            m_pRightBranch = m_NearTreeNodes.size();
+            m_NearTreeNodes.push_back(NTNnew);
         }
         // note that the next line assumes that m_dMaxRight is negative for a new node
         if ( m_dMaxRight < dTempRight ) m_dMaxRight = dTempRight;
         // If the left branch is empty, we are going to put something here
-        if ( m_pRightBranch->m_ptLeft == ULONG_MAX) {
-            m_pRightBranch->m_ptLeft = n;
+        if ( m_NearTreeNodes[m_pRightBranch]->m_ptLeft == ULONG_MAX) {
+            m_NearTreeNodes[m_pRightBranch]->m_ptLeft = n;
             objectCollide[n] = ULONG_MAX;
             SumSpacings += dTempRight;
             SumSpacingsSq += dTempRight*dTempRight;
             ++localDepth;
-            ++(m_pRightBranch->m_iTreeSize);
+            ++(m_NearTreeNodes[m_pRightBranch]->m_iTreeSize);
 #ifdef CNEARTREE_INSTRUMENTED
-            m_pRightBranch->m_iHeight = 1;
+            m_NearTreeNodes[m_pRightBranch]->m_iHeight = 1;
             if (m_iHeight < 2) m_iHeight = 2;
-            m_pRightBranch->m_imultLeft = 1;
+            m_NearTreeNodes[m_pRightBranch]->m_imultLeft = 1;
 #endif
             return;
         }
-        m_pRightBranch->InserterDelayed( n, localDepth, objectStore,
+        m_NearTreeNodes[m_pRightBranch]->InserterDelayed( n, localDepth, objectStore,
             objectCollide, SumSpacings, SumSpacingsSq );
 #ifdef CNEARTREE_INSTRUMENTED
-        m_iHeight = 1+m_pRightBranch->m_iHeight;
-        if (m_pLeftBranch && m_pLeftBranch->m_iHeight >= m_iHeight) m_iHeight = 1+m_pLeftBranch->m_iHeight;
+        m_iHeight = 1+m_NearTreeNodes[m_pRightBranch]->m_iHeight;
+        if (m_pLeftBranch!=ULONG_MAX && m_NearTreeNodes[m_pLeftBranch]->m_iHeight >= m_iHeight) m_iHeight = 1+m_NearTreeNodes[m_pLeftBranch]->m_iHeight;
 #endif
     }
     else  // ((DistanceTypeNode)(t - *m_tLeft) <= (DistanceTypeNode)(t - *m_tRight) )
     {
-        if ( m_pLeftBranch  == 0 ) {
-            m_pLeftBranch  = new NearTreeNode;
+        if ( m_pLeftBranch  == ULONG_MAX ) {
+            NearTreeNode * NTNnew =new NearTreeNode(m_NearTreeNodes,m_ObjectStore,m_ObjectCollide);
+            m_pLeftBranch = m_NearTreeNodes.size();
+            m_NearTreeNodes.push_back(NTNnew);
         }
         // note that the next line assumes that m_dMaxLeft is negative for a new node
         if ( m_dMaxLeft < dTempLeft ) m_dMaxLeft  = dTempLeft;
         // If the left branch is empty, we are going to put something here
-        if ( m_pLeftBranch->m_ptLeft == ULONG_MAX ) {
-            m_pLeftBranch->m_ptLeft = n;
+        if ( m_NearTreeNodes[m_pLeftBranch]->m_ptLeft == ULONG_MAX ) {
+            m_NearTreeNodes[m_pLeftBranch]->m_ptLeft = n;
             objectCollide[n] = ULONG_MAX;
             SumSpacings += dTempLeft;
             SumSpacingsSq += dTempLeft*dTempLeft;
             ++localDepth;
-            ++(m_pLeftBranch->m_iTreeSize);
+            ++(m_NearTreeNodes[m_pLeftBranch]->m_iTreeSize);
 #ifdef CNEARTREE_INSTRUMENTED
-            m_pLeftBranch->m_iHeight = 1;
+            m_NearTreeNodes[m_pLeftBranch]->m_iHeight = 1;
             if (m_iHeight < 2) m_iHeight = 2;
-            m_pLeftBranch->m_imultLeft = 1;
+            m_NearTreeNodes[m_pLeftBranch]->m_imultLeft = 1;
 #endif
             return;
         }        
-        m_pLeftBranch->InserterDelayed( n, localDepth,
+        m_NearTreeNodes[m_pLeftBranch]->InserterDelayed( n, localDepth,
             objectStore, objectCollide, SumSpacings, SumSpacingsSq );
 #ifdef CNEARTREE_INSTRUMENTED
-        m_iHeight = 1+m_pLeftBranch->m_iHeight;
-        if (m_pRightBranch && m_pRightBranch->m_iHeight >= m_iHeight) m_iHeight = 1+m_pRightBranch->m_iHeight;
+        m_iHeight = 1+m_NearTreeNodes[m_pLeftBranch]->m_iHeight;
+        if (m_pRightBranch!=ULONG_MAX && m_NearTreeNodes[m_pRightBranch]->m_iHeight >= m_iHeight) m_iHeight = 1+m_NearTreeNodes[m_pRightBranch]->m_iHeight;
 #endif
     }
 }  //   end InserterDelayed
@@ -3649,9 +3652,9 @@ void ReInserter_Flip ( const NearTreeNode * pntn, size_t& localDepth, std::vecto
     if ( pntn->m_ptLeft != ULONG_MAX) 
         InserterDelayed_Flip( pntn->m_ptLeft, tempdepth2, objectStore, SumSpacings, SumSpacingsSq );
 
-    if ( pntn->m_pLeftBranch ) ReInserter_Flip(pntn->m_pLeftBranch, tempdepth3, objectStore );
+    if ( pntn->m_pLeftBranch ) ReInserter_Flip(m_NearTreeNodes[pntn->m_pLeftBranch], tempdepth3, objectStore );
 
-    if ( pntn->m_pRightBranch ) ReInserter_Flip(pntn->m_pRightBranch, tempdepth4, objectStore );
+    if ( pntn->m_pRightBranch ) ReInserter_Flip(m_NearTreeNodes[pntn->m_pRightBranch], tempdepth4, objectStore );
     
     localDepth = tempdepth1>localDepth?tempdepth1:localDepth;
     localDepth = tempdepth2>localDepth?tempdepth2:localDepth;
@@ -3688,9 +3691,10 @@ bool Nearest (
 #endif
               ) const
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     DistanceTypeNode dDL=DistanceTypeNode(0), dDR=DistanceTypeNode(0);
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
     pClosest = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     ++VisitCount;
@@ -3702,7 +3706,12 @@ bool Nearest (
     {
         if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
             if (!sStack.empty( )) {
-                pt = sStack.back();
+                qt = sStack.back();
+                if (qt != ULONG_MAX) {
+                    pt = m_NearTreeNodes[qt];
+                } else {
+                    pt = const_cast<NearTreeNode*>(this);
+                }
                 sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
@@ -3736,13 +3745,14 @@ bool Nearest (
          on the stack, and process the other one based on which one seems
          smaller, but useful first]
          */
-        if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
-            if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight || pt->m_pRightBranch == 0) {
+        if (pt->m_pLeftBranch != ULONG_MAX && pt->m_pRightBranch != ULONG_MAX ) {
+            if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight || pt->m_pRightBranch == ULONG_MAX) {
                 if ( TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
                     if ( TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
                         sStack.push_back(pt->m_pRightBranch);
                     }
-                    pt = pt->m_pLeftBranch;
+                    qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
 #endif                                
@@ -3760,7 +3770,8 @@ bool Nearest (
                 if ( TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
                     sStack.push_back(pt->m_pLeftBranch);
                 }
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif                
@@ -3770,16 +3781,18 @@ bool Nearest (
         
         /* Only one branch is viable, try them one at a time
          */
-        if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
-            pt = pt->m_pLeftBranch;
+        if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
+            qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
             continue;
         }
         
-        if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
-            pt = pt->m_pRightBranch;
+        if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
+            qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
@@ -3789,7 +3802,12 @@ bool Nearest (
         /* We have procesed both sides, we need to go to the stack */
         
         if (!sStack.empty( )) {
-            pt = sStack.back();
+            qt = sStack.back();
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
             sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
@@ -3800,7 +3818,7 @@ bool Nearest (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        std::vector <NearTreeNode* > sTemp;
+        std::vector <size_t > sTemp;
         sTemp.swap( sStack );
     }
     if ( pClosest != ULONG_MAX )
@@ -3838,10 +3856,11 @@ bool LeftNearest (
 #endif
               ) const
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     enum  { left, right, end } eDir;
     eDir = left; // examine the left nodes first
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
     pClosest = ULONG_MAX;
     if ( pt->m_ptLeft == ULONG_MAX) return false; // test for empty
 #ifdef CNEARTREE_INSTRUMENTED
@@ -3857,9 +3876,10 @@ bool LeftNearest (
                 dRadius = dDR;
                 pClosest = pt->m_ptRight;
             }
-            if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius))
+            if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dDR,pt->m_dMaxRight,dRadius))
             { // we did the left and now we finished the right, go down
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
                 eDir = left;
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
@@ -3880,14 +3900,15 @@ bool LeftNearest (
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
-                sStack.push_back( pt );
+                sStack.push_back( qt );
             }
-            if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,pt->m_dMaxLeft,dRadius))
+            if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dDL,pt->m_dMaxLeft,dRadius))
             { // we did the left, go down
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
-                pt = pt->m_pLeftBranch;
+                qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
             }
             else
             {
@@ -3897,7 +3918,12 @@ bool LeftNearest (
         
         if ( eDir == end && !sStack.empty( ) )
         {
-            pt = sStack.back( );
+            qt = sStack.back( );
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif            
@@ -3907,7 +3933,7 @@ bool LeftNearest (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        std::vector <NearTreeNode* > sTemp;
+        std::vector <size_t > sTemp;
         sTemp.swap( sStack );
     }
     if ( pClosest != ULONG_MAX )
@@ -3940,9 +3966,10 @@ bool Farthest (
 #endif
                ) const
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     DistanceTypeNode dDL=DistanceTypeNode(0), dDR=DistanceTypeNode(0);
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
     pFarthest = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     ++VisitCount;
@@ -3954,7 +3981,12 @@ bool Farthest (
     {
         if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
             if (!sStack.empty( )) {
-                pt = sStack.back();
+                qt = sStack.back();
+                if (qt != ULONG_MAX) {
+                    pt = m_NearTreeNodes[qt];
+                } else {
+                    pt = const_cast<NearTreeNode*>(this);
+                }
                 sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
@@ -3988,13 +4020,14 @@ bool Farthest (
          on the stack, and process the other one based on which one seems
          larger, but useful first]
          */
-        if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
-            if (dDL+pt->m_dMaxLeft > dDR+pt->m_dMaxRight || pt->m_pRightBranch == 0) {
+        if (pt->m_pLeftBranch != ULONG_MAX && pt->m_pRightBranch != ULONG_MAX ) {
+            if (dDL+pt->m_dMaxLeft > dDR+pt->m_dMaxRight || pt->m_pRightBranch == ULONG_MAX) {
                 if ( TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
                     if ( TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
                         sStack.push_back(pt->m_pRightBranch);
                     }
-                    pt = pt->m_pLeftBranch;
+                    qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
 #endif                                
@@ -4012,7 +4045,8 @@ bool Farthest (
                 if ( TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
                     sStack.push_back(pt->m_pLeftBranch);
                 }
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif                
@@ -4022,16 +4056,18 @@ bool Farthest (
         
         /* Only one branch is viable, try them one at a time
          */
-        if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
-            pt = pt->m_pLeftBranch;
+        if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
+            qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
             continue;
         }
         
-        if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
-            pt = pt->m_pRightBranch;
+        if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
+            qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
@@ -4041,7 +4077,12 @@ bool Farthest (
         /* We have procesed both sides, we need to go to the stack */
         
         if (!sStack.empty( )) {
-            pt = sStack.back();
+            qt = sStack.back();
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
             sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
@@ -4052,7 +4093,7 @@ bool Farthest (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        std::vector <NearTreeNode* > sTemp;
+        std::vector <size_t > sTemp;
         sTemp.swap( sStack );
     }
     if ( pFarthest != ULONG_MAX )
@@ -4087,10 +4128,11 @@ bool LeftFarthest (
 #endif
                ) const
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     enum  { left, right, end } eDir;
     eDir = left; // examine the left nodes first
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
     pFarthest = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     ++VisitCount;
@@ -4106,9 +4148,10 @@ bool LeftFarthest (
                 dRadius = dDR;
                 pFarthest = pt->m_ptRight;
             }
-            if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight))
+            if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dRadius,dDR,pt->m_dMaxRight))
             { // we did the left and now we finished the right, go down
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif                            
@@ -4129,11 +4172,12 @@ bool LeftFarthest (
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
-                sStack.push_back( pt );
+                sStack.push_back( qt );
             }
-            if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
+            if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
             { // we did the left, go down
-                pt = pt->m_pLeftBranch;
+                qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif                            
@@ -4146,7 +4190,12 @@ bool LeftFarthest (
         
         if ( eDir == end && !sStack.empty( ) )
         {
-            pt = sStack.back( );
+            qt = sStack.back( );
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
@@ -4156,7 +4205,7 @@ bool LeftFarthest (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        std::vector <NearTreeNode* > sTemp;
+        std::vector <size_t > sTemp;
         sTemp.swap( sStack );
     }
     if ( pFarthest != ULONG_MAX )
@@ -4198,9 +4247,10 @@ long InSphere (
 #endif
                ) const
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     DistanceTypeNode dDL=DistanceTypeNode(0), dDR=DistanceTypeNode(0);
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -4212,7 +4262,12 @@ long InSphere (
     {
         if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
             if (!sStack.empty( )) {
-                pt = sStack.back();
+                qt = sStack.back();
+                if (qt != ULONG_MAX) {
+                    pt = m_NearTreeNodes[qt];
+                } else {
+                    pt = const_cast<NearTreeNode*>(this);
+                }
                 sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
@@ -4282,13 +4337,14 @@ long InSphere (
          on the stack, and process the other one based on which one seems
          smaller, but useful first]
          */
-        if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
-            if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight || pt->m_pRightBranch == 0) {
+        if (pt->m_pLeftBranch != ULONG_MAX && pt->m_pRightBranch != ULONG_MAX ) {
+            if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight || pt->m_pRightBranch == ULONG_MAX) {
                 if ( TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
                     if ( TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
                         sStack.push_back(pt->m_pRightBranch);
                     }
-                    pt = pt->m_pLeftBranch;
+                    qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
 #endif                                
@@ -4306,7 +4362,8 @@ long InSphere (
                 if ( TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
                     sStack.push_back(pt->m_pLeftBranch);
                 }
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif                
@@ -4316,16 +4373,18 @@ long InSphere (
         
         /* Only one branch is viable, try them one at a time
          */
-        if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
-            pt = pt->m_pLeftBranch;
+        if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
+            qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
             continue;
         }
         
-        if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
-            pt = pt->m_pRightBranch;
+        if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
+            qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
@@ -4335,7 +4394,12 @@ long InSphere (
         /* We have procesed both sides, we need to go to the stack */
         
         if (!sStack.empty( )) {
-            pt = sStack.back();
+            qt = sStack.back();
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
             sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
@@ -4346,7 +4410,7 @@ long InSphere (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        std::vector <NearTreeNode* > sTemp;
+        std::vector <size_t > sTemp;
         sTemp.swap( sStack );
     }
     return ( (long)tClosest.size() );
@@ -4367,9 +4431,10 @@ long InSphere (
 #endif
                ) const
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     DistanceTypeNode dDL=0., dDR=0.;
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -4381,7 +4446,12 @@ long InSphere (
     {
         if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
             if (!sStack.empty( )) {
-                pt = sStack.back();
+                qt = sStack.back();
+                if (qt != ULONG_MAX) {
+                    pt = m_NearTreeNodes[qt];
+                } else {
+                    pt = const_cast<NearTreeNode*>(this);
+                }
                 sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
@@ -4457,13 +4527,14 @@ long InSphere (
          on the stack, and process the other one based on which one seems
          smaller, but useful first]
          */
-        if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
-            if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight || pt->m_pRightBranch == 0) {
+        if (pt->m_pLeftBranch != ULONG_MAX && pt->m_pRightBranch != ULONG_MAX ) {
+            if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight || pt->m_pRightBranch == ULONG_MAX) {
                 if ( TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
                     if ( TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
                         sStack.push_back(pt->m_pRightBranch);
                     }
-                    pt = pt->m_pLeftBranch;
+                    qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
 #endif                                
@@ -4481,7 +4552,8 @@ long InSphere (
                 if ( TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
                     sStack.push_back(pt->m_pLeftBranch);
                 }
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif                
@@ -4491,16 +4563,18 @@ long InSphere (
         
         /* Only one branch is viable, try them one at a time
          */
-        if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
-            pt = pt->m_pLeftBranch;
+        if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
+            qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
             continue;
         }
         
-        if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
-            pt = pt->m_pRightBranch;
+        if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
+            qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
@@ -4510,7 +4584,12 @@ long InSphere (
         /* We have procesed both sides, we need to go to the stack */
         
         if (!sStack.empty( )) {
-            pt = sStack.back();
+            qt = sStack.back();
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
             sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
@@ -4521,7 +4600,7 @@ long InSphere (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        std::vector <NearTreeNode* > sTemp;
+        std::vector <size_t > sTemp;
         sTemp.swap( sStack );
     }
     return ( (long)tClosest.size() );
@@ -4564,10 +4643,11 @@ long LeftInSphere (
 #endif
                ) const
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     enum  { left, right, end } eDir;
     eDir = left; // examine the left nodes first
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
     if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
@@ -4602,9 +4682,10 @@ long LeftInSphere (
 #endif
 
            }
-            if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
+            if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
             { // we did the left and now we finished the right, go down
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -4643,11 +4724,12 @@ long LeftInSphere (
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
-                sStack.push_back( pt );
+                sStack.push_back( qt );
             }
-            if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,pt->m_dMaxLeft,dRadius) )
+            if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dDL,pt->m_dMaxLeft,dRadius) )
             { // we did the left, go down
-                pt = pt->m_pLeftBranch;
+                qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -4660,7 +4742,12 @@ long LeftInSphere (
         
         if ( eDir == end && !sStack.empty( ) )
         {
-            pt = sStack.back( );
+            qt = sStack.back( );
+            if (qt != ULONG_MAX) {
+              pt = m_NearTreeNodes[qt];
+            } else {
+              pt = const_cast<NearTreeNode*>(this);
+            }
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif            
@@ -4685,10 +4772,11 @@ long LeftInSphere (
 #endif
                ) const
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     enum  { left, right, end } eDir;
     eDir = left; // examine the left nodes first
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -4724,9 +4812,10 @@ long LeftInSphere (
                 }
 #endif
             }
-            if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
+            if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
             { // we did the left and now we finished the right, go down
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -4767,11 +4856,12 @@ long LeftInSphere (
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
-                sStack.push_back( pt );
+                sStack.push_back( qt );
             }
-            if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,pt->m_dMaxLeft,dRadius) )
+            if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dDL,pt->m_dMaxLeft,dRadius) )
             { // we did the left, go down
-                pt = pt->m_pLeftBranch;
+                qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -4784,7 +4874,12 @@ long LeftInSphere (
         
         if ( eDir == end && !sStack.empty( ) )
         {
-            pt = sStack.back( );
+            qt = sStack.back( );
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif            
@@ -4830,9 +4925,10 @@ long OutSphere (
 #endif
                 ) const
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     DistanceTypeNode dDL=0., dDR=0.;
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -4844,8 +4940,15 @@ long OutSphere (
     {
         if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
             if (!sStack.empty( )) {
-                pt = sStack.back();
+                qt = sStack.back();
+                if (qt != ULONG_MAX) {
+                    pt = m_NearTreeNodes[qt];
+                } else {
+                    pt = const_cast<NearTreeNode*>(this);
+                }
+
                 sStack.pop_back();
+
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif                
@@ -4912,13 +5015,14 @@ long OutSphere (
          on the stack, and process the other one based on which one seems
          larger, but useful first]
          */
-        if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
-            if (dDL+pt->m_dMaxLeft > dDR+pt->m_dMaxRight || pt->m_pRightBranch == 0) {
+        if (pt->m_pLeftBranch != ULONG_MAX && pt->m_pRightBranch != ULONG_MAX ) {
+            if (dDL+pt->m_dMaxLeft > dDR+pt->m_dMaxRight || pt->m_pRightBranch == ULONG_MAX) {
                 if ( TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
                     if ( TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
                         sStack.push_back(pt->m_pRightBranch);
                     }
-                    pt = pt->m_pLeftBranch;
+                    qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
 #endif                                
@@ -4936,7 +5040,8 @@ long OutSphere (
                 if ( TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
                     sStack.push_back(pt->m_pLeftBranch);
                 }
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif                
@@ -4946,16 +5051,18 @@ long OutSphere (
         
         /* Only one branch is viable, try them one at a time
          */
-        if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
-            pt = pt->m_pLeftBranch;
+        if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
+            qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
             continue;
         }
         
-        if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
-            pt = pt->m_pRightBranch;
+        if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
+            qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
@@ -4965,7 +5072,12 @@ long OutSphere (
         /* We have procesed both sides, we need to go to the stack */
         
         if (!sStack.empty( )) {
-            pt = sStack.back();
+            qt = sStack.back();
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
             sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
@@ -4976,7 +5088,7 @@ long OutSphere (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        std::vector <NearTreeNode* > sTemp;
+        std::vector <size_t > sTemp;
         sTemp.swap( sStack );
     }
     return ( (long)tFarthest.size() );
@@ -4996,9 +5108,10 @@ long OutSphere (
 #endif
                 ) const
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     DistanceTypeNode dDL=0., dDR=0.;
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -5010,7 +5123,12 @@ long OutSphere (
     {
         if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
             if (!sStack.empty( )) {
-                pt = sStack.back();
+                qt = sStack.back();
+                if (qt != ULONG_MAX) {
+                    pt = m_NearTreeNodes[qt];
+                } else {
+                    pt = const_cast<NearTreeNode*>(this);
+                }
                 sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
@@ -5083,13 +5201,14 @@ long OutSphere (
          on the stack, and process the other one based on which one seems
          larger, but useful first]
          */
-        if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
-            if (dDL+pt->m_dMaxLeft > dDR+pt->m_dMaxRight || pt->m_pRightBranch == 0) {
+        if (pt->m_pLeftBranch != ULONG_MAX && pt->m_pRightBranch != ULONG_MAX ) {
+            if (dDL+pt->m_dMaxLeft > dDR+pt->m_dMaxRight || pt->m_pRightBranch == ULONG_MAX) {
                 if ( TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
                     if ( TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
                         sStack.push_back(pt->m_pRightBranch);
                     }
-                    pt = pt->m_pLeftBranch;
+                    qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
 #endif                                
@@ -5107,7 +5226,8 @@ long OutSphere (
                 if ( TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
                     sStack.push_back(pt->m_pLeftBranch);
                 }
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif                
@@ -5117,16 +5237,18 @@ long OutSphere (
         
         /* Only one branch is viable, try them one at a time
          */
-        if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
-            pt = pt->m_pLeftBranch;
+        if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
+            qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
             continue;
         }
         
-        if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
-            pt = pt->m_pRightBranch;
+        if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
+            qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
@@ -5136,7 +5258,12 @@ long OutSphere (
         /* We have procesed both sides, we need to go to the stack */
         
         if (!sStack.empty( )) {
-            pt = sStack.back();
+            qt = sStack.back();
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
             sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
@@ -5147,7 +5274,7 @@ long OutSphere (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        std::vector <NearTreeNode* > sTemp;
+        std::vector <size_t > sTemp;
         sTemp.swap( sStack );
     }
     return ( (long)tFarthest.size() );
@@ -5187,10 +5314,11 @@ long LeftOutSphere (
 #endif
                 ) const
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     enum  { left, right, end } eDir;
     eDir = left; // examine the left nodes first
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -5223,9 +5351,10 @@ long LeftOutSphere (
                 }
 #endif
             }
-            if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
+            if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
             { // we did the left and now we finished the right, go down
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -5264,11 +5393,12 @@ long LeftOutSphere (
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
-                sStack.push_back( pt );
+                sStack.push_back( qt );
             }
-            if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
+            if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
             { // we did the left, go down
-                pt = pt->m_pLeftBranch;
+                qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -5281,7 +5411,12 @@ long LeftOutSphere (
         
         if ( eDir == end && !sStack.empty( ) )
         {
-            pt = sStack.back( );
+            qt = sStack.back( );
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif            
@@ -5306,10 +5441,11 @@ long LeftOutSphere (
 #endif
                 ) const
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     enum  { left, right, end } eDir;
     eDir = left; // examine the left nodes first
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -5344,9 +5480,10 @@ long LeftOutSphere (
                 }
 #endif
             }
-            if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
+            if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
             { // we did the left and now we finished the right, go down
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -5386,11 +5523,12 @@ long LeftOutSphere (
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
-                sStack.push_back( pt );
+                sStack.push_back( qt );
             }
-            if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
+            if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
             { // we did the left, go down
-                pt = pt->m_pLeftBranch;
+                qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -5403,7 +5541,12 @@ long LeftOutSphere (
         
         if ( eDir == end && !sStack.empty( ) )
         {
-            pt = sStack.back( );
+            qt = sStack.back( );
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif            
@@ -5445,9 +5588,10 @@ long InAnnulus (
 #endif
                 ) const
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     DistanceTypeNode dDL=0., dDR=0.;
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -5459,7 +5603,12 @@ long InAnnulus (
     {
         if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
             if (!sStack.empty( )) {
-                pt = sStack.back();
+                qt = sStack.back();
+                if (qt != ULONG_MAX) {
+                    pt = m_NearTreeNodes[qt];
+                } else {
+                    pt = const_cast<NearTreeNode*>(this);
+                }
                 sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
@@ -5527,13 +5676,14 @@ long InAnnulus (
          on the stack, and process the other one based on which one seems
          closer, but useful first
          */
-        if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
-            if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight || pt->m_pRightBranch == 0) {
+        if (pt->m_pLeftBranch != ULONG_MAX && pt->m_pRightBranch != ULONG_MAX ) {
+            if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight || pt->m_pRightBranch == ULONG_MAX) {
                 if ( (TRIANG(dRadius1,dDL,pt->m_dMaxLeft)) && (TRIANG(dDL,pt->m_dMaxLeft,dRadius2)  )) {
                     if ( (TRIANG(dRadius1,dDR,pt->m_dMaxRight)) && (TRIANG(dDR,pt->m_dMaxRight,dRadius2) )) {
                         sStack.push_back(pt->m_pRightBranch);
                     }
-                    pt = pt->m_pLeftBranch;
+                    qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
 #endif                                
@@ -5551,7 +5701,8 @@ long InAnnulus (
                 if ( (TRIANG(dRadius1,dDL,pt->m_dMaxLeft)) && (TRIANG(dDL,pt->m_dMaxLeft,dRadius2)  )) {
                     sStack.push_back(pt->m_pLeftBranch);
                 }
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif                
@@ -5561,16 +5712,18 @@ long InAnnulus (
         
         /* Only one branch is viable, try them one at a time
          */
-        if ( pt->m_pLeftBranch != 0 && (TRIANG(dRadius1,dDL,pt->m_dMaxLeft)) && (TRIANG(dDL,pt->m_dMaxLeft,dRadius2)  )) {
-            pt = pt->m_pLeftBranch;
+        if ( pt->m_pLeftBranch != ULONG_MAX && (TRIANG(dRadius1,dDL,pt->m_dMaxLeft)) && (TRIANG(dDL,pt->m_dMaxLeft,dRadius2)  )) {
+            qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
             continue;
         }
         
-        if ( pt->m_pRightBranch != 0 && (TRIANG(dRadius1,dDR,pt->m_dMaxRight)) && (TRIANG(dDR,pt->m_dMaxRight,dRadius2) )) {
-            pt = pt->m_pRightBranch;
+        if ( pt->m_pRightBranch != ULONG_MAX && (TRIANG(dRadius1,dDR,pt->m_dMaxRight)) && (TRIANG(dDR,pt->m_dMaxRight,dRadius2) )) {
+            qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
@@ -5580,7 +5733,12 @@ long InAnnulus (
         /* We have procesed both sides, we need to go to the stack */
         
         if (!sStack.empty( )) {
-            pt = sStack.back();
+            qt = sStack.back();
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
             sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
@@ -5591,7 +5749,7 @@ long InAnnulus (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        std::vector <NearTreeNode* > sTemp;
+        std::vector <size_t > sTemp;
         sTemp.swap( sStack );
     }
     return ( (long)tAnnular.size() );
@@ -5612,9 +5770,10 @@ long InAnnulus (
 #endif
                 ) const
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     DistanceTypeNode dDL=0., dDR=0.;
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -5626,7 +5785,12 @@ long InAnnulus (
     {
         if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
             if (!sStack.empty( )) {
-                pt = sStack.back();
+                qt = sStack.back();
+                if (qt != ULONG_MAX) {
+                    pt = m_NearTreeNodes[qt];
+                } else {
+                    pt = const_cast<NearTreeNode*>(this);
+                }
                 sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
@@ -5698,13 +5862,14 @@ long InAnnulus (
          on the stack, and process the other one based on which one seems
          larger, but useful first]
          */
-        if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
-            if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight || pt->m_pRightBranch == 0) {
+        if (pt->m_pLeftBranch != ULONG_MAX && pt->m_pRightBranch != ULONG_MAX ) {
+            if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight || pt->m_pRightBranch == ULONG_MAX) {
                 if ( (TRIANG(dRadius1,dDL,pt->m_dMaxLeft)) && (TRIANG(dDL,pt->m_dMaxLeft,dRadius2)  )) {
                     if ( (TRIANG(dRadius1,dDR,pt->m_dMaxRight)) && (TRIANG(dDR,pt->m_dMaxRight,dRadius2) )) {
                         sStack.push_back(pt->m_pRightBranch);
                     }
-                    pt = pt->m_pLeftBranch;
+                    qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
 #endif                                
@@ -5722,7 +5887,8 @@ long InAnnulus (
                 if ( (TRIANG(dRadius1,dDL,pt->m_dMaxLeft)) && (TRIANG(dDL,pt->m_dMaxLeft,dRadius2)  )) {
                     sStack.push_back(pt->m_pLeftBranch);
                 }
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif                
@@ -5732,16 +5898,18 @@ long InAnnulus (
         
         /* Only one branch is viable, try them one at a time
          */
-        if ( pt->m_pLeftBranch != 0 && (TRIANG(dRadius1,dDL,pt->m_dMaxLeft)) && (TRIANG(dDL,pt->m_dMaxLeft,dRadius2)  )) {
-            pt = pt->m_pLeftBranch;
+        if ( pt->m_pLeftBranch != ULONG_MAX && (TRIANG(dRadius1,dDL,pt->m_dMaxLeft)) && (TRIANG(dDL,pt->m_dMaxLeft,dRadius2)  )) {
+            qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
             continue;
         }
         
-        if ( pt->m_pRightBranch != 0 && (TRIANG(dRadius1,dDR,pt->m_dMaxRight)) && (TRIANG(dDR,pt->m_dMaxRight,dRadius2) )) {
-            pt = pt->m_pRightBranch;
+        if ( pt->m_pRightBranch != ULONG_MAX && (TRIANG(dRadius1,dDR,pt->m_dMaxRight)) && (TRIANG(dDR,pt->m_dMaxRight,dRadius2) )) {
+            qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
@@ -5751,7 +5919,12 @@ long InAnnulus (
         /* We have procesed both sides, we need to go to the stack */
         
         if (!sStack.empty( )) {
-            pt = sStack.back();
+            qt = sStack.back();
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
             sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
@@ -5762,7 +5935,7 @@ long InAnnulus (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        std::vector <NearTreeNode* > sTemp;
+        std::vector <size_t > sTemp;
         sTemp.swap( sStack );
     }
     return ( (long)tAnnular.size() );
@@ -5799,10 +5972,11 @@ long LeftInAnnulus (
 #endif
                 ) const
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     enum  { left, right, end } eDir;
     eDir = left; // examine the left nodes first
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -5835,9 +6009,10 @@ long LeftInAnnulus (
                 }
 #endif
             }
-            if ( pt->m_pRightBranch != 0 && (TRIANG(dRadius1,dDR,pt->m_dMaxRight)) && (TRIANG(dDR,pt->m_dMaxRight,dRadius2) ) )
+            if ( pt->m_pRightBranch != ULONG_MAX && (TRIANG(dRadius1,dDR,pt->m_dMaxRight)) && (TRIANG(dDR,pt->m_dMaxRight,dRadius2) ) )
             { // we did the left and now we finished the right, go down
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -5876,11 +6051,12 @@ long LeftInAnnulus (
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
-                sStack.push_back( pt );
+                sStack.push_back( qt );
             }
-            if ( pt->m_pLeftBranch != 0 && (TRIANG(dRadius1,dDL,pt->m_dMaxLeft)) && (TRIANG(dDL,pt->m_dMaxLeft,dRadius2)  ) )
+            if ( pt->m_pLeftBranch != ULONG_MAX && (TRIANG(dRadius1,dDL,pt->m_dMaxLeft)) && (TRIANG(dDL,pt->m_dMaxLeft,dRadius2)  ) )
             { // we did the left, go down
-                pt = pt->m_pLeftBranch;
+                qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -5893,7 +6069,12 @@ long LeftInAnnulus (
         
         if ( eDir == end && !sStack.empty( ) )
         {
-            pt = sStack.back( );
+            qt = sStack.back( );
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif            
@@ -5919,10 +6100,11 @@ long LeftInAnnulus (
 #endif
                 ) const
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     enum  { left, right, end } eDir;
     eDir = left; // examine the left nodes first
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -5957,9 +6139,10 @@ long LeftInAnnulus (
                 }
 #endif
             }
-            if ( pt->m_pRightBranch != 0 && (TRIANG(dRadius1,dDR,pt->m_dMaxRight)) && (TRIANG(dDR,pt->m_dMaxRight,dRadius2) ) )
+            if ( pt->m_pRightBranch != ULONG_MAX && (TRIANG(dRadius1,dDR,pt->m_dMaxRight)) && (TRIANG(dDR,pt->m_dMaxRight,dRadius2) ) )
             { // we did the left and now we finished the right, go down
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -5999,11 +6182,12 @@ long LeftInAnnulus (
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
-                sStack.push_back( pt );
+                sStack.push_back( qt );
             }
-            if ( pt->m_pLeftBranch != 0 && (TRIANG(dRadius1,dDL,pt->m_dMaxLeft)) && (TRIANG(dDL,pt->m_dMaxLeft,dRadius2)  ) )
+            if ( pt->m_pLeftBranch != ULONG_MAX && (TRIANG(dRadius1,dDL,pt->m_dMaxLeft)) && (TRIANG(dDL,pt->m_dMaxLeft,dRadius2)  ) )
             { // we did the left, go down
-                pt = pt->m_pLeftBranch;
+                qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -6016,7 +6200,12 @@ long LeftInAnnulus (
         
         if ( eDir == end && !sStack.empty( ) )
         {
-            pt = sStack.back( );
+            qt = sStack.back( );
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif            
@@ -6068,9 +6257,10 @@ long K_Near (
 #endif
              )
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     DistanceTypeNode dDL=0., dDR=0.;
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -6082,7 +6272,12 @@ long K_Near (
     {
         if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
             if (!sStack.empty( )) {
-                pt = sStack.back();
+                qt = sStack.back();
+                if (qt != ULONG_MAX) {
+                    pt = m_NearTreeNodes[qt];
+                } else {
+                    pt = const_cast<NearTreeNode*>(this);
+                }
                 sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
@@ -6154,13 +6349,14 @@ long K_Near (
          on the stack, and process the other one based on which one seems
          smaller, but useful first]
          */
-        if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
-            if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight || pt->m_pRightBranch == 0) {
+        if (pt->m_pLeftBranch != ULONG_MAX && pt->m_pRightBranch != ULONG_MAX ) {
+            if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight || pt->m_pRightBranch == ULONG_MAX) {
                 if ( TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
                     if ( TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
                         sStack.push_back(pt->m_pRightBranch);
                     }
-                    pt = pt->m_pLeftBranch;
+                    qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
 #endif                                
@@ -6178,7 +6374,8 @@ long K_Near (
                 if ( TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
                     sStack.push_back(pt->m_pLeftBranch);
                 }
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif                
@@ -6188,16 +6385,18 @@ long K_Near (
         
         /* Only one branch is viable, try them one at a time
          */
-        if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
-            pt = pt->m_pLeftBranch;
+        if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
+            qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
             continue;
         }
         
-        if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
-            pt = pt->m_pRightBranch;
+        if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
+            qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
@@ -6207,7 +6406,12 @@ long K_Near (
         /* We have procesed both sides, we need to go to the stack */
         
         if (!sStack.empty( )) {
-            pt = sStack.back();
+            qt = sStack.back();
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
             sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
@@ -6218,7 +6422,7 @@ long K_Near (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        std::vector <NearTreeNode* > sTemp;
+        std::vector <size_t > sTemp;
         sTemp.swap( sStack );
     }
     if( tClosest.size( ) > 1 ) K_Resize( k, t, tClosest, dRadius );
@@ -6238,9 +6442,10 @@ long K_Near (
 #endif
              )
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     DistanceTypeNode dDL=0., dDR=0.;
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -6252,7 +6457,12 @@ long K_Near (
     {
         if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
             if (!sStack.empty( )) {
-                pt = sStack.back();
+                qt = sStack.back();
+                if (qt != ULONG_MAX) {
+                    pt = m_NearTreeNodes[qt];
+                } else {
+                    pt = const_cast<NearTreeNode*>(this);
+                }
                 sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
@@ -6324,13 +6534,14 @@ long K_Near (
          on the stack, and process the other one based on which one seems
          smaller, but useful first]
          */
-        if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
-            if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight || pt->m_pRightBranch == 0) {
+        if (pt->m_pLeftBranch != ULONG_MAX && pt->m_pRightBranch != ULONG_MAX ) {
+            if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight || pt->m_pRightBranch == ULONG_MAX) {
                 if ( TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
                     if ( TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
                         sStack.push_back(pt->m_pRightBranch);
                     }
-                    pt = pt->m_pLeftBranch;
+                    qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
 #endif                                
@@ -6348,7 +6559,8 @@ long K_Near (
                 if ( TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
                     sStack.push_back(pt->m_pLeftBranch);
                 }
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif                
@@ -6358,16 +6570,18 @@ long K_Near (
         
         /* Only one branch is viable, try them one at a time
          */
-        if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
-            pt = pt->m_pLeftBranch;
+        if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
+            qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
             continue;
         }
         
-        if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
-            pt = pt->m_pRightBranch;
+        if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
+            qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
@@ -6377,7 +6591,12 @@ long K_Near (
         /* We have procesed both sides, we need to go to the stack */
         
         if (!sStack.empty( )) {
-            pt = sStack.back();
+            qt = sStack.back();
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
             sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
@@ -6388,7 +6607,7 @@ long K_Near (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        std::vector <NearTreeNode* > sTemp;
+        std::vector <size_t > sTemp;
         sTemp.swap( sStack );
     }
     if( tClosest.size( ) > 1 ) K_Resize( k, t, tClosest, dRadius );
@@ -6430,9 +6649,10 @@ long K_Far (
 #endif
             )
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     DistanceTypeNode dDL=0., dDR=0.;
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -6444,8 +6664,14 @@ long K_Far (
     {
         if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
             if (!sStack.empty( )) {
-                pt = sStack.back();
+                qt = sStack.back();
+                if (qt != ULONG_MAX) {
+                    pt = m_NearTreeNodes[qt];
+                } else {
+                    pt = const_cast<NearTreeNode*>(this);
+                }
                 sStack.pop_back();
+
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif                
@@ -6481,6 +6707,7 @@ long K_Far (
             }
         }
         if (pt->m_ptRight != ULONG_MAX) {
+
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                                            
@@ -6508,6 +6735,7 @@ long K_Far (
                     << std::endl;
                 }
 #endif
+
             }
         }
         
@@ -6516,13 +6744,15 @@ long K_Far (
          on the stack, and process the other one based on which one seems
          larger, but useful first]
          */
-        if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
-            if (dDL+pt->m_dMaxLeft > dDR+pt->m_dMaxRight || pt->m_pRightBranch == 0) {
+        if (pt->m_pLeftBranch != ULONG_MAX && pt->m_pRightBranch != ULONG_MAX ) {
+            if (dDL+pt->m_dMaxLeft > dDR+pt->m_dMaxRight || pt->m_pRightBranch == ULONG_MAX) {
                 if ( TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
                     if ( TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
                         sStack.push_back(pt->m_pRightBranch);
                     }
-                    pt = pt->m_pLeftBranch;
+                    qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
+
 #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
 #endif                                
@@ -6540,7 +6770,9 @@ long K_Far (
                 if ( TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
                     sStack.push_back(pt->m_pLeftBranch);
                 }
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
+
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif                
@@ -6550,16 +6782,19 @@ long K_Far (
         
         /* Only one branch is viable, try them one at a time
          */
-        if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
-            pt = pt->m_pLeftBranch;
+        if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
+            qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
+
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
             continue;
         }
         
-        if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
-            pt = pt->m_pRightBranch;
+        if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
+            qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
@@ -6569,8 +6804,14 @@ long K_Far (
         /* We have procesed both sides, we need to go to the stack */
         
         if (!sStack.empty( )) {
-            pt = sStack.back();
+            qt = sStack.back();
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
             sStack.pop_back();
+
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
@@ -6580,7 +6821,7 @@ long K_Far (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        std::vector <NearTreeNode* > sTemp;
+        std::vector <size_t > sTemp;
         sTemp.swap( sStack );
     }
     if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
@@ -6599,9 +6840,10 @@ long K_Far (
 #endif
             )
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     DistanceTypeNode dDL=0., dDR=0.;
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -6613,8 +6855,14 @@ long K_Far (
     {
         if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
             if (!sStack.empty( )) {
-                pt = sStack.back();
+                qt = sStack.back();
+                if (qt != ULONG_MAX) {
+                    pt = m_NearTreeNodes[qt];
+                } else {
+                    pt = const_cast<NearTreeNode*>(this);
+                }
                 sStack.pop_back();
+
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif                
@@ -6666,6 +6914,7 @@ long K_Far (
                     tFarthest.insert( tFarthest.end(), make_triple( -dDR, objectStore[objectCollide[collide]],  objectCollide[collide]));
                     if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
                     collide = objectCollide[collide];
+
 #ifdef CNEARTREE_INSTRUMENTED
                     colcount++;
 #endif
@@ -6685,13 +6934,15 @@ long K_Far (
          on the stack, and process the other one based on which one seems
          larger, but useful first]
          */
-        if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
-            if (dDL+pt->m_dMaxLeft > dDR+pt->m_dMaxRight || pt->m_pRightBranch == 0) {
+        if (pt->m_pLeftBranch != ULONG_MAX && pt->m_pRightBranch != ULONG_MAX ) {
+            if (dDL+pt->m_dMaxLeft > dDR+pt->m_dMaxRight || pt->m_pRightBranch == ULONG_MAX) {
                 if ( TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
                     if ( TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
                         sStack.push_back(pt->m_pRightBranch);
                     }
-                    pt = pt->m_pLeftBranch;
+                    qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
+
 #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
 #endif                                
@@ -6709,7 +6960,9 @@ long K_Far (
                 if ( TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
                     sStack.push_back(pt->m_pLeftBranch);
                 }
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
+
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif                
@@ -6719,16 +6972,20 @@ long K_Far (
         
         /* Only one branch is viable, try them one at a time
          */
-        if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
-            pt = pt->m_pLeftBranch;
+        if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
+            qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
+
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
             continue;
         }
         
-        if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
-            pt = pt->m_pRightBranch;
+        if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
+            qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
+
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
@@ -6738,8 +6995,14 @@ long K_Far (
         /* We have procesed both sides, we need to go to the stack */
         
         if (!sStack.empty( )) {
-            pt = sStack.back();
+            qt = sStack.back();
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
             sStack.pop_back();
+
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif                            
@@ -6749,7 +7012,7 @@ long K_Far (
     }
     if ( !sStack.empty( ) ) // for safety !!!
     {
-        std::vector <NearTreeNode* > sTemp;
+        std::vector <size_t > sTemp;
         sTemp.swap( sStack );
     }
     if( tFarthest.size( ) > 1 ) K_Resize( k, t, tFarthest, dRadius );
@@ -6793,10 +7056,11 @@ long LeftK_Near (
 #endif
              )
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     enum  { left, right, end } eDir;
     eDir = left; // examine the left nodes first
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -6831,9 +7095,10 @@ long LeftK_Near (
                 }
 #endif
             }
-            if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
+            if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
             { // we did the left and now we finished the right, go down
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -6873,11 +7138,12 @@ long LeftK_Near (
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
-                sStack.push_back( pt );
+                sStack.push_back( qt );
             }
-            if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,pt->m_dMaxLeft,dRadius) )
+            if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dDL,pt->m_dMaxLeft,dRadius) )
             { // we did the left, go down
-                pt = pt->m_pLeftBranch;
+                qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -6890,7 +7156,12 @@ long LeftK_Near (
         
         if ( eDir == end && !sStack.empty( ) )
         {
-            pt = sStack.back( );
+            qt = sStack.back( );
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif            
@@ -6914,10 +7185,11 @@ long LeftK_Near (
 #endif
              )
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     enum  { left, right, end } eDir;
     eDir = left; // examine the left nodes first
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -6952,9 +7224,10 @@ long LeftK_Near (
                 }
 #endif
             }
-            if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
+            if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
             { // we did the left and now we finished the right, go down
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -6991,14 +7264,17 @@ long LeftK_Near (
                     << std::endl;
                 }
 #endif
+
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
-                sStack.push_back( pt );
+                sStack.push_back( qt );
             }
-            if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,pt->m_dMaxLeft,dRadius) )
+            if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dDL,pt->m_dMaxLeft,dRadius) )
             { // we did the left, go down
-                pt = pt->m_pLeftBranch;
+                qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
+
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -7011,7 +7287,12 @@ long LeftK_Near (
         
         if ( eDir == end && !sStack.empty( ) )
         {
-            pt = sStack.back( );
+            qt = sStack.back( );
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif            
@@ -7057,10 +7338,11 @@ long LeftK_Far (
 #endif
             )
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     enum  { left, right, end } eDir;
     eDir = left; // examine the left nodes first
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -7095,9 +7377,10 @@ long LeftK_Far (
                 }
 #endif
             }
-            if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
+            if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
             { // we did the left and now we finished the right, go down
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -7137,11 +7420,13 @@ long LeftK_Far (
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
-                sStack.push_back( pt );
+                sStack.push_back( qt );
             }
-            if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
+            if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
             { // we did the left, go down
-                pt = pt->m_pLeftBranch;
+                qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
+
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -7154,7 +7439,12 @@ long LeftK_Far (
         
         if ( eDir == end && !sStack.empty( ) )
         {
-            pt = sStack.back( );
+            qt = sStack.back( );
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif            
@@ -7179,10 +7469,11 @@ long LeftK_Far (
 #endif
             )
 {
-    std::vector <NearTreeNode* > sStack;
+    std::vector <size_t > sStack;
     enum  { left, right, end } eDir;
     eDir = left; // examine the left nodes first
     NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+    size_t qt = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
     size_t colcount;
     ++VisitCount;
@@ -7217,9 +7508,10 @@ long LeftK_Far (
                 }
 #endif
             }
-            if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
+            if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
             { // we did the left and now we finished the right, go down
-                pt = pt->m_pRightBranch;
+                qt = pt->m_pRightBranch;
+                pt = m_NearTreeNodes[qt];
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -7259,11 +7551,13 @@ long LeftK_Far (
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
-                sStack.push_back( pt );
+                sStack.push_back( qt );
             }
-            if ( pt->m_pLeftBranch != 0 && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
+            if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
             { // we did the left, go down
-                pt = pt->m_pLeftBranch;
+                qt = pt->m_pLeftBranch;
+                pt = m_NearTreeNodes[qt];
+
 #ifdef CNEARTREE_INSTRUMENTED
                 ++VisitCount;
 #endif            
@@ -7276,7 +7570,12 @@ long LeftK_Far (
         
         if ( eDir == end && !sStack.empty( ) )
         {
-            pt = sStack.back( );
+            qt = sStack.back( );
+            if (qt != ULONG_MAX) {
+                pt = m_NearTreeNodes[qt];
+            } else {
+                pt = const_cast<NearTreeNode*>(this);
+            }
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif            
