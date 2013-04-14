@@ -276,6 +276,9 @@
 #include <cfloat>
 #include <algorithm>
 #include <cmath>
+#ifdef CNEARTREE_INSTRUMENTED
+#include <iostream>
+#endif
 
 #define USE_ARMADILLO_LIBRARY
 
@@ -3437,6 +3440,10 @@ void InserterDelayed_Flip ( const long n, size_t & localDepth,
             // Right node down one level
             if (dTempRight > dTempLeftRight) {
                 m_pRightBranch->m_ptLeft = m_ptRight;
+#ifdef CNEARTREE_INSTRUMENTED
+                m_pRightBranch->m_imultLeft = m_imultRight;
+                m_imultRight = 1;
+#endif
                 m_ptRight = n;
             }
             return;
@@ -4231,7 +4238,14 @@ long InSphere (
                     colcount++;
 #endif
                 }
-            }            
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
+            }
         }
         if (pt->m_ptRight != ULONG_MAX) {
 #ifdef CNEARTREE_INSTRUMENTED
@@ -4253,6 +4267,13 @@ long InSphere (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
             }
         }
         
@@ -4388,6 +4409,13 @@ long InSphere (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
 
             }
         }
@@ -4413,6 +4441,14 @@ long InSphere (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
+
             }
         }
         
@@ -4557,6 +4593,14 @@ long LeftInSphere (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
+
            }
             if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
             { // we did the left and now we finished the right, go down
@@ -4589,6 +4633,13 @@ long LeftInSphere (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
@@ -4665,7 +4716,13 @@ long LeftInSphere (
                     colcount++;
 #endif
                 }
-
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
             { // we did the left and now we finished the right, go down
@@ -4700,6 +4757,13 @@ long LeftInSphere (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
@@ -4805,7 +4869,13 @@ long OutSphere (
                     colcount++;
 #endif
                 }
-
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }
         }
         if (pt->m_ptRight != ULONG_MAX) {
@@ -4827,6 +4897,13 @@ long OutSphere (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
             }
         }
         
@@ -4960,7 +5037,13 @@ long OutSphere (
                     colcount++;
 #endif
                 }
-
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }
         }
         if (pt->m_ptRight != ULONG_MAX) {
@@ -4985,7 +5068,13 @@ long OutSphere (
                     colcount++;
 #endif
                 }
-
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
             }            
         }
         
@@ -5126,6 +5215,13 @@ long LeftOutSphere (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
             { // we did the left and now we finished the right, go down
@@ -5158,7 +5254,13 @@ long LeftOutSphere (
                     colcount++;
 #endif
                 }
-
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
@@ -5234,7 +5336,13 @@ long LeftOutSphere (
                     colcount++;
 #endif
                 }
-
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
             { // we did the left and now we finished the right, go down
@@ -5268,6 +5376,13 @@ long LeftOutSphere (
                     colcount++;
 #endif
                }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
@@ -5369,6 +5484,13 @@ long InAnnulus (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }
         }
         if (pt->m_ptRight != ULONG_MAX) {
@@ -5390,6 +5512,13 @@ long InAnnulus (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
             }
         }
         
@@ -5524,6 +5653,13 @@ long InAnnulus (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }            
         }
         if (pt->m_ptRight != ULONG_MAX) {
@@ -5547,7 +5683,14 @@ long InAnnulus (
                     colcount++;
 #endif
                 }
-            }            
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
+            }
         }
         
         /*
@@ -5684,6 +5827,13 @@ long LeftInAnnulus (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_pRightBranch != 0 && (TRIANG(dRadius1,dDR,pt->m_dMaxRight)) && (TRIANG(dDR,pt->m_dMaxRight,dRadius2) ) )
             { // we did the left and now we finished the right, go down
@@ -5716,6 +5866,13 @@ long LeftInAnnulus (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
@@ -5792,6 +5949,13 @@ long LeftInAnnulus (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_pRightBranch != 0 && (TRIANG(dRadius1,dDR,pt->m_dMaxRight)) && (TRIANG(dDR,pt->m_dMaxRight,dRadius2) ) )
             { // we did the left and now we finished the right, go down
@@ -5825,6 +5989,13 @@ long LeftInAnnulus (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
@@ -5938,6 +6109,13 @@ long K_Near (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }
         }
         if (pt->m_ptRight != ULONG_MAX) {
@@ -5961,6 +6139,13 @@ long K_Near (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
             }
         }
         
@@ -6094,7 +6279,13 @@ long K_Near (
                     colcount++;
 #endif
                 }
-
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }
         }
         if (pt->m_ptRight != ULONG_MAX) {
@@ -6118,6 +6309,13 @@ long K_Near (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
             }
         }
         
@@ -6273,7 +6471,13 @@ long K_Far (
                     colcount++;
 #endif
                 }
-
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }
         }
         if (pt->m_ptRight != ULONG_MAX) {
@@ -6297,7 +6501,14 @@ long K_Far (
                     colcount++;
 #endif
                 }
-            }            
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
+            }
         }
         
         /*
@@ -6429,6 +6640,13 @@ long K_Far (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }
         }
         if (pt->m_ptRight != ULONG_MAX) {
@@ -6452,6 +6670,13 @@ long K_Far (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
             }
         }
         
@@ -6598,6 +6823,13 @@ long LeftK_Near (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
             { // we did the left and now we finished the right, go down
@@ -6631,6 +6863,13 @@ long LeftK_Near (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
@@ -6705,6 +6944,13 @@ long LeftK_Near (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_pRightBranch != 0 && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
             { // we did the left and now we finished the right, go down
@@ -6738,7 +6984,13 @@ long LeftK_Near (
                     colcount++;
 #endif
                 }
-
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
@@ -6835,6 +7087,13 @@ long LeftK_Far (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
             { // we did the left and now we finished the right, go down
@@ -6868,6 +7127,13 @@ long LeftK_Far (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
@@ -6943,6 +7209,13 @@ long LeftK_Far (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultRight) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultRight
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_pRightBranch != 0 && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
             { // we did the left and now we finished the right, go down
@@ -6976,6 +7249,13 @@ long LeftK_Far (
                     colcount++;
 #endif
                 }
+#ifdef CNEARTREE_INSTRUMENTED
+                if (colcount != pt->m_imultLeft) {
+                    std::cerr << " Collision discrepancy colcount = "
+                    << colcount << " m_imultLeft = " << pt->m_imultLeft
+                    << std::endl;
+                }
+#endif
             }
             if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right object
             {
