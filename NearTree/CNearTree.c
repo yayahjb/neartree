@@ -3207,7 +3207,7 @@ extern "C" {
                 }
                 if ((pt->m_iflags&CNEARTREE_FLAG_LEFT_CHILD)&&
                     (TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter))&&
-                    (TRIANG(dRadiusInner,dDL,pt->m_dMaxRight))){
+                    (TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft))){
                     pt = pt->m_pLeftBranch;
 #ifdef CNEARTREE_INSTRUMENTED
                     (treehandle->m_NodeVisits)++;
@@ -3337,7 +3337,7 @@ extern "C" {
                 }
                 if ((pt->m_iflags&CNEARTREE_FLAG_LEFT_CHILD)&&
                     (TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter))&&
-                    (TRIANG(dRadiusInner,dDL,pt->m_dMaxRight))){
+                    (TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft))){
                     pt = pt->m_pLeftBranch;
 #ifdef CNEARTREE_INSTRUMENTED
                     (treehandle->m_NodeVisits)++;
