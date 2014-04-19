@@ -280,7 +280,7 @@
 #include <iostream>
 #endif
 
-#define USE_ARMADILLO_LIBRARY
+/* #define USE_ARMADILLO_LIBRARY */
 
 #ifdef _MSC_VER
 #define USE_LOCAL_HEADERS
