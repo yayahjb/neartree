@@ -3816,9 +3816,9 @@ std::vector<T> LloydCycleStep( const CNearTree<T>& coord, const std::vector<T>& 
         int indexVMin = 0;
         for ( unsigned int i=0; i<v.size( ); ++i )
         {
-            if ( abs((*it)-v[i]) < dmin )
+            if ( fabs(double((*it)-v[i])) < dmin )
             {
-                dmin = abs((*it)-v[i]);
+                dmin = fabs(double((*it)-v[i]));
                 indexVMin = it.get_position( );
                 indexVSumMin = i;
             }
@@ -3862,7 +3862,7 @@ void testLloyd( )
     for ( int i=0; i<60; ++i  )
     {
         std::vector<double> vOut = LloydCycleStep( vdata, vk );
-        if (i > 35 && (vk[0] != 3333. || vk[1] != 10000. || vk[2] != 16666.5)) {
+        if (i > 35 && (fabs(vk[0] - 3332.5)> 1. || fabs(vk[1] - 9999.)> 1. || fabs(vk[2] - 16666.)>1.)) {
             ++g_errorCount;
             fprintf( stdout, "testLoyd cycle %d ", i);
             for ( unsigned int j=0; j<vk.size( ); ++j )
