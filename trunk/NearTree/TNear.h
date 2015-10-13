@@ -2521,11 +2521,12 @@ public:
             bool shell, closed;
             long lFound;
             std::vector<std::pair<DistanceType, T> > K_Storage;
-            dRadiusOuter = 1.;
+            dRadiusOuter = m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+            if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+            if (dRadiusOuter > radius) dRadiusOuter = radius;
             numrad = 0;
             shell = true;
             closed = true;
-            if (dRadiusOuter > radius) dRadiusOuter = radius;
             /* First find the nearest k inner shell */
             do {
                 dRadiusOuterSave = dRadiusOuter;
@@ -2545,6 +2546,7 @@ public:
                 if (lFound > 0) break;
                 dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*2.;
                 dRadiusInner = dRadiusOuterSave;
+                if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                 if (dRadiusOuter > radius) dRadiusOuter = radius;
             } while (lFound == 0 && dRadiusOuterSave < radius);
             if (lFound < 1) return (0L);
@@ -2565,7 +2567,8 @@ public:
                     shell = true;
                     closed= false;
                     dRadiusInner = dRadiusOuter;
-                    dRadiusOuter = dRadiusInner+1.;
+                    dRadiusOuter = dRadiusInner+m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                     if (numrad == 10) {
                         int ii;
@@ -2580,6 +2583,7 @@ public:
                     closed = false;
                     dRadiusInner = dRadiusOuter;
                     dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(4.*dimest));
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                 }
                 K_Storage.clear();
@@ -2592,19 +2596,21 @@ public:
                             (double)(dRadiusInner), (double)(dRadiusOuter)); */
 
                     lFound = (this->m_BaseNode).K_Near( k-tClosest.size(),
-                                                   shell, closed,
+                                                       shell,
+                                                       closed,
                                                        dDistanceCache,
-                                                   dRadiusInner,
-                                                   dRadiusOuter,
-                                                   K_Storage,
-                                                   t
+                                                       dRadiusInner,
+                                                       dRadiusOuter,
+                                                       K_Storage,
+                                                       t
 #ifdef CNEARTREE_INSTRUMENTED
-                                                              , m_NodeVisits
+                                                       ,  m_NodeVisits
 #endif
-                                                              );
+                                                       );
                     if (lFound > 0) break;
                     dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*1.1;
                     dRadiusInner = dRadiusOuterSave;
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
 
                 } while (lFound == 0 && dRadiusOuterSave < radius);
@@ -2648,11 +2654,12 @@ public:
             bool shell, closed;
             long lFound;
             std::vector<triple<DistanceType, T, size_t> > K_Storage;
-            dRadiusOuter = 1.;
+            dRadiusOuter = m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+            if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+            if (dRadiusOuter > radius) dRadiusOuter = radius;
             numrad = 0;
             shell = true;
             closed = true;
-            if (dRadiusOuter > radius) dRadiusOuter = radius;
             /* First find the nearest k inner shell */
             do {
                 dRadiusOuterSave = dRadiusOuter;
@@ -2672,6 +2679,7 @@ public:
                 if (lFound > 0) break;
                 dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*2.;
                 dRadiusInner = dRadiusOuterSave;
+                if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                 if (dRadiusOuter > radius) dRadiusOuter = radius;
             } while (lFound == 0 && dRadiusOuterSave < radius);
             if (lFound < 1) return (0L);
@@ -2693,7 +2701,8 @@ public:
                     shell = true;
                     closed= false;
                     dRadiusInner = dRadiusOuter;
-                    dRadiusOuter = dRadiusInner+1.;
+                    dRadiusOuter = dRadiusInner+m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                     if (numrad == 10) {
                         int ii;
@@ -2708,6 +2717,7 @@ public:
                     closed = false;
                     dRadiusInner = dRadiusOuter;
                     dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(4.*dimest));
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                 }
                 K_Storage.clear();
@@ -2733,6 +2743,7 @@ public:
                     if (lFound > 0) break;
                     dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*1.1;
                     dRadiusInner = dRadiusOuterSave;
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                     
                 } while (lFound == 0 && dRadiusOuterSave < radius);
@@ -2771,16 +2782,26 @@ public:
             DistanceType dRadiusInner = 0;
             DistanceType dRadiusOuterSave;
             DistanceType dRadiusOuter;
+            double radlist[10];
+            double dimlist[9];
+            double dimest = 1.;
+            double foundatrad[10];
+            int numrad;
+            bool shell, closed;
             long lFound;
             std::vector<triple<DistanceType, T, size_t> > K_Storage;
-            dRadiusOuter = 1.;
+            dRadiusOuter = m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+            if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
             if (dRadiusOuter > radius) dRadiusOuter = radius;
+            numrad = 0;
+            shell = true;
+            closed = true;
             /* First find the nearest k inner shell */
             do {
                 dRadiusOuterSave = dRadiusOuter;
                 /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
                         (double)(dRadiusInner), (double)(dRadiusOuter)); */
-                lFound = (this->m_BaseNode).K_Near( k, true, true,
+                lFound = (this->m_BaseNode).K_Near( k, shell, closed,
                                                    dDistanceCache,
                                                    dRadiusInner,
                                                    dRadiusOuter,
@@ -2794,6 +2815,7 @@ public:
                 if (lFound > 0) break;
                 dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*2.;
                 dRadiusInner = dRadiusOuterSave;
+                if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                 if (dRadiusOuter > radius) dRadiusOuter = radius;
             } while (lFound == 0 && dRadiusOuterSave < radius);
             if (lFound < 1) return (0L);
@@ -2804,9 +2826,37 @@ public:
                 tDistances.insert( tDistances.end(),K_Storage[i].GetFirst() );
             }
             while ( tClosest.size() < k && dRadiusInner < radius) {
-                dRadiusInner = dRadiusOuter;
-                dRadiusOuter = dRadiusInner+1.;
-                if (dRadiusOuter > radius) dRadiusOuter = radius;
+                if (numrad < 10) {
+                    foundatrad[numrad] = (double)tClosest.size();
+                    radlist[numrad++] = dRadiusOuter;
+                    if (numrad > 1) {
+                        foundatrad[numrad-1]+= foundatrad[numrad-2];
+                        dimlist[numrad-2]
+                        = log(foundatrad[numrad-1]-foundatrad[numrad-2])
+                        /(log(radlist[numrad-1]-radlist[numrad-2])+1.e-38);
+                    }
+                    shell = true;
+                    closed= false;
+                    dRadiusInner = dRadiusOuter;
+                    dRadiusOuter = dRadiusInner+m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+                    if (dRadiusOuter > radius) dRadiusOuter = radius;
+                    if (numrad == 10) {
+                        int ii;
+                        dimest = 0.;
+                        for (ii=0; ii < numrad-1; ii++) {
+                            dimest += dimlist[ii];
+                        }
+                        dimest = dimest/((double) (numrad-1));
+                    }
+                } else {
+                    shell = false;
+                    closed = false;
+                    dRadiusInner = dRadiusOuter;
+                    dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(4.*dimest));
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+                    if (dRadiusOuter > radius) dRadiusOuter = radius;
+                }
                 K_Storage.clear();
                 /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
                         (double)(dRadiusInner), (double)(dRadiusOuter)); */
@@ -2828,8 +2878,9 @@ public:
 #endif
                                                        );
                     if (lFound > 0) break;
-                    dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*2.;
+                    dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*1.1;
                     dRadiusInner = dRadiusOuterSave;
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                     
                 } while (lFound == 0 && dRadiusOuterSave < radius);
@@ -2884,16 +2935,26 @@ public:
             DistanceType dRadiusInner = 0;
             DistanceType dRadiusOuterSave;
             DistanceType dRadiusOuter;
+            double radlist[10];
+            double dimlist[9];
+            double dimest = 1.;
+            double foundatrad[10];
+            int numrad;
+            bool shell, closed;
             long lFound;
             std::vector<std::pair<DistanceType, T> > K_Storage;
-            dRadiusOuter = 1.;
+            dRadiusOuter = m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+            if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
             if (dRadiusOuter > radius) dRadiusOuter = radius;
+            numrad = 0;
+            shell = true;
+            closed = true;
             /* First find the nearest k inner shell */
             do {
                 dRadiusOuterSave = dRadiusOuter;
                 /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
                  (double)(dRadiusInner), (double)(dRadiusOuter)); */
-                lFound = (this->m_BaseNode).LeftK_Near( k, true, true,
+                lFound = (this->m_BaseNode).LeftK_Near( k, shell, closed,
                                                        dDistanceCache,
                                                        dRadiusInner,
                                                        dRadiusOuter,
@@ -2907,6 +2968,7 @@ public:
                 if (lFound > 0) break;
                 dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*2.;
                 dRadiusInner = dRadiusOuterSave;
+                if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                 if (dRadiusOuter > radius) dRadiusOuter = radius;
             } while (lFound == 0 && dRadiusOuterSave < radius);
             if (lFound < 1) return (0L);
@@ -2915,9 +2977,37 @@ public:
                 tClosest.insert( tClosest.end( ), K_Storage[i].second );
             }
             while ( tClosest.size() < k && dRadiusInner < radius) {
-                dRadiusInner = dRadiusOuter;
-                dRadiusOuter = dRadiusInner+1.;
-                if (dRadiusOuter > radius) dRadiusOuter = radius;
+                if (numrad < 10) {
+                    foundatrad[numrad] = (double)tClosest.size();
+                    radlist[numrad++] = dRadiusOuter;
+                    if (numrad > 1) {
+                        foundatrad[numrad-1]+= foundatrad[numrad-2];
+                        dimlist[numrad-2]
+                        = log(foundatrad[numrad-1]-foundatrad[numrad-2])
+                        /(log(radlist[numrad-1]-radlist[numrad-2])+1.e-38);
+                    }
+                    shell = true;
+                    closed= false;
+                    dRadiusInner = dRadiusOuter;
+                    dRadiusOuter = dRadiusInner+m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+                    if (dRadiusOuter > radius) dRadiusOuter = radius;
+                    if (numrad == 10) {
+                        int ii;
+                        dimest = 0.;
+                        for (ii=0; ii < numrad-1; ii++) {
+                            dimest += dimlist[ii];
+                        }
+                        dimest = dimest/((double) (numrad-1));
+                    }
+                } else {
+                    shell = false;
+                    closed = false;
+                    dRadiusInner = dRadiusOuter;
+                    dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(4.*dimest));
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+                    if (dRadiusOuter > radius) dRadiusOuter = radius;
+                }
                 K_Storage.clear();
                 /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
                  (double)(dRadiusInner), (double)(dRadiusOuter)); */
@@ -2941,6 +3031,7 @@ public:
                     if (lFound > 0) break;
                     dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*2.;
                     dRadiusInner = dRadiusOuterSave;
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                     
                 } while (lFound == 0 && dRadiusOuterSave < radius);
@@ -2984,7 +3075,9 @@ public:
             bool shell, closed;
             long lFound;
             std::vector<triple<DistanceType, T, size_t> > K_Storage;
-            dRadiusOuter = 1.;
+            dRadiusOuter = m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+            if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+            if (dRadiusOuter > radius) dRadiusOuter = radius;
             numrad = 0;
             shell = true;
             closed = true;
@@ -3008,6 +3101,7 @@ public:
                 if (lFound > 0) break;
                 dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*2.;
                 dRadiusInner = dRadiusOuterSave;
+                if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                 if (dRadiusOuter > radius) dRadiusOuter = radius;
             } while (lFound == 0 && dRadiusOuterSave < radius);
             if (lFound < 1) return (0L);
@@ -3029,7 +3123,8 @@ public:
                     shell = true;
                     closed= false;
                     dRadiusInner = dRadiusOuter;
-                    dRadiusOuter = dRadiusInner+1.;
+                    dRadiusOuter = dRadiusInner+m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                     if (numrad == 10) {
                         int ii;
@@ -3069,6 +3164,7 @@ public:
                     if (lFound > 0) break;
                     dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*1.1;
                     dRadiusInner = dRadiusOuterSave;
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                     
                 } while (lFound == 0 && dRadiusOuterSave < radius);
