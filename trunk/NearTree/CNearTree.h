@@ -146,9 +146,10 @@ extern "C" {
 #define CNTF_NOFLIP        0x40000L     /*flag to suppress flips on insert      */
 #define CNTF_FORCEFLIP     0x80000L     /*flag to force flips on insert         */
 #define CNTF_NODEFER      0x100000L     /*flag to prevent deferred insert       */
+#define CNTF_SKNN         0x200000L     /*flag to use spherical KNN             */
 
     
-#define CNEARTREE_XFLAGS  0x1F0000L     /*mask for execution flags */
+#define CNEARTREE_XFLAGS  0x3F0000L     /*mask for execution flags */
     
 #ifdef CNEARTREE_FORCEPREPRUNE
   #define CNFT_FLAGDEFAULTPRUNE  CNTF_FORCEPREPRUNE
@@ -1263,7 +1264,144 @@ extern "C" {
      =======================================================================
      */
 
-    int CNearTreeSortIn(CVectorHandle metrics, CVectorHandle indices, double metric, size_t index, size_t k);
+    int CNearTreeSortIn(CVectorHandle metrics,
+                        CVectorHandle indices,
+                        double metric,
+                        size_t index,
+                        size_t k);
+    /*
+     =======================================================================
+     
+     int CNearTreeSortIn2(CVectorHandle metrics,
+     CVectorHandle indices,
+     double metric,
+     size_t index,
+     size_t k,
+     int shell,
+     size_t sSizeCur,
+     double dRadiusCur);
+     
+     CNearTreeSortIn2 inserts a new metric and index into the vectors
+     metrics and indices, sorted on non-decreasing metric,
+     with the size of the vectors capped at k, or uncapped if k = 0;
+     
+     =======================================================================
+     */
+    
+    int CNearTreeSortIn2(CVectorHandle metrics,
+                         CVectorHandle indices,
+                         double metric,
+                         size_t index,
+                         size_t k,
+                         int shell,
+                         size_t sSizeCur,
+                         double dRadiusCur);
+    
+    /*
+     =======================================================================
+     int CNearTreeFindKNearest ( const CNearTreeHandle treehandle,
+     const size_t k,
+     const double dRadius,
+     CVectorHandle coordClosest,
+     CVectorHandle objClosest,
+     const void * coord,
+     int resetcount);
+     
+     Function to search a Neartree for the set of objects closer to some probe point, coord,
+     than dRadius.
+     
+     k is the maximum number of closest neighbors to return.  Finds this many if passible.
+     
+     dRadius is the maximum search radius - any point further than dRadius from the probe
+     point will be ignored
+     
+     coordClosest is a vector of pointers to coordinate tuples and is the
+     returned set of farthest points from the probe point that can be found in the Neartree
+     
+     objClosest is a vector of objects and is the returned set of farthest points
+     from the probe point that can be found in the Neartree
+     
+     coord  is the probe point
+     
+     resetcount should be non-zero to clear objClosest on entry
+     
+     return value is 0 if points were found
+     
+     =======================================================================
+     */
+    
+    int CNearTreeFindKNearest (const CNearTreeHandle treehandle,
+                               const size_t k,
+                               const double dRadius,
+                               CVectorHandle coordClosest,
+                               CVectorHandle objClosest,
+                               const void * coord,
+                               int resetcount);
+   
+    int CNearTreeFindKNearest_Annular (const CNearTreeHandle treehandle,
+                                       const size_t k,
+                                       const double dRadius,
+                                       CVectorHandle distances,
+                                       CVectorHandle indices,
+                                       const void * coord);
+
+    int CNearTreeFindKNearest_Sphere (const CNearTreeHandle treehandle,
+                                      const size_t k,
+                                      const double dRadius,
+                                      CVectorHandle distances,
+                                      CVectorHandle indices,
+                                      const void * coord);
+
+    /*
+     =======================================================================
+     int CNearTreeFindKNearInAnnulus ( const CNearTreeHandle treehandle,
+     const size_t k,
+     const int shell,
+     const int closed,
+     const double dRadiusInner,
+     double dRadiusOuter,
+     CVectorHandle distInRing,
+     CVectorHandle indexInRing,
+     const void * coord);
+     
+     Function to search a Neartree for the set of objects closer to some probe point, coord,
+     than dRadius.
+     
+     k is the maximum number of closest neighbors to return.  Finds this many if passible.
+     
+     shell if non-zero, the search only returns hits in the nearest thin shell
+     
+     closed if non-zero, point at dRadiusInner will be included
+     
+     dRadiusInner is the minimum radius - any point closer than dRadiusInner from the probe point will be ignored, if closed is zero, any point at dRadiusInner will
+     also be ignored
+     
+     dRadiusOuter is the maximum search radius - any point further than dRadius from the probe point will be ignored,
+     
+     distInRing is an existing vector of the distances to the k closest points
+     to the probe point in the annulus that can be found in the Neartree.  The caller
+     should have created this vector with CVectorCreate(&distanceInRing,sizeof(double),k)
+     
+     indexInRing is an existing vector of indices of the coordinates and objects of
+     k closest points from the probe point in the annulus
+     that can be found in the Neartree
+     
+     coord  is the probe point
+     
+     return value is 0 if points were found
+     
+     =======================================================================
+     */
+    
+    int CNearTreeFindKNearInAnnulus (const CNearTreeHandle treehandle,
+                                     const size_t k,
+                                     const int shell,
+                                     const int closed,
+                                     const double dRadiusInner,
+                                     double dRadiusOuter,
+                                     CVectorHandle distInRing,
+                                     CVectorHandle indexInRing,
+                                     const void * coord);
     
     
     /*

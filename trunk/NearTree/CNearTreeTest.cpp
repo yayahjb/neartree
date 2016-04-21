@@ -155,40 +155,24 @@ int main(int argc, char* argv[])
     timecommand("testSeparation",{testSeparation( );});
     timecommand("testFindFirstObject",{testFindFirstObject( );});
     timecommand("testFindLastObject",{testFindLastObject( );});
-    testFindInSphereFromBottom( );
-    fprintf( stdout, "testFindInSphereFromBottom\n" );
-    testFindInSphereFromTop( );
-    fprintf( stdout, "testFindInSphereFromTop\n" );
-    testOutSphere( );
-    fprintf( stdout, "testOutSphere\n" );
-    testFindInAnnulus( );
-    fprintf( stdout, "testFindInAnnulus\n" );
-    testRandomTree1( 10000 );
-    fprintf( stdout, "testRandomTree1\n" );
-    testRandomTree2( 1000 );
-    fprintf( stdout, "testRandomTree2\n" );
-    testBigVector( );
-    fprintf( stdout, "testBigVector\n" );
-    testBigIntVec( );
-    fprintf( stdout, "testBigIntVec\n" );
-    testBackwardForward( );
-    fprintf( stdout, "testBackwardForward\n" );
-    testDelayedInsertion( );
-    fprintf( stdout, "testDelayedInsertion\n" );
+    timecommand("testFindInSphereFromBottom",{testFindInSphereFromBottom( );});
+    timecommand("testFindInSphereFromTop",{testFindInSphereFromTop( );});
+    timecommand("testOutSphere",{testOutSphere( );});
+    timecommand("testFindInAnnulus",{testFindInAnnulus( );});
+    timecommand("testRandomTree1",{testRandomTree1( 10000 );});
+    timecommand("testRandomTree2",{testRandomTree2( 1000 );});
+    timecommand("testBigVector",{testBigVector( );});
+    timecommand("testBigIntVec",{testBigIntVec( );});
+    timecommand("testBackwardForward",{testBackwardForward( );});
+    timecommand("testDelayedInsertion",{testDelayedInsertion( );});
 #ifndef CNEARTREE_NODEFER
-    testDelayedInsertionRandom( );
-    fprintf( stdout, "CompleteDelayedInsertRandom\n" );
+    timecommand("testDelayedInsertionRandom",{testDelayedInsertionRandom( );});
 #endif
-    testIterators( );
-    fprintf( stdout, "testIterators\n" );
-    testIntegerReturn( );
-    fprintf( stdout, "testIntegerReturn\n" );
-    testMisc( );
-    fprintf( stdout, "testMisc\n" );
-    testSTLContainerInput( );
-    fprintf( stdout, "testSTLContainerInput\n" );
-    testKNearFar( );
-    fprintf( stdout, "testKNearFar\n" );
+    timecommand("testIterators",{testIterators( );});
+    timecommand("testIntegerReturn",{testIntegerReturn( );});
+    timecommand("testMisc",{testMisc( );});
+    timecommand("testSTLContainerInput",{testSTLContainerInput( );});
+    timecommand("testKNearFar",{testKNearFar( );});
     timecommand("testMergeConstructor",{testMergeConstructor( );});
     timecommand("testOperatorPlusEquals",{testOperatorPlusEquals( );});
     timecommand("testOperatorMinusEquals",{testOperatorMinusEquals( );});
@@ -3196,7 +3180,7 @@ void testKNearFar( void )
         const long nToFind0 = 0;
         const double radius0 = 1000.0;
         
-       const size_t lFound0 = tree.LeftFindK_NearestNeighbors( 
+        const size_t lFound0 = tree.LeftFindK_NearestNeighbors(
                                                            nToFind0,
                                                            radius0,
                                                            outTree,
@@ -3398,7 +3382,7 @@ void testKNearFar( void )
     {
         CNearTree<vec17> tree;
         CNearTree<vec17> outTree;
-        const unsigned int n2Store = 20;
+        const unsigned int n2Store = 200000;
 
         for ( unsigned int i=0; i<n2Store; ++i )
         {

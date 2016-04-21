@@ -2521,7 +2521,7 @@ public:
             bool shell, closed;
             long lFound;
             std::vector<std::pair<DistanceType, T> > K_Storage;
-            dRadiusOuter = m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+            dRadiusOuter = m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
             if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
             if (dRadiusOuter > radius) dRadiusOuter = radius;
             numrad = 0;
@@ -2567,7 +2567,7 @@ public:
                     shell = true;
                     closed= false;
                     dRadiusInner = dRadiusOuter;
-                    dRadiusOuter = dRadiusInner+m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+                    dRadiusOuter = dRadiusInner+m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
                     if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                     if (numrad == 10) {
@@ -2654,7 +2654,7 @@ public:
             bool shell, closed;
             long lFound;
             std::vector<triple<DistanceType, T, size_t> > K_Storage;
-            dRadiusOuter = m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+            dRadiusOuter = m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
             if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
             if (dRadiusOuter > radius) dRadiusOuter = radius;
             numrad = 0;
@@ -2701,7 +2701,7 @@ public:
                     shell = true;
                     closed= false;
                     dRadiusInner = dRadiusOuter;
-                    dRadiusOuter = dRadiusInner+m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+                    dRadiusOuter = dRadiusInner+m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
                     if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                     if (numrad == 10) {
@@ -2790,7 +2790,7 @@ public:
             bool shell, closed;
             long lFound;
             std::vector<triple<DistanceType, T, size_t> > K_Storage;
-            dRadiusOuter = m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+            dRadiusOuter = m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
             if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
             if (dRadiusOuter > radius) dRadiusOuter = radius;
             numrad = 0;
@@ -2838,7 +2838,7 @@ public:
                     shell = true;
                     closed= false;
                     dRadiusInner = dRadiusOuter;
-                    dRadiusOuter = dRadiusInner+m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+                    dRadiusOuter = dRadiusInner+m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
                     if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                     if (numrad == 10) {
@@ -2943,7 +2943,7 @@ public:
             bool shell, closed;
             long lFound;
             std::vector<std::pair<DistanceType, T> > K_Storage;
-            dRadiusOuter = m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+            dRadiusOuter = m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
             if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
             if (dRadiusOuter > radius) dRadiusOuter = radius;
             numrad = 0;
@@ -2989,7 +2989,7 @@ public:
                     shell = true;
                     closed= false;
                     dRadiusInner = dRadiusOuter;
-                    dRadiusOuter = dRadiusInner+m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+                    dRadiusOuter = dRadiusInner+m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
                     if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                     if (numrad == 10) {
@@ -3075,7 +3075,7 @@ public:
             bool shell, closed;
             long lFound;
             std::vector<triple<DistanceType, T, size_t> > K_Storage;
-            dRadiusOuter = m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+            dRadiusOuter = m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
             if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
             if (dRadiusOuter > radius) dRadiusOuter = radius;
             numrad = 0;
@@ -3123,7 +3123,7 @@ public:
                     shell = true;
                     closed= false;
                     dRadiusInner = dRadiusOuter;
-                    dRadiusOuter = dRadiusInner+m_DiamEstimate/sqrt((double)(1+m_ObjectStore.size()));
+                    dRadiusOuter = dRadiusInner+m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
                     if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                     if (numrad == 10) {
