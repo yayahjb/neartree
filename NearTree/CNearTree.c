@@ -3430,19 +3430,55 @@ extern "C" {
         
     }
     
-    /*  int CNearTreeSortIn(CVectorHandle metrics, 
-     CVectorHandle indices, 
-     double metric, 
-     size_t index, 
+    /*  int CNearTreeSortIn(CVectorHandle metrics,
+     CVectorHandle indices,
+     double metric,
+     size_t index,
      size_t k);
      
      CNearTreeSortIn inserts a new metric and index into the vectors
      metrics and indices, sorted on non-decreasing metric,
      with the size of the vectors capped at k, or uncapped if k = 0;
      
+     */
+    
+    int CNearTreeSortIn(CVectorHandle metrics,
+                        CVectorHandle indices,
+                        double metric,
+                        size_t index,
+                        size_t k) {
+        
+        return CNearTreeSortIn2(metrics, indices, metric, index, k, 0, 0, 0.);
+        
+    }
+
+    
+    /*  int CNearTreeSortIn2(CVectorHandle metrics,
+     CVectorHandle indices, 
+     double metric, 
+     size_t index,
+     size_t k
+     int shell,
+     size_t sSizeCur,
+     double dRadiusCur);
+     
+     CNearTreeSortIn2 inserts a new metric and index into the vectors
+     metrics and indices, sorted on non-decreasing metric,
+     with the size of the vectors capped at k, or uncapped if k = 0;
+     
+     if shell is non-zero only the results at the minimal distance are
+     retained
+     
      */ 
     
-    int CNearTreeSortIn(CVectorHandle metrics, CVectorHandle indices, double metric, size_t index, size_t k) {
+    int CNearTreeSortIn2(CVectorHandle metrics,
+                         CVectorHandle indices,
+                         double metric,
+                         size_t index,
+                         size_t k,
+                         int shell,
+                         size_t sSizeCur,
+                         double dRadiusCur) {
         
         double localmetric=metric;
         double tempmetric;
@@ -3456,18 +3492,27 @@ extern "C" {
             || !indices 
             || CVectorSize(metrics) != CVectorSize(indices)) return CNEARTREE_BAD_ARGUMENT;
         
-        if (CVectorSize(metrics) == 0) {
+        if (CVectorSize(metrics) <= sSizeCur) {
             CVectorAddElement(metrics,&localmetric);
             CVectorAddElement(indices,&localindex);
             return CNEARTREE_SUCCESS;
         }
         
         low = 0;
+        if (shell && sSizeCur > 0) low = sSizeCur;
         high = CVectorSize(metrics)-1;
         CVectorGetElementptr(metrics, &localmetrics,0);
         CVectorGetElementptr(indices, &localindices,0);
         
-        if (localmetric <= ((double *)localmetrics)[low]) {
+        if (( shell && localmetric < ((double *)localmetrics)[low] )
+            || (localmetric < ((double *)localmetrics)[low] && k == 1)){
+            CVectorSetSize(metrics,sSizeCur);
+            CVectorSetSize(indices,sSizeCur);
+            high = 0;
+            CVectorAddElement(metrics,&localmetric);
+            CVectorAddElement(indices,&localindex);
+        
+        } else if (localmetric <= ((double *)localmetrics)[low]) {
             
             tempmetric =  ((double *)localmetrics)[high];
             tempindex =  ((size_t *)localindices)[high];
@@ -3479,7 +3524,7 @@ extern "C" {
             ((size_t *)localindices)[low] = localindex;
             CVectorSetFlags(metrics,0);
             CVectorSetFlags(indices,0);
-            if (k==0 || CVectorSize(metrics) < k) { 
+            if (k==0 || CVectorSize(metrics)-sSizeCur < k) {
                 CVectorAddElement(metrics,&tempmetric);
                 CVectorAddElement(indices,&tempindex); 
             }
@@ -3487,7 +3532,10 @@ extern "C" {
         } else if (localmetric >= ((double *)localmetrics)[high]) {
             CVectorSetFlags(metrics,0);
             CVectorSetFlags(indices,0);
-            if (k==0 || CVectorSize(metrics) < k) { 
+            if ((!shell && (k==0 || CVectorSize(metrics) < k))
+                || (shell
+                    && localmetric == ((double *)localmetrics)[high]
+                    && (k==0 || CVectorSize(metrics)-sSizeCur < k))){
                 CVectorAddElement(metrics,&localmetric);
                 CVectorAddElement(indices,&localindex); 
             }
@@ -3578,13 +3626,221 @@ extern "C" {
                                CVectorHandle objClosest,
                                const void * coord,
                                int resetcount){
+        
+        CVectorHandle distances;
+        CVectorHandle indices;
+        CVectorHandle coords;
+        CVectorHandle objs;
+        void CNEARTREE_FAR * xcoord;
+        void CNEARTREE_FAR * xobj;
+        size_t ii, index;
+        int lresult;
+        
+        coords=treehandle->m_CoordStore;
+        objs=treehandle->m_ObjectStore;
+
+        /* prepare coordClosest and objClosest */
+        
+        if (resetcount) {
+            if (coordClosest) CVectorClear( coordClosest );
+            if (objClosest) CVectorClear( objClosest );
+        }
+        
+        if (!CNearTreeZeroIfEmpty(treehandle)) return CNEARTREE_NOT_FOUND;
+        
+        if (CVectorCreate(&distances,sizeof(double),k) ||
+            CVectorCreate(&indices,sizeof(size_t),k))
+            
+            return CNEARTREE_MALLOC_FAILED;
+
+        
+        if ((treehandle->m_iflags&CNTF_SKNN)) {
+            lresult = CNearTreeFindKNearest_Sphere ( treehandle,
+                                                 k,
+                                                 dRadius,
+                                                 distances,
+                                                 indices,
+                                                 coord);
+        } else {
+            lresult = CNearTreeFindKNearest_Annular ( treehandle,
+                                                  k,
+                                                  dRadius,
+                                                  distances,
+                                                  indices,
+                                                  coord);
+        }
+        
+        /* Then transfer out the results to coordClosest and objClosest */
+        
+        for (ii = 0; ii < CVectorSize(indices) && ii < k; ii++) {
+            CVectorGetElement(indices,(void *)&index,ii);
+            if (coordClosest)  {
+                xcoord = CVectorElementAt(coords,index);
+                CVectorAddElement(coordClosest,&xcoord);
+            }
+            if (objClosest) {
+                xobj = CVectorElementAt(objs,index);
+                CVectorAddElement(objClosest,&xobj);
+            }
+            
+        }
+        
+        return lresult;
+        
+    }
+
+#include <stdio.h>
+    
+    int CNearTreeFindKNearest_Annular (const CNearTreeHandle treehandle,
+                                       const size_t k,
+                                       const double dRadius,
+                                       CVectorHandle distances,
+                                       CVectorHandle indices,
+                                       const void * coord){
+        
+        double dRadiusInner = 0;
+        double dRadiusOuterSave;
+        double dRadiusOuter;
+        double radlist[10];
+        double dimlist[9];
+        double dimest = 1.;
+        double foundatrad[10];
+        double drat;
+        int numrad;
+        int shell, closed;
+        int error;
+        long lFound;
+        int l2lazy;
+        size_t size;
+        
+        drat = 1.;        
+        l2lazy = 0;
+        if ((treehandle->m_iflags&CNEARTREE_NORM_L2LAZY)) {
+            /* compute the worst case ratio of the L1 norm to the L2 norm */
+            drat = sqrt((double)(treehandle->m_szdimension));
+            l2lazy = 1;
+        }
+        
+        
+        dRadiusOuter = treehandle->m_SumSpacings/sqrt((double)(1+CVectorSize(treehandle->m_ObjectStore)));
+        if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+        if (dRadiusOuter > dRadius) dRadiusOuter = dRadius;
+        numrad = 0;
+        shell = 1;
+        closed = 1;
+
+        /*fprintf (stderr,
+                 "Entering CNearTreeFindKNearest_Annular, dRadius %g, dRadiusInner %g, dRadiusOuter %g\n",
+                 dRadius, dRadiusInner, dRadiusOuter);*/
+        
+        /* First find the nearest k inner shell */
+        do {
+            dRadiusOuterSave = dRadiusOuter;
+            size = CVectorSize(distances);
+            /*fprintf(stderr,"k %d, dRadius %g, dRadiusInner, dRadiusOuter %g %g\n", (int)k,
+                    (double)dRadius, (double)(dRadiusInner), (double)(dRadiusOuter));*/
+            error = CNearTreeFindKNearInAnnulus(treehandle,k-size,shell,closed,
+                                                dRadiusInner,
+                                                dRadiusOuter,
+                                                distances,
+                                                indices,
+                                                coord);
+            lFound = CVectorSize(distances)-size;
+            if (lFound > 0) {
+                CVectorGetElement(distances,&dRadiusOuter,CVectorSize(distances)-1);
+                /*fprintf (stderr,
+                         "Ran CNearTreeFindKNearInAnnulus, lFound %ld , dRadiusInner %g, dRadiusOuter %g\n",
+                         (long)lFound, dRadiusInner, dRadiusOuter);*/
+                break;
+            }
+            dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*2.;
+            dRadiusInner = dRadiusOuterSave;
+            if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+            if (dRadiusOuter > dRadius) dRadiusOuter = dRadius;
+        } while (lFound <= 0 && dRadiusOuterSave < dRadius);
+
+        if (lFound < 1) return (0L);
+        while ( CVectorSize(distances) < k && dRadiusInner < dRadius) {
+            if (numrad < 10) {
+                foundatrad[numrad] = (double)CVectorSize(distances);
+                radlist[numrad++] = dRadiusOuter;
+                if (numrad > 1) {
+                    foundatrad[numrad-1]+= foundatrad[numrad-2];
+                    dimlist[numrad-2]
+                    = log(foundatrad[numrad-1]-foundatrad[numrad-2])
+                    /(log(radlist[numrad-1]-radlist[numrad-2])+1.e-38);
+                }
+                shell = 1;
+                closed= 0;
+                dRadiusInner = dRadiusOuter;
+                dRadiusOuter = dRadiusInner
+                +treehandle->m_SumSpacings
+                /sqrt((double)(1+CVectorSize(treehandle->m_ObjectStore)));
+                if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+                if (dRadiusOuter > dRadius) dRadiusOuter = dRadius;
+                if (numrad == 10) {
+                    int ii;
+                    dimest = 0.;
+                    for (ii=0; ii < numrad-1; ii++) {
+                        dimest += dimlist[ii];
+                    }
+                    dimest = dimest/((double) (numrad-1));
+                }
+            } else {
+                shell = 0;
+                closed = 0;
+                dRadiusInner = dRadiusOuter;
+                dRadiusOuter = dRadiusInner*pow(((double)k)/((double)CVectorSize(distances)),1./(4.*dimest));
+                if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+                if (dRadiusOuter > dRadius) dRadiusOuter = dRadius;
+            }
+            /*fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
+             (double)(dRadiusInner), (double)(dRadiusOuter)); */
+            /* Add any point from the next annular shell */
+            do {
+                dRadiusOuterSave = dRadiusOuter;
+                size = CVectorSize(distances);
+                /*fprintf(stderr,"k %d, dRadius %g, dRadiusInner, dRadiusOuter %g %g\n", (int)k,
+                        (double)dRadius, (double)(dRadiusInner), (double)(dRadiusOuter));*/
+                error = CNearTreeFindKNearInAnnulus(treehandle,k-size,shell,closed,
+                                                    dRadiusInner,
+                                                    dRadiusOuter,
+                                                    distances,
+                                                    indices,
+                                                    coord);
+                lFound = CVectorSize(distances) - size;
+                if (lFound > 0) {
+                    CVectorGetElement(distances,&dRadiusOuter,CVectorSize(distances)-1);
+                    /*fprintf (stderr,
+                             "Ran CNearTreeFindKNearInAnnulus, lFound %ld , dRadiusInner %g, dRadiusOuter %g\n",
+                             (long)lFound, dRadiusInner, dRadiusOuter);*/
+                    break;
+                }
+                dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*1.1;
+                dRadiusInner = dRadiusOuterSave;
+                if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+                if (dRadiusOuter > dRadius) dRadiusOuter = dRadius;
+                
+            } while (lFound <= 0 && dRadiusOuterSave < dRadius);
+            /* fprintf(stderr,"found %ld points\n",lFound); */
+            if (dRadiusOuter >= dRadius-1.e-36) break;
+        }
+        
+        return error;
+
+    }
+
+    int CNearTreeFindKNearest_Sphere (const CNearTreeHandle treehandle,
+                               const size_t k,
+                               const double dRadius,
+                               CVectorHandle distances,
+                               CVectorHandle indices,
+                               const void * coord){
         double dDR, dDL, dTarget, dist, drat;
         int nopoints, l2lazy;
         CVectorHandle sStack;
         CVectorHandle coords;
         CVectorHandle objs;
-        CVectorHandle dDs;
-        CVectorHandle stIndices;
         void CNEARTREE_FAR * xcoord;
         void CNEARTREE_FAR * xobj;
         CNearTreeNodeHandle pt;
@@ -3631,17 +3887,9 @@ extern "C" {
         (treehandle->m_NodeVisits)++;
 #endif                                               
         
-        if (CVectorCreate(&sStack,sizeof(CNearTreeNodeHandle),10) ||
-            
-            CVectorCreate(&dDs,sizeof(double),k) ||
-            
-            CVectorCreate(&stIndices,sizeof(size_t),k)) return CNEARTREE_MALLOC_FAILED;
+        if (CVectorCreate(&sStack,sizeof(CNearTreeNodeHandle),10))
+            return CNEARTREE_MALLOC_FAILED;
         
-        /* clear the contents of the return vector so that things don't accidentally accumulate */
-        if (resetcount) {
-            if (coordClosest) CVectorClear( coordClosest );
-            if (objClosest) CVectorClear( objClosest );
-        }
         
         while (!(eDir == end && CVectorSize(sStack) == 0)) {
             
@@ -3657,9 +3905,9 @@ extern "C" {
                         }
                         if (!l2lazy || dist <= dTarget) {
                             nopoints = 0;
-                            CNearTreeSortIn(dDs,stIndices,dist,pt->m_indexRight,k);
-                            if (CVectorSize(dDs)==k) {
-                                CVectorGetElement(dDs,&dTarget,k-1);
+                            CNearTreeSortIn2(distances,indices,dist,pt->m_indexRight,k,0,0,0.);
+                            if (CVectorSize(distances)==k) {
+                                CVectorGetElement(distances,&dTarget,k-1);
                             }
                         }
                     }
@@ -3687,9 +3935,9 @@ extern "C" {
                         } 
                         if (!l2lazy || dist <= dTarget) {
                             nopoints = 0;
-                            CNearTreeSortIn(dDs,stIndices,dist,pt->m_indexLeft,k);
-                            if (CVectorSize(dDs)==k) {
-                                CVectorGetElement(dDs,&dTarget,k-1);
+                            CNearTreeSortIn2(distances,indices,dist,pt->m_indexLeft,k,0,0,0.);
+                            if (CVectorSize(distances)==k) {
+                                CVectorGetElement(distances,&dTarget,k-1);
                         }
                         }
                     }
@@ -3717,26 +3965,213 @@ extern "C" {
         
         CVectorFree(&sStack);
         
-        if (!nopoints) {
-            for (ii = 0; ii < CVectorSize(stIndices); ii++) {
-                CVectorGetElement(stIndices,&index,ii);
-                if (coordClosest)  {
-                    xcoord = CVectorElementAt(coords,index);
-                    CVectorAddElement(coordClosest,&xcoord);
-                }
-                if (objClosest) {
-                    xobj = CVectorElementAt(objs,index);
-                    CVectorAddElement(objClosest,&xobj);
-                }
-                
-            }
-        }
-        
-        CVectorFree(&dDs);
-        CVectorFree(&stIndices);
-        
         return  nopoints?CNEARTREE_NOT_FOUND:CNEARTREE_SUCCESS;
     }     
+
+    /*
+     =======================================================================
+     int CNearTreeFindKNearInAnnulus ( const CNearTreeHandle treehandle,
+     const size_t k,
+     const int shell,
+     const int closed,
+     const double dRadiusInner,
+     double dRadiusOuter,
+     CVectorHandle distInRing,
+     CVectorHandle indexInRing,
+     const void * coord);
+     
+     Function to search a Neartree for the set of objects closer to some probe point, coord,
+     than dRadius.
+     
+     k is the maximum number of closest neighbors to return.  Finds this many if passible.
+     
+     shell if non-zero, the search only returns hits in the nearest thin shell
+     
+     closed if non-zero, point at dRadiusInner will be included
+     
+     dRadiusInner is the minimum radius - any point closer than dRadiusInner from the probe point will be ignored, if closed is zero, any point at dRadiusInner will
+          also be ignored
+     
+     dRadiusOuter is the maximum search radius - any point further than dRadius from the probe point will be ignored,
+     
+     distInRing is an existing vector of the distances to the k closest points
+          to the probe point in the annulus that can be found in the Neartree.  The caller
+          should have created this vector with CVectorCreate(&distanceInRing,sizeof(double),k)
+     
+     indexInRing is an existing vector of indices of the coordinates and objects of 
+          k closest points from the probe point in the annulus
+          that can be found in the Neartree
+     
+     coord  is the probe point
+     
+     return value is 0 if points were found
+     
+     =======================================================================
+     */
+    
+    int CNearTreeFindKNearInAnnulus (const CNearTreeHandle treehandle,
+                                     const size_t k,
+                                     const int shell,
+                                     const int closed,
+                                     const double dRadiusInner,
+                                     double dRadiusOuter,
+                                     CVectorHandle distInRing,
+                                     CVectorHandle indexInRing,
+                                     const void * coord){
+        double dDR, dDL, dTarget, dist, drat;
+        double dRadiusCur;
+        int nopoints, l2lazy;
+        CVectorHandle sStack;
+        CVectorHandle coords;
+        CVectorHandle objs;
+        void CNEARTREE_FAR * xdist;
+        void CNEARTREE_FAR * xcoord;
+        void CNEARTREE_FAR * xobj;
+        CNearTreeNodeHandle pt;
+        size_t ii, index, size;
+        enum  { left, right, end } eDir;
+        
+        eDir = left; /* examine the left nodes first */
+        
+        nopoints = 1;
+        
+        dDR = dDL = DBL_MAX;
+        
+        dTarget = dRadiusOuter;
+        
+        drat = 1.;
+        
+        l2lazy = 0;
+        
+        if ((treehandle->m_iflags&CNEARTREE_NORM_L2LAZY)) {
+            
+            /* compute the worst case ratio of the L1 norm to the L2 norm */
+            drat = sqrt((double)(treehandle->m_szdimension));
+            l2lazy = 1;
+            
+        }
+        
+        if (dRadiusInner < 0.
+            || dRadiusOuter < 0.
+            || dRadiusInner > dRadiusOuter) return CNEARTREE_BAD_ARGUMENT;
+        
+        if ( !treehandle || !coord ) return CNEARTREE_BAD_ARGUMENT;
+        
+        if ( treehandle->m_DelayedIndices ) {
+            if (CNearTreeCompleteDelayedInsert(treehandle)!=CNEARTREE_SUCCESS) return CNEARTREE_BAD_ARGUMENT;
+        }
+        
+        dRadiusCur = dRadiusInner;
+        size = CVectorSize(distInRing);
+        if (size > 0) {
+            CVectorGetElement(distInRing,&dRadiusCur,size-1);
+        }
+        
+        pt = treehandle->m_ptTree;
+        
+        coords=treehandle->m_CoordStore;
+        
+        objs=treehandle->m_ObjectStore;
+        
+        if (!pt) return CNEARTREE_BAD_ARGUMENT;
+        
+        if (!(pt->m_iflags&CNEARTREE_FLAG_LEFT_DATA)) return CNEARTREE_NOT_FOUND;
+        
+#ifdef CNEARTREE_INSTRUMENTED
+        (treehandle->m_NodeVisits)++;
+#endif
+        
+        if (CVectorCreate(&sStack,sizeof(CNearTreeNodeHandle),10))
+            return CNEARTREE_MALLOC_FAILED;
+        
+        while (!(eDir == end && CVectorSize(sStack) == 0)) {
+            
+            if ( eDir == right ) {
+                dDR = DBL_MAX;
+                if ((pt->m_iflags)&CNEARTREE_FLAG_RIGHT_DATA) {
+                    dist = dDR = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexRight));
+                    if (dDR <= dRadiusOuter*drat
+                        && (dDR > dRadiusInner
+                           || ((closed||l2lazy) && dDR == dRadiusInner )  )) {
+                        if (l2lazy) {
+                            CNTM_DistL2(dist,treehandle,
+                                        (void CNEARTREE_FAR *)coord,
+                                        CVectorElementAt(coords,pt->m_indexRight));
+                        }
+                        if (!l2lazy
+                            || (dist <= dRadiusOuter
+                                && (dist > dRadiusInner
+                                    || (closed && dist == dRadiusInner ) ))) {
+                                nopoints = 0;
+                                CNearTreeSortIn2(distInRing,indexInRing,dist,pt->m_indexRight,k,shell, size, dRadiusCur);
+                                if (CVectorSize(distInRing)==k) {
+                                    CVectorGetElement(distInRing,&dRadiusOuter,k-1);
+                                }
+                            }
+                    }
+                }
+                if ((pt->m_iflags&CNEARTREE_FLAG_RIGHT_CHILD)&&
+                    (TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter))&&
+                    (TRIANG(dRadiusInner,dDR,pt->m_dMaxRight))){
+                    /* we did the left and now we finished the right, go down */
+                    pt = pt->m_pRightBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle->m_NodeVisits)++;
+#endif
+                    eDir = left;
+                } else {
+                    eDir = end;
+                }
+            }
+            if ( eDir == left ) {
+                if ((pt->m_iflags)&CNEARTREE_FLAG_LEFT_DATA) {
+                    dist = dDL = CNearTreeDist(treehandle, (void CNEARTREE_FAR *)coord, CVectorElementAt(coords,pt->m_indexLeft));
+                    if (dDL <= dRadiusOuter*drat
+                        && (dDL > dRadiusInner
+                         || ((closed||l2lazy) && dDL == dRadiusInner )  )) {
+                        if (l2lazy) {
+                            CNTM_DistL2(dist,treehandle,
+                                        (void CNEARTREE_FAR *)coord,
+                                        CVectorElementAt(coords,pt->m_indexLeft));
+                        }
+                        if (!l2lazy
+                            || (dist <= dRadiusOuter
+                            && (dist > dRadiusInner || (closed && dist == dRadiusInner ) ))) {
+                            nopoints = 0;
+                            CNearTreeSortIn2(distInRing,indexInRing,dist,pt->m_indexLeft,k,shell,size,dRadiusCur);
+                            if (CVectorSize(distInRing)==k) {
+                                CVectorGetElement(distInRing,&dRadiusOuter,k-1);
+                            }
+                        }
+                    }
+                }
+                if (pt->m_iflags&CNEARTREE_FLAG_RIGHT_DATA) {
+                    CVectorAddElement(sStack,&pt);
+                }
+                if ((pt->m_iflags&CNEARTREE_FLAG_LEFT_CHILD)&&
+                    (TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter))&&
+                    (TRIANG(dRadiusInner,dDL,pt->m_dMaxRight))){
+                    pt = pt->m_pLeftBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    (treehandle->m_NodeVisits)++;
+#endif
+                } else {
+                    eDir = end;
+                }
+            }
+            if ( eDir == end && CVectorSize(sStack) != 0 ) {
+                CVectorGetElement(sStack,&pt,CVectorSize(sStack)-1);
+                CVectorRemoveElement(sStack,CVectorSize(sStack)-1);
+                eDir = right;
+            }
+            
+        }
+        
+        CVectorFree(&sStack);
+        
+        return  nopoints?CNEARTREE_NOT_FOUND:CNEARTREE_SUCCESS;
+    }
+
     
     
     /*
@@ -3931,7 +4366,7 @@ extern "C" {
                         }
                         if (!l2lazy || dist >= dTarget ) {
                             nopoints = 0;
-                            CNearTreeSortIn(dDs,stIndices,-dist,pt->m_indexRight,k);
+                            CNearTreeSortIn2(dDs,stIndices,-dist,pt->m_indexRight,k,0,0,0.);
                             if (CVectorSize(dDs)==k) {
                                 CVectorGetElement(dDs,&dTarget,k-1);
                                 dTarget = -dTarget;
@@ -3962,7 +4397,7 @@ extern "C" {
                         }   
                         if (!l2lazy || dist >= dTarget ) {
                             nopoints = 0;
-                            CNearTreeSortIn(dDs,stIndices,-dist,pt->m_indexLeft,k);
+                            CNearTreeSortIn2(dDs,stIndices,-dist,pt->m_indexLeft,k,0,0,0.);
                             if (CVectorSize(dDs)==k) {
                                 CVectorGetElement(dDs,&dTarget,k-1);
                                 dTarget = -dTarget;
