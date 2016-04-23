@@ -77,6 +77,10 @@ extern "C" {
 #define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0))
 #endif
     
+#ifndef CNEARTREE_DIMSAMPLES
+#define CNEARTREE_DIMSAMPLES 4
+#endif
+    
 #define max2(x,y) ((x)>=(y)?(x):(y)) 
     
     
@@ -3701,10 +3705,10 @@ extern "C" {
         double dRadiusInner = 0;
         double dRadiusOuterSave;
         double dRadiusOuter;
-        double radlist[10];
-        double dimlist[9];
+        double radlist[CNEARTREE_DIMSAMPLES];
+        double dimlist[CNEARTREE_DIMSAMPLES-1];
         double dimest = 1.;
-        double foundatrad[10];
+        double foundatrad[CNEARTREE_DIMSAMPLES];
         double drat;
         int numrad;
         int shell, closed;
@@ -3760,8 +3764,8 @@ extern "C" {
         } while (lFound <= 0 && dRadiusOuterSave < dRadius);
 
         if (lFound < 1) return (0L);
-        while ( CVectorSize(distances) < k && dRadiusInner < dRadius) {
-            if (numrad < 10) {
+        while ( CVectorSize(distances) < k && dRadiusOuter < dRadius) {
+            if (numrad < CNEARTREE_DIMSAMPLES) {
                 foundatrad[numrad] = (double)CVectorSize(distances);
                 radlist[numrad++] = dRadiusOuter;
                 if (numrad > 1) {
@@ -3778,7 +3782,7 @@ extern "C" {
                 /sqrt((double)(1+CVectorSize(treehandle->m_ObjectStore)));
                 if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                 if (dRadiusOuter > dRadius) dRadiusOuter = dRadius;
-                if (numrad == 10) {
+                if (numrad == CNEARTREE_DIMSAMPLES) {
                     int ii;
                     dimest = 0.;
                     for (ii=0; ii < numrad-1; ii++) {
@@ -3790,7 +3794,7 @@ extern "C" {
                 shell = 0;
                 closed = 0;
                 dRadiusInner = dRadiusOuter;
-                dRadiusOuter = dRadiusInner*pow(((double)k)/((double)CVectorSize(distances)),1./(4.*dimest));
+                dRadiusOuter = dRadiusInner*pow(((double)k)/((double)CVectorSize(distances)),1./(3.*dimest));
                 if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                 if (dRadiusOuter > dRadius) dRadiusOuter = dRadius;
             }

@@ -448,6 +448,8 @@ public:
     static const long        NTF_NoFlip            = 4; //flag to suppress flips on insert
     static const long        NTF_ForceFlip         = 8; //flag to force flips on insert
     static const long        NTF_NoDefer           =16; //flag to prevent deferred insert
+    static const long        NTF_AnnularKNN        =32; //flag to do KNN in annular pieces
+    static const long        NTF_SphericalKNN      =64; //flag to do KNN as complete spheres
     
 #ifdef CNEARTREE_FORCEPREPRUNE
     static const long        NFT_FlagDefaultPrune  = NTF_ForcePrePrune;
@@ -483,9 +485,14 @@ public:
     static const long        NFT_FlagDefaultDefer = 0;
 #endif
     
-    static const long        NTF_FlagsDefault      =  NFT_FlagDefaultPrune|NFT_FlagDefaultFlip|NFT_FlagDefaultDefer;
+    static const long        NTF_FlagsDefault      =  NFT_FlagDefaultPrune|NFT_FlagDefaultFlip|NFT_FlagDefaultDefer|NTF_AnnularKNN;
     
     
+#ifdef CNEARTREE_DIMSAMPLES
+    static const size_t      cneartree_dimsamples  = CNEARTREE_DIMSAMPLES;
+#else
+    static const size_t      cneartree_dimsamples  = 4;
+#endif
     
 private: // start of real definition of CNearTree
     std::vector<long> m_DelayedIndices;    // objects queued for insertion, possibly in random order
@@ -2513,10 +2520,10 @@ public:
             DistanceType dRadiusInner = 0;
             DistanceType dRadiusOuterSave;
             DistanceType dRadiusOuter;
-            double radlist[10];
-            double dimlist[9];
+            double radlist[cneartree_dimsamples];
+            double dimlist[cneartree_dimsamples-1];
             double dimest = 1.;
-            double foundatrad[10];
+            double foundatrad[cneartree_dimsamples];
             int numrad;
             bool shell, closed;
             long lFound;
@@ -2527,6 +2534,10 @@ public:
             numrad = 0;
             shell = true;
             closed = true;
+            if (m_Flags & NTF_SphericalKNN) {
+                dRadiusOuter = radius;
+                shell = false;
+            }
             /* First find the nearest k inner shell */
             do {
                 dRadiusOuterSave = dRadiusOuter;
@@ -2554,8 +2565,8 @@ public:
             {
                 tClosest.insert( tClosest.end( ), K_Storage[i].second );
             }
-            while ( tClosest.size() < k && dRadiusInner < radius) {
-                if (numrad < 10) {
+            while ( tClosest.size() < k && dRadiusOuter < radius) {
+                if (numrad < cneartree_dimsamples) {
                     foundatrad[numrad] = (double)tClosest.size();
                     radlist[numrad++] = dRadiusOuter;
                     if (numrad > 1) {
@@ -2570,7 +2581,7 @@ public:
                     dRadiusOuter = dRadiusInner+m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
                     if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
-                    if (numrad == 10) {
+                    if (numrad == cneartree_dimsamples) {
                         int ii;
                         dimest = 0.;
                         for (ii=0; ii < numrad-1; ii++) {
@@ -2582,7 +2593,7 @@ public:
                     shell = false;
                     closed = false;
                     dRadiusInner = dRadiusOuter;
-                    dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(4.*dimest));
+                    dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(3.*dimest));
                     if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                 }
@@ -2646,10 +2657,10 @@ public:
             DistanceType dRadiusInner = 0;
             DistanceType dRadiusOuterSave;
             DistanceType dRadiusOuter;
-            double radlist[10];
-            double dimlist[9];
+            double radlist[cneartree_dimsamples];
+            double dimlist[cneartree_dimsamples-1];
             double dimest = 1.;
-            double foundatrad[10];
+            double foundatrad[cneartree_dimsamples];
             int numrad;
             bool shell, closed;
             long lFound;
@@ -2660,6 +2671,10 @@ public:
             numrad = 0;
             shell = true;
             closed = true;
+            if (m_Flags & NTF_SphericalKNN) {
+                dRadiusOuter = radius;
+                shell = false;
+            }
             /* First find the nearest k inner shell */
             do {
                 dRadiusOuterSave = dRadiusOuter;
@@ -2688,8 +2703,8 @@ public:
                 tClosest.insert( tClosest.end( ), K_Storage[i].GetSecond() );
                 tIndices.insert( tIndices.end( ), K_Storage[i].GetThird() );
             }
-            while ( tClosest.size() < k && dRadiusInner < radius) {
-                if (numrad < 10) {
+            while ( tClosest.size() < k && dRadiusOuter < radius) {
+                if (numrad < cneartree_dimsamples) {
                     foundatrad[numrad] = (double)lFound;
                     radlist[numrad++] = dRadiusOuter;
                     if (numrad > 1) {
@@ -2704,7 +2719,7 @@ public:
                     dRadiusOuter = dRadiusInner+m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
                     if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
-                    if (numrad == 10) {
+                    if (numrad == cneartree_dimsamples) {
                         int ii;
                         dimest = 0.;
                         for (ii=0; ii < numrad-1; ii++) {
@@ -2716,7 +2731,7 @@ public:
                     shell = false;
                     closed = false;
                     dRadiusInner = dRadiusOuter;
-                    dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(4.*dimest));
+                    dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(3.*dimest));
                     if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                 }
@@ -2782,10 +2797,10 @@ public:
             DistanceType dRadiusInner = 0;
             DistanceType dRadiusOuterSave;
             DistanceType dRadiusOuter;
-            double radlist[10];
-            double dimlist[9];
+            double radlist[cneartree_dimsamples];
+            double dimlist[cneartree_dimsamples-1];
             double dimest = 1.;
-            double foundatrad[10];
+            double foundatrad[cneartree_dimsamples];
             int numrad;
             bool shell, closed;
             long lFound;
@@ -2796,6 +2811,10 @@ public:
             numrad = 0;
             shell = true;
             closed = true;
+            if (m_Flags & NTF_SphericalKNN) {
+                dRadiusOuter = radius;
+                shell = false;
+            }
             /* First find the nearest k inner shell */
             do {
                 dRadiusOuterSave = dRadiusOuter;
@@ -2825,8 +2844,8 @@ public:
                 tIndices.insert( tIndices.end( ), K_Storage[i].GetThird() );
                 tDistances.insert( tDistances.end(),K_Storage[i].GetFirst() );
             }
-            while ( tClosest.size() < k && dRadiusInner < radius) {
-                if (numrad < 10) {
+            while ( tClosest.size() < k && dRadiusOuter < radius) {
+                if (numrad < cneartree_dimsamples) {
                     foundatrad[numrad] = (double)tClosest.size();
                     radlist[numrad++] = dRadiusOuter;
                     if (numrad > 1) {
@@ -2841,7 +2860,7 @@ public:
                     dRadiusOuter = dRadiusInner+m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
                     if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
-                    if (numrad == 10) {
+                    if (numrad == cneartree_dimsamples) {
                         int ii;
                         dimest = 0.;
                         for (ii=0; ii < numrad-1; ii++) {
@@ -2853,7 +2872,7 @@ public:
                     shell = false;
                     closed = false;
                     dRadiusInner = dRadiusOuter;
-                    dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(4.*dimest));
+                    dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(3.*dimest));
                     if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                 }
@@ -2935,10 +2954,10 @@ public:
             DistanceType dRadiusInner = 0;
             DistanceType dRadiusOuterSave;
             DistanceType dRadiusOuter;
-            double radlist[10];
-            double dimlist[9];
+            double radlist[cneartree_dimsamples];
+            double dimlist[cneartree_dimsamples-1];
             double dimest = 1.;
-            double foundatrad[10];
+            double foundatrad[cneartree_dimsamples];
             int numrad;
             bool shell, closed;
             long lFound;
@@ -2949,6 +2968,10 @@ public:
             numrad = 0;
             shell = true;
             closed = true;
+            if (m_Flags & NTF_SphericalKNN) {
+                dRadiusOuter = radius;
+                shell = false;
+            }
             /* First find the nearest k inner shell */
             do {
                 dRadiusOuterSave = dRadiusOuter;
@@ -2976,8 +2999,8 @@ public:
             {
                 tClosest.insert( tClosest.end( ), K_Storage[i].second );
             }
-            while ( tClosest.size() < k && dRadiusInner < radius) {
-                if (numrad < 10) {
+            while ( tClosest.size() < k && dRadiusOuter < radius) {
+                if (numrad < cneartree_dimsamples) {
                     foundatrad[numrad] = (double)tClosest.size();
                     radlist[numrad++] = dRadiusOuter;
                     if (numrad > 1) {
@@ -2992,7 +3015,7 @@ public:
                     dRadiusOuter = dRadiusInner+m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
                     if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
-                    if (numrad == 10) {
+                    if (numrad == cneartree_dimsamples) {
                         int ii;
                         dimest = 0.;
                         for (ii=0; ii < numrad-1; ii++) {
@@ -3004,7 +3027,7 @@ public:
                     shell = false;
                     closed = false;
                     dRadiusInner = dRadiusOuter;
-                    dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(4.*dimest));
+                    dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(3.*dimest));
                     if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                 }
@@ -3067,10 +3090,10 @@ public:
             DistanceType dRadiusInner = 0;
             DistanceType dRadiusOuterSave;
             DistanceType dRadiusOuter;
-            double radlist[10];
-            double dimlist[9];
+            double radlist[cneartree_dimsamples];
+            double dimlist[cneartree_dimsamples-1];
             double dimest = 1.;
-            double foundatrad[10];
+            double foundatrad[cneartree_dimsamples];
             int numrad;
             bool shell, closed;
             long lFound;
@@ -3081,6 +3104,10 @@ public:
             numrad = 0;
             shell = true;
             closed = true;
+            if (m_Flags & NTF_SphericalKNN) {
+                dRadiusOuter = radius;
+                shell = false;
+            }
             if (dRadiusOuter > radius) dRadiusOuter = radius;
             /* First find the nearest k inner shell */
             do {
@@ -3110,8 +3137,8 @@ public:
                 tClosest.insert( tClosest.end( ), K_Storage[i].GetSecond() );
                 tIndices.insert( tIndices.end( ), K_Storage[i].GetThird() );
             }
-            while ( tClosest.size() < k && dRadiusInner < radius) {
-                if (numrad < 10) {
+            while ( tClosest.size() < k && dRadiusOuter < radius) {
+                if (numrad < cneartree_dimsamples) {
                     foundatrad[numrad] = (double)tClosest.size();
                     radlist[numrad++] = dRadiusOuter;
                     if (numrad > 1) {
@@ -3126,7 +3153,7 @@ public:
                     dRadiusOuter = dRadiusInner+m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
                     if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
-                    if (numrad == 10) {
+                    if (numrad == cneartree_dimsamples) {
                         int ii;
                         dimest = 0.;
                         for (ii=0; ii < numrad-1; ii++) {
@@ -3138,7 +3165,7 @@ public:
                     shell = false;
                     closed = false;
                     dRadiusInner = dRadiusOuter;
-                    dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(4.*dimest));
+                    dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(3.*dimest));
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                 }
                 K_Storage.clear();
