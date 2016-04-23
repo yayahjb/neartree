@@ -21,16 +21,22 @@ NearTree -- function library efficiently solving the Nearest Neighbor Problem
 <hr>
 <center>
 <h2 align=center>NearTree</h2>
-Release 4.0<br />
+Release 5.0<br />
 <font size="-1">
-18 April 2014<br />
-&#169; Copyright 2001, 2008, 2009, 2010, 2011, 2014 Larry Andrews.  All rights reserved
+23 April 2016<br />
+&#169; Copyright 2001, 2008, 2009, 2010, 2011, 2014, 2016 Larry Andrews.  All rights reserved
 <br />
 based on<br />
+Lawrence C. Andrews, Herbert J. Bernstein, &quot;<i>NearTree, a data structure and a software toolkit for the nearest-neighbor problem</i>&quot;,<br />
+    J. Appl. Crystallogr., Volume 49, Part 3 (June 2016),
+    doi: 10.1107/S1600576716004350, ISSN:1600-5767,<br />
+
+<p>
 Larry Andrews, &quot;<i>A template for the nearest neighbor problem</i>&quot;,<br />
-C/C++ Users Journal, Volume 19 ,  Issue 11  (November 2001), 40 - 49  (2001),
+C/C++ Users Journal, Volume 19,  Issue 11  (November 2001), 40 - 49  (2001),
 ISSN:1075-2838,<br />
 <a href="http://www.ddj.com/architect/184401449" style="text-decoration:none">www.ddj.com/architect/184401449</a>
+
 <p>
 Revised 12 Dec 2008, for sourceforge release, Larry Andrews and Herbert J. Bernstein<br />
 8 Jan 2009 Release 1.0 LCA and HJB<br />
@@ -53,6 +59,7 @@ Revised 12 Dec 2008, for sourceforge release, Larry Andrews and Herbert J. Berns
 23 April 2011 Release 3.1 HJB<br />
 27 September 2011 Release 3.1.1 HJB<br />
 18 April 2014 Release 4.0 HJB<br />
+23 April 2016 Release 5.0 HJB<br />
 </font>
 <P>
 
@@ -87,6 +94,10 @@ This is a release of an API for finding nearest neighbors among points in spaces
 arbitrary dimensions.  This release provides a C++ template, TNear.h, and a
 C library, CNearTree.c, with example/test programs.
 <font size="-1">
+<p>Release 5.0 cummulative changes from 2014, 2015, 2016 (svn revisions 153 - 159)
+including fixing a bug in the Lloyd cluster test and revising the KNN code to
+do an annular search.  A checkpoint capability and a recovery constructor have
+been added to TNear.h.
 <p>Release 4.0 cummulative changes from 2011, 2013, 2014, including
 flattening the tree for the C++ template by moving collisions into a
 separate vector, optional support for armadillo, and new code to facilitate
@@ -170,7 +181,7 @@ insertions before parallel execution of parallel searches.
 <p>
 The NearTree package is available at <a href="http://www.sourceforge.net/projects/neartree">www.sourceforge.net/projects/neartree</a>.
 A source tarball is available at <a 
-href="http://downloads.sourceforge.net/neartree/NearTree-4.0.tar.gz">downloads.sourceforge.net/neartree/NearTree-4.0.tar.gz</a>.
+href="http://downloads.sourceforge.net/neartree/NearTree-5.0.tar.gz">downloads.sourceforge.net/neartree/NearTree-5.0.tar.gz</a>.
 Later tarballs may be available.
 <p>
 If you decide to simply use the TNear.h header to add nearest neighbor support to C++ code under Visual
@@ -179,7 +190,7 @@ USE_LOCAL_HEADERS, which is automatically defined if _MSC_VER is defined.  For
 unix or MINGW, you will need to use the Makefile and to have libtool on your system.  Be warned that
 the default libtool under Mac OS X will not work for this installation.
 <P>
-When the source tarball is downloaded and unpacked, you should have a directory NearTree-4.0.  To
+When the source tarball is downloaded and unpacked, you should have a directory NearTree-5.0.  To
 see the current settings for a build
 execute
 <p>
@@ -306,7 +317,12 @@ errors of about 1 part in 10**15 is not a serious problem, the definition of
 <p>
 NOTE: A range of 10**15 is comparable to the diameter of the earth
 vs. the separation of two bonded atoms.
-
+<p>
+As of version 5.0, the default for processing K-nearest-neighbor request is to search in
+nested annuli.  For KNN searches on high dimension spaces or spaces with expensive
+distance calculations, this is the best choice.  However, flags are provided to revert
+to the version 4.0 spherical KNN search if desired.  See NTF_SphericalKNN in TNear.h
+and CNTF_SKNN in CNearTree.h.
 
 <hr>
 <hr>
@@ -411,26 +427,86 @@ The provided interface is:
 <p>
 <pre><tt>
     <b>#include &lt;TNear.h&gt;</b>
+    
+    // Constructors
 
     <b>CNearTree</b>( <b>void</b> );   // constructor
-       instantiated by something like:      CNearTree &lt;T&gt; vTree;
-       for some type T
+       // nstantiated by something like:      CNearTree &lt;T&gt; vTree;
+       // for some type T
        
     <b>CNearTree</b>( <b>const ContainerType&lt;T&gt;</b> &amp; <i>o</i>);    // constructor from containers, e.g. ...
 
     <b>CNearTree</b>( <b>const std::vector&lt;T&gt;</b> &amp; <i>o</i> );     // constructor
+
     <b>CNearTree</b>( <b>const std::list&lt;T&gt;</b> &amp; <i>o</i> );       // constructor
+
     <b>CNearTree</b>( <b>const std::set&lt;T&gt;</b> &amp; <i>o</i> );        // constructor
+
     <b>CNearTree</b>( <b>const CNearTree&lt;T&gt;</b> &amp; <i>o</i> );       // constructor
 
-    <b>CNearTree</b>( <b>const ContainerType&lt;T&gt;</b> &amp; <i>o1</i>,
-              <b>const ContainerType&lt;T&gt;</b> &amp; <i>o2</i>);
-                                                              // constructor merging 2 containers, e.g. ...
+    <b>CNearTree</b>( <b>const ContainerType&lt;T&gt;</b> &amp; <i>o1</i>, <b>const ContainerType&lt;T&gt;</b> &amp; <i>o2</i> );
+                                                // constructor merging 2 containers, The
+                                                // containers can be standard library containers or CNearTrees.
     
+    // *** The next constructor and the following Get_Checkpoint function are a matched
+    //     pair.  The constructor will recreate a NearTree save by Get_Checkpoint, even
+    //     if the objects have been saved to a file and restored. **
+
+
+    <b>CNearTree</b>( <b>const std::vector&lt;long&gt;</b> &amp; <i>DelayedIndices</i>,
+                                                // objects queued for insertion, possibly in random order
+               <b>const std::vector&lt;T&gt;</b> &amp; <i>ObjectStore</i>,
+                                                // all inserted objects go here
+               <b>const std::vector&lt;size_t></b> &amp; <i>ObjectCollide</i>,
+                                                // overflow chain of colliding objects
+               <b>const size_t</b> <i>DeepestDepth</i>,       // maximum depth of the tree
+               <b>const std::vector&lt; NearTreeNode&lt;T, DistanceType, distMinValue&gt; * &gt;</b> &amp; <i>NearTreeNodes<i>,
+                                                // vector of pointers to nodes to build the tree
+               <b>const NearTreeNode&lt;T, DistanceType, distMinValue&gt;</b> <i>BaseNode</i>,
+                                                // the tree's data is stored down
+                                                // this node in m_NearTreeNodes
+               <b>const long</b> <i>Flags</i>,                // flags for operational control (mainly for testing)
+               <b>const DistanceType</b> <i>DiamEstimate</i>, // estimated diameter
+               <b>const DistanceType</b> <i>SumSpacings</i>,  // sum of spacings at time of insertion
+               <b>const DistanceType</b> <i>SumSpacingsSq</i>,// sum of squares of spacings at time of insertion
+               <b>const double</b> <i>DimEstimate</i>,        // estimated dimension
+               <b>const double</b> <i>DimEstimateEsd</i>      // estimated dimension estimated standard deviation
+#ifdef CNEARTREE_INSTRUMENTED
+               , <b>const size_t</b> <i>NodeVisits</i>        // number of node visits
+#endif
+                                              ) // constructor
+                                              
+    // Checkpoint Getter
+                                              
+    <b>void Get_Checkpoint</b> ( <b>std::vector&lt;long&gt;</b> * * <i>DelayedIndices</i>,
+                                                // objects queued for insertion, possibly in random order
+               <b>std::vector&lt;T&gt;</b> * * <i>ObjectStore</i>,  // all inserted objects go here
+               <b>std::vector&lt;size_t&gt;</b> * * <i>ObjectCollide</i>,
+                                                // overflow chain of colliding objects
+               <b>size_t</b> * <i>DeepestDepth</i>,           // maximum depth of the tree
+               <b>std::vector&lt; NearTreeNode&lt;T, DistanceType, distMinValue&gt; * &gt;</b> * * <i>NearTreeNodes</i>,
+                                                // vector of pointers to nodes to build the tree
+               <b>NearTreeNode&lt;T, DistanceType, distMinValue&gt;</b> * * <i>BaseNode</i>,
+                                                // the tree's data is stored down
+                                                // this node in m_NearTreeNodes
+               <b>long</b> * <i>Flags</i>,                    // flags for operational control (mainly for testing)
+               <b>DistanceType</b> * <i>DiamEstimate</i>,     // estimated diameter
+               <b>DistanceType</b> * <i>SumSpacings</i>,      // sum of spacings at time of insertion
+               <b>DistanceType</b> * <i>SumSpacingsSq</i>,    // sum of squares of spacings at time of insertion
+               <b>double</b> * <i>DimEstimate</i>,            // estimated dimension
+               <b>double</b> * <i>DimEstimateEsd</i>          // estimated dimension estimated standard deviation
+#ifdef CNEARTREE_INSTRUMENTED
+               , <b>size_t</b> * <i>NodeVisits</i>            // number of node visits
+#endif
+                                              ) // checkpoint getter
+
+    // Destructor
     
     <b>~CNearTree</b>( <b>void</b> );  // destructor
     
     <b>void clear</b>( <b>void</b> );  // clear the NearTree
+    
+    // Flag Management
     
     <b>long GetFlags</b>( <b>void</b> ) <b>const</b>;                       // Get all execution flags
     <b>void SetFlags</b>( <b>const long</b> <i>flags</i> );                 // Set all execution flags
@@ -445,6 +521,8 @@ The provided interface is:
     <b>static const long</b>        NTF_NoFlip            = 4; //flag to suppress flips on insert
     <b>static const long</b>        NTF_ForceFlip         = 8; //flag to force flips on insert
     <b>static const long</b>        NTF_NoDefer           =16; //flag to prevent deferred insert
+    <b>static const long</b>        NTF_AnnularKNN        =32; //flag to do KNN in annular pieces
+    <b>static const long</b>        NTF_SphericalKNN      =64; //flag to do KNN as complete spheres
 
     
     <b>template&lt;typename</b> <i>InputContainer</i>&gt;
@@ -816,50 +894,6 @@ Information and special operation functions:
      <b>bool empty</b> ( <b>void</b> );
         returns true if the tree is empty, otherwise false
         
-    // *** The next constructor and the following Get_Checkpoint function are a matched
-    //     pair.  The constructor will recreate a NearTree save by Get_Checkpoint, even
-    //     if the objects have been saved to a file and restored. **
-    <b>CNeartree</b>( <b>const std::vector&lt;long&gt;</b> &amp; DelayedIndices,     // objects queued for insertion, possibly in random order
-               <b>const std::vector&lt;T&gt;</b>    &amp; ObjectStore,        // all inserted objects go here
-               <b>const std::vector&lt;size_t&gt;</b> &amp; ObjectCollide,    // overflow chain of colliding objects
-               <b>const size_t</b> DeepestDepth,
-               <b>const std::vector&lt; NearTreeNode&lt;T, DistanceType, distMinValue&gt; * &gt;</b> &amp; NearTreeNodes,
-                                                      // vector of pointers to nodes to build the tree
-               <b>const NearTreeNode&lt;T, DistanceType, distMinValue&gt;</b> BaseNode, // the tree's data is stored down
-                                                      // this node in m_NearTreeNodes
-               <b>const long</b>              Flags,         // flags for operational control (mainly for testing)
-               <b>const DistanceType</b>      DiamEstimate,  // estimated diameter
-               <b>const DistanceType</b>      SumSpacings,   // sum of spacings at time of insertion
-
-               <b>const DistanceType</b>      SumSpacingsSq, // sum of squares of spacings at time of insertion
-               <b>const double</b>            DimEstimate,   // estimated dimension
-               <b>const double</b>            DimEstimateEsd // estimated dimension estimated standard deviation
-            #ifdef CNEARTREE_INSTRUMENTED
-             , <b>const size_t</b>            NodeVisits     // number of node visits
-            #endif
-               );  // CNearTree recovery constructor
-    
-    <b>void Get_Checkpoint</b>( <b>std::vector&lt;long&gt;</b> * * DelayedIndices, // objects queued for insertion, possibly in random order
-               <b>std::vector&lt;T&gt;</b>  * * ObjectStore,       // all inserted objects go here
-               <b>std::vector&lt;size_t&gt;</b> * * ObjectCollide, // overflow chain of colliding objects
-               <b>size_t</b>              * DeepestDepth,    // maximum depth of the tree
-               <b>std::vector&lt; NearTreeNode&lt;T, DistanceType, distMinValue&gt; * &gt; * * NearTreeNodes</b>,
-                                                      // vector of pointers to nodes to build the tree
-               <b>NearTreeNode&lt;T, DistanceType, distMinValue></b> * * BaseNode,
-                                                      // the tree's data is stored down
-                                                      // this node in m_NearTreeNodes
-               <b>long</b>              * Flags,             // flags for operational control (mainly for testing)
-               <b>DistanceType</b>      * DiamEstimate,      // estimated diameter
-               <b>DistanceType</b>      * SumSpacings,       // sum of spacings at time of insertion
-               <b>DistanceType</b>      * SumSpacingsSq,     // sum of squares of spacings at time of insertion
-               <b>double</b>            * DimEstimate,       // estimated dimension
-               <b>double</b>            * DimEstimateEsd     // estimated dimension estimated standard deviation
-            #ifdef CNEARTREE_INSTRUMENTED
-             , <b>size_t</b>          * NodeVisits           // number of node visits
-            #endif
-               );
-
-
         
 <hr>
 
@@ -874,7 +908,7 @@ Iterators:
      list of iterators. The same set is available for const_iterator.
 
      <b>iterator</b> ( <b>void</b> ) { }; // constructor
-     <b>iterator</b> ( <b>const const_iterator&amp;</b> <i>s</i> );
+     <b>explicit iterator</b> ( <b>const const_iterator&amp;</b> <i>s</i> );
      <b>iterator&amp; operator=  </b> ( <b>const iterator&amp;</b> <i>s</i> );
      <b>iterator&amp; operator=  </b> ( <b>const const_iterator&amp;</b> <i>s</i> );
      <b>iterator  operator++ </b> ( <b>const int</b> <i>n</i> );
@@ -898,6 +932,9 @@ Iterators:
 
 
      <b>const T * const operator-> </b> ( <b>void</b> )   <b>const</b>;
+     <b>long get_position</b> ( <b>void</b> ) <b>const</b>;
+     <b>const CNearTree&lt; T, DistanceType, distMinValue &gt; * get_parent</b> ( <b>void</b>  );
+         
 
 <hr>
   </tt>
@@ -1189,7 +1226,13 @@ nodes of type CNearTreeNode:
                                          /* tree descending from the left object        */
         struct _CNearTreeNode * m_pRightBranch; 
                                          /* tree descending from the right object       */
-        int              m_iflags;       /* flags                                       */
+        long              m_iflags;      /* flags
+        size_t            m_iTreeSize;   /* size of this node tree  */
+#ifdef CNEARTREE_INSTRUMENTED
+        size_t            m_Height;      /* height of this node     */
+#endif
+
+*/
     } CNearTreeNode;
     
     
@@ -1204,6 +1247,16 @@ nodes of type CNearTreeNode:
         CVectorHandle    m_ObjectStore;   /* all inserted objects                        */
         CVectorHandle    m_CoordStore;    /* all inserted coordinates                    */
         CVectorHandle    m_DelayedIndices;/* objects queued for insertion                */
+        CRHrand          m_rhr;           /* random number generator                     */
+        double           m_DiamEstimate;  /* estimated diameter */
+        double           m_SumSpacings;   /* sum of spacings at time of insertion */
+        double           m_SumSpacingsSq; /* sum of spacings squared at time of insertion */
+        double           m_DimEstimate;   /* estimated dimension */
+        double           m_DimEstimateEsd;/* estimated dimension estimated standard deviation */
+#ifdef CNEARTREE_INSTRUMENTED
+        size_t           m_NodeVisits;    /* number of node visits */
+#endif
+
     } CNearTree;
     
     typedef CNearTree     FAR * CNearTreeHandle;
@@ -1215,6 +1268,7 @@ nodes of type CNearTreeNode:
 #define CNTF_NOFLIP        0x40000L     /*flag to suppress flips on insert      */
 #define CNTF_FORCEFLIP     0x80000L     /*flag to force flips on insert         */
 #define CNTF_NODEFER      0x100000L     /*flag to prevent deferred insert       */
+#define CNTF_SKNN         0x200000L     /*flag to use spherical KNN             */
 
 
 </pre></tt>
@@ -1468,7 +1522,7 @@ Typical use is
 <hr>
 <hr>
 <font size="-1">
-Updated 18 April 2014<br />
+Updated 23 April 2016<br />
 <script language="javascript" type="text/javascript">
 <!-- 
       var name = "andrewsL@";
