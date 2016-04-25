@@ -251,7 +251,7 @@ install:  all $(INSTALL_PREFIX) $(INSTALL_PREFIX)/lib $(INSTALL_PREFIX)/include 
 		  $(BUILD_COMMAND_DYNAMIC) $(INCLUDES) $(EXAMPLES)/CNearTreeTest.c \
 		  -L$(INSTALL_PREFIX)/lib -lCNearTree $(CLIBRARIES) -o $(BIN)/CNearTreeTest_dynamic
 		  $(BIN)/CNearTreeTest_dynamic 
-			
+		
 		  
 		  
 #
@@ -289,77 +289,97 @@ $(LIB)/libCNearTree.$(LIB_EXT): $(SRC)/CNearTree.c $(INC)/CNearTree.h $(LIB) $(C
 #
 $(BIN)/CPPMain: $(INC)/TNear.h $(EXAMPLES)/main.cpp $(EXAMPLES)/v.cpp $(BIN)
 	$(CPPBUILD_COMMAND_LOCAL) $(EXAMPLES)/main.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
-		      -o $@
+		  -o $@
 
 $(BIN)/CPPMain_Flip: $(INC)/TNear.h $(EXAMPLES)/main_flip.cpp $(EXAMPLES)/v.cpp $(BIN)
 	$(CPPBUILD_COMMAND_LOCAL) $(EXAMPLES)/main_flip.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
-		      -o $@
-			  
+		  -o $@
+		  
 $(BIN)/CPPNearTreeTest: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
 	$(CPPBUILD_COMMAND_LOCAL) $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
-		      -o $@
+		  -o $@
+
+$(BIN)/CPPNearTreeTest_2SAMP: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
+		$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_DIMSAMPLES=2 $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
+		  -o $@
+
+$(BIN)/CPPNearTreeTest_6SAMP: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
+	$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_DIMSAMPLES=6 $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
+		  -o $@
+
+
+$(BIN)/CPPNearTreeTest_8SAMP: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
+		$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_DIMSAMPLES=8 $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
+		  -o $@
+
 
 $(BIN)/CPPNearTreeTestInst: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
 	$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
-		      -o $@
+		  -o $@
 
 $(BIN)/CPPNearTreeTestInstFlip: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
 	$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED -DCNEARTREE_FORCEFLIP $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
-		      -o $@
-			  
+		  -o $@
+		  
 $(BIN)/CPPNearTreeTestInstNoDefer: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
 	$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED -DCNEARTREE_NODEFER $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
-		      -o $@
+		  -o $@
 
 $(BIN)/CPPNearTreeTestInstNoFlip: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
 	$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED -DCNEARTREE_NOFLIP $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
-	              -o $@
+		      -o $@
 
 $(BIN)/CPPNearTreeTestInstNoFlipNoDefer: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
 	$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED -DCNEARTREE_NOFLIP -DCNEARTREE_NODEFER $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
-		      -o $@
-			  
+		  -o $@
+		  
 $(BIN)/CMain: $(INC)/CNearTree.h $(EXAMPLES)/main.c $(SRC)/CNearTree.c $(BIN) $(LIB)/libCNearTree.$(LIB_EXT)
 	$(BUILD_COMMAND_LOCAL) $(EXAMPLES)/main.c  $(LIB)/libCNearTree.$(LIB_EXT) $(CLIBRARIES) \
-		      -o $@
+		  -o $@
 
 $(BIN)/CNearTreeTest: $(INC)/CNearTree.h $(EXAMPLES)/CNearTreeTest.c $(SRC)/CNearTree.c $(BIN) $(LIB)/libCNearTree.$(LIB_EXT)
 	$(BUILD_COMMAND_LOCAL) $(EXAMPLES)/CNearTreeTest.c $(LIB)/libCNearTree.$(LIB_EXT) $(CLIBRARIES) \
-		      -o $@
+		  -o $@
 
 $(BIN)/CNearTreeTestInst: $(INC)/CNearTree.h $(EXAMPLES)/CNearTreeTest.c $(SRC)/CNearTree.c $(BIN) $(LIB)/libCNearTree.$(LIB_EXT)
 	$(BUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED $(EXAMPLES)/CNearTreeTest.c $(LIB)/libCNearTree.$(LIB_EXT) $(CLIBRARIES) \
-		      -o $@
+		  -o $@
 
 
 #
 # Tests
 #
 tests:		$(LIB) $(BIN) $(BIN)/CPPMain $(BIN)/CPPMain_Flip $(BIN)/CPPNearTreeTest \
-				$(BIN)/CPPNearTreeTestInst $(BIN)/CMain $(BIN)/CNearTreeTest \
-				$(BIN)/CPPNearTreeTestInstFlip $(BIN)/CPPNearTreeTestInstNoDefer \
-				$(BIN)/CPPNearTreeTestInstNoFlip $(BIN)/CPPNearTreeTestInstNoFlipNoDefer \
-				$(BIN)/CNearTreeTestInst
-			$(TIME) $(BIN)/CPPMain 3458923 > $(TESTDATA)/CPPMain.lst
-			$(TIME) $(BIN)/CPPMain_Flip 3458923 > $(TESTDATA)/CPPMain_Flip.lst
-			$(TIME) $(BIN)/CMain 3458923 > $(TESTDATA)/CMain.lst
-			$(TIME) $(BIN)/CPPNearTreeTest
-			$(TIME) $(BIN)/CPPNearTreeTestInst
-			$(TIME) $(BIN)/CPPNearTreeTestInstFlip
-			$(TIME) $(BIN)/CPPNearTreeTestInstNoDefer
-			$(TIME) $(BIN)/CPPNearTreeTestInstNoFlip
-			$(TIME) $(BIN)/CNearTreeTest --debug
-			$(TIME) $(BIN)/CNearTreeTestInst --debug
+		$(BIN)/CPPNearTreeTest_2SAMP \
+		$(BIN)/CPPNearTreeTest_6SAMP \
+		$(BIN)/CPPNearTreeTest_8SAMP \
+		$(BIN)/CPPNearTreeTestInst $(BIN)/CMain $(BIN)/CNearTreeTest \
+		$(BIN)/CPPNearTreeTestInstFlip $(BIN)/CPPNearTreeTestInstNoDefer \
+		$(BIN)/CPPNearTreeTestInstNoFlip $(BIN)/CPPNearTreeTestInstNoFlipNoDefer \
+		$(BIN)/CNearTreeTestInst
+		$(TIME) $(BIN)/CPPMain 3458923 > $(TESTDATA)/CPPMain.lst
+		$(TIME) $(BIN)/CPPMain_Flip 3458923 > $(TESTDATA)/CPPMain_Flip.lst
+		$(TIME) $(BIN)/CMain 3458923 > $(TESTDATA)/CMain.lst
+		$(TIME) $(BIN)/CPPNearTreeTest_2SAMP
+		$(TIME) $(BIN)/CPPNearTreeTest
+		$(TIME) $(BIN)/CPPNearTreeTest_6SAMP
+		$(TIME) $(BIN)/CPPNearTreeTest_8SAMP
+		$(TIME) $(BIN)/CPPNearTreeTestInst
+		$(TIME) $(BIN)/CPPNearTreeTestInstFlip
+		$(TIME) $(BIN)/CPPNearTreeTestInstNoDefer
+		$(TIME) $(BIN)/CPPNearTreeTestInstNoFlip
+		$(TIME) $(BIN)/CNearTreeTest --debug
+		$(TIME) $(BIN)/CNearTreeTestInst --debug
 ifneq ($(MSYSTEM),MINGW32)
-			diff -b -c $(TESTDATA)/CPPMain_orig.lst $(TESTDATA)/CPPMain.lst
-			diff -b -c $(TESTDATA)/CPPMain_orig.lst $(TESTDATA)/CPPMain_Flip.lst
-			diff -b -c $(TESTDATA)/CMain_orig.lst $(TESTDATA)/CMain.lst
+		diff -b -c $(TESTDATA)/CPPMain_orig.lst $(TESTDATA)/CPPMain.lst
+		diff -b -c $(TESTDATA)/CPPMain_orig.lst $(TESTDATA)/CPPMain_Flip.lst
+		diff -b -c $(TESTDATA)/CMain_orig.lst $(TESTDATA)/CMain.lst
 else
-			diff -b -c $(TESTDATA)/CPPMain_MINGW_orig.lst $(TESTDATA)/CPPMain.lst
-			diff -b -c $(TESTDATA)/CPPMain_MINGW_orig.lst $(TESTDATA)/CPPMain_Flip.lst
-			diff -b -c $(TESTDATA)/CMain_MINGW_orig.lst $(TESTDATA)/CMain.lst
+		diff -b -c $(TESTDATA)/CPPMain_MINGW_orig.lst $(TESTDATA)/CPPMain.lst
+		diff -b -c $(TESTDATA)/CPPMain_MINGW_orig.lst $(TESTDATA)/CPPMain_Flip.lst
+		diff -b -c $(TESTDATA)/CMain_MINGW_orig.lst $(TESTDATA)/CMain.lst
 endif
-			
+		
 #
 # Remove all non-source files
 #

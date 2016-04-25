@@ -1953,6 +1953,49 @@ public:
     
     
     //=======================================================================
+    // LLoyd's algorithm
+    /*
+
+    Templates to partition the point in a NearTree into clusters nearest to
+    given points.
+
+     If the input is a container of points t1:  The NearTree is examined. For each point
+    input in the input container a new container of the same type is output in the
+    vector of containers that will be returned. If N points are input, then N
+    containers will be output. The points of the neartree will be examined. Copies
+    of the neartree points are put into the output container (in the output vector)
+    that corresponds to the input point that it is nearest to.  If a point in the
+    NearTree is equidistant to more than one point in t1, then it is assigned to
+    the first point in the container at that distance
+
+
+    If the input is two points t1 and t2, then the corresponding Neartee point
+    are place into containers group1 and group2, and, if group1_ordinals and 
+    group2_ordinals are provided the ordinals of into those vectors. 
+    The ordinals can be used as indices into the CNearTree itself.
+       */
+    template<typename ContainerType>
+    std::vector<ContainerType> BelongsToPoints( const ContainerType& t1 ) const {
+       std::vector<ContainerType> out( t1.size( ) );
+       typename CNearTree<T>::iterator it;
+
+       typename CNearTree<T>::iterator best;
+       for ( it=this->begin( ); it!=this->end( ); ++it ) {
+          unsigned int bestindex = 0;
+          double bestDistance = DBL_MAX;
+          for ( unsigned int t1i=0; t1i<t1.size( ); ++t1i ) {
+             const double testDistance = DistanceBetween( ( *it ), t1[t1i] );
+             if ( testDistance <bestDistance ) {
+                bestindex = t1i;
+                best = it;
+                bestDistance = testDistance;
+             }
+          }
+          out[bestindex].insert( out[bestindex].end(), *it );
+       }
+       return out;
+    }  // end BelongsToPoints
+
     template<typename ContainerType>
     void BelongsToPoints( const T& t1, const T& t2, ContainerType& group1, ContainerType& group2 )
     {
@@ -1972,6 +2015,8 @@ public:
             }
         }
     }  // end BelongsToPoints
+
+
     template<typename ContainerType>
     void BelongsToPoints( const T& t1, const T& t2, ContainerType& group1, ContainerType& group2,
                          std::vector<size_t>& group1_ordinals, std::vector<size_t>& group2_ordinals)
@@ -2845,6 +2890,8 @@ public:
                 tDistances.insert( tDistances.end(),K_Storage[i].GetFirst() );
             }
             while ( tClosest.size() < k && dRadiusOuter < radius) {
+                /*fprintf (stderr,"Doing annuli, k %d, iFound %d, radius %g dRadiusOuter %g\n",
+                         (int)k,(int)lFound, radius, dRadiusOuter );*/
                 if (numrad < cneartree_dimsamples) {
                     foundatrad[numrad] = (double)tClosest.size();
                     radlist[numrad++] = dRadiusOuter;
@@ -3000,6 +3047,8 @@ public:
                 tClosest.insert( tClosest.end( ), K_Storage[i].second );
             }
             while ( tClosest.size() < k && dRadiusOuter < radius) {
+                /* fprintf (stderr,"Doing annuli, k %d, iFound %d, radius %g dRadiusOuter %g\n",
+                         (int)k,(int)lFound, radius, dRadiusOuter ); */
                 if (numrad < cneartree_dimsamples) {
                     foundatrad[numrad] = (double)tClosest.size();
                     radlist[numrad++] = dRadiusOuter;

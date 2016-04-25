@@ -101,6 +101,7 @@ void testOperatorMinusEquals( void );
 void testSetSymmetricDifference( void );
 void testCentroid( void );
 void testLloyd( void );
+void testLloyd_N( void );
 
 //std::vector<int> LloydCycleStep( const CNearTree<int>& coord, const std::vector<int>& vIn );
 
@@ -181,6 +182,7 @@ int main(int argc, char* argv[])
     timecommand("testSetSymmetricDifference",{testSetSymmetricDifference( );});
     timecommand("testCentroid",{testCentroid( );});
     timecommand("testLloyd",{testLloyd( );});
+    timecommand("testLloyd-N",{testLloyd_N( );});
     
 
     if( g_errorCount == 0 )
@@ -1884,7 +1886,7 @@ void testIterators( void )
 {
     CNearTree<int> tree;
     CNearTree<int>::iterator itEmpty = tree.back( );
-    CNearTree<int>::iterator itTest  = tree.end( );
+
     if( itEmpty != tree.end( ) )
     {
         ++g_errorCount;
@@ -4302,20 +4304,57 @@ void testLloyd( )
     }
 }
 
-//> Lloyd cycle step
-//>
-//> put starting points (SPs) in a neartree
-//>
-//> CNearTree LloydCycle( const CNearTree& data, const CNearTree& SP )
-//> make a vector v of Vector_3 of size SP.size( ) and one of long same size
-//> for each data point
-//>   get iterator to nearest SP
-//>   v[it->GetPosition()] += *it;
-//>   ++count[it->GetPosition()];
-//> end for
-//>
-//> foreach in v
-//>   v[i] /= count[i]
-//>
-//> return (CNearTree(v));
+void testLloyd_N( )
+{
+    CNearTree<double> vdata;
+    std::vector<double> vk;
 
+    for ( int i=0; i<100; ++i )
+    {
+        vdata.insert( double(i) );
+    }    
+    
+    size_t estdim = (size_t)(0.5+vdata.GetDimEstimate());
+    if ( estdim != 1) {
+        ++g_errorCount;   
+    fprintf(stdout, "testLloyd: dimension estimate %ld != 1\n",(long)estdim);
+    }
+    
+    vk.push_back( double(-12) );
+    vk.push_back( double(0) );
+    vk.push_back( double(17) );
+    vk.push_back( double(100) );
+
+    std::vector<std::vector<double> > vvd = vdata.BelongsToPoints( vk );
+    const int i19191 = 19191;
+
+    if (vvd.size( ) != vk.size( ))
+    {
+       ++g_errorCount;
+       fprintf( stdout, "testLloyd_N, vdd.size %ld  vk.size %ld\n", (long)vvd.size( ), (long)vk.size( ) );
+    }
+
+    if (!vvd[0].empty( ))
+    {
+       ++g_errorCount;
+       fprintf( stdout, "testLloyd_N, vdd[0].size %ld  should be 0\n", (long)vvd[0].size( ) );
+    }
+
+    if (vvd[1].size( ) != 9)
+    {
+       ++g_errorCount;
+       fprintf( stdout, "testLloyd_N, vdd[1].size %ld  should be 9\n", (long)vvd[1].size( ) );
+    }
+
+    if (vvd[2].size( ) != 50)
+    {
+       ++g_errorCount;
+       fprintf( stdout, "testLloyd_N, vdd[2].size %ld  should be 50\n", (long)vvd[2].size( ) );
+    }
+
+    if (vvd[3].size( ) != 41)
+    {
+       ++g_errorCount;
+       fprintf( stdout, "testLloyd_N, vdd[3].size %ld  should be 51\n", (long)vvd[3].size( ) );
+    }
+}

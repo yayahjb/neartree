@@ -1,14 +1,15 @@
+
                                     NearTree
 
-                                  Release 5.0
-                                 23 April 2016
-      (c) Copyright 2001, 2008, 2009, 2010, 2011, 2014, 2016 Larry Andrews. 
+                                  Release 5.1
+                                 24 April 2016
+     (c) Copyright 2001, 2008, 2009, 2010, 2011, 2014, 2016 Larry Andrews.
                               All rights reserved
                                     based on
-  Lawrence C. Andrews, Herbert J. Bernstein, "NearTree, a data structure and a
-              software toolkit for the nearest-neighbor problem",
-           J. Appl. Crystallogr., Volume 49, Part 3 (June 2016), doi:
-                   10.1107/S1600576716004350, ISSN:1600-5767,
+     Lawrence C. Andrews, Herbert J. Bernstein, "NearTree, a data structure
+           and a software toolkit for the nearest-neighbor problem",
+             J. Appl. Crystallogr., Volume 49, Part 3 (June 2016),
+                doi: 10.1107/S1600576716004350, ISSN:1600-5767,
 
          Larry Andrews, "A template for the nearest neighbor problem",
    C/C++ Users Journal, Volume 19, Issue 11 (November 2001), 40 - 49 (2001),
@@ -38,6 +39,7 @@
                       27 September 2011 Release 3.1.1 HJB
                          18 April 2014 Release 4.0 HJB
                          23 April 2016 Release 5.0 HJB
+                         25 April 2016 Release 5.1 LCA
 
     YOU MAY REDISTRIBUTE NearTree UNDER THE TERMS OF THE LGPL
 
@@ -63,10 +65,13 @@
    spaces of arbitrary dimensions. This release provides a C++ template,
    TNear.h, and a C library, CNearTree.c, with example/test programs.
 
-   Release 5.0 cummulative changes from 2014, 2015, 2016 (svn revisions 153 -
-   159) including fixing a bug in the Lloyd cluster test and revising the KNN
-   code to do an annular search. A checkpoint capability and a recovery
-   constructor have been added to TNear.h.
+   Release 5.1 augmented the Lloyd alogorithm code to allow for an arbitrary
+   number of cluster points. The Makefile and README have been updated.
+
+   Release 5.0 has cummulative changes from 2014, 2015, 2016 (svn revisions
+   153 - 159) including fixing a bug in the Lloyd cluster test and revising
+   the KNN code to do an annular search. A checkpoint capability and a
+   recovery constructor have been added to TNear.h.
 
    Release 4.0 cummulative changes from 2011, 2013, 2014, including
    flattening the tree for the C++ template by moving collisions into a
@@ -166,7 +171,7 @@
 
    The NearTree package is available at
    www.sourceforge.net/projects/neartree. A source tarball is available at
-   downloads.sourceforge.net/neartree/NearTree-5.0.tar.gz. Later tarballs may
+   downloads.sourceforge.net/neartree/NearTree-5.1.tar.gz. Later tarballs may
    be available.
 
    If you decide to simply use the TNear.h header to add nearest neighbor
@@ -178,7 +183,7 @@
    work for this installation.
 
    When the source tarball is downloaded and unpacked, you should have a
-   directory NearTree-5.0. To see the current settings for a build execute
+   directory NearTree-5.1. To see the current settings for a build execute
 
    make
 
@@ -309,6 +314,13 @@
    However, flags are provided to revert to the version 4.0 spherical KNN
    search if desired. See NTF_SphericalKNN in TNear.h and CNTF_SKNN in
    CNearTree.h.
+
+   If you define CNEARTREE_DIMSAMPLES with a integer value, that value will
+   be used as the count of the number of radii to try to estimate the
+   Hausdorff dimension in doing K-nearest-neighbor processinf. Values as low
+   as 2 can be used. The default is 4. The higher the value, the more
+   accurate the dimension estimate. The Makefile includes tests of 2, 4, 6
+   and 8 samples.
 
      ----------------------------------------------------------------------
 
@@ -613,10 +625,27 @@
 
      The following functions (BelongsToPoints, SeparateByRadius, FindInSphere, FindOutSphere,
      and FindInAnnulus) all return a container (ContainerType) that can be any standard library
-     container (such as std::vector< T >) or CNearTree.  In each case option arguments
-     allow a parallel vector of indices to be returned for each container, giving the
-     indices of the returned objects within the original NearTree.
+     container (such as std::vector< T >) or CNearTree.
+    
+     If the input is a container of points t1:  The NearTree is examined. For each
+     point input in the input container a new container of the same type is output
+     in the vector of containers that will be returned. If N points are input, then N
+     containers will be output. The points of the neartree will be examined. Copies
+     of the neartree points are put into the output container (in the output vector)
+     that corresponds to the input point that it is nearest to.  If a point in the
+     NearTree is equidistant to more than one point in t1, then it is assigned to
+     the first point in the container at that distance
+    
+     If the input is two points t1 and t2, then the corresponding Neartee point
+     are place into containers group1 and group2, and, if group1_ordinals and
+     group2_ordinals are provided the ordinals of into those vectors.
+     The ordinals can be used as indices into the CNearTree itself.
+
+
      
+     template<typename ContainerType>
+     std::vector<ContainerType> BelongsToPoints ( const ContainerType& t1 ) const;
+
      template<typename ContainerType>
      void BelongsToPoints ( const T& t1, const T& t2,
          ContainerType& group1, ContainerType& group2 );
@@ -624,11 +653,24 @@
      void BelongsToPoints ( const T& t1, const T& t2,
          ContainerType& group1, ContainerType& group2,
      std::vector<size_t>& group1_ordinals, std::vector<size_t>& group2_ordinals);
-        returns the points closer to t1 than to t2 in group1 and the rest in group 2
-        if group1_ordinals and group2_ordinals are provided the ordinals of the
-        found objects in the object store are put into those vectors. The ordinals
-        can be used as indices into the CNearTree itself.
-       
+     template<typename ContainerType>
+     std::vector<ContainerType> BelongsToPoints ( const T& t1 );
+    
+     If the input is a container of points t1:  The NearTree is examined. For each
+     point input in the input container a new container of the same type is output
+     in the vector of containers that will be returned. If N points are input, then N
+     containers will be output. The points of the neartree will be examined. Copies
+     of the neartree points are put into the output container (in the output vector)
+     that corresponds to the input point that it is nearest to.  If a point in the
+     NearTree is equidistant to more than one point in t1, then it is assigned to
+     the first point in the container at that distance
+    
+     If the input is two points t1 and t2, then the corresponding Neartee points
+     are place into containers group1 and group2, and, if group1_ordinals and
+     group2_ordinals are provided the ordinals of into those vectors.
+     The ordinals can be used as indices into the CNearTree itself.
+    
+    
      template<typename ContainerTypeInside, typename ContainerTypeOutside>
      void SeparateByRadius ( const DistanceType radius, const T& probe,
          ContainerTypeInside& inside, ContainerTypeOutside& outside );
@@ -1408,5 +1450,5 @@
 
      ----------------------------------------------------------------------
 
-   Updated 23 April 2016
+   Updated 25 April 2016
    andrewsl@ix.netcom.com
