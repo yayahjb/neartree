@@ -1,7 +1,7 @@
 
                                     NearTree
 
-                                  Release 5.1
+                                 Release 5.1.1
                                  24 April 2016
      (c) Copyright 2001, 2008, 2009, 2010, 2011, 2014, 2016 Larry Andrews.
                               All rights reserved
@@ -40,6 +40,7 @@
                          18 April 2014 Release 4.0 HJB
                          23 April 2016 Release 5.0 HJB
                          25 April 2016 Release 5.1 LCA
+                    30 April 2016 Release 5.1.1 LCA and HJB
 
     YOU MAY REDISTRIBUTE NearTree UNDER THE TERMS OF THE LGPL
 
@@ -64,6 +65,9 @@
    This is a release of an API for finding nearest neighbors among points in
    spaces of arbitrary dimensions. This release provides a C++ template,
    TNear.h, and a C library, CNearTree.c, with example/test programs.
+
+   Release 5.1.1 added a pdf of the 2001 Dr. Dobbs article, added with
+   permission of the editor.
 
    Release 5.1 augmented the Lloyd alogorithm code to allow for an arbitrary
    number of cluster points. The Makefile and README have been updated.
@@ -171,8 +175,8 @@
 
    The NearTree package is available at
    www.sourceforge.net/projects/neartree. A source tarball is available at
-   downloads.sourceforge.net/neartree/NearTree-5.1.tar.gz. Later tarballs may
-   be available.
+   downloads.sourceforge.net/neartree/NearTree-5.1.1.tar.gz. Later tarballs
+   may be available.
 
    If you decide to simply use the TNear.h header to add nearest neighbor
    support to C++ code under Visual Studio, be sure to also use the rhrand.h
@@ -183,7 +187,7 @@
    work for this installation.
 
    When the source tarball is downloaded and unpacked, you should have a
-   directory NearTree-5.1. To see the current settings for a build execute
+   directory NearTree-5.1.1. To see the current settings for a build execute
 
    make
 

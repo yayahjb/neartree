@@ -21,7 +21,7 @@ NearTree -- function library efficiently solving the Nearest Neighbor Problem
 <hr>
 <center>
 <h2 align=center>NearTree</h2>
-Release 5.1<br />
+Release 5.1.1<br />
 <font size="-1">
 24 April 2016<br />
 &#169; Copyright 2001, 2008, 2009, 2010, 2011, 2014, 2016 Larry Andrews.<br />
@@ -62,6 +62,7 @@ Revised 12 Dec 2008, for sourceforge release, Larry Andrews and Herbert J. Berns
 18 April 2014 Release 4.0 HJB<br />
 23 April 2016 Release 5.0 HJB<br />
 25 April 2016 Release 5.1 LCA<br />
+30 April 2016 Release 5.1.1 LCA and HJB<br />
 </font>
 <P>
 
@@ -96,6 +97,8 @@ This is a release of an API for finding nearest neighbors among points in spaces
 arbitrary dimensions.  This release provides a C++ template, TNear.h, and a
 C library, CNearTree.c, with example/test programs.
 <font size="-1">
+<p>Release 5.1.1 added a pdf of the 2001 Dr. Dobbs article, added with permission of
+the editor.
 <p>Release 5.1 augmented the Lloyd alogorithm code to allow for an arbitrary number
 of cluster points.  The Makefile and README have been updated.
 <p>Release 5.0 has cummulative changes from 2014, 2015, 2016 (svn revisions 153 - 159)
@@ -185,7 +188,7 @@ insertions before parallel execution of parallel searches.
 <p>
 The NearTree package is available at <a href="http://www.sourceforge.net/projects/neartree">www.sourceforge.net/projects/neartree</a>.
 A source tarball is available at <a 
-href="http://downloads.sourceforge.net/neartree/NearTree-5.1.tar.gz">downloads.sourceforge.net/neartree/NearTree-5.1.tar.gz</a>.
+href="http://downloads.sourceforge.net/neartree/NearTree-5.1.1.tar.gz">downloads.sourceforge.net/neartree/NearTree-5.1.1.tar.gz</a>.
 Later tarballs may be available.
 <p>
 If you decide to simply use the TNear.h header to add nearest neighbor support to C++ code under Visual
@@ -194,7 +197,7 @@ USE_LOCAL_HEADERS, which is automatically defined if _MSC_VER is defined.  For
 unix or MINGW, you will need to use the Makefile and to have libtool on your system.  Be warned that
 the default libtool under Mac OS X will not work for this installation.
 <P>
-When the source tarball is downloaded and unpacked, you should have a directory NearTree-5.1.  To
+When the source tarball is downloaded and unpacked, you should have a directory NearTree-5.1.1.  To
 see the current settings for a build
 execute
 <p>
