@@ -71,6 +71,7 @@
 #define ABS(x) (((x)<0)?-(x):(x))
 
 RHrand rhr;
+size_t norm_delay;
 
 void testSeparation( void );
 void testEmptyTree( void );
@@ -93,8 +94,7 @@ void testBigVector( void );
 void testIntegerReturn( void );
 void testBigIntVec( void );
 void testSTLContainerInput( void );
-void testKNearFar( void );
-void testKNearFar_Spherical( void );
+void testKNearFar( size_t, size_t );
 void testMergeConstructor( void );
 void testOperatorPlusEquals( void );
 void testOperatorMinusEquals( void );
@@ -108,6 +108,7 @@ void testLloyd_N( void );
 long g_errorCount;
 
 int debug;
+int knntest;
 
 #define timecommand(idstring,command) \
 { \
@@ -130,18 +131,33 @@ clock_t tc2 = std::clock();\
 size_t nv2 = tree.GetNodeVisits(); \
 fprintf( stdout, "%s time %f, visits %ld \n", idstring, ((double)(tc2-tc1))/CLOCKS_PER_SEC, (long)(nv2-nv1)); \
 }
-
 #endif
+#define looptimecommand(idstring,paramname,paramlow,paramhigh,paramstep, command) \
+{   size_t paramname; \
+    for (paramname=paramlow; paramname<paramhigh+1; paramname+=paramstep) { \
+        clock_t tc1 = std::clock();\
+        {command} \
+        clock_t tc2 = std::clock();\
+        fprintf( stdout, "%s =%ld time %f \n", \
+                idstring, (long)paramname, ((double)(tc2-tc1))/CLOCKS_PER_SEC); \
+    } \
+}
 
 /*=======================================================================*/
 int main(int argc, char* argv[])
 {
+    size_t testdim;
+    size_t norm_delay;
     g_errorCount = 0;
     
     debug = 0;
+    knntest = 0;
     if (argc > 1 && !strcmp(argv[1],"--debug")) debug = 1;
-   
-        
+    if (argc > 1 && !strcmp(argv[1],"--knntest")) knntest = 1;
+    if (argc > 2 && !strcmp(argv[2],"--debug")) debug = 1;
+    if (argc > 2 && !strcmp(argv[2],"--knntest")) knntest = 1;
+    
+    
     /* test the interface with an empty tree */
     testEmptyTree( );
     fprintf( stdout, "testEmptyTree\n" );
@@ -153,7 +169,7 @@ int main(int argc, char* argv[])
         sprintf(tagstring,"testLinearTree %d",i);
         testLinearTree( i );
     }
-
+    
     timecommand("testSeparation",{testSeparation( );});
     timecommand("testFindFirstObject",{testFindFirstObject( );});
     timecommand("testFindLastObject",{testFindLastObject( );});
@@ -174,8 +190,16 @@ int main(int argc, char* argv[])
     timecommand("testIntegerReturn",{testIntegerReturn( );});
     timecommand("testMisc",{testMisc( );});
     timecommand("testSTLContainerInput",{testSTLContainerInput( );});
-    timecommand("testKNearFar",{testKNearFar( );});
-    timecommand("testKNearFar_Spherical",{testKNearFar_Spherical( );});
+    if (knntest) {
+    norm_delay = 100000;
+    do {
+        fprintf(stdout," norm_delay %ld\n",(long)norm_delay);
+        looptimecommand("testKNearFar testdim",testdim,0,49,6,{testKNearFar(testdim, norm_delay);});
+        norm_delay /= 10;
+    } while (norm_delay >0);
+    } else {
+        timecommand("testKNearFar",{testKNearFar(0,1);});
+    }
     timecommand("testMergeConstructor",{testMergeConstructor( );});
     timecommand("testOperatorPlusEquals",{testOperatorPlusEquals( );});
     timecommand("testOperatorMinusEquals",{testOperatorMinusEquals( );});
@@ -184,12 +208,12 @@ int main(int argc, char* argv[])
     timecommand("testLloyd",{testLloyd( );});
     timecommand("testLloyd-N",{testLloyd_N( );});
     
-
+    
     if( g_errorCount == 0 )
     {
         fprintf(stdout,  "No errors were detected while testing CNearTree\n" );
     }
-    else 
+    else
     {
         fprintf(stdout,  "%ld Errors were detected while testing CNearTree\n", g_errorCount );
     }
@@ -1260,11 +1284,149 @@ class vec17
         vec17& operator-= ( const vec17 ) { return ( *this ); }; // just to keep LINT happy
     };  // end vec17
 
+/*=======================================================================*/
+/* make a n-dimension vector class for testing */
+class vecn
+{
+public:
+    std::vector< double > pd;
+    int dim;
+    size_t delay;
+    double length;  // just for a signature for debugging
+    vecn( ) :
+    dim(17), length(0), delay(norm_delay)
+    {
+        pd.resize(17);
+        for( int i=0; i<dim; ++i )
+        {
+            pd[i] = rhr.urand()*((double)RHrand::RHRAND_MAX);
+        }
+        length = Norm( );
+    }
+    vecn(const size_t n ) :
+    dim(n), length(0), delay(norm_delay)
+    {
+        pd.resize(n);
+        for( int i=0; i<dim; ++i )
+        {
+            pd[i] = rhr.urand()*((double)RHrand::RHRAND_MAX);
+        }
+        length = Norm( );
+    }
+    vecn(const size_t n, const size_t x_delay ) :
+    dim(n), length(0), delay(x_delay)
+    {
+        pd.resize(n);
+        for( int i=0; i<dim; ++i )
+        {
+            pd[i] = rhr.urand()*((double)RHrand::RHRAND_MAX);
+        }
+        length = Norm( );
+        norm_delay = x_delay;
+    }
+    vecn(const double d, const size_t n, const size_t x_delay ) :
+    dim(n), length(0), delay(x_delay)
+    {
+        pd.resize(n);
+        for( int i=0; i<dim; ++i )
+        {
+            pd[i] = d;
+        }
+        length = Norm( );
+        norm_delay = delay;
+    }
+
+    explicit vecn( const double d ):
+    dim(17), length(0), delay(norm_delay)
+    {
+        pd.resize(17);
+        for( int i=0; i<dim; ++i )
+        {
+            pd[i] = d;
+        }
+        length = Norm( );
+    }
+    explicit vecn( const int n ):
+    dim(17), length(0), delay(norm_delay)
+    {
+        pd.resize(17);
+        for( int i=0; i<dim; ++i )
+        {
+            pd[i] = double(n);
+        }
+        length = Norm( );
+    }
+    explicit vecn( const double d, const size_t n ):
+    dim(n), length(0), delay(norm_delay)
+    {
+        pd.resize(n);
+        for( int i=0; i<dim; ++i )
+        {
+            pd[i] = d;
+        }
+        length = Norm( );
+    }
+    explicit vecn( const int n, const size_t ndim ):
+    dim(ndim), length(0), delay(norm_delay)
+    {
+        pd.resize(ndim);
+        for( int i=0; i<dim; ++i )
+        {
+            pd[i] = double(n);
+        }
+        length = Norm( );
+    }
+
+    ~vecn( void )
+    {
+    }
+    
+    vecn& operator= ( const vecn& s )
+    {
+        this->delay = s.delay;
+        this->length = s.Norm();
+        this->dim = s.dim;
+        this->pd.resize(this->dim);
+        for( int i=0; i<dim; ++i )
+        {
+            this->pd[i] = s.pd[i];
+        }
+        
+        return *this;
+    }
+    
+    vecn operator-( const vecn& v ) const /* USERS: be sure to make both const */
+    {
+        vecn vtemp(0,dim,norm_delay);
+        if (this->delay > vtemp.delay) vtemp.delay = this->delay;
+        for( int i=0; i<dim; ++i )
+        {
+            vtemp.pd[i] = this->pd[i] - v.pd[i];
+        }
+        vtemp.length = Norm(  );
+        return( vtemp );
+    }
+    double Norm( void ) const
+    {
+        double dtemp = 0.0;
+        if (norm_delay==0) norm_delay=1;
+        for( size_t kd=0; kd <= norm_delay; kd++) {
+            for( int i=0; i<dim; ++i )
+            {
+                dtemp += pd[i]*pd[i];  //  L2 measure here
+            }
+        }
+        return( double(sqrt( dtemp/(double)(norm_delay) )) );
+    }
+    
+    vecn& operator-= ( const vecn ) { return ( *this ); }; // just to keep LINT happy
+};  // end vecn
+
 
 /*=======================================================================*/
 void testBigVector(  )
 {
-    const int vectorsize = 1000;   
+    const int vectorsize = 1000;
     CNearTree<vec17> tree;
     vec17 vAll[vectorsize]; /* keep a list of all of the input so we can find particular entries */
     double rmax = -DBL_MAX;
@@ -3118,18 +3280,19 @@ void testTiming ( void )
 }  // end testTiming
 
 /*=======================================================================*/
-void testKNearFar( void )
+void testKNearFar( size_t testdim, size_t xnorm_delay )
 {
     CNearTree<int> tree;
     CNearTree<int> outTree;
     std::vector<size_t> outIndices;
+    long flags;
     
-    {
+    if (testdim == 0)  {
         const int searchPoint = 50;
         const long nToFind0 = 0;
         const double radius0 = 1000.0;
         
-        const size_t lFound0 = tree.FindK_NearestNeighbors( 
+        const size_t lFound0 = tree.FindK_NearestNeighbors(
                                                            nToFind0,
                                                            radius0,
                                                            outTree,
@@ -3141,16 +3304,16 @@ void testKNearFar( void )
             fprintf(stdout, "testKNearFar, Near: #0: found wrong count %ld\n",  (long)lFound0);
         }
     }
-    {
+    if (testdim == 0) {
         const int searchPoint = 50;
         const long nToFind0 = 0;
         const double radius0 = 1000.0;
         
-        const size_t lFound0 = tree.LeftFindK_NearestNeighbors( 
-                                                           nToFind0,
-                                                           radius0,
-                                                           outTree,
-                                                           searchPoint );
+        const size_t lFound0 = tree.LeftFindK_NearestNeighbors(
+                                                               nToFind0,
+                                                               radius0,
+                                                               outTree,
+                                                               searchPoint );
         outTree.CompleteDelayedInsert( );
         if( lFound0 != 0 )
         {
@@ -3159,12 +3322,12 @@ void testKNearFar( void )
         }
     }
     
-    {
+    if (testdim == 0) {
         const int searchPoint = 50;
         const long nToFind0 = 0;
         const double radius0 = 1000.0;
         
-        const size_t lFound0 = tree.FindK_NearestNeighbors( 
+        const size_t lFound0 = tree.FindK_NearestNeighbors(
                                                            nToFind0,
                                                            radius0,
                                                            outTree,
@@ -3179,17 +3342,17 @@ void testKNearFar( void )
         }
     }
     
-    {
+    if (testdim == 0) {
         const int searchPoint = 50;
         const long nToFind0 = 0;
         const double radius0 = 1000.0;
         
         const size_t lFound0 = tree.LeftFindK_NearestNeighbors(
-                                                           nToFind0,
-                                                           radius0,
-                                                           outTree,
-                                                           outIndices,
-                                                           searchPoint );
+                                                               nToFind0,
+                                                               radius0,
+                                                               outTree,
+                                                               outIndices,
+                                                               searchPoint );
         outTree.CompleteDelayedInsert( );
         if( lFound0 != 0 || outIndices.size() != 0 )
         {
@@ -3200,199 +3363,201 @@ void testKNearFar( void )
     }
     
     
-    for( int i=0; i<100; ++i )
-    {
-        tree.insert( i );
-    }
-    
-    {
-        const int searchPoint = 50;
-        const long nToFind1 = 13;
-        const double radius1 = 1000.0;
-        
-        const size_t lFound1 = tree.FindK_NearestNeighbors( 
-                                                           nToFind1,
-                                                           radius1,
-                                                           outTree,
-                                                           searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound1 != 13 )
+    if (testdim == 0) {
+        for( int i=0; i<100; ++i )
         {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: #1: found wrong count %ld\n", (long)lFound1 );
+            tree.insert( i );
         }
-    }
-
-    {
-
-        const int searchPoint = 50;
-        const long nToFind1 = 13;
-        const double radius1 = 1000.0;
         
-        const size_t lFound1 = tree.LeftFindK_NearestNeighbors( 
-                                                           nToFind1,
-                                                           radius1,
-                                                           outTree,
-                                                           searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound1 != 13 )
         {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Left Near: #1: found wrong count %ld\n", (long)lFound1 );
+            const int searchPoint = 50;
+            const long nToFind1 = 13;
+            const double radius1 = 1000.0;
+            
+            const size_t lFound1 = tree.FindK_NearestNeighbors(
+                                                               nToFind1,
+                                                               radius1,
+                                                               outTree,
+                                                               searchPoint );
+            outTree.CompleteDelayedInsert( );
+            if( lFound1 != 13 )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testKNearFar, Near: #1: found wrong count %ld\n", (long)lFound1 );
+            }
         }
-    }
-    
-    {
-        const int searchPoint = 50;
-        const long nToFind1 = 13;
-        const double radius1 = 1000.0;
         
-        const size_t lFound1 = tree.FindK_NearestNeighbors( 
-                                                           nToFind1,
-                                                           radius1,
-                                                           outTree,
-                                                           outIndices,
-                                                           searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound1 != 13 || outIndices.size() !=13)
         {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: #1: found wrong count %ld or wrong indices %ld\n",
-                    (long)lFound1, (long)outIndices.size());
-        } else {
-            for (size_t ii = 0; ii < outIndices.size(); ii++) {
-                if (tree[outIndices[ii]] != outTree[ii]) {
-                    ++g_errorCount;
-                    fprintf(stdout, "testKNearFar, Near: #1: mismatch between tree[%ld] and outTree[%ld]\n",
-                            (long)outIndices[ii], (long)ii);
+            
+            const int searchPoint = 50;
+            const long nToFind1 = 13;
+            const double radius1 = 1000.0;
+            
+            const size_t lFound1 = tree.LeftFindK_NearestNeighbors(
+                                                                   nToFind1,
+                                                                   radius1,
+                                                                   outTree,
+                                                                   searchPoint );
+            outTree.CompleteDelayedInsert( );
+            if( lFound1 != 13 )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testKNearFar, Left Near: #1: found wrong count %ld\n", (long)lFound1 );
+            }
+        }
+        
+        {
+            const int searchPoint = 50;
+            const long nToFind1 = 13;
+            const double radius1 = 1000.0;
+            
+            const size_t lFound1 = tree.FindK_NearestNeighbors(
+                                                               nToFind1,
+                                                               radius1,
+                                                               outTree,
+                                                               outIndices,
+                                                               searchPoint );
+            outTree.CompleteDelayedInsert( );
+            if( lFound1 != 13 || outIndices.size() !=13)
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testKNearFar, Near: #1: found wrong count %ld or wrong indices %ld\n",
+                        (long)lFound1, (long)outIndices.size());
+            } else {
+                for (size_t ii = 0; ii < outIndices.size(); ii++) {
+                    if (tree[outIndices[ii]] != outTree[ii]) {
+                        ++g_errorCount;
+                        fprintf(stdout, "testKNearFar, Near: #1: mismatch between tree[%ld] and outTree[%ld]\n",
+                                (long)outIndices[ii], (long)ii);
+                    }
                 }
             }
         }
-    }
-
-    {
-        const int searchPoint = 50;
-        const long nToFind1 = 13;
-        const double radius1 = 1000.0;
         
-        const size_t lFound1 = tree.LeftFindK_NearestNeighbors( 
-                                                           nToFind1,
-                                                           radius1,
-                                                           outTree,
-                                                           outIndices,
-                                                           searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound1 != 13 || outIndices.size() !=13)
         {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Left Near: #1: found wrong count %ld or wrong indices %ld\n",
-                    (long)lFound1, (long)outIndices.size());
-        } else {
-            for (size_t ii = 0; ii < outIndices.size(); ii++) {
-                if (tree[outIndices[ii]] != outTree[ii]) {
-                    ++g_errorCount;
-                    fprintf(stdout, "testKNearFar, Left Near: #1: mismatch between tree[%ld] and outTree[%ld]\n",
-                            (long)outIndices[ii], (long)ii);
+            const int searchPoint = 50;
+            const long nToFind1 = 13;
+            const double radius1 = 1000.0;
+            
+            const size_t lFound1 = tree.LeftFindK_NearestNeighbors(
+                                                                   nToFind1,
+                                                                   radius1,
+                                                                   outTree,
+                                                                   outIndices,
+                                                                   searchPoint );
+            outTree.CompleteDelayedInsert( );
+            if( lFound1 != 13 || outIndices.size() !=13)
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testKNearFar, Left Near: #1: found wrong count %ld or wrong indices %ld\n",
+                        (long)lFound1, (long)outIndices.size());
+            } else {
+                for (size_t ii = 0; ii < outIndices.size(); ii++) {
+                    if (tree[outIndices[ii]] != outTree[ii]) {
+                        ++g_errorCount;
+                        fprintf(stdout, "testKNearFar, Left Near: #1: mismatch between tree[%ld] and outTree[%ld]\n",
+                                (long)outIndices[ii], (long)ii);
+                    }
                 }
+            }
+        }
+        
+        {
+            const int searchPoint = 98;
+            const long nToFind2 = 13;
+            const double radius2 = 3.5;
+            const size_t lFound2 = tree.FindK_NearestNeighbors(
+                                                               nToFind2,
+                                                               radius2,
+                                                               outTree,
+                                                               searchPoint );
+            outTree.CompleteDelayedInsert( );
+            if( lFound2 != 5 )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testKNearFar, Near: found wrong count #2\n" );
+            }
+        }
+        
+        {
+            const int searchPoint = 50;
+            const long nToFind3 = 7;
+            const double radius3 = 12;
+            const size_t lFound3 = tree.FindK_NearestNeighbors(
+                                                               nToFind3,
+                                                               radius3,
+                                                               outTree,
+                                                               searchPoint );
+            outTree.CompleteDelayedInsert( );
+            if( lFound3 != 7u )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testKNearFar, Near: found wrong count #3\n" );
+            }
+        }
+        
+        {
+            const int searchPoint = 2;
+            const long nToFind4 = 7;
+            const double radius4 = 12;
+            const size_t lFound4 = tree.FindK_NearestNeighbors(
+                                                               nToFind4,
+                                                               radius4,
+                                                               outTree,
+                                                               searchPoint );
+            outTree.CompleteDelayedInsert( );
+            if( lFound4 != 7u )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testKNearFar, Near: found wrong count #4\n" );
+            }
+        }
+        
+        {
+            const int searchPoint = 2;
+            const long nToFind5 = 7;
+            const double radius5 = 3.5;
+            std::vector<int> outVector;
+            const size_t lFound5 = tree.FindK_NearestNeighbors(
+                                                               nToFind5,
+                                                               radius5,
+                                                               outVector,
+                                                               searchPoint );
+            if( lFound5 != 6u )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testKNearFar, Near: found wrong count #5\n" );
+            }
+        }
+        
+        {
+            const int searchPoint = 2;
+            const long nToFind5 = 7;
+            const double radius5 = 3.5;
+            std::list<int> outList;
+            const size_t lFound6 = tree.FindK_NearestNeighbors(
+                                                               nToFind5,
+                                                               radius5,
+                                                               outList,
+                                                               searchPoint );
+            if( lFound6 != 6u )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testKNearFar, Near: found wrong count #6\n" );
             }
         }
     }
     
-    {
-        const int searchPoint = 98;
-        const long nToFind2 = 13;
-        const double radius2 = 3.5;
-        const size_t lFound2 = tree.FindK_NearestNeighbors( 
-                                                           nToFind2,
-                                                           radius2,
-                                                           outTree,
-                                                           searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound2 != 5 )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: found wrong count #2\n" );
-        }
-    }
-    
-    {
-        const int searchPoint = 50;
-        const long nToFind3 = 7;
-        const double radius3 = 12;
-        const size_t lFound3 = tree.FindK_NearestNeighbors( 
-                                                           nToFind3,
-                                                           radius3,
-                                                           outTree,
-                                                           searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound3 != 7u )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: found wrong count #3\n" );
-        }
-    }
-    
-    {
-        const int searchPoint = 2;
-        const long nToFind4 = 7;
-        const double radius4 = 12;
-        const size_t lFound4 = tree.FindK_NearestNeighbors( 
-                                                           nToFind4,
-                                                           radius4,
-                                                           outTree,
-                                                           searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound4 != 7u )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: found wrong count #4\n" );
-        }
-    }
-    
-    {
-        const int searchPoint = 2;
-        const long nToFind5 = 7;
-        const double radius5 = 3.5;
-        std::vector<int> outVector;
-        const size_t lFound5 = tree.FindK_NearestNeighbors( 
-                                                           nToFind5,
-                                                           radius5,
-                                                           outVector,
-                                                           searchPoint );
-        if( lFound5 != 6u )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: found wrong count #5\n" );
-        }
-    }
-    
-    {
-        const int searchPoint = 2;
-        const long nToFind5 = 7;
-        const double radius5 = 3.5;
-        std::list<int> outList;
-        const size_t lFound6 = tree.FindK_NearestNeighbors( 
-                                                           nToFind5,
-                                                           radius5,
-                                                           outList,
-                                                           searchPoint );
-        if( lFound6 != 6u )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: found wrong count #6\n" );
-        }
-    }
-
-    {
+    if (testdim == 0){
         CNearTree<vec17> tree;
         CNearTree<vec17> outTree;
-        const unsigned int n2Store = 100000;
-
-        for ( unsigned int i=0; i<n2Store; ++i )
+        const size_t n2Store = 300000;
+        
+        for ( size_t i=0; i<n2Store; ++i )
         {
             tree.insert( vec17( ) );
         }
-
+        
         const vec17 probe = vec17();
         const size_t n2Finda = 100;
         const size_t lFound17a = tree.FindK_NearestNeighbors( n2Finda, 100000.0, outTree, probe );
@@ -3407,446 +3572,7 @@ void testKNearFar( void )
             fprintf(stdout, "testKNearFar, Near: found wrong count #17a testing outTree.size()\n" );
         }
         double maxDist = -1.0;
-        for ( unsigned int i=0; i<outTree.size(); ++i )
-        {
-            maxDist = std::max( maxDist, (probe-outTree[i]).Norm() );
-        }
-
-        outTree.clear( );
-        const size_t lFound17b = tree.FindK_NearestNeighbors( 10*n2Store, 100000.0, outTree, probe );
-        if( lFound17b != n2Store )
-        {
-            ++g_errorCount;
-	    fprintf(stdout, "testKNearFar, Near: found wrong count #17b testing %ld, got %ld, expected %ld\n",
-			                        (long int) outTree.size(), (long int) lFound17b, (long int) n2Store );
-        }
-
-        size_t count = 0;
-        for ( unsigned int i=0; i<outTree.size(); ++i )
-        {
-            count += ((probe-outTree[i]).Norm() <= maxDist*(1.0+1.0E-9) ) ? 1 : 0 ;
-        }
-        if( count != n2Finda )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: found wrong count #17b testing %ld, got %ld, expected %ld\n",
-                                                (long int) outTree.size(), (long int) n2Finda, (long int) count );
-        }
-
-    }
-    
-    {
-        const int searchPoint = -1;
-        const long nToFind1 = 13;
-        
-        const size_t lFound1 = tree.FindK_FarthestNeighbors( 
-                                                            nToFind1,
-                                                            outTree,
-                                                            searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound1 != 13u )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Far: found wrong count #1\n" );
-        }
-    }
-    
-    {
-        const int searchPoint = 50;
-        const long nToFind2 = 13;
-        const size_t lFound2 = tree.FindK_FarthestNeighbors( 
-                                                            nToFind2,
-                                                            outTree,
-                                                            searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound2 != 13 )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Far: found wrong count #2\n" );
-        }
-    }
-    
-    {
-        const int searchPoint = 150;
-        const long nToFind3 = 7;
-        const size_t lFound3 = tree.FindK_FarthestNeighbors( 
-                                                            nToFind3,
-                                                            outTree,
-                                                            searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound3 != 7u )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Far: found wrong count #3\n" );
-        }
-    }
-    
-    {
-        const int searchPoint = 46;
-        const long nToFind4 = 12;
-        const size_t lFound4 = tree.FindK_FarthestNeighbors( 
-                                                            nToFind4,
-                                                            outTree,
-                                                            searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound4 != 12u )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Far: found wrong count #4\n" );
-        }
-    }
-    
-    {
-        const int searchPoint = 2;
-        const long nToFind5 = 7;
-        std::vector<int> outVector;
-        const size_t lFound5 = tree.FindK_FarthestNeighbors( 
-                                                            nToFind5,
-                                                            outVector,
-                                                            searchPoint );
-        if( lFound5 != 7u )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Far: found wrong count #5\n" );
-        }
-    }
-    
-    {
-        const int searchPoint = 200;
-        const long nToFind6 = 7;
-        std::list<int> outList;
-        const size_t lFound6 = tree.FindK_FarthestNeighbors( 
-                                                            nToFind6,
-                                                            outList,
-                                                            searchPoint );
-        if( lFound6 != 7u )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Far: found wrong count #6\n" );
-        }
-    }
-    
-    
-    {
-        const int searchPoint = 2;
-        const long nToFind7 = 7;
-        std::set<int> outSet;
-        const size_t lFound7 = tree.FindK_FarthestNeighbors( 
-                                                            nToFind7,
-                                                            outSet,
-                                                            searchPoint );
-        if( lFound7 != 7u )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Far: found wrong count #7\n" );
-        }
-    }
-    
-}  // end testKNearFar
-
-
-/*=======================================================================*/
-void testKNearFar_Spherical( void )
-{
-    CNearTree<int> tree;
-    CNearTree<int> outTree;
-    std::vector<size_t> outIndices;
-    long flags;
-    
-    flags = tree.GetFlags();
-    flags &= ~(CNearTree<int>::NTF_AnnularKNN);
-    flags |= CNearTree<int>::NTF_SphericalKNN;
-    tree.SetFlags(flags);
-    
-    {
-        const int searchPoint = 50;
-        const long nToFind0 = 0;
-        const double radius0 = 1000.0;
-        
-        const size_t lFound0 = tree.FindK_NearestNeighbors(
-                                                           nToFind0,
-                                                           radius0,
-                                                           outTree,
-                                                           searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound0 != 0 )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: #0: found wrong count %ld\n",  (long)lFound0);
-        }
-    }
-    {
-        const int searchPoint = 50;
-        const long nToFind0 = 0;
-        const double radius0 = 1000.0;
-        
-        const size_t lFound0 = tree.LeftFindK_NearestNeighbors(
-                                                               nToFind0,
-                                                               radius0,
-                                                               outTree,
-                                                               searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound0 != 0 )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Left Near: #0: found wrong count %ld\n",  (long)lFound0);
-        }
-    }
-    
-    {
-        const int searchPoint = 50;
-        const long nToFind0 = 0;
-        const double radius0 = 1000.0;
-        
-        const size_t lFound0 = tree.FindK_NearestNeighbors(
-                                                           nToFind0,
-                                                           radius0,
-                                                           outTree,
-                                                           outIndices,
-                                                           searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound0 != 0 || outIndices.size() != 0 )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: #0: found wrong count %ld and unexpected indices %ld \n",
-                    (long)lFound0, (long)outIndices.size());
-        }
-    }
-    
-    {
-        const int searchPoint = 50;
-        const long nToFind0 = 0;
-        const double radius0 = 1000.0;
-        
-        const size_t lFound0 = tree.LeftFindK_NearestNeighbors(
-                                                               nToFind0,
-                                                               radius0,
-                                                               outTree,
-                                                               outIndices,
-                                                               searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound0 != 0 || outIndices.size() != 0 )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Left Near: #0: found wrong count %ld and unexpected indices %ld \n",
-                    (long)lFound0, (long)outIndices.size());
-        }
-    }
-    
-    
-    for( int i=0; i<100; ++i )
-    {
-        tree.insert( i );
-    }
-    
-    {
-        const int searchPoint = 50;
-        const long nToFind1 = 13;
-        const double radius1 = 1000.0;
-        
-        const size_t lFound1 = tree.FindK_NearestNeighbors(
-                                                           nToFind1,
-                                                           radius1,
-                                                           outTree,
-                                                           searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound1 != 13 )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: #1: found wrong count %ld\n", (long)lFound1 );
-        }
-    }
-    
-    {
-        
-        const int searchPoint = 50;
-        const long nToFind1 = 13;
-        const double radius1 = 1000.0;
-        
-        const size_t lFound1 = tree.LeftFindK_NearestNeighbors(
-                                                               nToFind1,
-                                                               radius1,
-                                                               outTree,
-                                                               searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound1 != 13 )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Left Near: #1: found wrong count %ld\n", (long)lFound1 );
-        }
-    }
-    
-    {
-        const int searchPoint = 50;
-        const long nToFind1 = 13;
-        const double radius1 = 1000.0;
-        
-        const size_t lFound1 = tree.FindK_NearestNeighbors(
-                                                           nToFind1,
-                                                           radius1,
-                                                           outTree,
-                                                           outIndices,
-                                                           searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound1 != 13 || outIndices.size() !=13)
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: #1: found wrong count %ld or wrong indices %ld\n",
-                    (long)lFound1, (long)outIndices.size());
-        } else {
-            for (size_t ii = 0; ii < outIndices.size(); ii++) {
-                if (tree[outIndices[ii]] != outTree[ii]) {
-                    ++g_errorCount;
-                    fprintf(stdout, "testKNearFar, Near: #1: mismatch between tree[%ld] and outTree[%ld]\n",
-                            (long)outIndices[ii], (long)ii);
-                }
-            }
-        }
-    }
-    
-    {
-        const int searchPoint = 50;
-        const long nToFind1 = 13;
-        const double radius1 = 1000.0;
-        
-        const size_t lFound1 = tree.LeftFindK_NearestNeighbors(
-                                                               nToFind1,
-                                                               radius1,
-                                                               outTree,
-                                                               outIndices,
-                                                               searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound1 != 13 || outIndices.size() !=13)
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Left Near: #1: found wrong count %ld or wrong indices %ld\n",
-                    (long)lFound1, (long)outIndices.size());
-        } else {
-            for (size_t ii = 0; ii < outIndices.size(); ii++) {
-                if (tree[outIndices[ii]] != outTree[ii]) {
-                    ++g_errorCount;
-                    fprintf(stdout, "testKNearFar, Left Near: #1: mismatch between tree[%ld] and outTree[%ld]\n",
-                            (long)outIndices[ii], (long)ii);
-                }
-            }
-        }
-    }
-    
-    {
-        const int searchPoint = 98;
-        const long nToFind2 = 13;
-        const double radius2 = 3.5;
-        const size_t lFound2 = tree.FindK_NearestNeighbors(
-                                                           nToFind2,
-                                                           radius2,
-                                                           outTree,
-                                                           searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound2 != 5 )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: found wrong count #2\n" );
-        }
-    }
-    
-    {
-        const int searchPoint = 50;
-        const long nToFind3 = 7;
-        const double radius3 = 12;
-        const size_t lFound3 = tree.FindK_NearestNeighbors(
-                                                           nToFind3,
-                                                           radius3,
-                                                           outTree,
-                                                           searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound3 != 7u )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: found wrong count #3\n" );
-        }
-    }
-    
-    {
-        const int searchPoint = 2;
-        const long nToFind4 = 7;
-        const double radius4 = 12;
-        const size_t lFound4 = tree.FindK_NearestNeighbors(
-                                                           nToFind4,
-                                                           radius4,
-                                                           outTree,
-                                                           searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound4 != 7u )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: found wrong count #4\n" );
-        }
-    }
-    
-    {
-        const int searchPoint = 2;
-        const long nToFind5 = 7;
-        const double radius5 = 3.5;
-        std::vector<int> outVector;
-        const size_t lFound5 = tree.FindK_NearestNeighbors(
-                                                           nToFind5,
-                                                           radius5,
-                                                           outVector,
-                                                           searchPoint );
-        if( lFound5 != 6u )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: found wrong count #5\n" );
-        }
-    }
-    
-    {
-        const int searchPoint = 2;
-        const long nToFind5 = 7;
-        const double radius5 = 3.5;
-        std::list<int> outList;
-        const size_t lFound6 = tree.FindK_NearestNeighbors(
-                                                           nToFind5,
-                                                           radius5,
-                                                           outList,
-                                                           searchPoint );
-        if( lFound6 != 6u )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: found wrong count #6\n" );
-        }
-    }
-    
-    {
-        CNearTree<vec17> tree;
-        CNearTree<vec17> outTree;
-        const unsigned int n2Store = 200000;
-
-        flags = tree.GetFlags();
-        flags &= ~(CNearTree<int>::NTF_AnnularKNN);
-        flags |= CNearTree<int>::NTF_SphericalKNN;
-        tree.SetFlags(flags);
-
-        for ( unsigned int i=0; i<n2Store; ++i )
-        {
-            tree.insert( vec17( ) );
-        }
-        
-        const vec17 probe = vec17();
-        const size_t n2Finda = 500;
-        const size_t lFound17a = tree.FindK_NearestNeighbors( n2Finda, 100000.0, outTree, probe );
-        if( lFound17a != n2Finda )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: found wrong count #17a testing lFound17a\n" );
-        }
-        if( lFound17a != outTree.size( ) )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Near: found wrong count #17a testing outTree.size()\n" );
-        }
-        double maxDist = -1.0;
-        for ( unsigned int i=0; i<outTree.size(); ++i )
+        for ( size_t i=0; i<outTree.size(); ++i )
         {
             maxDist = std::max( maxDist, (probe-outTree[i]).Norm() );
         }
@@ -3872,112 +3598,299 @@ void testKNearFar_Spherical( void )
                     (long int) outTree.size(), (long int) n2Finda, (long int) count );
         }
         
-    }
-    
-    {
-        const int searchPoint = -1;
-        const long nToFind1 = 13;
+    } else {
+        CNearTree<vecn> tree;
+        CNearTree<vecn> outTree;
+        CNearTree<vecn> outTree2;
+        CNearTree<vecn> outTree3;
+        CNearTree<vecn> outTree4;
+        const unsigned int n2Store = 100000*testdim;
+        double testrad1 = (double)RHrand::RHRAND_MAX/3.;
+        double testrad2 = testrad1*std::sqrt((double)(testdim));
+        size_t subspdim, ibase, i, j, k, kk;
+        std::vector<vecn>basis;
+        vecn coeff;
+        vecn datapt;
+        double coeff_norm;
+        double cluster_scale[5] = {.005,.01,.05,.1,.5};
+        size_t i_cluster;
         
-        const size_t lFound1 = tree.FindK_FarthestNeighbors(
-                                                            nToFind1,
-                                                            outTree,
-                                                            searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound1 != 13u )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Far: found wrong count #1\n" );
+        i = 0;
+        norm_delay=0;
+        fprintf(stdout,"n2Store = %ld\n",(long)n2Store);
+        for (i_cluster=0; i_cluster < 5; i_cluster++) {
+            fprintf(stdout,"cluster_scale %g\n",cluster_scale[i_cluster]);
+            while (i < n2Store) {
+                datapt = vecn(testdim);
+                tree.insert(datapt);
+                i++;
+                /*if (i%1000 == 0) fprintf(stdout,"i = %d\n",(int)i); */
+                subspdim = 1+(int)(std::sqrt(std::sqrt(rhr.urand()))*(double)(testdim-1)+0.4999999);
+                basis.resize(subspdim);
+                for (k=0; k < 200*subspdim && i< n2Store; k++) {
+                    for (ibase=0; ibase < subspdim && i < n2Store; ibase++) {
+                        basis[ibase] = vecn(testdim);
+                        for (j = 0; j < testdim; j++) {
+                            datapt.pd[j] += (basis[ibase].pd[j]- ((double)RHrand::RHRAND_MAX)/2.)*cluster_scale[i_cluster];
+                        }
+                        tree.insert(datapt);
+                        i++;
+                    }
+                }
+            }
+            
+            
+            /* fprintf(stdout,"tree.CompleteDelayedInsertRandom()"); */
+            tree.CompleteDelayedInsertRandom();
+            norm_delay = xnorm_delay;
+            
+            size_t n2Finda;
+            for (n2Finda = 5; n2Finda <  50; n2Finda+=5) {
+                outTree.clear( );
+                outTree2.clear( );
+                outTree3.clear( );
+                outTree4.clear( );
+                
+                clock_t tc1, tc2;
+                vecn probe;
+                do {
+                    probe = vecn(testdim, norm_delay);
+                    for (int ii = 0; ii < testdim; ii++) probe.pd[ii]-= (double)RHrand::RHRAND_MAX/2.;
+                    for (int ii = 0; ii < testdim; ii++) probe.pd[ii] *= (testrad1/((double)RHrand::RHRAND_MAX))/100.;
+                } while (probe.Norm()>testrad1/2.);
+                for (int ii = 0; ii < testdim; ii++) probe.pd[ii]+= datapt.pd[ii];
+                
+                /* First do an annular search with a cache */
+                
+                flags = tree.GetFlags();
+                flags &= ~(CNearTree<int>::NTF_SphericalKNN
+                           |CNearTree<int>::NTF_NoDistanceCache);
+                flags |= CNearTree<int>::NTF_AnnularKNN;
+                tree.SetFlags(flags);
+                
+                tc1 = std::clock();
+                const size_t lFound17awc = tree.FindK_NearestNeighbors(
+                                                                       n2Finda,
+                                                                       testrad2,
+                                                                       outTree, probe );
+                tc2 = std::clock();
+                fprintf(stdout,"FindK_NearestNeighbors_Annular_w_Cache k = %ld time = %f\n",(long)n2Finda,((double)(tc2-tc1))/CLOCKS_PER_SEC );
+                
+                /* Second do a spherical search with a cache */
+                flags = tree.GetFlags();
+                flags &= ~(CNearTree<int>::NTF_AnnularKNN
+                           |CNearTree<int>::NTF_NoDistanceCache);
+                flags |= CNearTree<int>::NTF_SphericalKNN;
+                tree.SetFlags(flags);
+                
+                tc1 = std::clock();
+                const size_t lFound17swc = tree.FindK_NearestNeighbors( n2Finda,
+                                                                       testrad2,
+                                                                       outTree2, probe );
+                tc2 = std::clock();
+                fprintf(stdout,"FindK_NearestNeighbors_Sphere_w_Cache k = %ld time = %f\n",(long)n2Finda,((double)(tc2-tc1))/CLOCKS_PER_SEC );
+                
+                /* Third do an annular search without a cache */
+                
+                flags = tree.GetFlags();
+                flags &= ~(CNearTree<int>::NTF_SphericalKNN);
+                flags |= (CNearTree<int>::NTF_AnnularKNN|CNearTree<int>::NTF_NoDistanceCache);
+                tree.SetFlags(flags);
+                
+                tc1 = std::clock();
+                const size_t lFound17anoc = tree.FindK_NearestNeighbors(
+                                                                        n2Finda,
+                                                                        testrad1,
+                                                                        outTree3, probe );
+                tc2 = std::clock();
+                fprintf(stdout,"FindK_NearestNeighbors_Annular_no_Cache k = %ld time = %f\n",(long)n2Finda,((double)(tc2-tc1))/CLOCKS_PER_SEC );
+                
+                /* Finally do a spherical search without a cache */
+                
+                flags = tree.GetFlags();
+                flags &= ~(CNearTree<int>::NTF_AnnularKNN);
+                flags |= (CNearTree<int>::NTF_SphericalKNN|CNearTree<int>::NTF_NoDistanceCache);;
+                tree.SetFlags(flags);
+                
+                tc1 = std::clock();
+                const size_t lFound17snoc = tree.FindK_NearestNeighbors( n2Finda,
+                                                                        testrad1,
+                                                                        outTree4, probe );
+                tc2 = std::clock();
+                fprintf(stdout,"FindK_NearestNeighbors_Sphere_no_Cache k = %ld time = %f\n",(long)n2Finda,((double)(tc2-tc1))/CLOCKS_PER_SEC );
+                
+                
+                if( lFound17awc != n2Finda )
+                {
+                    ++g_errorCount;
+                    fprintf(stdout, "testKNearFar, Near: found wrong count #17awc testing lFound17a looking for %ld, found %ld\n", (long)n2Finda, (long) lFound17awc  );
+                }
+                if( lFound17swc != n2Finda )
+                {
+                    ++g_errorCount;
+                    fprintf(stdout, "testKNearFar, Near: found wrong count #17swc testing lFound17a looking for %ld, found %ld\n", (long)n2Finda, (long) lFound17swc  );
+                }
+                if( lFound17anoc != n2Finda )
+                {
+                    ++g_errorCount;
+                    fprintf(stdout, "testKNearFar, Near: found wrong count #17anoc testing lFound17a looking for %ld, found %ld\n", (long)n2Finda, (long) lFound17anoc  );
+                }
+                if( lFound17snoc != n2Finda )
+                {
+                    ++g_errorCount;
+                    fprintf(stdout, "testKNearFar, Near: found wrong count #17snoc testing lFound17a looking for %ld, found %ld\n", (long)n2Finda, (long) lFound17snoc  );
+                }
+                if( lFound17awc != outTree.size( ) )
+                {
+                    ++g_errorCount;
+                    fprintf(stdout, "testKNearFar, Near: found wrong count #17awc testing outTree.size()\n" );
+                }
+                if( lFound17swc != outTree2.size( ) )
+                {
+                    ++g_errorCount;
+                    fprintf(stdout, "testKNearFar, Near: found wrong count #17swc testing outTree2.size()\n" );
+                }
+                if( lFound17anoc != outTree3.size( ) )
+                {
+                    ++g_errorCount;
+                    fprintf(stdout, "testKNearFar, Near: found wrong count #17anoc testing outTree.size()\n" );
+                }
+                if( lFound17snoc != outTree4.size( ) )
+                {
+                    ++g_errorCount;
+                    fprintf(stdout, "testKNearFar, Near: found wrong count #17snoc testing outTree2.size()\n" );
+                }
+                
+            }
+            /* const size_t lFound17b = tree.FindK_NearestNeighbors( 10*n2Store, 1.e+38, outTree, probe );
+             if( lFound17b != n2Store )
+             {
+             ++g_errorCount;
+             fprintf(stdout, "testKNearFar, Near: found wrong count #17b testing %ld, got %ld, expected %ld\n",
+             (long int) outTree.size(), (long int) lFound17b, (long int) n2Store );
+             }
+             
+             size_t count = 0;
+             for ( unsigned int i=0; i<outTree.size(); ++i )
+             {
+             count += ((probe-outTree[i]).Norm() <= maxDist*(1.0+1.0E-9) ) ? 1 : 0 ;
+             }
+             if( count != n2Finda )
+             {
+             ++g_errorCount;
+             fprintf(stdout, "testKNearFar, Near: found wrong count #17c testing %ld, got %ld, expected %ld\n",
+             (long int) outTree.size(), (long int) n2Finda, (long int) count );
+             }
+             */
         }
     }
     
-    {
-        const int searchPoint = 50;
-        const long nToFind2 = 13;
-        const size_t lFound2 = tree.FindK_FarthestNeighbors(
-                                                            nToFind2,
-                                                            outTree,
-                                                            searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound2 != 13 )
+    if (testdim == 0) {
         {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Far: found wrong count #2\n" );
+            const int searchPoint = -1;
+            const long nToFind1 = 13;
+            
+            const size_t lFound1 = tree.FindK_FarthestNeighbors(
+                                                                nToFind1,
+                                                                outTree,
+                                                                searchPoint );
+            outTree.CompleteDelayedInsert( );
+            if( lFound1 != 13u )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testKNearFar, Far: found wrong count #1\n" );
+            }
         }
-    }
-    
-    {
-        const int searchPoint = 150;
-        const long nToFind3 = 7;
-        const size_t lFound3 = tree.FindK_FarthestNeighbors(
-                                                            nToFind3,
-                                                            outTree,
-                                                            searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound3 != 7u )
+        
         {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Far: found wrong count #3\n" );
+            const int searchPoint = 50;
+            const long nToFind2 = 13;
+            const size_t lFound2 = tree.FindK_FarthestNeighbors(
+                                                                nToFind2,
+                                                                outTree,
+                                                                searchPoint );
+            outTree.CompleteDelayedInsert( );
+            if( lFound2 != 13 )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testKNearFar, Far: found wrong count #2\n" );
+            }
         }
-    }
-    
-    {
-        const int searchPoint = 46;
-        const long nToFind4 = 12;
-        const size_t lFound4 = tree.FindK_FarthestNeighbors(
-                                                            nToFind4,
-                                                            outTree,
-                                                            searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound4 != 12u )
+        
         {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Far: found wrong count #4\n" );
+            const int searchPoint = 150;
+            const long nToFind3 = 7;
+            const size_t lFound3 = tree.FindK_FarthestNeighbors(
+                                                                nToFind3,
+                                                                outTree,
+                                                                searchPoint );
+            outTree.CompleteDelayedInsert( );
+            if( lFound3 != 7u )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testKNearFar, Far: found wrong count #3\n" );
+            }
         }
-    }
-    
-    {
-        const int searchPoint = 2;
-        const long nToFind5 = 7;
-        std::vector<int> outVector;
-        const size_t lFound5 = tree.FindK_FarthestNeighbors(
-                                                            nToFind5,
-                                                            outVector,
-                                                            searchPoint );
-        if( lFound5 != 7u )
+        
         {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Far: found wrong count #5\n" );
+            const int searchPoint = 46;
+            const long nToFind4 = 12;
+            const size_t lFound4 = tree.FindK_FarthestNeighbors(
+                                                                nToFind4,
+                                                                outTree,
+                                                                searchPoint );
+            outTree.CompleteDelayedInsert( );
+            if( lFound4 != 12u )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testKNearFar, Far: found wrong count #4\n" );
+            }
         }
-    }
-    
-    {
-        const int searchPoint = 200;
-        const long nToFind6 = 7;
-        std::list<int> outList;
-        const size_t lFound6 = tree.FindK_FarthestNeighbors(
-                                                            nToFind6,
-                                                            outList,
-                                                            searchPoint );
-        if( lFound6 != 7u )
+        
         {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Far: found wrong count #6\n" );
+            const int searchPoint = 2;
+            const long nToFind5 = 7;
+            std::vector<int> outVector;
+            const size_t lFound5 = tree.FindK_FarthestNeighbors(
+                                                                nToFind5,
+                                                                outVector,
+                                                                searchPoint );
+            if( lFound5 != 7u )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testKNearFar, Far: found wrong count #5\n" );
+            }
         }
-    }
-    
-    
-    {
-        const int searchPoint = 2;
-        const long nToFind7 = 7;
-        std::set<int> outSet;
-        const size_t lFound7 = tree.FindK_FarthestNeighbors(
-                                                            nToFind7,
-                                                            outSet,
-                                                            searchPoint );
-        if( lFound7 != 7u )
+        
         {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Far: found wrong count #7\n" );
+            const int searchPoint = 200;
+            const long nToFind6 = 7;
+            std::list<int> outList;
+            const size_t lFound6 = tree.FindK_FarthestNeighbors(
+                                                                nToFind6,
+                                                                outList,
+                                                                searchPoint );
+            if( lFound6 != 7u )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testKNearFar, Far: found wrong count #6\n" );
+            }
+        }
+        
+        
+        {
+            const int searchPoint = 2;
+            const long nToFind7 = 7;
+            std::set<int> outSet;
+            const size_t lFound7 = tree.FindK_FarthestNeighbors(
+                                                                nToFind7,
+                                                                outSet,
+                                                                searchPoint );
+            if( lFound7 != 7u )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testKNearFar, Far: found wrong count #7\n" );
+            }
         }
     }
     

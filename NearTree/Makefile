@@ -55,7 +55,7 @@ RELEASE = 4.0
 CC	= gcc
 CXX     = g++
 ifneq ($(MSYSTEM),MINGW32)
-CFLAGS  = -g -O2  -Wall  -ansi -pedantic -DCNEARTREE_SAFE_TRIANG=1
+CFLAGS  = -g -O3  -Wall  -ansi -pedantic -DCNEARTREE_SAFE_TRIANG=1
 TIME = time
 else
 CFLAGS  = -g -O2 -Wall  -DCNEARTREE_SAFE_TRIANG=1
