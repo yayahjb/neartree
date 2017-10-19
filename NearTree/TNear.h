@@ -90,7 +90,8 @@
 //       Places objects in a queue for insertion later when CompleteDelayInsert
 //
 //    void insert( ContainerType ) // for containers, std::vector, ..., or CNearTree
-//       all inserts are delayed until a search is performed or until an explicit call to CompleteDelayedInsertions
+//       all inserts are delayed until a search is performed or until an explicit
+//       call to CompleteDelayedInsertions
 //
 //    bool NearestNeighbor ( const DistanceType dRadius,  T& tClosest,   const T& t ) const
 //       dRadius is the largest radius within which to search; make it
@@ -100,20 +101,41 @@
 //       tClosest is returned as the object that was found closest to the probe
 //          point (if any were within radius dRadius of the probe)
 //       t is the probe point, used to search in the group of points insert'ed
-
 //       return value is true if some object was found within the search radius, false otherwise
 //
 //    iterator NearestNeighbor( const DistanceType radius, const T& probe ); returns an iterator
 //       to the nearest point to the probe point or end() if there is none
 //
+//    template<typename ContainerType>
+//    iterator SummedNearestNeighbor ( const DistanceType &dMaxSum,  T& tClosest,   const ContainerType& t ) const
+//       dMaxSum is the largest sum of distances within which to search; make it
+//          very large if you want to include every point that was loaded; dMaxSum
+//          is returned as the smallest sum of distances to the probe (or the dMaxSum
+//          if nothing is found)
+//       tClosest is returned as the object that for which the sum of distances to
+//          the points in the vector of probe points is smallest, if any were found
+//          for which the sum of distances if less than or equal to dMaxSum
+//       t is the vector of probe points, used to search in the group of points insert'ed
+//       return value is an iterator to the point for which the sum of distances to the
+//       probe points is least or end() if there is none
+//
 //    bool FarthestNeighbor ( T& tFarthest,   const T& t ) const
-//       tFarthest is returned as the object that was found farthest to the probe
+//       tFarthest is returned as the object that was found farthest from the probe
 //          point
 //       t is the probe point, used to search in the group of points insert'ed
 //       return value is true if some object was found, false otherwise
 //
 //    iterator FarthestNeighbor( const T& probe ); returns an iterator
 //       to the farthest point to the probe point or end() if there is none
+//
+//    template<typename ContainerType>
+//    iterator SummedFarthestNeighbor ( T& tFarthest,   const ContainerType& t ) const
+//       tFartheste is returned as the object that for which the sum of distances to
+//          the points in the vector of probe points is largest.
+//       t is the vector of probe points, used to search in the group of points insert'ed
+//       return value is an iterator to the point for which the sum of distances to the
+//       probe points is greatest or end() if there is none
+//
 //
 //
 //    the following functions (FindInSphere, FindOutSphere, and FindInAnnulus) all return a container
@@ -643,8 +665,6 @@ public:
 #endif
     {
         typename InputContainer1::const_iterator it1;
-        
-        
         for( it1=o1.begin(); it1!=o1.end(); ++it1 )
         {
             insert( *it1 );
@@ -657,8 +677,6 @@ public:
         }
         
     }  //  CNearTree constructor
-    
-    
     
     //=======================================================================
     //  CNearTree ( )
@@ -1368,6 +1386,53 @@ public:
     }// NearestNeighbor
     
     //=======================================================================
+    //  template<typename ContainerType>
+    //  iterator SummedNearestNeighbor ( const DistanceType &dSumdist, const ContainerType& t ) const
+    //
+    //  Function to search a NearTree for the object for which the sum of distances
+    //  to the probe point in vector, t is least. This function
+    //  is only here so that the function SummedNearest can be called without having sumdist  const.
+    //  This was necessary because Summed Nearest is recursive, but needs to keep the current smallest
+    //  sumdist.
+    //
+    //    dSumdist is the maximum sum of distances - any point for which the sum of
+    //             distances is greater than dSumdist from the probes in t will be ignored
+    //    t  is the probe point
+    //
+    //    the return is an iterator to the templated type and is the returned point at the
+    //             sum of distances from the the probe points in (t) that can be found in the NearTree
+    //             or iterator::end if no point was found
+    //
+    //  This version uses the balanced search
+    //=======================================================================
+    template<typename ContainerType>
+    inline iterator SummedNearestNeighbor ( const DistanceType& dSumdist, const ContainerType& t ) const
+    {
+        T closest;
+        size_t index = ULONG_MAX;
+        DistanceType tempSumdist = dSumdist;
+        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+        
+        if( this->empty( ) || dSumdist < DistanceType( 0 ) )
+        {
+            return ( iterator(end( )) );
+        }
+        else if ( m_BaseNode.SummedNearest ( tempSumdist, closest, t, index, m_ObjectStore
+#ifdef CNEARTREE_INSTRUMENTED
+                                     , m_NodeVisits
+#endif
+                                     ) )
+        {
+            return ( iterator( (long)index, this ) );
+        }
+        else
+        {
+            return ( iterator(end( )) );
+        }
+    }// SummedNearestNeighbor
+
+
+//=======================================================================
     //  iterator LeftNearestNeighbor ( const DistanceType &radius, const T& t ) const
     //
     //  Function to search a NearTree for the object closest to some probe point, t. This function
@@ -1951,9 +2016,55 @@ public:
                                                        ) );
         }
     }  //  LeftFarthestNeighbor
-    
-    
+  
+
     //=======================================================================
+    //  template<typename ContainerType>
+    //  iterator SummedFarthestNeighbor ( const ContainerType& t ) const
+    //
+    //  Function to search a NearTree for the object for which the sum of distances
+    //  to the probe point in container t is greatest. This function
+    //  is only here so that the function SummedFrathest can be called without having sumdist  const.
+    //  This was necessary because Summed Farthest is recursive, but needs to keep the current largest
+    //  sumdist.
+    //
+    //    t  is the conatiner of probe point
+    //
+    //    the return is an iterator to the templated type and is the returned point at the
+    //             sum of distances from the the probe points in (t) that can be found in the NearTree
+    //             ois greatest iterator::end if no point was found
+    //
+    //  This version uses the balanced search
+    //=======================================================================
+    template<typename ContainerType>
+    inline iterator SummedNearestNeighbor ( const ContainerType& t ) const
+    {
+        T farthest;
+        DistanceType dSumDist;
+        size_t index = ULONG_MAX;
+        DistanceType tempSumdist = DistanceType( distMinValue );;
+        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+
+        if( this->empty( ) )
+        {
+            return ( iterator(end( )) );
+             }
+        else if ( m_BaseNode.SummedFarthest ( tempSumdist, farthest, t, index, m_ObjectStore
+#ifdef CNEARTREE_INSTRUMENTED
+                                            , m_NodeVisits
+#endif
+                                            ) )
+        {
+            return ( iterator( (long)index, this ) );
+          }
+        else
+        {
+            return ( iterator(end( )) );
+       }
+    }// SummedFarthestNeighbor
+
+  
+   //=======================================================================
     // LLoyd's algorithm
     /*
 
@@ -1997,6 +2108,8 @@ public:
        return out;
     }  // end BelongsToPoints
 
+
+    //=======================================================================
     template<typename ContainerType>
     void BelongsToPoints( const T& t1, const T& t2, ContainerType& group1, ContainerType& group2 )
     {
@@ -2529,6 +2642,7 @@ public:
         return ( lReturn );
     }  //  LeftFindInAnnulus
     
+
 
     //=======================================================================
     //  long FindK_NearestNeighbors(  const size_t k, const DistanceType& dRadius, OutputContainerType& tClosest, const T& t ) const
@@ -4914,7 +5028,188 @@ public:
             return ( pClosest != ULONG_MAX );
         };   // end LeftNearest
         
+    
         //=======================================================================
+    //  template<typename ContainerType>
+    //  DistanceTypeNode SummedDistance ( const ContainerType& t, TNode& tTree )
+    //  Private function to sum the distances from tTree to each element of t
+    //
+    //    tTree -- a single point
+    //    t     -- a container of points
+    //
+    //   returns the sum of DistanceBetween calls for tTree and each element of t
+    //
+    //=======================================================================
+
+    template<typename ContainerType>
+    DistanceTypeNode SummedDistance ( const ContainerType& t, TNode& tTree ) {
+        
+        DistanceTypeNode sum = DistanceTypeNode(0);
+        typename ContainerType::iterator it;
+        for (it = t.begin(); it != t.end(); it++) {
+            sum += DistanceBetween( tTree, *it);
+        }
+        return sum;
+    }
+
+    
+    
+    //=======================================================================
+    //  template<typename ContainerType>
+    //  bool SummedNearest ( DistanceTypeNode& dSumdist,  TNode& tClosest,   const ContainerType& t,
+    //                 size_t& pClosest, const std::vector<TNode>& objectStore) const
+    //
+    //  Private function to search a NearTree for the object closest to some probe point, t.
+    //  This function is only called by NearestNeighbor.
+    //
+    //    dSumdist is the smallest currently known sum of distances of an object from the probe points.
+    //    tClosest is an object of the templated type and is the returned closest point
+    //             to the probe point that can be found in the NearTree
+    //    pClosest is the index of the point found or ULONG_MAX
+    //    t  is the container of probe points
+    //    objectStore is the complete object store of the NearTree
+    //
+    //    the return value is true only if a point was found within dSumdist
+    //
+    //=======================================================================
+    template<typename ContainerType>
+    bool SummedNearest (
+                  DistanceTypeNode& dSumDist,
+                  TNode& tClosest,
+                  const ContainerType& t,
+                  size_t& pClosest,
+                  const std::vector<TNode>& objectStore
+#ifdef CNEARTREE_INSTRUMENTED
+                  , size_t& VisitCount
+#endif
+    ) const
+    {
+        std::vector <NearTreeNode* > sStack;
+        DistanceTypeNode dDL=DistanceTypeNode(0), dDR=DistanceTypeNode(0);
+        size_t tsize;
+        NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+        pClosest = ULONG_MAX;
+#ifdef CNEARTREE_INSTRUMENTED
+        ++VisitCount;
+#endif
+        
+        tsize = t.size();
+        if ( pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
+        while ( pt->m_ptLeft != ULONG_MAX ||
+               pt->m_ptRight != ULONG_MAX ||
+               !sStack.empty( ) )
+        {
+            if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
+                if (!sStack.empty( )) {
+                    pt = sStack.back();
+                    sStack.pop_back();
+#ifdef CNEARTREE_INSTRUMENTED
+                    ++VisitCount;
+#endif
+                    continue;
+                }
+                break;
+            }
+            if (pt->m_ptLeft != ULONG_MAX) {
+                dDL = SummedDistance( t, objectStore[pt->m_ptLeft] );
+                if ( dDL <= dSumDist )
+                {
+                    dSumDist = dDL;
+                    pClosest = pt->m_ptLeft;
+                }
+            }
+            if (pt->m_ptRight != ULONG_MAX) {
+#ifdef CNEARTREE_INSTRUMENTED
+                ++VisitCount;
+#endif
+                dDR = SummedDistance( t, objectStore[pt->m_ptRight]);
+                if ( dDR <= dSumDist )
+                {
+                    dSumDist = dDR;
+                    pClosest = pt->m_ptRight;
+                }
+            }
+            
+            /*
+             See if both branches are populated.  In that case, save one branch
+             on the stack, and process the other one based on which one seems
+             smaller, but useful first]
+             */
+            if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
+                if (dDL+tsize*pt->m_dMaxLeft < dDR+tsize*pt->m_dMaxRight || pt->m_pRightBranch == 0) {
+                    if ( TRIANG(dDL,tsize*pt->m_dMaxLeft,dSumDist)) {
+                        if ( TRIANG(dDR,tsize*pt->m_dMaxRight,dSumDist)) {
+                            sStack.push_back(pt->m_pRightBranch);
+                        }
+                        pt = pt->m_pLeftBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                        ++VisitCount;
+#endif
+                        continue;
+                    }
+                    /* If we are here, the left branch was not useful
+                     Fall through to use the right
+                     */
+                }
+                
+                /* We come here either because pursuing the left branch was not useful
+                 of the right branch look shorter
+                 */
+                if ( TRIANG(dDR,tsize*pt->m_dMaxRight,dSumDist)) {
+                    if ( TRIANG(dDL,tsize*pt->m_dMaxLeft,dSumDist)) {
+                        sStack.push_back(pt->m_pLeftBranch);
+                    }
+                    pt = pt->m_pRightBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    ++VisitCount;
+#endif
+                    continue;
+                }
+            }
+            
+            /* Only one branch is viable, try them one at a time
+             */
+            if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,tsize*pt->m_dMaxLeft,dSumDist)) {
+                pt = pt->m_pLeftBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                ++VisitCount;
+#endif
+                continue;
+            }
+            
+            if ( pt->m_pRightBranch != 0 && TRIANG(dDR,tsize*pt->m_dMaxRight,dSumDist)) {
+                pt = pt->m_pRightBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                ++VisitCount;
+#endif
+                continue;
+            }
+            
+            /* We have procesed both sides, we need to go to the stack */
+            
+            if (!sStack.empty( )) {
+                pt = sStack.back();
+                sStack.pop_back();
+#ifdef CNEARTREE_INSTRUMENTED
+                ++VisitCount;
+#endif                            
+                continue;
+            }
+            break;
+        }
+        if ( !sStack.empty( ) ) // for safety !!!
+        {
+            std::vector <NearTreeNode* > sTemp;
+            sTemp.swap( sStack );
+        }
+        if ( pClosest != ULONG_MAX )
+            tClosest = objectStore[pClosest];
+        return ( pClosest != ULONG_MAX );
+    };   // end SummedNearest
+    
+
+
+//=======================================================================
         //  bool Farthest ( DistanceTypeNode& dRadius,  TNode& tFarthest,   const TNode& t ) const
         //
         //  Private function to search a NearTree for the m_Object farthest from some probe point, t.
@@ -5184,7 +5479,158 @@ public:
             return ( pFarthest != ULONG_MAX );
         };   //  end LeftFarthest
         
+    //=======================================================================
+    //  bool SummedFarthest ( DistanceTypeNode& dSumDist,  TNode& tFarthest,
+    //          const ContainerType& t, size_t& pFarthest,
+    //          const std::vector<TNode>& objectStore) const
+    //
+    //  Private function to search a NearTree for the object farthest from some probe point, t.
+    //  This function is only called by FarthestNeighbor.
+    //
+    //    dSumDist is the largest currently known sum of distances of an object from the probe points.
+    //    tFarthest is an object of the templated type and is the returned farthest point
+    //             from the probe point that can be found in the NearTree
+    //    t  is the container of probe points
+    //
+    //    the return value is true only if a point was found (should only be false for
+    //             an empty tree)
+    //
+    //=======================================================================
+    template<typename ContainerType>
+    bool SummedFarthest (
+                   DistanceTypeNode& dSumDist,
+                   TNode& tFarthest,
+                   const ContainerType& t, size_t& pFarthest,
+                   const std::vector<TNode>& objectStore
+#ifdef CNEARTREE_INSTRUMENTED
+                   , size_t& VisitCount
+#endif
+    ) const
+    {
+        std::vector <NearTreeNode* > sStack;
+        DistanceTypeNode dDL=DistanceTypeNode(0), dDR=DistanceTypeNode(0);
+        size_t tsize;
+        NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+        pFarthest = ULONG_MAX;
+#ifdef CNEARTREE_INSTRUMENTED
+        ++VisitCount;
+#endif
         
+        tsize = t.size();
+        if ( pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
+        while ( pt->m_ptLeft != ULONG_MAX ||
+               pt->m_ptRight != ULONG_MAX ||
+               !sStack.empty( ) )
+        {
+            if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
+                if (!sStack.empty( )) {
+                    pt = sStack.back();
+                    sStack.pop_back();
+#ifdef CNEARTREE_INSTRUMENTED
+                    ++VisitCount;
+#endif
+                    continue;
+                }
+                break;
+            }
+            if (pt->m_ptLeft != ULONG_MAX) {
+                dDL = SummedDistance( t, objectStore[pt->m_ptLeft] );
+                if ( dDL >= dSumDist )
+                {
+                    dSumDist = dDL;
+                    pFarthest = pt->m_ptLeft;
+                }
+            }
+            if (pt->m_ptRight != ULONG_MAX) {
+#ifdef CNEARTREE_INSTRUMENTED
+                ++VisitCount;
+#endif
+                dDR = SummedDistance( t, objectStore[pt->m_ptRight]);
+                if ( dDR >= dSumDist )
+                {
+                    dSumDist = dDR;
+                    pFarthest = pt->m_ptRight;
+                }
+            }
+            
+            /*
+             See if both branches are populated.  In that case, save one branch
+             on the stack, and process the other one based on which one seems
+             larger, but useful first]
+             */
+            if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
+                if (dDL+tsize*pt->m_dMaxLeft > dDR+tsize*pt->m_dMaxRight || pt->m_pRightBranch == 0) {
+                    if ( TRIANG(dSumDist,dDL,tsize*pt->m_dMaxLeft)) {
+                        if ( TRIANG(dSumDist,dDR,tsize*pt->m_dMaxRight)) {
+                            sStack.push_back(pt->m_pRightBranch);
+                        }
+                        pt = pt->m_pLeftBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                        ++VisitCount;
+#endif
+                        continue;
+                    }
+                    /* If we are here, the left branch was not useful
+                     Fall through to use the right
+                     */
+                }
+                
+                /* We come here either because pursuing the left branch was not useful
+                 of the right branch look shorter
+                 */
+                if ( TRIANG(dSumDist,dDR,tsize*pt->m_dMaxRight)) {
+                    if ( TRIANG(dSumDist,dDL,tsize*pt->m_dMaxLeft)) {
+                        sStack.push_back(pt->m_pLeftBranch);
+                    }
+                    pt = pt->m_pRightBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    ++VisitCount;
+#endif
+                    continue;
+                }
+            }
+            
+            /* Only one branch is viable, try them one at a time
+             */
+            if ( pt->m_pLeftBranch != 0 && TRIANG(dSumDist,dDL,tsize*pt->m_dMaxLeft)) {
+                pt = pt->m_pLeftBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                ++VisitCount;
+#endif
+                continue;
+            }
+            
+            if ( pt->m_pRightBranch != 0 && TRIANG(dSumDist,dDR,tsize*pt->m_dMaxRight)) {
+                pt = pt->m_pRightBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                ++VisitCount;
+#endif
+                continue;
+            }
+            
+            /* We have procesed both sides, we need to go to the stack */
+            
+            if (!sStack.empty( )) {
+                pt = sStack.back();
+                sStack.pop_back();
+#ifdef CNEARTREE_INSTRUMENTED
+                ++VisitCount;
+#endif                            
+                continue;
+            }
+            break;
+        }
+        if ( !sStack.empty( ) ) // for safety !!!
+        {
+            std::vector <NearTreeNode* > sTemp;
+            sTemp.swap( sStack );
+        }
+        if ( pFarthest != ULONG_MAX )
+            tFarthest = objectStore[pFarthest];
+        return ( pFarthest != ULONG_MAX );
+    };   // end SummedFarthest
+
+
         //=======================================================================
         //  long InSphere (
         //                const DistanceTypeNode& dRadius,
