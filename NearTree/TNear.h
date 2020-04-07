@@ -197,12 +197,6 @@
 //       if tIndices is used, it is a vector to which to add the indices of the points found
 //       t is the probe point, used to search in the group of points insert'ed
 //
-//    The variants LeftNearestNeighbor, LeftFarthestNeighbor, LeftFindInSphere, LeftFindOutSphere,
-//    LeftFindInAnnulus, LeftFindK_NearestNeighbors, and LeftFindK_FarthestNeighbors are the
-//    older, search-left-first versions, retained for existing applications that may require support
-//    for those versions and for testing and validation.  Those older versions are deprecated
-//    and may be removed in an upcoming release.
-//
 //    ~CNearTree( void )  // destructor
 //
 // =====================================================================================================
@@ -1679,45 +1673,6 @@ public:
             return ( iterator(this->end( )) );
         }
     }
-    //=======================================================================
-    //  iterator LeftFarthestNeighbor ( const T& t ) const
-    //
-    //  Function to search a NearTree for the object farthest from some probe point, t. This function
-    //  is only here so that the function Farthest can be called without having the radius const.
-    //  This was necessary because Farthest is recursive, but needs to keep the current largest radius.
-    //
-    //    t  is the probe point
-    //
-    //    the return is an iterator to the templated type and is the returned farthest point
-    //             from the probe point (t) that can be found in the NearTree
-    //             or iterator::end if no point was found
-    //
-    // This version uses the left-first search
-    //=======================================================================
-    iterator LeftFarthestNeighbor ( const T& t ) const
-    {
-        T farthest;
-        size_t index = ULONG_MAX;
-        DistanceType radius = DistanceType( distMinValue );
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) )
-        {
-            return ( end( ) );
-        }
-        else if ( (this->m_BaseNode).LeftFarthest( radius, farthest, t, index
-#ifdef CNEARTREE_INSTRUMENTED
-                                                  , m_NodeVisits
-#endif
-                                                  ) )
-        {
-            return ( iterator( (long)index, this ) );
-        }
-        else
-        {
-            return ( end( ) );
-        }
-    }
     
     //=======================================================================
     //  bool FarthestNeighbor ( T& tFarthest, const T& t ) const
@@ -2007,68 +1962,6 @@ public:
     }  //  FindInSphere
     
     //=======================================================================
-    //  long LeftFindInSphere ( const DistanceType& dRadius,  OutputContainerType& tClosest,   const T& t ) const
-    //
-    //  Function to search a NearTree for the set of objects closer to some probe point, t,
-    //  than dRadius. This is only here so that tClosest can be cleared before starting the work.
-    //
-    //    dRadius is the maximum search radius - any point farther than dRadius from the probe
-    //             point will be ignored
-    //    tClosest is returned as a container of objects of the templated type and is the
-    //             returned set of nearest points to the probe point that can be found
-    //             in the NearTree. The container can be a Standard Library container or
-    //             a CNearTree
-    //    t  is the probe point
-    //
-    // returns the number of objects returned in the container (for sets, that may not equal the number found)
-    //
-    // This version used the left-first search
-    //=======================================================================
-    template<typename OutputContainerType>
-    inline long LeftFindInSphere ( const DistanceType& dRadius, OutputContainerType& tClosest, const T& t ) const
-    {
-        // clear the contents of the return vector so that things don't accidentally accumulate
-        tClosest.clear( );
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) )
-        {
-            return( 0L );
-        }
-        else
-        {
-            return ( (this->m_BaseNode).LeftInSphere( dRadius, tClosest, t
-#ifdef CNEARTREE_INSTRUMENTED
-                                                     , m_NodeVisits
-#endif
-                                                     ) );
-        }
-    }  //  LeftFindInSphere
-    
-    template<typename OutputContainerType>
-    inline long LeftFindInSphere ( const DistanceType& dRadius,  OutputContainerType& tClosest,
-                                  std::vector<size_t>& tIndices, const T& t ) const
-    {
-        // clear the contents of the return vector so that things don't accidentally accumulate
-        tClosest.clear( );
-        tIndices.clear( );
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) )
-        {
-            return( 0L );
-        }
-        else
-        {
-            return ( (this->m_BaseNode).LeftInSphere( dRadius, tClosest, tIndices, t
-#ifdef CNEARTREE_INSTRUMENTED
-                                                     , m_NodeVisits
-#endif
-                                                     ) );
-        }
-    }  //  LeftFindInSphere
-    
-    //=======================================================================
     //  long FindOutSphere ( const DistanceType& dRadius,  OutputContainerType& tFarthest,   const T& t ) const
     //
     //  Function to search a NearTree for the set of objects farther from some probe point, t,
@@ -2136,76 +2029,6 @@ public:
                                                   ) );
         }
     }  //  FindOutSphere
-    
-    //=======================================================================
-    //  long leftFindOutSphere ( const DistanceType& dRadius,  OutputContainerType& tFarthest,   const T& t ) const
-    //
-    //  Function to search a NearTree for the set of objects farther from some probe point, t,
-    //  than dRadius. This is only here so that tFarthest can be cleared before starting the work.
-    //
-    //    dRadius is the maximum search radius - any point nearer than dRadius from the probe
-    //             point will be ignored
-    //    tFarthest is returned as a container of objects of the templated type and is the
-    //             returned set of nearest points to the probe point that can be found
-    //             in the NearTree. The container can be a Standard Library container or
-    //             a CNearTree
-    //    t  is the probe point
-    //
-    // returns the number of objects returned in the container (for sets, that may not equal the number found)
-    //
-    // This version uses the left-first search
-    //=======================================================================
-    template<typename OutputContainerType>
-    long LeftFindOutSphere (
-                            const DistanceType& dRadius,
-                            OutputContainerType& tFarthest,
-                            const T& t
-                            ) const
-    {
-        // clear the contents of the return vector so that things don't accidentally accumulate
-        tFarthest.clear( );
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) )
-        {
-            return( 0L );
-        }
-        else
-        {
-            return ( (this->m_BaseNode).LeftOutSphere( dRadius, tFarthest, t
-#ifdef CNEARTREE_INSTRUMENTED
-                                                      , m_NodeVisits
-#endif
-                                                      ) );
-        }
-    }  //  LeftFindOutSphere
-    
-    template<typename OutputContainerType>
-    long LeftFindOutSphere (
-                            const DistanceType& dRadius,
-                            OutputContainerType& tFarthest,
-                            std::vector<size_t>& tIndices,
-                            const T& t
-                            ) const
-    {
-        // clear the contents of the return vector so that things don't accidentally accumulate
-        tFarthest.clear( );
-        tIndices.clear( );
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) )
-        {
-            return( 0L );
-        }
-        else
-        {
-            return ( (this->m_BaseNode).LeftOutSphere( dRadius, tFarthest, tIndices, t
-#ifdef CNEARTREE_INSTRUMENTED
-                                                      , m_NodeVisits
-#endif
-                                                      ) );
-        }
-    }  //  LeftFindOutSphere
     
     
     //=======================================================================

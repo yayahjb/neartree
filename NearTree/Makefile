@@ -56,6 +56,7 @@ CC	= gcc
 CXX     = g++
 ifneq ($(MSYSTEM),MINGW32)
 CFLAGS  = -g -O3  -Wall  -ansi -pedantic -DCNEARTREE_SAFE_TRIANG=1
+SHELL = bash
 TIME = time
 else
 CFLAGS  = -g -O2 -Wall  -DCNEARTREE_SAFE_TRIANG=1
