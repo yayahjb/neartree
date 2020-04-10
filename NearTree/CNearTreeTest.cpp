@@ -146,7 +146,6 @@ fprintf( stdout, "%s time %f, visits %ld \n", idstring, ((double)(tc2-tc1))/CLOC
 /*=======================================================================*/
 int main(int argc, char* argv[])
 {
-    size_t testdim;
     size_t norm_delay;
     g_errorCount = 0;
     
@@ -1291,8 +1290,8 @@ class vecn
 public:
     std::vector< double > pd;
     int dim;
-    size_t delay;
     double length;  // just for a signature for debugging
+    size_t delay;
     vecn( ) :
     dim(17), length(0), delay(norm_delay)
     {
@@ -3607,11 +3606,10 @@ void testKNearFar( size_t testdim, size_t xnorm_delay )
         const unsigned int n2Store = 100000*testdim;
         double testrad1 = (double)RHrand::RHRAND_MAX/3.;
         double testrad2 = testrad1*std::sqrt((double)(testdim));
-        size_t subspdim, ibase, i, j, k, kk;
+        size_t subspdim, ibase, i, j, k;
         std::vector<vecn>basis;
         vecn coeff;
         vecn datapt;
-        double coeff_norm;
         double cluster_scale[5] = {.005,.01,.05,.1,.5};
         size_t i_cluster;
         
@@ -3655,10 +3653,10 @@ void testKNearFar( size_t testdim, size_t xnorm_delay )
                 vecn probe;
                 do {
                     probe = vecn(testdim, norm_delay);
-                    for (int ii = 0; ii < testdim; ii++) probe.pd[ii]-= (double)RHrand::RHRAND_MAX/2.;
-                    for (int ii = 0; ii < testdim; ii++) probe.pd[ii] *= (testrad1/((double)RHrand::RHRAND_MAX))/100.;
+                    for (size_t ii = 0; ii < testdim; ii++) probe.pd[ii]-= (double)RHrand::RHRAND_MAX/2.;
+                    for (size_t ii = 0; ii < testdim; ii++) probe.pd[ii] *= (testrad1/((double)RHrand::RHRAND_MAX))/100.;
                 } while (probe.Norm()>testrad1/2.);
-                for (int ii = 0; ii < testdim; ii++) probe.pd[ii]+= datapt.pd[ii];
+                for (size_t ii = 0; ii < testdim; ii++) probe.pd[ii]+= datapt.pd[ii];
                 
                 /* First do an annular search with a cache */
                 
@@ -4239,7 +4237,7 @@ void testLloyd_N( )
     vk.push_back( double(100) );
 
     std::vector<std::vector<double> > vvd = vdata.BelongsToPoints( vk );
-    const int i19191 = 19191;
+    /* const int i19191 = 19191; */
 
     if (vvd.size( ) != vk.size( ))
     {

@@ -158,9 +158,7 @@ void testEmptyTree( void )
 {
     CNearTreeHandle tree;
     CVectorHandle v;
-    int CNEARTREE_FAR * close;
     void CNEARTREE_FAR * vclose;
-    int CNEARTREE_FAR * nFar;
     void CNEARTREE_FAR * vnFar;
     int probe[1];
     bool bTreeEmpty;
@@ -184,7 +182,6 @@ void testEmptyTree( void )
     
     probe[0] = 1;
     bTreeHasNearest =  !CNearTreeNearestNeighbor(tree, 0.0, &vclose, NULL, probe); 
-    close = (int CNEARTREE_FAR *)vclose;
     if( bTreeHasNearest )
     {
         ++g_errorCount;
@@ -193,7 +190,6 @@ void testEmptyTree( void )
     
     probe[0] = 0;
     bTreeHasFarthest = !CNearTreeFarthestNeighbor(tree, &vnFar, NULL, probe);
-    nFar = (int CNEARTREE_FAR *)vnFar;
     if( bTreeHasFarthest )
     {
         ++g_errorCount;
@@ -505,7 +501,6 @@ void testFindFirstObject( void )
 /*=======================================================================*/
 void testFindLastObject( void )
 {
-    double fFinal;
     CNearTreeHandle tree;
     bool bReturn, bResult;
     double f[1];
@@ -514,7 +509,6 @@ void testFindLastObject( void )
     int count;
     
     count = 0;
-    fFinal = DBL_MAX;
     bReturn = !CNearTreeCreate(&tree,1,CNEARTREE_TYPE_DOUBLE);
     if (!bReturn)
     {
@@ -527,7 +521,6 @@ void testFindLastObject( void )
     while( f[0] > 2.0*sqrt(DBL_MIN) )
     {
         bReturn = !CNearTreeImmediateInsert(tree,f, NULL);
-        fFinal = f[0];
         f[0] /= 2.0;
         ++count;
     }
@@ -582,7 +575,6 @@ void testFindLastObject( void )
     }
     
     count = 0;
-    fFinal = DBL_MAX;
     bReturn = !CNearTreeCreate(&tree,1,CNEARTREE_TYPE_DOUBLE|CNEARTREE_FLIP);
     if (!bReturn)
     {
@@ -595,7 +587,6 @@ void testFindLastObject( void )
     while( f[0] > 2.0*sqrt(DBL_MIN) )
     {
         bReturn = !CNearTreeImmediateInsert(tree,f, NULL);
-        fFinal = f[0];
         f[0] /= 2.0;
         ++count;
     }
@@ -1334,7 +1325,7 @@ void testBigVector(  )
     void CNEARTREE_FAR * vvFarthest;
     double CNEARTREE_FAR * vNearCenter;
     void CNEARTREE_FAR * vvNearCenter;
-    double CNEARTREE_FAR * vExtreme;
+    /* double CNEARTREE_FAR * vExtreme; */
     void CNEARTREE_FAR * vvExtreme;
     
     double rmax = -DBL_MAX;
@@ -1528,7 +1519,7 @@ void testBigVector(  )
         
         /* Just make sure that FarthestNeighbor works for objects */
         bResult = !CNearTreeFarthestNeighbor(tree, &vvExtreme, NULL, vNearCenter );
-        vExtreme = (double CNEARTREE_FAR *)vvExtreme;
+        /* vExtreme = (double CNEARTREE_FAR *)vvExtreme; */
         if (!bResult)
         {
             ++g_errorCount;

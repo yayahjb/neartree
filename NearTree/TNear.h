@@ -5658,7 +5658,333 @@ public:
         }   // end InAnnulus
         
         
-        
+        //=======================================================================
+        // template< typename ProbeContainerType > 
+        // inline DistanceTypeNode AvgDistFrom(
+        //              ProbeContainerType& t,               // container of probe points
+        //              TNode p)                             // the point being tested
+        //
+        // Private function to compile the average distance from the points
+        // in a probe container to a specificed point to be tested.  Return
+        // TNode(0.0) for an empty probe container as well as for the case
+        // where all the distances are zero.
+        //=======================================================================
+
+        template< typename ProbeContainerType >
+        inline DistanceTypeNode AvgDistFrom(
+                     ProbeContainerType& t,               // container of probe points
+                     TNode p)                             // the point being tested
+        {
+          DistanceTypeNode avg( TNode(0.0) );
+          typename ProbeContainerType::iterator it;
+          size_t count = t.size();
+          if ( count > 0 ) {
+            for ( it = t.begin(); it!=t.end(); ++it)
+            {
+              avg  += DistanceBetween( *it, p );
+            }
+            avg /= DistanceType(count);
+          }
+          return ( avg );
+        }   // end AngDist
+
+        //=======================================================================
+        // template< typename ProbeContainerType >
+        // long K_Extreme (const size_t k, // the target number of points to find
+        //             const bool near,   // if true, search nearest, else to search farthest
+        //             const bool shell,  // if true, the search only returns hits in the nearest or farthest thin shell
+        //             const bool closed, // if true, the search in inlcusive of the inner radius
+        //             std::map<size_t,double> &dDistanceCache, // parallel map to m_ObjectStore containing
+        //              //                 cached distances from the probe to that object or DBL_MAX;  
+        //              DistanceTypeNode& dAvgDistInner, // the inner bound on the search radius or average sum
+        //              //                 of distances, which will be updated if near is false when the
+        //              //                 internal store is resized
+        //              DistanceTypeNode& dAvgDistOuter,     // the excluded outer bound on the search radius or 
+        //              //                 average sum, which will be updated if near is true when  the internal 
+        //              //                 store is resized
+        //             std::vector<std::pair<DistanceTypeNode,size_t> >& tExtreme,
+        //              //                 a vector of pair of Nodes and ordinals of objects where 
+        //              //                 the objects are of the templated type found between dAvgDistInner and 
+        //              //                 dAvgDistOuter as an average of distance from probe points, limited 
+        //              //                 by the k-extreme search
+        //              ProbeContainerType& t                // container of probe points
+        // #ifdef CNEARTREE_INSTRUMENTED
+        //             , size_t& VisitCount
+        //             , std::map<size_t,size_t> &sDistanceCacheHits
+        // #endif
+        //)
+        // Private function to perform all the varieties of near and far searches
+        //=======================================================================
+
+
+        template< typename ProbeContainerType >
+        long K_Extreme (const size_t k, // the target number of points to find
+                     const bool near,   // if true, search nearest, else to search farthest
+                     const bool shell,  // if true, the search only returns hits in the nearest or farthest thin shell
+                     const bool closed, // if true, the search in inlcusive of the inner radius
+                     std::map<size_t,double> &dDistanceCache, // parallel map to m_ObjectStore containing
+                     //                 cached distances from the probe to that object or DBL_MAX;  
+                     DistanceTypeNode& dAvgDistInner, // the inner bound on the search radius or average sum
+                     //                 of distances, which will be updated if near is false when the
+                     //                 internal store is resized
+                     DistanceTypeNode& dAvgDistOuter,     // the excluded outer bound on the search radius or 
+                     //                 average sum, which will be updated if near is true when  the internal 
+                     //                 store is resized
+                     std::vector<std::pair<DistanceTypeNode,size_t> >& tExtreme,
+                     //                 a vector of pair of Nodes and ordinals of objects where 
+                     //                 the objects are of the templated type found between dAvgDistInner and 
+                     //                 dAvgDistOuter as an average of distance from probe points, limited 
+                     //                 by the k-extreme search
+                     ProbeContainerType& t                // container of probe points
+#ifdef CNEARTREE_INSTRUMENTED
+                     , size_t& VisitCount
+                     , std::map<size_t,size_t> &sDistanceCacheHits
+#endif
+        )
+        {
+            std::vector <size_t > sStack;
+            DistanceTypeNode dDL=0., dDR=0.;
+            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
+            size_t qt = ULONG_MAX;
+            double direction;
+#ifdef CNEARTREE_INSTRUMENTED
+            size_t colcount;
+            ++VisitCount;
+#endif
+            direction=near?1.:-1.;
+            if ( pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
+            while ( pt->m_ptLeft != ULONG_MAX ||
+                   pt->m_ptRight != ULONG_MAX ||
+                   !sStack.empty( ) )
+            {
+                if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
+                    if (!sStack.empty( )) {
+                        qt = sStack.back();
+                        if (qt != ULONG_MAX) {
+                            pt = m_NearTreeNodes[qt];
+                        } else {
+                            pt = const_cast<NearTreeNode*>(this);
+                        }
+                        sStack.pop_back();
+#ifdef CNEARTREE_INSTRUMENTED
+                        ++VisitCount;
+#endif
+                        continue;
+                    }
+                    break;
+                }
+                if (pt->m_ptLeft != ULONG_MAX) {
+                    double dc;
+                    if ((dc=dDistanceCache[pt->m_ptLeft]) >= 1.) {
+                        dDL = dc-1.;
+#ifdef CNEARTREE_INSTRUMENTED
+                        sDistanceCacheHits[pt->m_ptLeft] += 1;
+#endif
+                    } else {
+                        dDL =AvgDistFrom( t, m_ObjectStore[pt->m_ptLeft] );
+                        dDistanceCache[pt->m_ptLeft] = 1.+(double)dDL;
+#ifdef CNEARTREE_INSTRUMENTED
+                        sDistanceCacheHits[pt->m_ptLeft] = 1;
+#endif
+                    }
+                    if ( dDL <= dAvgDistOuter
+                        && (dDL > dAvgDistInner
+                            || (closed && dDL == dAvgDistInner )))
+                    {   size_t collide;
+#ifdef CNEARTREE_INSTRUMENTED
+                        colcount = 1;
+#endif
+                        if ((k == 1 || shell) && dDL <= dAvgDistOuter) {
+                            if (dDL < dAvgDistOuter) tExtreme.clear();
+                            dAvgDistOuter = dDL;
+                            /* fprintf (stderr,"reduced dAvgDistOuter %g\n",
+                             (double)dAvgDistOuter); */
+                        }
+                        tExtreme.insert( tExtreme.end(), std::make_pair( direction*dDL, pt->m_ptLeft ) );
+                        if( tExtreme.size( ) > k ) { 
+                          if (near) K_Resize( k, t, tExtreme, dAvgDistOuter );
+                          else K_Resize( k, t, tExtreme, dAvgDistInner );
+                        }
+                        collide = pt->m_ptLeft;
+                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
+                            tExtreme.insert( tExtreme.end(), std::make_pair( direction*dDL, m_ObjectCollide[collide] ) );
+                            if( tExtreme.size( ) > k ) {
+                              if (near) K_Resize( k, t, tExtreme, dAvgDistOuter );
+                              else  K_Resize( k, t, tExtreme, dAvgDistInner );
+                            }
+                            collide = m_ObjectCollide[collide];
+#ifdef CNEARTREE_INSTRUMENTED
+                            colcount++;
+#endif
+                        }
+#ifdef CNEARTREE_INSTRUMENTED
+                        if (colcount != pt->m_imultLeft) {
+                            std::cerr << " Collision discrepancy colcount = "
+                            << colcount << " m_imultLeft = " << pt->m_imultLeft
+                            << std::endl;
+                        }
+#endif
+                    }
+                }
+                if (pt->m_ptRight != ULONG_MAX) {
+                    double dc;
+#ifdef CNEARTREE_INSTRUMENTED
+                    ++VisitCount;
+#endif
+                    if ((dc=dDistanceCache[pt->m_ptRight]) >= 1.) {
+                        dDR = dc-1.;
+#ifdef CNEARTREE_INSTRUMENTED
+                        sDistanceCacheHits[pt->m_ptRight] += 1;
+#endif
+                    } else {
+                        dDR = AvgDistFrom( t, m_ObjectStore[pt->m_ptRight] );
+                        dDistanceCache[pt->m_ptRight] = 1.+(double)dDR;
+#ifdef CNEARTREE_INSTRUMENTED
+                        sDistanceCacheHits[pt->m_ptRight] = 1;
+#endif
+                    }
+                    
+                    if ( dDR <= dAvgDistOuter
+                        && (dDR > dAvgDistInner
+                            || (closed && dDR == dAvgDistInner)))
+                    {   size_t collide;
+#ifdef CNEARTREE_INSTRUMENTED
+                        colcount = 1;
+#endif
+                        if ((k == 1 || shell) && dDR <= dAvgDistOuter) {
+                            if (dDR < dAvgDistOuter) tExtreme.clear();
+                            dAvgDistOuter = dDR;
+                            /* fprintf (stderr,"reduced dAvgDistOuter %g\n",
+                             (double)dAvgDistOuter); */
+                        }
+                        tExtreme.insert( tExtreme.end(), std::make_pair( direction*dDR, pt->m_ptRight ) );
+                        if( tExtreme.size( ) > k ) {
+                          if (near) K_Resize( k, t, tExtreme, dAvgDistOuter );
+                          else K_Resize( k, t, tExtreme, dAvgDistInner );
+                        }
+                        collide = pt->m_ptRight;
+                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
+                            tExtreme.insert( tExtreme.end(), std::make_pair( direction*dDR, m_ObjectCollide[collide]));
+                            if( tExtreme.size( ) > k ) {
+                              if (near) K_Resize( k, t, tExtreme, dAvgDistOuter );
+                              else K_Resize( k, t, tExtreme, dAvgDistInner );
+                            }
+                            collide = m_ObjectCollide[collide];
+#ifdef CNEARTREE_INSTRUMENTED
+                            colcount++;
+#endif
+                        }
+#ifdef CNEARTREE_INSTRUMENTED
+                        if (colcount != pt->m_imultRight) {
+                            std::cerr << " Collision discrepancy colcount = "
+                            << colcount << " m_imultLeft = " << pt->m_imultRight
+                            << std::endl;
+                        }
+#endif
+                    }
+                }
+                
+                /*
+                 See if both branches are populated.  In that case, save one branch
+                 on the stack, and process the other one based on which one seems
+                 smaller, but useful first]
+                 */
+                if (pt->m_pLeftBranch != ULONG_MAX
+                    && pt->m_pRightBranch != ULONG_MAX ) {
+                    /* if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight */
+                    if (dDL <= dDR || dDL+pt->m_dMaxLeft <= dDR+pt->m_dMaxRight
+                        || pt->m_pRightBranch == ULONG_MAX) {
+                        if ( (TRIANG(dAvgDistInner,dDL,pt->m_dMaxLeft))
+                            && (TRIANG(dDL,pt->m_dMaxLeft,dAvgDistOuter)  )) {
+                            if ( (TRIANG(dAvgDistInner,dDR,pt->m_dMaxRight))
+                                && (TRIANG(dDR,pt->m_dMaxRight,dAvgDistOuter) )) {
+                                
+                                sStack.push_back(pt->m_pRightBranch);
+                            }
+                            qt = pt->m_pLeftBranch;
+                            pt = m_NearTreeNodes[qt];
+#ifdef CNEARTREE_INSTRUMENTED
+                            ++VisitCount;
+#endif
+                            continue;
+                        }
+                        /* If we are here, the left branch was not useful
+                         Fall through to use the right
+                         */
+                    }
+                    
+                    /* We come here either because pursuing the left branch was not useful
+                     of the right branch looks shorter (near true) or farther (near false)
+                     */
+                    if ( pt->m_pRightBranch != ULONG_MAX
+                        && TRIANG(dDR,pt->m_dMaxRight,dAvgDistOuter)
+                        && TRIANG(dAvgDistInner,dDR,pt->m_dMaxRight)) {
+                        if ( TRIANG(dDL,pt->m_dMaxLeft,dAvgDistOuter)
+                            && TRIANG(dAvgDistInner,dDL,pt->m_dMaxLeft) ) {
+                            sStack.push_back(pt->m_pLeftBranch);
+                        }
+                        qt = pt->m_pRightBranch;
+                        pt = m_NearTreeNodes[qt];
+#ifdef CNEARTREE_INSTRUMENTED
+                        ++VisitCount;
+#endif
+                        continue;
+                    }
+                }
+                
+                /* Only one branch is viable, try them one at a time
+                 */
+                if ( pt->m_pLeftBranch != ULONG_MAX
+                    && TRIANG(dDL,pt->m_dMaxLeft,dAvgDistOuter)
+                    && TRIANG(dAvgDistInner,dDL,pt->m_dMaxLeft)) {
+                    qt = pt->m_pLeftBranch;
+                    pt = m_NearTreeNodes[qt];
+#ifdef CNEARTREE_INSTRUMENTED
+                    ++VisitCount;
+#endif
+                    continue;
+                }
+                
+                if ( pt->m_pRightBranch != ULONG_MAX
+                    && TRIANG(dDR,pt->m_dMaxRight,dAvgDistOuter)
+                    && TRIANG(dAvgDistInner,dDR,pt->m_dMaxRight)) {
+                    qt = pt->m_pRightBranch;
+                    pt = m_NearTreeNodes[qt];
+#ifdef CNEARTREE_INSTRUMENTED
+                    ++VisitCount;
+#endif
+                    continue;
+                }
+                
+                /* We have procesed both sides, we need to go to the stack */
+                
+                if (!sStack.empty( )) {
+                    qt = sStack.back();
+                    if (qt != ULONG_MAX) {
+                        pt = m_NearTreeNodes[qt];
+                    } else {
+                        pt = const_cast<NearTreeNode*>(this);
+                    }
+                    sStack.pop_back();
+#ifdef CNEARTREE_INSTRUMENTED
+                    ++VisitCount;
+#endif
+                    continue;
+                }
+                break;
+            }
+            if ( !sStack.empty( ) ) // for safety !!!
+            {
+                std::vector <size_t > sTemp;
+                sTemp.swap( sStack );
+            }
+            if( tExtreme.size( ) > 1 ) {
+                if (near)  K_Resize( k, t, tExtreme, dAvgDistOuter );
+                else K_Resize( k, t, tExtreme, dAvgDistInner );
+            }
+            return ( (long)tExtreme.size( ) );
+        } // end K_Extreme
+
         //=======================================================================
         //  long K_Near ( const size_t k,
         //                const bool shell,
