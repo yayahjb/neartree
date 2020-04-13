@@ -56,10 +56,12 @@ CC	= gcc
 CXX     = g++
 ifneq ($(MSYSTEM),MINGW32)
 CFLAGS  = -g -O3  -Wall  -ansi -pedantic -DCNEARTREE_SAFE_TRIANG=1
+CXXFLAGS  = -g -O3  -Wall -std=c++11  -DCNEARTREE_SAFE_TRIANG=1
 SHELL = bash
 TIME = time
 else
 CFLAGS  = -g -O2 -Wall  -DCNEARTREE_SAFE_TRIANG=1
+CXXFLAGS  = -g -O2 -Wall  -std=c++11 -DCNEARTREE_SAFE_TRIANG=1
 TIME = 
 endif
 
@@ -119,10 +121,10 @@ CPPLIBRARIES = -lm
 CLIBRARIES = $(CVECTOR_LIBLOC) -lCVector -lm
 
 COMPILE_COMMAND        =  $(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(INCLUDES) $(WARNINGS) -c
-CPPCOMPILE_COMMAND     =  $(LIBTOOL) --mode=compile $(CXX) $(CFLAGS) $(INCLUDES) $(WARNINGS) -c
+CPPCOMPILE_COMMAND     =  $(LIBTOOL) --mode=compile $(CXX) $(CXXFLAGS) $(INCLUDES) $(WARNINGS) -c
 LIBRARY_LINK_COMMAND   =  $(LIBTOOL) --mode=link $(CC) -version-info $(VERSION) -no-undefined -rpath $(INSTALL_PREFIX)/lib
 BUILD_COMMAND_LOCAL    =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) $(INCLUDES)
-CPPBUILD_COMMAND_LOCAL =  $(LIBTOOL) --mode=link $(CXX) -no-undefined $(CFLAGS) $(INCLUDES)
+CPPBUILD_COMMAND_LOCAL =  $(LIBTOOL) --mode=link $(CXX) -no-undefined $(CXXFLAGS) $(INCLUDES)
 BUILD_COMMAND_DYNAMIC  =  $(LIBTOOL) --mode=link $(CC) -no-undefined $(CFLAGS) -shared -I$(INSTALL_PREFIX)/include
 BUILD_COMMAND_STATIC   =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) -static-libtool-libs -I$(INSTALL_PREFIX)/include
 INSTALL_COMMAND        =  $(LIBTOOL) --mode=install cp
