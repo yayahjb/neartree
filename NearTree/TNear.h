@@ -1059,7 +1059,7 @@ public:
         this->CompleteDelayedInsert( );
         return( *this );
     }
-    
+ 
     //=======================================================================
     // Name: set_symmetric_difference()
     // Description: removes the portion container's contents from a NearTree
@@ -1072,7 +1072,7 @@ public:
     template<typename InputContainer>
     CNearTree& set_symmetric_difference ( const InputContainer& o )
     {
-        
+
         if ( o.empty( ) )
         { // do nothing if "this" is already complete
         }
@@ -1084,26 +1084,26 @@ public:
         {
             std::set<T> s1, s2, s3;
             s1.insert( this->begin( ), this->end( ) );
-            
+
             s2.insert( o.begin(), o.end( ) );
-            
+
             this->clear( );
             std::set_symmetric_difference(
                                           s1.begin( ), s1.end( ),
                                           s2.begin( ), s2.end( ),
                                           std::inserter( s3, s3.end( ) ) );
-            
+
             this->insert( s3 );
         }
-        
+
         this->CompleteDelayedInsert( );
         return( *this );
     }
-    
+
     template<typename InputContainer>
     CNearTree& set_symmetric_difference ( InputContainer& o )
     {
-        
+
         if ( o.empty( ) )
         { // do nothing if "this" is already complete
         }
@@ -1115,23 +1115,23 @@ public:
         {
             std::set<T> s1, s2, s3;
             s1.insert( this->begin( ), this->end( ) );
-            
+
             s2.insert( o.begin(), o.end( ) );
-            
+
             this->clear( );
             std::set_symmetric_difference(
                                           s1.begin( ), s1.end( ),
                                           s2.begin( ), s2.end( ),
                                           std::inserter( s3, s3.end( ) ) );
-            
+
             this->insert( s3 );
         }
-        
+
         this->CompleteDelayedInsert( );
         return( *this );
     }
-    
-    
+
+
     //=======================================================================
     // clear( void )
     //
@@ -1172,9 +1172,9 @@ public:
         this->m_SumSpacingsSq  = DistanceType( 0 );
         this->m_DimEstimate    = 0;
         this->m_DimEstimateEsd = 0;
-#ifdef CNEARTREE_INSTRUMENTED
+        #ifdef CNEARTREE_INSTRUMENTED
         this->m_NodeVisits     = 0;
-#endif
+        #endif
         
     }
     
@@ -1376,9 +1376,9 @@ public:
             return ( iterator(end( )) );
         }
         else if ( (this->m_BaseNode).Nearest( tempRadius, closest, t, index
-#ifdef CNEARTREE_INSTRUMENTED
-                                             , m_NodeVisits
-#endif
+                                              #ifdef CNEARTREE_INSTRUMENTED
+                                            , m_NodeVisits
+                                              #endif
                                              ) )
         {
             return ( iterator( (long)index, this ) );
@@ -1395,7 +1395,7 @@ public:
     //    const ContainerType& t ) const
     //
     //  Function to search a NearTree for the object for which the sum of distances
-    //  to the probe point in vector, t is least. This function
+    //  to the probe points in vector, t is least. This function
     //  is only here so that the function SummedNearest can be called without
     //  having sumdist  const.  This was necessary because Summed Nearest is
     //  recursive, but needs to keep the current smallest sumdist.
@@ -1418,15 +1418,15 @@ public:
         size_t index = ULONG_MAX;
         DistanceType tempSumdist = dSumdist;
         const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
+
         if( this->empty( ) || dSumdist < DistanceType( 0 ) )
         {
             return ( iterator(end( )) );
         }
         else if ( m_BaseNode.SummedNearest ( tempSumdist, closest, t, index, m_ObjectStore
-#ifdef CNEARTREE_INSTRUMENTED
-                                            , m_NodeVisits
-#endif
+                                             #ifdef CNEARTREE_INSTRUMENTED
+                                           , m_NodeVisits
+                                             #endif
                                             ) )
         {
             return ( iterator( (long)index, this ) );
@@ -1478,9 +1478,9 @@ public:
             size_t index = ULONG_MAX;
             return ( (this->m_BaseNode).Nearest (
                                                  dSearchRadius, tClosest, t, index
-#ifdef CNEARTREE_INSTRUMENTED
-                                                 , m_NodeVisits
-#endif
+                                                 #ifdef CNEARTREE_INSTRUMENTED
+                                               , m_NodeVisits
+                                                 #endif
                                                  ) );
         }
     }  //  NearestNeighbor
