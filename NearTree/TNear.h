@@ -2,12 +2,13 @@
 //*  TNear.h
 //*  NearTree
 //*
-//*  Copyright 2001, 2008 Larry Andrews.  All rights reserved
+//*  Copyright 2001, 2008, 2020 Larry Andrews.  All rights reserved
 //*  Revised 12 Dec 2008 for sourceforge release -- H. J. Bernstein
 //*  Revised 30 May 2009, release with full containerization of C++
-//*                       version and KNear/Far in C++ and C, LCA + HJB
+//*                       version and K_Near/K_Far in C++ and C, LCA + HJB
 //*  Revised 13 Nov 2010, revisions to C++ version for balanced
 //*                       searches, LCA+HJB
+//*  Revised 10 Feb 2020, add full set of K_SumNear/K_SumFar calls
 
 
 //**********************************************************************
@@ -63,7 +64,8 @@
 // functionality for the template to work. For the built-in
 // numerics of C++, they are provided here (or else you should create them).
 
-//    DistanceType Norm( );   // conversion constructor from the templated class to DistanceType
+//    DistanceType Norm( );   // conversion constructor from the templated class 
+//                                to DistanceType
 //                                (usually will return a "length" of type double)
 //    operator- ( );          // geometrical (vector) difference of two objects
 //    a copy constructor would be nice
@@ -107,7 +109,8 @@
 //       to the nearest point to the probe point or end() if there is none
 //
 //    template<typename ContainerType>
-//    iterator SummedNearestNeighbor ( const DistanceType &dMaxSum,  T& tClosest,   const ContainerType& t ) const
+//    iterator SummedNearestNeighbor ( const DistanceType &dMaxSum,  T& tClosest, 
+//       const ContainerType& t ) const
 //       dMaxSum is the largest sum of distances within which to search; make it
 //          very large if you want to include every point that was loaded; dMaxSum
 //          is returned as the smallest sum of distances to the probe (or the dMaxSum
@@ -138,10 +141,11 @@
 //
 //
 //
-//    the following functions (FindInSphere, FindOutSphere, and FindInAnnulus) all return a container
-//    (ContainerType) that can be any standard library container (such as std::vector< T >) or CNearTree.
-//    each has an alternate version in which, in addition the indices of the objects in the
-//    object store are returned in a second parallel vector.
+//    the following functions (FindInSphere, FindOutSphere, and FindInAnnulus) all return 
+//    a container (ContainerType) that can be any standard library container 
+//    (such as std::vector< T >) or CNearTree. each has an alternate version in which, 
+//    in addition the indices of the objects in the  object store are returned in a 
+//    second parallel vector.
 //
 //    long FindInSphere ( const DistanceType dRadius,  ContainerType& tClosest, const T& t ) const
 //    long FindInSphere ( const DistanceType dRadius,  ContainerType& tClosest, std::vector<size_t>& tIndices, const T& t ) const
@@ -153,8 +157,10 @@
 //       t is the probe point, used to search in the group of points insert'ed
 //       return value is the number of objects found within the search radius
 //
-//    long FindOutSphere ( const DistanceType dRadius,  ContainerType& tClosest, const T& t ) const
-//    long FindOutSphere ( const DistanceType dRadius,  ContainerType& tClosest, std::vector<size_t>& tIndices, const T& t ) const
+//    long FindOutSphere ( const DistanceType dRadius,  ContainerType& tClosest, 
+//       const T& t ) const
+//    long FindOutSphere ( const DistanceType dRadius,  ContainerType& tClosest, 
+//       std::vector<size_t>& tIndices, const T& t ) const
 //       dRadius is the radius outside which to search; make it very small if you want to
 //           include every point that was loaded;
 //       tClosest is returned as the ContainerType of objects that were found within a radius dRadius
@@ -163,34 +169,34 @@
 //       t is the probe point, used to search in the group of points insert'ed
 //       return value is the number of objects found within the search radius
 //
-//    long FindInAnnulus (const DistanceType dRadius1, const DistanceType dRadius2, ContainerType& tClosest,   const T& t ) const
-//    long FindInAnnulus (const DistanceType dRadius1, const DistanceType dRadius2, ContainerType& tClosest, std::vector<size_t>& tIndices,  const T& t ) const
+//    long FindInAnnulus (const DistanceType dRadius1, const DistanceType dRadius2, 
+//       ContainerType& tClosest,   const T& t ) const
+//    long FindInAnnulus (const DistanceType dRadius1, const DistanceType dRadius2, 
+//       ContainerType& tClosest, std::vector<size_t>& tIndices,  const T& t ) const
 //       dRadius1 and dRadius2 are the two radii between which to find  data points
 //       tClosest is returned ContainerType of the objects found in the annulus
 //       if tIndices is used, it is a vector to which to add the indices of the points found
 //       t is the probe point, used to search in the group of points insert'ed
 //       return value is the number of objects found within the search radius
 //
-//    long FindK_NearestNeighbors ( const size_t k, const DistanceType& radius,  OutputContainerType& tClosest,   const T& t )
-//    long FindK_NearestNeighbors ( const size_t k, const DistanceType& radius,  OutputContainerType& tClosest, std::vector<size_t>& tIndices,  const T& t )
+//    long FindK_NearestNeighbors ( const size_t k, const DistanceType& radius,  
+//       OutputContainerType& tClosest,   const T& t )
+//    long FindK_NearestNeighbors ( const size_t k, const DistanceType& radius,  
+//       OutputContainerType& tClosest, std::vector<size_t>& tIndices,  const T& t )
 //       k is the maximum number of nearest neighbors to return. Finds this many if possible
 //       radius Within a sphere defined by radius, search for the k-nearest-neighbors
 //       tClosest is returned ContainerType of the objects found within the sphere
 //       if tIndices is used, it is a vector to which to add the indices of the points found
 //       t is the probe point, used to search in the group of points insert'ed
 //
-//    long FindK_FarthestNeighbors ( const size_t k, OutputContainerType& tClosest,   const T& t )
-//    long FindK_FarthestNeighbors ( const size_t k, OutputContainerType& tClosest, std::vector<size_t>& tIndices,  const T& t )
+//    long FindK_FarthestNeighbors ( const size_t k, OutputContainerType& tClosest,   
+//       const T& t )
+//    long FindK_FarthestNeighbors ( const size_t k, OutputContainerType& tClosest, 
+//       std::vector<size_t>& tIndices,  const T& t )
 //       k is the maximum number of farthest neighbors to return. Finds this many if possible
 //       tClosest is returned ContainerType of the objects found
 //       if tIndices is used, it is a vector to which to add the indices of the points found
 //       t is the probe point, used to search in the group of points insert'ed
-//
-//    The variants LeftNearestNeighbor, LeftFarthestNeighbor, LeftFindInSphere, LeftFindOutSphere,
-//    LeftFindInAnnulus, LeftFindK_NearestNeighbors, and LeftFindK_FarthestNeighbors are the
-//    older, search-left-first versions, retained for exiting applications that may require support
-//    for those versions and for testing and validation.  Those older versions are deprecated
-//    and may be removed in an upcoming release.
 //
 //    ~CNearTree( void )  // destructor
 //
@@ -299,6 +305,7 @@
 #include <algorithm>
 #include <map>
 #include <cmath>
+#include <functional>
 #ifdef CNEARTREE_INSTRUMENTED
 #include <iostream>
 #endif
@@ -310,10 +317,10 @@
 #endif
 #ifndef USE_LOCAL_HEADERS
 #include <rhrand.h>
-#include <triple.h>
+#include <S6_with_CS6Dist.h>
 #else
 #include "rhrand.h"
-#include "triple.h"
+#include "S6_with_CS6Dist.h"
 #endif
 
 #ifdef USE_ARMADILLO_LIBRARY
@@ -411,7 +418,21 @@ public:
         return( d>0?d:-d );
     }
 #endif
+   // Specific version for S6_with_CS6Dist
+    class S6_with_CS6Dist;
+    static inline DistanceType DistanceBetween( const S6_with_CS6Dist& t1, const S6_with_CS6Dist& t2 )
+    {
+        DistanceType d = t1.DistanceBetween(t2);
+        return( d>0?d:-d );
+    }
+    class S6;
+    static inline DistanceType DistanceBetween( const S6& t1, const S6& t2 )
+    {
+        DistanceType d = t1.DistanceBetween(t2);
+        return( d>0?d:-d );
+    }
     
+
     static inline DistanceType DistanceBetween( const double t1, const double t2 )
     {
         return( (DistanceType)fabs( t1-t2 ) ); // encourage the compiler to get the correct abs
@@ -593,9 +614,9 @@ public:
     , m_SumSpacingsSq ( DistanceType( 0 ) )
     , m_DimEstimate   ( 0 )
     , m_DimEstimateEsd( 0 )
-#ifdef CNEARTREE_INSTRUMENTED
+      #ifdef CNEARTREE_INSTRUMENTED
     , m_NodeVisits( 0 )
-#endif
+      #endif
     {
         typename InputContainer::const_iterator it;
         
@@ -641,7 +662,7 @@ public:
     //=======================================================================
     // CNearTree ( const InputContainer& o1, const InputContainer& o1 )
     //
-    // templated constructor for class CNearTree for merging multiple
+    //  templated constructor for class CNearTree for merging multiple
     // containers.
     // The containers can be standard library containers or CNearTrees.
     //
@@ -685,24 +706,24 @@ public:
     //
     //=======================================================================
     CNearTree (
-     const std::vector<long> & DelayedIndices, // objects queued for insertion, possibly in random order
-     const std::vector<T>    & ObjectStore,    // all inserted objects go here
-     const std::vector<size_t>
-                             & ObjectCollide,  // overflow chain of colliding objects
-     const size_t            DeepestDepth,   // maximum depth of the tree
-     const std::vector< NearTreeNode<T, DistanceType, distMinValue> * >
-                             & NearTreeNodes,  // vector of pointers to nodes to build the tree
-     const NearTreeNode<T, DistanceType, distMinValue>
-                             BaseNode,       // the tree's data is stored down
-                                             // this node in m_NearTreeNodes
-     const long              Flags,          // flags for operational control (mainly for testing)
-     const DistanceType      DiamEstimate,   // estimated diameter
-     const DistanceType      SumSpacings,    // sum of spacings at time of insertion
-     const DistanceType      SumSpacingsSq,  // sum of squares of spacings at time of insertion
-     const double            DimEstimate,    // estimated dimension
-     const double            DimEstimateEsd  // estimated dimension estimated standard deviation
+               const std::vector<long> & DelayedIndices, // objects queued for insertion, possibly in random order
+               const std::vector<T>    & ObjectStore,    // all inserted objects go here
+               const std::vector<size_t>
+               & ObjectCollide,  // overflow chain of colliding objects
+               const size_t            DeepestDepth,   // maximum depth of the tree
+               const std::vector< NearTreeNode<T, DistanceType, distMinValue> * >
+               & NearTreeNodes,  // vector of pointers to nodes to build the tree
+               const NearTreeNode<T, DistanceType, distMinValue>
+               BaseNode,       // the tree's data is stored down
+               // this node in m_NearTreeNodes
+               const long              Flags,          // flags for operational control (mainly for testing)
+               const DistanceType      DiamEstimate,   // estimated diameter
+               const DistanceType      SumSpacings,    // sum of spacings at time of insertion
+               const DistanceType      SumSpacingsSq,  // sum of squares of spacings at time of insertion
+               const double            DimEstimate,    // estimated dimension
+               const double            DimEstimateEsd  // estimated dimension estimated standard deviation
 #ifdef CNEARTREE_INSTRUMENTED
-     , const size_t            NodeVisits     // number of node visits
+               , const size_t            NodeVisits     // number of node visits
 #endif
     )  // constructor
     : m_DelayedIndices ( DelayedIndices  )
@@ -711,18 +732,18 @@ public:
     , m_DeepestDepth   ( DeepestDepth )
     , m_NearTreeNodes  ( NearTreeNodes )
     , m_BaseNode       ( BaseNode.m_ptLeft,
-                         BaseNode.m_ptRight,
-                         BaseNode.m_dMaxLeft,
-                         BaseNode.m_dMaxRight,
-                         BaseNode.m_pLeftBranch,
-                         BaseNode.m_pRightBranch,
-                         BaseNode.m_iTreeSize,
+                        BaseNode.m_ptRight,
+                        BaseNode.m_dMaxLeft,
+                        BaseNode.m_dMaxRight,
+                        BaseNode.m_pLeftBranch,
+                        BaseNode.m_pRightBranch,
+                        BaseNode.m_iTreeSize,
 #ifdef CNEARTREE_INSTRUMENTED
-                         BaseNode.m_iHeight,
-                         BaseNode.m_imultLeft,
-                         BaseNode.m_imultRight,
+                        BaseNode.m_iHeight,
+                        BaseNode.m_imultLeft,
+                        BaseNode.m_imultRight,
 #endif
-                         m_NearTreeNodes, m_ObjectStore, m_ObjectCollide )
+                        m_NearTreeNodes, m_ObjectStore, m_ObjectCollide )
     , m_Flags          ( Flags )
     , m_DiamEstimate   ( DiamEstimate )
     , m_SumSpacings    ( SumSpacings )
@@ -732,10 +753,10 @@ public:
 #ifdef CNEARTREE_INSTRUMENTED
     , m_NodeVisits     ( NodeVisits )
 #endif
-    {        
+    {
     } // CNearTree recovery constructor
     
-
+    
     
     //=======================================================================
     //  Get_Checkpoint ( )
@@ -744,26 +765,26 @@ public:
     //
     //=======================================================================
     void Get_Checkpoint (
-               std::vector<long> * * DelayedIndices, // objects queued for insertion, possibly in random order
-               std::vector<T>    * * ObjectStore,    // all inserted objects go here
-               std::vector<size_t>
-                                 * * ObjectCollide,  // overflow chain of colliding objects
-               size_t            * DeepestDepth,   // maximum depth of the tree
-               std::vector< NearTreeNode<T, DistanceType, distMinValue> * >
-                                 * * NearTreeNodes,  // vector of pointers to nodes to build the tree
-               NearTreeNode<T, DistanceType, distMinValue>
-                                 * * BaseNode,       // the tree's data is stored down
-                                                   // this node in m_NearTreeNodes
-               long              * Flags,          // flags for operational control (mainly for testing)
-               DistanceType      * DiamEstimate,   // estimated diameter
-               DistanceType      * SumSpacings,    // sum of spacings at time of insertion
-               DistanceType      * SumSpacingsSq,  // sum of squares of spacings at time of insertion
-               double            * DimEstimate,    // estimated dimension
-               double            * DimEstimateEsd  // estimated dimension estimated standard deviation
+                         std::vector<long> * * DelayedIndices, // objects queued for insertion, possibly in random order
+                         std::vector<T>    * * ObjectStore,    // all inserted objects go here
+                         std::vector<size_t>
+                         * * ObjectCollide,  // overflow chain of colliding objects
+                         size_t            * DeepestDepth,   // maximum depth of the tree
+                         std::vector< NearTreeNode<T, DistanceType, distMinValue> * >
+                         * * NearTreeNodes,  // vector of pointers to nodes to build the tree
+                         NearTreeNode<T, DistanceType, distMinValue>
+                         * * BaseNode,       // the tree's data is stored down
+                         // this node in m_NearTreeNodes
+                         long              * Flags,          // flags for operational control (mainly for testing)
+                         DistanceType      * DiamEstimate,   // estimated diameter
+                         DistanceType      * SumSpacings,    // sum of spacings at time of insertion
+                         DistanceType      * SumSpacingsSq,  // sum of squares of spacings at time of insertion
+                         double            * DimEstimate,    // estimated dimension
+                         double            * DimEstimateEsd  // estimated dimension estimated standard deviation
 #ifdef CNEARTREE_INSTRUMENTED
-               , size_t          * NodeVisits     // number of node visits
+                         , size_t          * NodeVisits     // number of node visits
 #endif
-        )
+    )
     {
         size_t nntn;
         NearTreeNode<T, DistanceType, distMinValue> * nNTN;
@@ -774,18 +795,18 @@ public:
         *NearTreeNodes  = new std::vector< NearTreeNode<T, DistanceType, distMinValue> * > ();
         for (nntn=0; nntn < m_NearTreeNodes.size(); nntn++) {
             nNTN = new NearTreeNode<T, DistanceType, distMinValue> (m_NearTreeNodes[nntn]->m_ptLeft,
-                                                                        m_NearTreeNodes[nntn]->m_ptRight,
-                                                                        m_NearTreeNodes[nntn]->m_dMaxLeft,
-                                                                        m_NearTreeNodes[nntn]->m_dMaxRight,
-                                                                        m_NearTreeNodes[nntn]->m_pLeftBranch,
-                                                                        m_NearTreeNodes[nntn]->m_pRightBranch,
-                                                                        m_NearTreeNodes[nntn]->m_iTreeSize,
+                                                                    m_NearTreeNodes[nntn]->m_ptRight,
+                                                                    m_NearTreeNodes[nntn]->m_dMaxLeft,
+                                                                    m_NearTreeNodes[nntn]->m_dMaxRight,
+                                                                    m_NearTreeNodes[nntn]->m_pLeftBranch,
+                                                                    m_NearTreeNodes[nntn]->m_pRightBranch,
+                                                                    m_NearTreeNodes[nntn]->m_iTreeSize,
 #ifdef CNEARTREE_INSTRUMENTED
-                                                                        m_NearTreeNodes[nntn]->m_iHeight,
-                                                                        m_NearTreeNodes[nntn]->m_imultLeft,
-                                                                        m_NearTreeNodes[nntn]->m_imultRight,
+                                                                    m_NearTreeNodes[nntn]->m_iHeight,
+                                                                    m_NearTreeNodes[nntn]->m_imultLeft,
+                                                                    m_NearTreeNodes[nntn]->m_imultRight,
 #endif
-                                                                        m_NearTreeNodes, m_ObjectStore, m_ObjectCollide );
+                                                                    m_NearTreeNodes, m_ObjectStore, m_ObjectCollide );
             (*NearTreeNodes)->push_back(nNTN);
         }
         
@@ -813,7 +834,7 @@ public:
 #endif
     } // Get_Checkpoint
     
-
+    
     
     
     //=======================================================================
@@ -1387,26 +1408,28 @@ public:
     
     //=======================================================================
     //  template<typename ContainerType>
-    //  iterator SummedNearestNeighbor ( const DistanceType &dSumdist, const ContainerType& t ) const
+    //  iterator SummedNearestNeighbor ( const DistanceType &dSumdist,
+    //    const ContainerType& t ) const
     //
     //  Function to search a NearTree for the object for which the sum of distances
     //  to the probe point in vector, t is least. This function
-    //  is only here so that the function SummedNearest can be called without having sumdist  const.
-    //  This was necessary because Summed Nearest is recursive, but needs to keep the current smallest
-    //  sumdist.
+    //  is only here so that the function SummedNearest can be called without
+    //  having sumdist  const.  This was necessary because Summed Nearest is
+    //  recursive, but needs to keep the current smallest sumdist.
     //
     //    dSumdist is the maximum sum of distances - any point for which the sum of
-    //             distances is greater than dSumdist from the probes in t will be ignored
+    //      distances is greater than dSumdist from the probes in t will be ignored
     //    t  is the probe point
     //
-    //    the return is an iterator to the templated type and is the returned point at the
-    //             sum of distances from the the probe points in (t) that can be found in the NearTree
-    //             or iterator::end if no point was found
+    //    the return is an iterator to the templated type and is the returned point
+    //      at the sum of distances from the the probe points in (t) that can be
+    //      found in the NearTree  or iterator::end if no point was found
     //
     //  This version uses the balanced search
     //=======================================================================
     template<typename ContainerType>
-    inline iterator SummedNearestNeighbor ( const DistanceType& dSumdist, const ContainerType& t ) const
+    inline iterator SummedNearestNeighbor ( const DistanceType& dSumdist,
+                                           const ContainerType& t ) const
     {
         T closest;
         size_t index = ULONG_MAX;
@@ -1419,9 +1442,9 @@ public:
         }
         else if ( m_BaseNode.SummedNearest ( tempSumdist, closest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
-                                     , m_NodeVisits
+                                            , m_NodeVisits
 #endif
-                                     ) )
+                                            ) )
         {
             return ( iterator( (long)index, this ) );
         }
@@ -1430,62 +1453,22 @@ public:
             return ( iterator(end( )) );
         }
     }// SummedNearestNeighbor
-
-
-//=======================================================================
-    //  iterator LeftNearestNeighbor ( const DistanceType &radius, const T& t ) const
-    //
-    //  Function to search a NearTree for the object closest to some probe point, t. This function
-    //  is only here so that the function Nearest can be called without having the radius const.
-    //  This was necessary because Nearest is recursive, but needs to keep the current smallest radius.
-    //
-    //    dRadius is the maximum search radius - any point farther than dRadius from the probe
-    //             point will be ignored
-    //    t  is the probe point
-    //
-    //    the return is an iterator to the templated type and is the returned nearest point
-    //             to the probe point (t) that can be found in the NearTree
-    //             or iterator::end if no point was found
-    //
-    //  This version used the left-first search
-    //=======================================================================
-    inline iterator LeftNearestNeighbor ( const DistanceType& radius, const T& t ) const
-    {
-        T closest;
-        size_t index = ULONG_MAX;
-        DistanceType tempRadius = radius;
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) || radius < DistanceType( 0 ) )
-        {
-            return ( iterator(end( )) );
-        }
-        else if ( (this->m_BaseNode).LeftNearest( tempRadius, closest, t, index
-#ifdef CNEARTREE_INSTRUMENTED
-                                                 , m_NodeVisits
-#endif
-                                                 ) )
-        {
-            return ( iterator( (long)index, this ) );
-        }
-        else
-        {
-            return ( iterator(end( )) );
-        }
-    }// LeftNearestNeighbor
     
     
     //=======================================================================
-    //  bool NearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const T& t ) const
+    //  bool NearestNeighbor ( const DistanceType& dRadius,  T& tClosest,
+    //    const T& t ) const
     //
-    //  Function to search a NearTree for the object closest to some probe point, t. This function
-    //  is only here so that the function Nearest can be called without having the radius const.
-    //  This was necessary because Nearest is recursive, but needs to keep the current smallest radius.
+    //  Function to search a NearTree for the object closest to some probe
+    //    point, t. This function is only here so that the function Nearest
+    //    can be called without having the radius const.  This was necessary
+    //    because Nearest is recursive, but needs to keep the current smallest
+    //    radius.
     //
-    //    dRadius is the maximum search radius - any point farther than dRadius from the probe
-    //             point will be ignored
-    //    tClosest is an object of the templated type and is the returned nearest point
-    //             to the probe point that can be found in the NearTree
+    //    dRadius is the maximum search radius - any point farther than dRadius
+    //      from the probe point will be ignored
+    //    tClosest is an object of the templated type and is the returned
+    //      nearest point to the probe point that can be found in the NearTree
     //    t  is the probe point
     //
     //    the return value is true only if a point was found
@@ -1493,7 +1476,8 @@ public:
     //
     //  This version used the balanced search
     //=======================================================================
-    inline bool NearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const T& t ) const
+    inline bool NearestNeighbor ( const DistanceType& dRadius,  T& tClosest,
+                                 const T& t ) const
     {
         const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
         
@@ -1518,48 +1502,6 @@ public:
         }
     }  //  NearestNeighbor
     
-    //=======================================================================
-    //  bool LeftNearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const T& t ) const
-    //
-    //  Function to search a NearTree for the object closest to some probe point, t. This function
-    //  is only here so that the function Nearest can be called without having the radius const.
-    //  This was necessary because Nearest is recursive, but needs to keep the current smallest radius.
-    //
-    //    dRadius is the maximum search radius - any point farther than dRadius from the probe
-    //             point will be ignored
-    //    tClosest is an object of the templated type and is the returned nearest point
-    //             to the probe point that can be found in the NearTree
-    //    t  is the probe point
-    //
-    //    the return value is true only if a point was found
-    //
-    //
-    //  This version used the left-first search
-    //=======================================================================
-    inline bool LeftNearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const T& t ) const
-    {
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if ( dRadius < DistanceType(0) )
-        {
-            return ( false );
-        }
-        else if ( this->empty( ) )
-        {
-            return ( false );
-        }
-        else
-        {
-            DistanceType dSearchRadius = dRadius;
-            size_t index = ULONG_MAX;
-            return ( (this->m_BaseNode).LeftNearest (
-                                                     dSearchRadius, tClosest, t, index
-#ifdef CNEARTREE_INSTRUMENTED
-                                                     , m_NodeVisits
-#endif
-                                                     ) );
-        }
-    }  //  LeftNearestNeighbor
     
     
     //=======================================================================
@@ -1715,161 +1657,6 @@ public:
     }  //  end ShortNearestNeighbor
     
     
-    //=======================================================================
-    //  iterator LeftShortNearestNeighbor ( const DistanceType &radius, const T& t )
-    //
-    //  Function to search a NearTree for the object closest to some probe point, t. This function
-    //  is only here so that the function Nearest can be called without having the radius const.
-    //  This was necessary because Nearest is recursive, but needs to keep the current smallest radius.
-    //
-    //    dRadius is the maximum search radius - any point farther than dRadius from the probe
-    //             point will be ignored
-    //    t  is the probe point
-    //
-    //    the return is an iterator to the templated type and is the returned nearest point
-    //             to the probe point (t) that can be found in the NearTree
-    //             or iterator::end if no point was found
-    //
-    //  This version used the short-radius left-first search
-    //=======================================================================
-    inline iterator LeftShortNearestNeighbor ( const DistanceType& radius, const T& t )
-    {
-        T closest;
-        size_t dimest;
-        size_t index = ULONG_MAX;
-        DistanceType tempRadius = radius;
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) || radius < DistanceType( 0 ) )
-        {
-            return ( iterator(end( )) );
-        }
-        else if (!(m_Flags & NTF_NoPrePrune) && (dimest=(this)->GetDimEstimate())>0) {
-            DistanceType shortRadius = m_DiamEstimate/DistanceType((1+m_ObjectStore.size()));
-            DistanceType limitRadius = 10*m_DiamEstimate/DistanceType((1+m_ObjectStore.size()));
-            DistanceType meanSpacing = m_SumSpacings/DistanceType((1+m_ObjectStore.size()));
-            DistanceType varSpacing = m_SumSpacingsSq/DistanceType((1+m_ObjectStore.size()))-meanSpacing*meanSpacing;
-            if (limitRadius > radius/2.) limitRadius = radius/2.;
-            if (limitRadius > meanSpacing/2.) limitRadius = meanSpacing/2.;
-            double lineardensity=pow((double)m_ObjectStore.size(),1./(dimest));
-            if (shortRadius > DistanceType( 0 ) &&
-                ( (varSpacing < 0.25*meanSpacing*meanSpacing/(dimest)
-                   || (lineardensity*((double)meanSpacing) > 1.)
-                   || (m_Flags & NTF_ForcePrePrune)))) {
-                DistanceType testRadius;
-                while (shortRadius <= limitRadius) {
-                    testRadius = shortRadius;
-                    if ( (this->m_BaseNode).Nearest ( testRadius, closest, t, index
-#ifdef CNEARTREE_INSTRUMENTED
-                                                     , m_NodeVisits
-#endif
-                                                     ))
-                        return iterator( (long)index, this );
-                    shortRadius *= DistanceType(10);
-                }
-            }
-            if ( (this->m_BaseNode).LeftNearest( tempRadius, closest, t, index
-#ifdef CNEARTREE_INSTRUMENTED
-                                                , m_NodeVisits
-#endif
-                                                ) )
-            {
-                return ( iterator( (long)index, this ) );
-            }
-            else
-            {
-                return ( iterator(end( )) );
-            }
-        }
-        else if ( (this->m_BaseNode).LeftNearest( tempRadius, closest, t, index
-#ifdef CNEARTREE_INSTRUMENTED
-                                                 , m_NodeVisits
-#endif
-                                                 ) )
-        {
-            return ( iterator( (long)index, this ) );
-        }
-        else
-        {
-            return ( iterator(end( )) );
-        }
-    } // sedn LeftShortNearestNeightbor
-    
-    
-    //=======================================================================
-    //  bool LeftShortNearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const T& t ) const
-    //
-    //  Function to search a NearTree for the object closest to some probe point, t. This function
-    //  is only here so that the function Nearest can be called without having the radius const.
-    //  This was necessary because Nearest is recursive, but needs to keep the current smallest radius.
-    //
-    //    dRadius is the maximum search radius - any point farther than dRadius from the probe
-    //             point will be ignored
-    //    tClosest is an object of the templated type and is the returned nearest point
-    //             to the probe point that can be found in the NearTree
-    //    t  is the probe point
-    //
-    //    the return value is true only if a point was found
-    //
-    //  This version uses the short-radius left-first search
-    //=======================================================================
-    inline bool LeftShortNearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const T& t )
-    {
-        size_t index = ULONG_MAX;
-        double dimest;
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        DistanceType dSearchRadius = dRadius;
-        
-        if ( dRadius < DistanceType(0) )
-        {
-            return ( false );
-        }
-        else if ( this->empty( ) )
-        {
-            return ( false );
-        }
-        else
-        {
-            if (!(m_Flags & NTF_NoPrePrune) && (dimest=(this)->GetDimEstimate())>0.) {
-                DistanceType shortRadius = m_DiamEstimate/DistanceType((1+m_ObjectStore.size()));
-                DistanceType limitRadius = 10.0*m_DiamEstimate/DistanceType((1+m_ObjectStore.size()));
-                DistanceType meanSpacing = m_SumSpacings/DistanceType((1+m_ObjectStore.size()));
-                DistanceType varSpacing = m_SumSpacingsSq/DistanceType((1+m_ObjectStore.size()))-meanSpacing*meanSpacing;
-                if (limitRadius > dRadius/2.) limitRadius = dRadius/2.;
-                if (limitRadius > meanSpacing/2.) limitRadius = meanSpacing/2.;
-                bool bReturn;
-                double lineardensity=pow((double)m_ObjectStore.size(),1./(dimest));
-                if (shortRadius > DistanceType( 0 ) &&
-                    ( (varSpacing < 0.25*meanSpacing*meanSpacing/(dimest)
-                       || (lineardensity*((double)meanSpacing) > 1.)
-                       || (m_Flags & NTF_ForcePrePrune)))) {
-                    DistanceType testRadius;
-                    while (shortRadius <= limitRadius) {
-                        testRadius = shortRadius;
-                        if ((bReturn = (this->m_BaseNode).LeftNearest ( testRadius, tClosest, t, index
-#ifdef CNEARTREE_INSTRUMENTED
-                                                                      , m_NodeVisits
-#endif
-                                                                      ))) return bReturn;
-                        shortRadius *= DistanceType(10);
-                    }
-                }
-            }
-            return (  (this->m_BaseNode).LeftNearest ( dSearchRadius, tClosest, t, index
-#ifdef CNEARTREE_INSTRUMENTED
-                                                      , m_NodeVisits
-#endif
-                                                      ) );
-        }
-    }  //  LeftNearestNearestNeighbor
-    
-    
-    //=======================================================================
-    //  iterator FarthestNeighbor ( const T& t ) const
-    //
-    //  Function to search a NearTree for the object farthest from some probe point, t. This function
-    //  is only here so that the function Farthest can be called without having the radius const.
     //  This was necessary because Farthest is recursive, but needs to keep the current largest radius.
     //
     //    t  is the probe point
@@ -1902,45 +1689,6 @@ public:
         else
         {
             return ( iterator(this->end( )) );
-        }
-    }
-    //=======================================================================
-    //  iterator LeftFarthestNeighbor ( const T& t ) const
-    //
-    //  Function to search a NearTree for the object farthest from some probe point, t. This function
-    //  is only here so that the function Farthest can be called without having the radius const.
-    //  This was necessary because Farthest is recursive, but needs to keep the current largest radius.
-    //
-    //    t  is the probe point
-    //
-    //    the return is an iterator to the templated type and is the returned farthest point
-    //             from the probe point (t) that can be found in the NearTree
-    //             or iterator::end if no point was found
-    //
-    // This version uses the left-first search
-    //=======================================================================
-    iterator LeftFarthestNeighbor ( const T& t ) const
-    {
-        T farthest;
-        size_t index = ULONG_MAX;
-        DistanceType radius = DistanceType( distMinValue );
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) )
-        {
-            return ( end( ) );
-        }
-        else if ( (this->m_BaseNode).LeftFarthest( radius, farthest, t, index
-#ifdef CNEARTREE_INSTRUMENTED
-                                                  , m_NodeVisits
-#endif
-                                                  ) )
-        {
-            return ( iterator( (long)index, this ) );
-        }
-        else
-        {
-            return ( end( ) );
         }
     }
     
@@ -1980,44 +1728,7 @@ public:
         }
     }  //  FarthestNeighbor
     
-    //=======================================================================
-    //  bool LeftFarthestNeighbor ( T& tFarthest, const T& t ) const
-    //
-    //  Function to search a NearTree for the object farthest from some probe point, t. This function
-    //  is only here so that the function FarthestNeighbor can be called without the user
-    //  having to input a search radius and so the search radius can be guaranteed to be
-    //  negative at the start.
-    //
-    //    tFarthest is an object of the templated type and is the returned farthest point
-    //             from the probe point that can be found in the NearTree
-    //    t  is the probe point
-    //
-    //    the return value is true only if a point was found (should only be false for
-    //             an empty tree)
-    //
-    //  This version uses the left-first search
-    //=======================================================================
-    bool LeftFarthestNeighbor ( T& tFarthest, const T& t ) const
-    {
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if ( this->empty( ) )
-        {
-            return ( false );
-        }
-        else
-        {
-            DistanceType dSearchRadius = DistanceType( distMinValue );
-            size_t index = ULONG_MAX;
-            return (  (this->m_BaseNode).LeftFarthest ( dSearchRadius, tFarthest, t, index
-#ifdef CNEARTREE_INSTRUMENTED
-                                                       , m_NodeVisits
-#endif
-                                                       ) );
-        }
-    }  //  LeftFarthestNeighbor
-  
-
+    
     //=======================================================================
     //  template<typename ContainerType>
     //  iterator SummedFarthestNeighbor ( const ContainerType& t ) const
@@ -2044,71 +1755,71 @@ public:
         size_t index = ULONG_MAX;
         DistanceType tempSumdist = DistanceType( distMinValue );;
         const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-
+        
         if( this->empty( ) )
         {
             return ( iterator(end( )) );
-             }
+        }
         else if ( m_BaseNode.SummedFarthest ( tempSumdist, farthest, t, index, m_ObjectStore
 #ifdef CNEARTREE_INSTRUMENTED
-                                            , m_NodeVisits
+                                             , m_NodeVisits
 #endif
-                                            ) )
+                                             ) )
         {
             return ( iterator( (long)index, this ) );
-          }
+        }
         else
         {
             return ( iterator(end( )) );
-       }
+        }
     }// SummedFarthestNeighbor
-
-  
-   //=======================================================================
+    
+    
+    //=======================================================================
     // LLoyd's algorithm
     /*
-
-    Templates to partition the point in a NearTree into clusters nearest to
-    given points.
-
+     
+     Templates to partition the point in a NearTree into clusters nearest to
+     given points.
+     
      If the input is a container of points t1:  The NearTree is examined. For each point
-    input in the input container a new container of the same type is output in the
-    vector of containers that will be returned. If N points are input, then N
-    containers will be output. The points of the neartree will be examined. Copies
-    of the neartree points are put into the output container (in the output vector)
-    that corresponds to the input point that it is nearest to.  If a point in the
-    NearTree is equidistant to more than one point in t1, then it is assigned to
-    the first point in the container at that distance
-
-
-    If the input is two points t1 and t2, then the corresponding Neartee point
-    are place into containers group1 and group2, and, if group1_ordinals and 
-    group2_ordinals are provided the ordinals of into those vectors. 
-    The ordinals can be used as indices into the CNearTree itself.
-       */
+     input in the input container a new container of the same type is output in the
+     vector of containers that will be returned. If N points are input, then N
+     containers will be output. The points of the neartree will be examined. Copies
+     of the neartree points are put into the output container (in the output vector)
+     that corresponds to the input point that it is nearest to.  If a point in the
+     NearTree is equidistant to more than one point in t1, then it is assigned to
+     the first point in the container at that distance
+     
+     
+     If the input is two points t1 and t2, then the corresponding Neartee point
+     are place into containers group1 and group2, and, if group1_ordinals and
+     group2_ordinals are provided the ordinals of into those vectors.
+     The ordinals can be used as indices into the CNearTree itself.
+     */
     template<typename ContainerType>
     std::vector<ContainerType> BelongsToPoints( const ContainerType& t1 ) const {
-       std::vector<ContainerType> out( t1.size( ) );
-       typename CNearTree<T>::iterator it;
-
-       typename CNearTree<T>::iterator best;
-       for ( it=this->begin( ); it!=this->end( ); ++it ) {
-          unsigned int bestindex = 0;
-          double bestDistance = DBL_MAX;
-          for ( unsigned int t1i=0; t1i<t1.size( ); ++t1i ) {
-             const double testDistance = DistanceBetween( ( *it ), t1[t1i] );
-             if ( testDistance <bestDistance ) {
-                bestindex = t1i;
-                best = it;
-                bestDistance = testDistance;
-             }
-          }
-          out[bestindex].insert( out[bestindex].end(), *it );
-       }
-       return out;
+        std::vector<ContainerType> out( t1.size( ) );
+        typename CNearTree<T>::iterator it;
+        
+        typename CNearTree<T>::iterator best;
+        for ( it=this->begin( ); it!=this->end( ); ++it ) {
+            unsigned int bestindex = 0;
+            double bestDistance = DBL_MAX;
+            for ( unsigned int t1i=0; t1i<t1.size( ); ++t1i ) {
+                const double testDistance = DistanceBetween( ( *it ), t1[t1i] );
+                if ( testDistance <bestDistance ) {
+                    bestindex = t1i;
+                    best = it;
+                    bestDistance = testDistance;
+                }
+            }
+            out[bestindex].insert( out[bestindex].end(), *it );
+        }
+        return out;
     }  // end BelongsToPoints
-
-
+    
+    
     //=======================================================================
     template<typename ContainerType>
     void BelongsToPoints( const T& t1, const T& t2, ContainerType& group1, ContainerType& group2 )
@@ -2129,8 +1840,8 @@ public:
             }
         }
     }  // end BelongsToPoints
-
-
+    
+    
     template<typename ContainerType>
     void BelongsToPoints( const T& t1, const T& t2, ContainerType& group1, ContainerType& group2,
                          std::vector<size_t>& group1_ordinals, std::vector<size_t>& group2_ordinals)
@@ -2269,68 +1980,6 @@ public:
     }  //  FindInSphere
     
     //=======================================================================
-    //  long LeftFindInSphere ( const DistanceType& dRadius,  OutputContainerType& tClosest,   const T& t ) const
-    //
-    //  Function to search a NearTree for the set of objects closer to some probe point, t,
-    //  than dRadius. This is only here so that tClosest can be cleared before starting the work.
-    //
-    //    dRadius is the maximum search radius - any point farther than dRadius from the probe
-    //             point will be ignored
-    //    tClosest is returned as a container of objects of the templated type and is the
-    //             returned set of nearest points to the probe point that can be found
-    //             in the NearTree. The container can be a Standard Library container or
-    //             a CNearTree
-    //    t  is the probe point
-    //
-    // returns the number of objects returned in the container (for sets, that may not equal the number found)
-    //
-    // This version used the left-first search
-    //=======================================================================
-    template<typename OutputContainerType>
-    inline long LeftFindInSphere ( const DistanceType& dRadius, OutputContainerType& tClosest, const T& t ) const
-    {
-        // clear the contents of the return vector so that things don't accidentally accumulate
-        tClosest.clear( );
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) )
-        {
-            return( 0L );
-        }
-        else
-        {
-            return ( (this->m_BaseNode).LeftInSphere( dRadius, tClosest, t
-#ifdef CNEARTREE_INSTRUMENTED
-                                                     , m_NodeVisits
-#endif
-                                                     ) );
-        }
-    }  //  LeftFindInSphere
-    
-    template<typename OutputContainerType>
-    inline long LeftFindInSphere ( const DistanceType& dRadius,  OutputContainerType& tClosest,
-                                  std::vector<size_t>& tIndices, const T& t ) const
-    {
-        // clear the contents of the return vector so that things don't accidentally accumulate
-        tClosest.clear( );
-        tIndices.clear( );
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) )
-        {
-            return( 0L );
-        }
-        else
-        {
-            return ( (this->m_BaseNode).LeftInSphere( dRadius, tClosest, tIndices, t
-#ifdef CNEARTREE_INSTRUMENTED
-                                                     , m_NodeVisits
-#endif
-                                                     ) );
-        }
-    }  //  LeftFindInSphere
-    
-    //=======================================================================
     //  long FindOutSphere ( const DistanceType& dRadius,  OutputContainerType& tFarthest,   const T& t ) const
     //
     //  Function to search a NearTree for the set of objects farther from some probe point, t,
@@ -2398,76 +2047,6 @@ public:
                                                   ) );
         }
     }  //  FindOutSphere
-    
-    //=======================================================================
-    //  long leftFindOutSphere ( const DistanceType& dRadius,  OutputContainerType& tFarthest,   const T& t ) const
-    //
-    //  Function to search a NearTree for the set of objects farther from some probe point, t,
-    //  than dRadius. This is only here so that tFarthest can be cleared before starting the work.
-    //
-    //    dRadius is the maximum search radius - any point nearer than dRadius from the probe
-    //             point will be ignored
-    //    tFarthest is returned as a container of objects of the templated type and is the
-    //             returned set of nearest points to the probe point that can be found
-    //             in the NearTree. The container can be a Standard Library container or
-    //             a CNearTree
-    //    t  is the probe point
-    //
-    // returns the number of objects returned in the container (for sets, that may not equal the number found)
-    //
-    // This version uses the left-first search
-    //=======================================================================
-    template<typename OutputContainerType>
-    long LeftFindOutSphere (
-                            const DistanceType& dRadius,
-                            OutputContainerType& tFarthest,
-                            const T& t
-                            ) const
-    {
-        // clear the contents of the return vector so that things don't accidentally accumulate
-        tFarthest.clear( );
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) )
-        {
-            return( 0L );
-        }
-        else
-        {
-            return ( (this->m_BaseNode).LeftOutSphere( dRadius, tFarthest, t
-#ifdef CNEARTREE_INSTRUMENTED
-                                                      , m_NodeVisits
-#endif
-                                                      ) );
-        }
-    }  //  LeftFindOutSphere
-    
-    template<typename OutputContainerType>
-    long LeftFindOutSphere (
-                            const DistanceType& dRadius,
-                            OutputContainerType& tFarthest,
-                            std::vector<size_t>& tIndices,
-                            const T& t
-                            ) const
-    {
-        // clear the contents of the return vector so that things don't accidentally accumulate
-        tFarthest.clear( );
-        tIndices.clear( );
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) )
-        {
-            return( 0L );
-        }
-        else
-        {
-            return ( (this->m_BaseNode).LeftOutSphere( dRadius, tFarthest, tIndices, t
-#ifdef CNEARTREE_INSTRUMENTED
-                                                      , m_NodeVisits
-#endif
-                                                      ) );
-        }
-    }  //  LeftFindOutSphere
     
     
     //=======================================================================
@@ -2556,96 +2135,10 @@ public:
         return ( lReturn );
     }  //  FindInAnnulus
     
-    //=======================================================================
-    //  long LeftFindInAnnulus ( const DistanceType& dRadius1, const DistanceType dRadius2, OutputContainerType& tAnnular, const T& t ) const
-    //
-    //  Function to search a NearTree for the set of objects within a "spherical" annulus
-    //
-    //    dRadius1 is the minimum search radius - any point nearer than dRadius1 from the probe
-    //             point will be ignored
-    //    dRadius2 is the maximum search radius - any point farther than dRadius2 from the probe
-    //             point will be ignored
-    //    tAnnular is returned as a container of objects of the templated type and is the
-    //             returned set of nearest points to the probe point that can be found
-    //             in the NearTree. The container can be a Standard Library container or
-    //             a CNearTree
-    //    t  is the probe point
-    //
-    // returns the number of objects returned in the container (for sets, that may not equal the number found)
-    //
-    // This version uses the left-first search
-    //=======================================================================
-    template<typename OutputContainerType>
-    long LeftFindInAnnulus (
-                            const DistanceType& dRadius1,
-                            const DistanceType& dRadius2,
-                            OutputContainerType& tAnnular,
-                            const T& t
-                            ) const
-    {
-        long lReturn = 0;
-        // clear the contents of the return vector so that things don't accidentally accumulate
-        tAnnular.clear( );
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) )
-        {
-        }
-        else if ( dRadius1 > dRadius2 )
-        {
-            // Make sure that r1 < r2
-            return ( LeftFindInAnnulus( dRadius2, dRadius1, tAnnular, t ) );
-        }
-        else
-        {
-            lReturn =  (this->m_BaseNode).LeftInAnnulus( dRadius1, dRadius2, tAnnular, t
-#ifdef CNEARTREE_INSTRUMENTED
-                                                        , m_NodeVisits
-#endif
-                                                        );
-        }
-        
-        return ( lReturn );
-    }  //  LeftFindInAnnulus
-    template<typename OutputContainerType>
-    long LeftFindInAnnulus (
-                            const DistanceType& dRadius1,
-                            const DistanceType& dRadius2,
-                            OutputContainerType& tAnnular,
-                            std::vector<size_t>& tIndices,
-                            const T& t
-                            ) const
-    {
-        long lReturn = 0;
-        // clear the contents of the return vector so that things don't accidentally accumulate
-        tAnnular.clear( );
-        tIndices.clear( );
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) )
-        {
-        }
-        else if ( dRadius1 > dRadius2 )
-        {
-            // Make sure that r1 < r2
-            return ( LeftFindInAnnulus( dRadius2, dRadius1, tAnnular, tIndices, t ) );
-        }
-        else
-        {
-            lReturn =  (this->m_BaseNode).LeftInAnnulus( dRadius1, dRadius2, tAnnular, tIndices, t
-#ifdef CNEARTREE_INSTRUMENTED
-                                                        , m_NodeVisits
-#endif
-                                                        );
-        }
-        
-        return ( lReturn );
-    }  //  LeftFindInAnnulus
     
-
-
     //=======================================================================
-    //  long FindK_NearestNeighbors(  const size_t k, const DistanceType& dRadius, OutputContainerType& tClosest, const T& t ) const
+    //  long FindK_NearestNeighbors(  const size_t k, const DistanceType& dRadius,
+    //     OutputContainerType& tClosest, const T& t ) const
     //
     //  Function to search a NearTree for the set of objects closer to some probe point, t,
     //  than dRadius. This is only here so that tClosest can be cleared before starting the work
@@ -2688,10 +2181,10 @@ public:
             double dimlist[cneartree_dimsamples-1];
             double dimest = 1.;
             double foundatrad[cneartree_dimsamples];
-            int numrad;
+            size_t numrad;
             bool shell, closed;
             long lFound;
-            std::vector<std::pair<DistanceType, T> > K_Storage;
+            std::vector<std::pair<DistanceType, size_t> > K_Storage;
             dRadiusOuter = minradinc = 0.333*(m_SumSpacings/((double)(1+m_ObjectStore.size()))+ sqrt(m_SumSpacingsSq/((double)(1+m_ObjectStore.size()))));
             if (minradinc < 1.e-38) minradinc = 1.;
             if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner + minradinc;
@@ -2708,7 +2201,7 @@ public:
             do {
                 dRadiusOuterSave = dRadiusOuter;
                 /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
-                        (double)(dRadiusInner), (double)(dRadiusOuter)); */
+                 (double)(dRadiusInner), (double)(dRadiusOuter)); */
                 if (!(m_Flags & NTF_NoDistanceCache)) {
                     lFound = (this->m_BaseNode).K_Near( k, shell, closed,
                                                        dDistanceCache,
@@ -2716,10 +2209,10 @@ public:
                                                        dRadiusOuter,
                                                        K_Storage,
                                                        t
-#ifdef CNEARTREE_INSTRUMENTED
+                                                       #ifdef CNEARTREE_INSTRUMENTED
                                                        , m_NodeVisits
                                                        , sDistanceCacheHits
-#endif
+                                                       #endif
                                                        );
                 } else {
                     lFound = (this->m_BaseNode).K_Near( k, shell, closed,
@@ -2727,16 +2220,16 @@ public:
                                                        dRadiusOuter,
                                                        K_Storage,
                                                        t
-#ifdef CNEARTREE_INSTRUMENTED
+                                                       #ifdef CNEARTREE_INSTRUMENTED
                                                        , m_NodeVisits
-#endif
+                                                       #endif
                                                        );
-
+                    
                 }
                 /*fprintf(stderr,"found %ld points\n",lFound);*/
                 if (lFound > 0) break;
                 dRadiusOuter = dRadiusOuterSave+
-                   (dRadiusOuterSave-dRadiusInner)*2.;
+                (dRadiusOuterSave-dRadiusInner)*2.;
                 dRadiusInner = dRadiusOuterSave;
                 if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+minradinc;
                 if (dRadiusOuter > radius) dRadiusOuter = radius;
@@ -2744,7 +2237,7 @@ public:
             if (lFound < 1) return (0L);
             for( unsigned int i=0; i<K_Storage.size( ); ++i )
             {
-                tClosest.insert( tClosest.end( ), K_Storage[i].second );
+                tClosest.insert( tClosest.end( ), m_ObjectStore[K_Storage[i].second] );
             }
             while ( tClosest.size() < k && dRadiusOuter < radius) {
                 if (numrad < cneartree_dimsamples) {
@@ -2763,7 +2256,7 @@ public:
                     if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+minradinc;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                     if (numrad == cneartree_dimsamples) {
-                        int ii;
+                        size_t ii;
                         dimest = 0.;
                         for (ii=0; ii < numrad-1; ii++) {
                             dimest += dimlist[ii];
@@ -2780,27 +2273,27 @@ public:
                 }
                 K_Storage.clear();
                 /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
-                        (double)(dRadiusInner), (double)(dRadiusOuter)); */
+                 (double)(dRadiusInner), (double)(dRadiusOuter)); */
                 /* Add any point from the next annular shell */
                 do {
                     dRadiusOuterSave = dRadiusOuter;
                     /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
-                            (double)(dRadiusInner), (double)(dRadiusOuter)); */
-
+                     (double)(dRadiusInner), (double)(dRadiusOuter)); */
+                    
                     if (!(m_Flags & NTF_NoDistanceCache)) {
                         lFound = (this->m_BaseNode).K_Near( k-tClosest.size(),
-                                                       shell,
-                                                       closed,
-                                                       dDistanceCache,
-                                                       dRadiusInner,
-                                                       dRadiusOuter,
-                                                       K_Storage,
-                                                       t
+                                                           shell,
+                                                           closed,
+                                                           dDistanceCache,
+                                                           dRadiusInner,
+                                                           dRadiusOuter,
+                                                           K_Storage,
+                                                           t
 #ifdef CNEARTREE_INSTRUMENTED
-                                                       ,  m_NodeVisits
-                                                       , sDistanceCacheHits
+                                                           ,  m_NodeVisits
+                                                           , sDistanceCacheHits
 #endif
-                                                       );
+                                                           );
                     } else {
                         lFound = (this->m_BaseNode).K_Near( k-tClosest.size(),
                                                            shell,
@@ -2819,14 +2312,14 @@ public:
                     dRadiusInner = dRadiusOuterSave;
                     if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+minradinc;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
-
+                    
                 } while (lFound == 0 && dRadiusOuterSave < radius);
                 /*fprintf(stderr,"found %ld points\n",lFound); */
                 for( unsigned int i=0; i<K_Storage.size( ); ++i )
                 {
-                    tClosest.insert( tClosest.end( ), K_Storage[i].second );
+                    tClosest.insert( tClosest.end( ), m_ObjectStore[K_Storage[i].second] );
                 }
-
+                
                 if (dRadiusOuter >= radius-1.e-36) break;
             }
             
@@ -2861,10 +2354,10 @@ public:
             double dimlist[cneartree_dimsamples-1];
             double dimest = 1.;
             double foundatrad[cneartree_dimsamples];
-            int numrad;
+            size_t numrad;
             bool shell, closed;
             long lFound;
-            std::vector<triple<DistanceType, T, size_t> > K_Storage;
+            std::vector< std::pair<DistanceType, size_t> > K_Storage;
             dRadiusOuter = minradinc = 0.333*(m_SumSpacings/((double)(1+m_ObjectStore.size()))+ sqrt(m_SumSpacingsSq/((double)(1+m_ObjectStore.size()))));
             if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
             if (dRadiusOuter > radius) dRadiusOuter = radius;
@@ -2914,8 +2407,8 @@ public:
             if (lFound < 1) return (0L);
             for( unsigned int i=0; i<K_Storage.size( ); ++i )
             {
-                tClosest.insert( tClosest.end( ), K_Storage[i].GetSecond() );
-                tIndices.insert( tIndices.end( ), K_Storage[i].GetThird() );
+                tClosest.insert( tClosest.end( ), m_ObjectStore[K_Storage[i].second] );
+                tIndices.insert( tIndices.end( ), K_Storage[i].second );
             }
             while ( tClosest.size() < k && dRadiusOuter < radius) {
                 if (numrad < cneartree_dimsamples) {
@@ -2934,7 +2427,7 @@ public:
                     if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+minradinc;
                     if (dRadiusOuter > radius) dRadiusOuter = radius;
                     if (numrad == cneartree_dimsamples) {
-                        int ii;
+                        size_t ii;
                         dimest = 0.;
                         for (ii=0; ii < numrad-1; ii++) {
                             dimest += dimlist[ii];
@@ -2993,8 +2486,8 @@ public:
                 /* fprintf(stderr,"found %ld points\n",lFound); */
                 for( unsigned int i=0; i<K_Storage.size( ); ++i )
                 {
-                    tClosest.insert( tClosest.end( ), K_Storage[i].GetSecond() );
-                    tIndices.insert( tIndices.end( ), K_Storage[i].GetThird() );
+                    tClosest.insert( tClosest.end( ), m_ObjectStore[K_Storage[i].second] );
+                    tIndices.insert( tIndices.end( ), K_Storage[i].second );
                 }
                 if (dRadiusOuter >= radius-1.e-36) break;
             }
@@ -3035,7 +2528,7 @@ public:
             int numrad;
             bool shell, closed;
             long lFound;
-            std::vector<triple<DistanceType, T, size_t> > K_Storage;
+            std::vector<std::pair<DistanceType, size_t> >K_Storage;
             dRadiusOuter = m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
             if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
             if (dRadiusOuter > radius) dRadiusOuter = radius;
@@ -3051,7 +2544,7 @@ public:
             do {
                 dRadiusOuterSave = dRadiusOuter;
                 /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
-                        (double)(dRadiusInner), (double)(dRadiusOuter)); */
+                 (double)(dRadiusInner), (double)(dRadiusOuter)); */
                 if (!(m_Flags & NTF_NoDistanceCache)) {
                     lFound = (this->m_BaseNode).K_Near( k, shell, closed,
                                                        dDistanceCache,
@@ -3085,189 +2578,13 @@ public:
             if (lFound < 1) return (0L);
             for( unsigned int i=0; i<K_Storage.size( ); ++i )
             {
-                tClosest.insert( tClosest.end( ), K_Storage[i].GetSecond() );
-                tIndices.insert( tIndices.end( ), K_Storage[i].GetThird() );
-                tDistances.insert( tDistances.end(),K_Storage[i].GetFirst() );
+                tClosest.insert( tClosest.end( ), m_ObjectStore[K_Storage[i].second] );
+                tIndices.insert( tIndices.end( ), K_Storage[i].second );
+                tDistances.insert( tDistances.end(),K_Storage[i].first );
             }
             while ( tClosest.size() < k && dRadiusOuter < radius) {
                 /*fprintf (stderr,"Doing annuli, k %d, iFound %d, radius %g dRadiusOuter %g\n",
-                         (int)k,(int)lFound, radius, dRadiusOuter );*/
-                if (numrad < cneartree_dimsamples) {
-                    foundatrad[numrad] = (double)tClosest.size();
-                    radlist[numrad++] = dRadiusOuter;
-                    if (numrad > 1) {
-                        foundatrad[numrad-1]+= foundatrad[numrad-2];
-                        dimlist[numrad-2]
-                        = log(foundatrad[numrad-1]-foundatrad[numrad-2])
-                        /(log(radlist[numrad-1]-radlist[numrad-2])+1.e-38);
-                    }
-                    shell = true;
-                    closed= false;
-                    dRadiusInner = dRadiusOuter;
-                    dRadiusOuter = dRadiusInner+m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
-                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
-                    if (dRadiusOuter > radius) dRadiusOuter = radius;
-                    if (numrad == cneartree_dimsamples) {
-                        int ii;
-                        dimest = 0.;
-                        for (ii=0; ii < numrad-1; ii++) {
-                            dimest += dimlist[ii];
-                        }
-                        dimest = dimest/((double) (numrad-1));
-                    }
-                } else {
-                    shell = false;
-                    closed = false;
-                    dRadiusInner = dRadiusOuter;
-                    dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(3.*dimest));
-                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
-                    if (dRadiusOuter > radius) dRadiusOuter = radius;
-                }
-                K_Storage.clear();
-                /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
-                        (double)(dRadiusInner), (double)(dRadiusOuter)); */
-                /* Add any point from the next annular shell */
-                do {
-                    dRadiusOuterSave = dRadiusOuter;
-                    /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
-                            (double)(dRadiusInner), (double)(dRadiusOuter)); */
-                    if (!(m_Flags & NTF_NoDistanceCache)) {
-                        lFound = (this->m_BaseNode).K_Near( k-tClosest.size(),
-                                                           true, false,
-                                                           dDistanceCache,
-                                                           dRadiusInner,
-                                                           dRadiusOuter,
-                                                           K_Storage,
-                                                           t
-#ifdef CNEARTREE_INSTRUMENTED
-                                                           , m_NodeVisits
-                                                           , sDistanceCacheHits
-#endif
-                                                           );
-                    } else {
-                        lFound = (this->m_BaseNode).K_Near( k-tClosest.size(),
-                                                           true, false,
-                                                           dRadiusInner,
-                                                           dRadiusOuter,
-                                                           K_Storage,
-                                                           t
-#ifdef CNEARTREE_INSTRUMENTED
-                                                           , m_NodeVisits
-#endif
-                                                           );
-                        
-                    }
-                    if (lFound > 0) break;
-                    dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*1.1;
-                    dRadiusInner = dRadiusOuterSave;
-                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
-                    if (dRadiusOuter > radius) dRadiusOuter = radius;
-                    
-                } while (lFound == 0 && dRadiusOuterSave < radius);
-                /* fprintf(stderr,"found %ld points\n",lFound); */
-                for( unsigned int i=0; i<K_Storage.size( ); ++i )
-                {
-                    tClosest.insert( tClosest.end( ), K_Storage[i].GetSecond() );
-                    tIndices.insert( tIndices.end( ), K_Storage[i].GetThird() );
-                    tDistances.insert( tDistances.end(),K_Storage[i].GetFirst() );
-                }
-                if (dRadiusOuter >= radius-1.e-36) break;
-            }
-            
-            return( tClosest.size() );
-        }
-    }  //  FindK_NearestNeighbors
-    
-    //=======================================================================
-    //  long LeftFindK_NearestNeighbors(  const size_t k, const DistanceType& dRadius, OutputContainerType& tClosest, const T& t ) const
-    //
-    //  Function to search a NearTree for the set of objects closer to some probe point, t,
-    //  than dRadius. This is only here so that tClosest can be cleared before starting the work
-    //   and radius can be updated while processing.
-    //
-    //    k is the maximum number of points to return
-    //    dRadius is the maximum search radius - any point farther than dRadius from the probe
-    //             point will be ignored
-    //    tClosest is returned as a container of objects of the templated type and is the
-    //             returned set of nearest points to the probe point that can be found
-    //             in the NearTree. The container can be a Standard Library container or
-    //             a CNearTree
-    //    t  is the probe point
-    //
-    // returns the number of objects returned in the container (for sets, that may not equal the number found)
-    //
-    // This version uses the left-first search
-    //=======================================================================
-    template<typename OutputContainerType>
-    long LeftFindK_NearestNeighbors ( const size_t k, const DistanceType& radius,  OutputContainerType& tClosest,   const T& t )
-    {
-        // clear the contents of the return vector so that things don't accidentally accumulate
-        tClosest.clear( );
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) )
-        {
-            return( 0L );
-        }
-        else
-        {
-            std::map<size_t,double> dDistanceCache;
-#ifdef CNEARTREE_INSTRUMENTED
-            std::map<size_t,size_t> sDistanceCacheHits;
-#endif
-            DistanceType dRadiusInner = 0;
-            DistanceType dRadiusOuterSave;
-            DistanceType dRadiusOuter;
-            double radlist[cneartree_dimsamples];
-            double dimlist[cneartree_dimsamples-1];
-            double dimest = 1.;
-            double foundatrad[cneartree_dimsamples];
-            int numrad;
-            bool shell, closed;
-            long lFound;
-            std::vector<std::pair<DistanceType, T> > K_Storage;
-            dRadiusOuter = m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
-            if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
-            if (dRadiusOuter > radius) dRadiusOuter = radius;
-            numrad = 0;
-            shell = true;
-            closed = true;
-            if (m_Flags & NTF_SphericalKNN) {
-                dRadiusOuter = radius;
-                shell = false;
-            }
-            /* First find the nearest k inner shell */
-            dDistanceCache.clear();
-            do {
-                dRadiusOuterSave = dRadiusOuter;
-                /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
-                 (double)(dRadiusInner), (double)(dRadiusOuter)); */
-                lFound = (this->m_BaseNode).LeftK_Near( k, shell, closed,
-                                                       dDistanceCache,
-                                                       dRadiusInner,
-                                                       dRadiusOuter,
-                                                       K_Storage,
-                                                       t
-#ifdef CNEARTREE_INSTRUMENTED
-                                                       , m_NodeVisits
-                                                       , sDistanceCacheHits
-#endif
-                                                       );
-                /* fprintf(stderr,"found %ld points\n",lFound); */
-                if (lFound > 0) break;
-                dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*2.;
-                dRadiusInner = dRadiusOuterSave;
-                if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
-                if (dRadiusOuter > radius) dRadiusOuter = radius;
-            } while (lFound == 0 && dRadiusOuterSave < radius);
-            if (lFound < 1) return (0L);
-            for( unsigned int i=0; i<K_Storage.size( ); ++i )
-            {
-                tClosest.insert( tClosest.end( ), K_Storage[i].second );
-            }
-            while ( tClosest.size() < k && dRadiusOuter < radius) {
-                /* fprintf (stderr,"Doing annuli, k %d, iFound %d, radius %g dRadiusOuter %g\n",
-                         (int)k,(int)lFound, radius, dRadiusOuter ); */
+                 (int)k,(int)lFound, radius, dRadiusOuter );*/
                 if (numrad < cneartree_dimsamples) {
                     foundatrad[numrad] = (double)tClosest.size();
                     radlist[numrad++] = dRadiusOuter;
@@ -3307,152 +2624,9 @@ public:
                     dRadiusOuterSave = dRadiusOuter;
                     /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
                      (double)(dRadiusInner), (double)(dRadiusOuter)); */
-                    
-                    lFound = (this->m_BaseNode).LeftK_Near( k-tClosest.size(),
-                                                           true, false,
-                                                           dDistanceCache,
-                                                           dRadiusInner,
-                                                           dRadiusOuter,
-                                                           K_Storage,
-                                                           t
-#ifdef CNEARTREE_INSTRUMENTED
-                                                           , m_NodeVisits
-                                                           , sDistanceCacheHits
-#endif
-                                                           );
-                    if (lFound > 0) break;
-                    dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*2.;
-                    dRadiusInner = dRadiusOuterSave;
-                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
-                    if (dRadiusOuter > radius) dRadiusOuter = radius;
-                    
-                } while (lFound == 0 && dRadiusOuterSave < radius);
-                /* fprintf(stderr,"found %ld points\n",lFound); */
-                for( unsigned int i=0; i<K_Storage.size( ); ++i )
-                {
-                    tClosest.insert( tClosest.end( ), K_Storage[i].second );
-                }
-                
-                if (dRadiusOuter >= radius-1.e-36) break;
-            }
-            
-            return( tClosest.size() );
-        }
-    }  //  FindK_NearestNeighbors
-    template<typename OutputContainerType>
-    long LeftFindK_NearestNeighbors ( const size_t k, const DistanceType& radius,
-                                     OutputContainerType& tClosest,
-                                     std::vector<size_t>& tIndices, const T& t )
-    {
-        // clear the contents of the return vector so that things don't accidentally accumulate
-        tClosest.clear( );
-        tIndices.clear( );
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) )
-        {
-            return( 0L );
-        }
-        else
-        {
-            typename std::map<size_t,double> dDistanceCache;
-#ifdef CNEARTREE_INSTRUMENTED
-            typename std::map<size_t,size_t> sDistanceCacheHits;
-#endif
-            DistanceType dRadiusInner = 0;
-            DistanceType dRadiusOuterSave;
-            DistanceType dRadiusOuter;
-            double radlist[cneartree_dimsamples];
-            double dimlist[cneartree_dimsamples-1];
-            double dimest = 1.;
-            double foundatrad[cneartree_dimsamples];
-            int numrad;
-            bool shell, closed;
-            long lFound;
-            std::vector<triple<DistanceType, T, size_t> > K_Storage;
-            dRadiusOuter = m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
-            if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
-            if (dRadiusOuter > radius) dRadiusOuter = radius;
-            numrad = 0;
-            shell = true;
-            closed = true;
-            if (m_Flags & NTF_SphericalKNN) {
-                dRadiusOuter = radius;
-                shell = false;
-            }
-            if (dRadiusOuter > radius) dRadiusOuter = radius;
-            /* First find the nearest k inner shell */
-            dDistanceCache.clear();
-            do {
-                dRadiusOuterSave = dRadiusOuter;
-                /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
-                 (double)(dRadiusInner), (double)(dRadiusOuter)); */
-                lFound = (this->m_BaseNode).LeftK_Near( k, shell, closed,
-                                                       dDistanceCache,
-                                                       dRadiusInner,
-                                                       dRadiusOuter,
-                                                       K_Storage,
-                                                       t
-#ifdef CNEARTREE_INSTRUMENTED
-                                                       , m_NodeVisits
-                                                       , sDistanceCacheHits
-#endif
-                                                       );
-                /* fprintf(stderr,"found %ld points\n",lFound); */
-                if (lFound > 0) break;
-                dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*2.;
-                dRadiusInner = dRadiusOuterSave;
-                if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
-                if (dRadiusOuter > radius) dRadiusOuter = radius;
-            } while (lFound == 0 && dRadiusOuterSave < radius);
-            if (lFound < 1) return (0L);
-            for( unsigned int i=0; i<K_Storage.size( ); ++i )
-            {
-                tClosest.insert( tClosest.end( ), K_Storage[i].GetSecond() );
-                tIndices.insert( tIndices.end( ), K_Storage[i].GetThird() );
-            }
-            while ( tClosest.size() < k && dRadiusOuter < radius) {
-                if (numrad < cneartree_dimsamples) {
-                    foundatrad[numrad] = (double)tClosest.size();
-                    radlist[numrad++] = dRadiusOuter;
-                    if (numrad > 1) {
-                        foundatrad[numrad-1]+= foundatrad[numrad-2];
-                        dimlist[numrad-2]
-                        = log(foundatrad[numrad-1]-foundatrad[numrad-2])
-                        /(log(radlist[numrad-1]-radlist[numrad-2])+1.e-38);
-                    }
-                    shell = true;
-                    closed= false;
-                    dRadiusInner = dRadiusOuter;
-                    dRadiusOuter = dRadiusInner+m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
-                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
-                    if (dRadiusOuter > radius) dRadiusOuter = radius;
-                    if (numrad == cneartree_dimsamples) {
-                        int ii;
-                        dimest = 0.;
-                        for (ii=0; ii < numrad-1; ii++) {
-                            dimest += dimlist[ii];
-                        }
-                        dimest = dimest/((double) (numrad-1));
-                    }
-                } else {
-                    shell = false;
-                    closed = false;
-                    dRadiusInner = dRadiusOuter;
-                    dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(3.*dimest));
-                    if (dRadiusOuter > radius) dRadiusOuter = radius;
-                }
-                K_Storage.clear();
-                /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
-                 (double)(dRadiusInner), (double)(dRadiusOuter)); */
-                /* Add any point from the next annular shell */
-                do {
-                    dRadiusOuterSave = dRadiusOuter;
-                    /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
-                            (double)(dRadiusInner), (double)(dRadiusOuter)); */
                     if (!(m_Flags & NTF_NoDistanceCache)) {
                         lFound = (this->m_BaseNode).K_Near( k-tClosest.size(),
-                                                           shell, closed,
+                                                           true, false,
                                                            dDistanceCache,
                                                            dRadiusInner,
                                                            dRadiusOuter,
@@ -3465,7 +2639,7 @@ public:
                                                            );
                     } else {
                         lFound = (this->m_BaseNode).K_Near( k-tClosest.size(),
-                                                           shell, closed,
+                                                           true, false,
                                                            dRadiusInner,
                                                            dRadiusOuter,
                                                            K_Storage,
@@ -3474,7 +2648,7 @@ public:
                                                            , m_NodeVisits
 #endif
                                                            );
-
+                        
                     }
                     if (lFound > 0) break;
                     dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*1.1;
@@ -3486,16 +2660,16 @@ public:
                 /* fprintf(stderr,"found %ld points\n",lFound); */
                 for( unsigned int i=0; i<K_Storage.size( ); ++i )
                 {
-                    tClosest.insert( tClosest.end( ), K_Storage[i].GetSecond() );
-                    tIndices.insert( tIndices.end( ), K_Storage[i].GetThird() );
+                    tClosest.insert( tClosest.end( ), m_ObjectStore[K_Storage[i].second] );
+                    tIndices.insert( tIndices.end( ), K_Storage[i].second );
+                    tDistances.insert( tDistances.end(),K_Storage[i].first );
                 }
-
                 if (dRadiusOuter >= radius-1.e-36) break;
             }
-
+            
             return( tClosest.size() );
         }
-    }  //  LeftFindK_NearestNeighbors
+    }  //  FindK_NearestNeighbors
     
     
     //=======================================================================
@@ -3528,7 +2702,7 @@ public:
         }
         else
         {
-            std::vector<std::pair<DistanceType, T> > K_Storage;
+            std::vector<std::pair<DistanceType, size_t> > K_Storage;
             DistanceType dRadius = 0;
             const long lFound = (this->m_BaseNode).K_Far( k, dRadius, K_Storage, t
 #ifdef CNEARTREE_INSTRUMENTED
@@ -3556,7 +2730,7 @@ public:
         }
         else
         {
-            std::vector<triple<DistanceType, T, size_t> > K_Storage;
+            std::vector<std::pair<DistanceType, size_t> >K_Storage;
             DistanceType dRadius = 0;
             const long lFound = (this->m_BaseNode).K_Far( k, dRadius, K_Storage, t
 #ifdef CNEARTREE_INSTRUMENTED
@@ -3565,8 +2739,8 @@ public:
                                                          );
             for( unsigned int i=0; i<K_Storage.size( ); ++i )
             {
-                tFarthest.insert( tFarthest.end( ), K_Storage[i].second);
-                tIndices.insert( tIndices.end( ), K_Storage[i].third);
+                tFarthest.insert( tFarthest.end( ), m_ObjectStore[K_Storage[i].second]);
+                tIndices.insert( tIndices.end( ), K_Storage[i].second);
             }
             return( lFound );
         }
@@ -3589,64 +2763,6 @@ public:
     //
     // This version uses the left-first search
     //=======================================================================
-    template<typename OutputContainerType>
-    long LeftFindK_FarthestNeighbors ( const size_t k, OutputContainerType& tFarthest,   const T& t )
-    {
-        // clear the contents of the return vector so that things don't accidentally accumulate
-        tFarthest.clear( );
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) )
-        {
-            return( 0L );
-        }
-        else
-        {
-            std::vector<std::pair<DistanceType, T> > K_Storage;
-            DistanceType dRadius = 0;
-            const long lFound = (this->m_BaseNode).LeftK_Far( k, dRadius, K_Storage, t
-#ifdef CNEARTREE_INSTRUMENTED
-                                                             , m_NodeVisits
-#endif
-                                                             );
-            for( unsigned int i=0; i<K_Storage.size( ); ++i )
-            {
-                tFarthest.insert( tFarthest.end( ), K_Storage[i].second );
-            }
-            return( lFound );
-        }
-    }  //  LeftFindK_FarthestNeighbors
-    
-    template<typename OutputContainerType>
-    long LeftFindK_FarthestNeighbors ( const size_t k, OutputContainerType& tFarthest, std::vector<size_t>& tIndices, const T& t )
-    {
-        // clear the contents of the return vector so that things don't accidentally accumulate
-        tFarthest.clear( );
-        tIndices.clear( );
-        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
-        
-        if( this->empty( ) )
-        {
-            return( 0L );
-        }
-        else
-        {
-            std::vector<triple<DistanceType, T, size_t> > K_Storage;
-            DistanceType dRadius = 0;
-            const long lFound = (this->m_BaseNode).LeftK_Far( k, dRadius, K_Storage, t
-#ifdef CNEARTREE_INSTRUMENTED
-                                                             , m_NodeVisits
-#endif
-                                                             );
-            for( unsigned int i=0; i<K_Storage.size( ); ++i )
-            {
-                tFarthest.insert( tFarthest.end( ), K_Storage[i].second);
-                tIndices.insert( tIndices.end( ), K_Storage[i].third);
-            }
-            return( lFound );
-        }
-    }  //  LeftFindK_FarthestNeighbors
-    
     
     //=======================================================================
     //  void CompleteDelayedInsert ( void )
@@ -4318,7 +3434,7 @@ public:
                         , size_t & imultLeft
                         , size_t & imultRight
 #endif
-                        ) {
+        ) {
             ptLeft       = m_ptLeft;
             ptRight      = m_ptRight;
             dMaxLeft     = m_dMaxLeft;
@@ -4346,7 +3462,7 @@ public:
                         , const size_t  imultLeft
                         , const size_t  imultRight
 #endif
-                        ) {
+        ) {
             m_ptLeft       = ptLeft;
             m_ptRight      = ptRight;
             m_dMaxLeft     = dMaxLeft;
@@ -4778,7 +3894,7 @@ public:
 #ifdef CNEARTREE_INSTRUMENTED
                       , size_t& VisitCount
 #endif
-                      ) const
+        ) const
         {
             std::vector <size_t > sStack;
             DistanceTypeNode dDL=DistanceTypeNode(0), dDR=DistanceTypeNode(0);
@@ -4917,299 +4033,187 @@ public:
         
         
         //=======================================================================
-        //  bool LeftNearest ( DistanceTypeNode& dRadius,  TNode& tClosest,   const TNode& t) const
+        //  template<typename ContainerType>
+        //  DistanceTypeNode SummedDistance ( const ContainerType& t, TNode& tTree )
+        //  Private function to sum the distances from tTree to each element of t
         //
-        //  Private function to search a NearTree for the m_Object closest to some probe point, t.
-        //  This function is only called by NearestNeighbor.
+        //    tTree -- a single point
+        //    t     -- a container of points
         //
-        //    dRadius is the smallest currently known distance of an m_Object from the probe point.
-        //    tClosest is an m_Object of the templated type and is the returned closest point
-        //             to the probe point that can be found in the NearTree
-        //    t  is the probe point
-        //    m_ObjectStore is the complete m_Object store of the NearTree
-        //
-        //    the return value is true only if a point was found within dRadius
-        //
-        //    This version differs from Nearest by searching to the left first
+        //   returns the sum of DistanceBetween calls for tTree and each element of t
         //
         //=======================================================================
-        bool LeftNearest (
-                          DistanceTypeNode& dRadius,
-                          TNode& tClosest,
-                          const TNode& t,
-                          size_t& pClosest
+        
+        template<typename ContainerType>
+        DistanceTypeNode SummedDistance ( const ContainerType& t, TNode& tTree ) {
+            
+            DistanceTypeNode sum = DistanceTypeNode(0);
+            typename ContainerType::iterator it;
+            for (it = t.begin(); it != t.end(); it++) {
+                sum += DistanceBetween( tTree, *it);
+            }
+            return sum;
+        }
+        
+        
+        
+        //=======================================================================
+        //  template<typename ContainerType>
+        //  bool SummedNearest ( DistanceTypeNode& dSumdist,  TNode& tClosest,
+        //    const ContainerType& t, size_t& pClosest,
+        //    const std::vector<TNode>& objectStore) const
+        //
+        //  Private function to search a NearTree for the object closest to some probe point, t.
+        //  This function is only called by NearestNeighbor.
+        //
+        //    dSumdist is the smallest currently known sum of distances of an object from the probe points.
+        //    tClosest is an object of the templated type and is the returned closest point
+        //             to the probe point that can be found in the NearTree
+        //    pClosest is the index of the point found or ULONG_MAX
+        //    t  is the container of probe points
+        //    objectStore is the complete object store of the NearTree
+        //
+        //    the return value is true only if a point was found within dSumdist
+        //
+        //=======================================================================
+        template<typename ContainerType>
+        bool SummedNearest (
+                            DistanceTypeNode& dSumDist,
+                            TNode& tClosest,
+                            const ContainerType& t,
+                            size_t& pClosest,
+                            const std::vector<TNode>& objectStore
 #ifdef CNEARTREE_INSTRUMENTED
-                          , size_t& VisitCount
+                            , size_t& VisitCount
 #endif
-                          ) const
+        ) const
         {
-            std::vector <size_t > sStack;
-            enum  { left, right, end } eDir;
-            eDir = left; // examine the left nodes first
+            std::vector <NearTreeNode* > sStack;
+            DistanceTypeNode dDL=DistanceTypeNode(0), dDR=DistanceTypeNode(0);
+            size_t tsize;
             NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
             pClosest = ULONG_MAX;
-            if ( pt->m_ptLeft == ULONG_MAX) return false; // test for empty
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif
-            while ( ! ( eDir == end && sStack.empty( ) ) )
-            {
-                if ( eDir == right )
-                {
-                    const DistanceTypeNode dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                    if ( dDR <= dRadius )
-                    {
-                        dRadius = dDR;
-                        pClosest = pt->m_ptRight;
-                    }
-                    if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dDR,pt->m_dMaxRight,dRadius))
-                    { // we did the left and now we finished the right, go down
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-                        eDir = left;
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                if ( eDir == left )
-                {
-                    const DistanceTypeNode dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]  );
-                    if ( dDL <= dRadius )
-                    {
-                        dRadius = dDL;
-                        pClosest = pt->m_ptLeft;
-                    }
-                    if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right m_Object
-                    {
-                        sStack.push_back( qt );
-                    }
-                    if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dDL,pt->m_dMaxLeft,dRadius))
-                    { // we did the left, go down
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        qt = pt->m_pLeftBranch;
-                        pt = m_NearTreeNodes[qt];
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                
-                if ( eDir == end && !sStack.empty( ) )
-                {
-                    qt = sStack.back( );
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    sStack.pop_back( );
-                    eDir = right;
-                }
-            }
-            if ( !sStack.empty( ) ) // for safety !!!
-            {
-                std::vector <size_t > sTemp;
-                sTemp.swap( sStack );
-            }
-            if ( pClosest != ULONG_MAX )
-                tClosest = m_ObjectStore[pClosest];
-            return ( pClosest != ULONG_MAX );
-        };   // end LeftNearest
-        
-    
-        //=======================================================================
-    //  template<typename ContainerType>
-    //  DistanceTypeNode SummedDistance ( const ContainerType& t, TNode& tTree )
-    //  Private function to sum the distances from tTree to each element of t
-    //
-    //    tTree -- a single point
-    //    t     -- a container of points
-    //
-    //   returns the sum of DistanceBetween calls for tTree and each element of t
-    //
-    //=======================================================================
-
-    template<typename ContainerType>
-    DistanceTypeNode SummedDistance ( const ContainerType& t, TNode& tTree ) {
-        
-        DistanceTypeNode sum = DistanceTypeNode(0);
-        typename ContainerType::iterator it;
-        for (it = t.begin(); it != t.end(); it++) {
-            sum += DistanceBetween( tTree, *it);
-        }
-        return sum;
-    }
-
-    
-    
-    //=======================================================================
-    //  template<typename ContainerType>
-    //  bool SummedNearest ( DistanceTypeNode& dSumdist,  TNode& tClosest,   const ContainerType& t,
-    //                 size_t& pClosest, const std::vector<TNode>& objectStore) const
-    //
-    //  Private function to search a NearTree for the object closest to some probe point, t.
-    //  This function is only called by NearestNeighbor.
-    //
-    //    dSumdist is the smallest currently known sum of distances of an object from the probe points.
-    //    tClosest is an object of the templated type and is the returned closest point
-    //             to the probe point that can be found in the NearTree
-    //    pClosest is the index of the point found or ULONG_MAX
-    //    t  is the container of probe points
-    //    objectStore is the complete object store of the NearTree
-    //
-    //    the return value is true only if a point was found within dSumdist
-    //
-    //=======================================================================
-    template<typename ContainerType>
-    bool SummedNearest (
-                  DistanceTypeNode& dSumDist,
-                  TNode& tClosest,
-                  const ContainerType& t,
-                  size_t& pClosest,
-                  const std::vector<TNode>& objectStore
-#ifdef CNEARTREE_INSTRUMENTED
-                  , size_t& VisitCount
-#endif
-    ) const
-    {
-        std::vector <NearTreeNode* > sStack;
-        DistanceTypeNode dDL=DistanceTypeNode(0), dDR=DistanceTypeNode(0);
-        size_t tsize;
-        NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-        pClosest = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-        ++VisitCount;
-#endif
-        
-        tsize = t.size();
-        if ( pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
-        while ( pt->m_ptLeft != ULONG_MAX ||
-               pt->m_ptRight != ULONG_MAX ||
-               !sStack.empty( ) )
-        {
-            if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
-                if (!sStack.empty( )) {
-                    pt = sStack.back();
-                    sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    continue;
-                }
-                break;
-            }
-            if (pt->m_ptLeft != ULONG_MAX) {
-                dDL = SummedDistance( t, objectStore[pt->m_ptLeft] );
-                if ( dDL <= dSumDist )
-                {
-                    dSumDist = dDL;
-                    pClosest = pt->m_ptLeft;
-                }
-            }
-            if (pt->m_ptRight != ULONG_MAX) {
-#ifdef CNEARTREE_INSTRUMENTED
-                ++VisitCount;
-#endif
-                dDR = SummedDistance( t, objectStore[pt->m_ptRight]);
-                if ( dDR <= dSumDist )
-                {
-                    dSumDist = dDR;
-                    pClosest = pt->m_ptRight;
-                }
-            }
             
-            /*
-             See if both branches are populated.  In that case, save one branch
-             on the stack, and process the other one based on which one seems
-             smaller, but useful first]
-             */
-            if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
-                if (dDL+tsize*pt->m_dMaxLeft < dDR+tsize*pt->m_dMaxRight || pt->m_pRightBranch == 0) {
-                    if ( TRIANG(dDL,tsize*pt->m_dMaxLeft,dSumDist)) {
-                        if ( TRIANG(dDR,tsize*pt->m_dMaxRight,dSumDist)) {
-                            sStack.push_back(pt->m_pRightBranch);
-                        }
-                        pt = pt->m_pLeftBranch;
+            tsize = t.size();
+            if ( pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
+            while ( pt->m_ptLeft != ULONG_MAX ||
+                   pt->m_ptRight != ULONG_MAX ||
+                   !sStack.empty( ) )
+            {
+                if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
+                    if (!sStack.empty( )) {
+                        pt = sStack.back();
+                        sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
                         ++VisitCount;
 #endif
                         continue;
                     }
-                    /* If we are here, the left branch was not useful
-                     Fall through to use the right
-                     */
+                    break;
+                }
+                if (pt->m_ptLeft != ULONG_MAX) {
+                    dDL = SummedDistance( t, objectStore[pt->m_ptLeft] );
+                    if ( dDL <= dSumDist )
+                    {
+                        dSumDist = dDL;
+                        pClosest = pt->m_ptLeft;
+                    }
+                }
+                if (pt->m_ptRight != ULONG_MAX) {
+#ifdef CNEARTREE_INSTRUMENTED
+#endif
+                    dDR = SummedDistance( t, objectStore[pt->m_ptRight]);
+                    if ( dDR <= dSumDist )
+                    {
+                        dSumDist = dDR;
+                        pClosest = pt->m_ptRight;
+                    }
                 }
                 
-                /* We come here either because pursuing the left branch was not useful
-                 of the right branch look shorter
+                
+                /*
+                 See if both branches are populated.  In that case, save one branch
+                 on the stack, and process the other one based on which one seems
+                 smaller, but useful first]
                  */
-                if ( TRIANG(dDR,tsize*pt->m_dMaxRight,dSumDist)) {
-                    if ( TRIANG(dDL,tsize*pt->m_dMaxLeft,dSumDist)) {
-                        sStack.push_back(pt->m_pLeftBranch);
+                if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
+                    if (dDL+tsize*pt->m_dMaxLeft < dDR+tsize*pt->m_dMaxRight || pt->m_pRightBranch == 0) {
+                        if ( TRIANG(dDL,tsize*pt->m_dMaxLeft,dSumDist)) {
+                            if ( TRIANG(dDR,tsize*pt->m_dMaxRight,dSumDist)) {
+                                sStack.push_back(pt->m_pRightBranch);
+                            }
+                            pt = pt->m_pLeftBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                            ++VisitCount;
+#endif
+                            continue;
+                        }
+                        /* If we are here, the left branch was not useful
+                         Fall through to use the right
+                         */
                     }
+                    
+                    /* We come here either because pursuing the left branch was not useful
+                     of the right branch look shorter
+                     */
+                    if ( TRIANG(dDR,tsize*pt->m_dMaxRight,dSumDist)) {
+                        if ( TRIANG(dDL,tsize*pt->m_dMaxLeft,dSumDist)) {
+                            sStack.push_back(pt->m_pLeftBranch);
+                        }
+                        pt = pt->m_pRightBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                        ++VisitCount;
+#endif
+                        continue;
+                    }
+                }
+                
+                /* Only one branch is viable, try them one at a time
+                 */
+                if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,tsize*pt->m_dMaxLeft,dSumDist)) {
+                    pt = pt->m_pLeftBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    ++VisitCount;
+#endif
+                    continue;
+                }
+                
+                if ( pt->m_pRightBranch != 0 && TRIANG(dDR,tsize*pt->m_dMaxRight,dSumDist)) {
                     pt = pt->m_pRightBranch;
 #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
 #endif
                     continue;
                 }
-            }
-            
-            /* Only one branch is viable, try them one at a time
-             */
-            if ( pt->m_pLeftBranch != 0 && TRIANG(dDL,tsize*pt->m_dMaxLeft,dSumDist)) {
-                pt = pt->m_pLeftBranch;
+                
+                /* We have procesed both sides, we need to go to the stack */
+                
+                if (!sStack.empty( )) {
+                    pt = sStack.back();
+                    sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
-                ++VisitCount;
-#endif
-                continue;
-            }
-            
-            if ( pt->m_pRightBranch != 0 && TRIANG(dDR,tsize*pt->m_dMaxRight,dSumDist)) {
-                pt = pt->m_pRightBranch;
-#ifdef CNEARTREE_INSTRUMENTED
-                ++VisitCount;
-#endif
-                continue;
-            }
-            
-            /* We have procesed both sides, we need to go to the stack */
-            
-            if (!sStack.empty( )) {
-                pt = sStack.back();
-                sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
-                ++VisitCount;
+                    ++VisitCount;
 #endif                            
-                continue;
+                    continue;
+                }
+                break;
             }
-            break;
-        }
-        if ( !sStack.empty( ) ) // for safety !!!
-        {
-            std::vector <NearTreeNode* > sTemp;
-            sTemp.swap( sStack );
-        }
-        if ( pClosest != ULONG_MAX )
-            tClosest = objectStore[pClosest];
-        return ( pClosest != ULONG_MAX );
-    };   // end SummedNearest
-    
-
-
-//=======================================================================
+            if ( !sStack.empty( ) ) // for safety !!!
+            {
+                std::vector <NearTreeNode* > sTemp;
+                sTemp.swap( sStack );
+            }
+            if ( pClosest != ULONG_MAX )
+                tClosest = objectStore[pClosest];
+            return ( pClosest != ULONG_MAX );
+        }   // end SummedNearest
+        
+        
+        
+        //=======================================================================
         //  bool Farthest ( DistanceTypeNode& dRadius,  TNode& tFarthest,   const TNode& t ) const
         //
         //  Private function to search a NearTree for the m_Object farthest from some probe point, t.
@@ -5231,7 +4235,7 @@ public:
 #ifdef CNEARTREE_INSTRUMENTED
                        , size_t& VisitCount
 #endif
-                       ) const
+        ) const
         {
             std::vector <size_t > sStack;
             DistanceTypeNode dDL=DistanceTypeNode(0), dDR=DistanceTypeNode(0);
@@ -5368,269 +4372,159 @@ public:
             return ( pFarthest != ULONG_MAX );
         };   // end Farthest
         
+        
         //=======================================================================
-        //  bool LeftFarthest ( DistanceTypeNode& dRadius,  TNode& tFarthest, const TNode& t ) const
+        //  bool SummedFarthest ( DistanceTypeNode& dSumDist,  TNode& tFarthest,
+        //          const ContainerType& t, size_t& pFarthest,
+        //          const std::vector<TNode>& objectStore) const
         //
-        //  Private function to search a NearTree for the m_Object farthest from some probe point, t.
+        //  Private function to search a NearTree for the object farthest from some probe point, t.
         //  This function is only called by FarthestNeighbor.
         //
-        //    dRadius is the largest currently known distance of an m_Object from the probe point.
-        //    tFarthest is an m_Object of the templated type and is the returned farthest point
+        //    dSumDist is the largest currently known sum of distances of an object from the probe points.
+        //    tFarthest is an object of the templated type and is the returned farthest point
         //             from the probe point that can be found in the NearTree
-        //    t  is the probe point
+        //    t  is the container of probe points
         //
         //    the return value is true only if a point was found (should only be false for
         //             an empty tree)
         //
-        //    This version differs from Farthest by searching to the left first
-        //
         //=======================================================================
-        bool LeftFarthest (
-                           DistanceTypeNode& dRadius,
-                           TNode& tFarthest,
-                           const TNode& t, size_t& pFarthest
+        template<typename ContainerType>
+        bool SummedFarthest (
+                             DistanceTypeNode& dSumDist,
+                             TNode& tFarthest,
+                             const ContainerType& t, size_t& pFarthest,
+                             const std::vector<TNode>& objectStore
 #ifdef CNEARTREE_INSTRUMENTED
-                           , size_t& VisitCount
+                             , size_t& VisitCount
 #endif
-                           ) const
+        ) const
         {
-            std::vector <size_t > sStack;
-            enum  { left, right, end } eDir;
-            eDir = left; // examine the left nodes first
+            std::vector <NearTreeNode* > sStack;
+            DistanceTypeNode dDL=DistanceTypeNode(0), dDR=DistanceTypeNode(0);
+            size_t tsize;
             NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
             pFarthest = ULONG_MAX;
 #ifdef CNEARTREE_INSTRUMENTED
             ++VisitCount;
 #endif
-            if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
-            while ( ! ( eDir == end && sStack.empty( ) ) )
-            {
-                if ( eDir == right )
-                {
-                    const DistanceTypeNode dDR = DistanceBetween( t , m_ObjectStore[pt->m_ptRight] );
-                    if ( dDR >= dRadius )
-                    {
-                        dRadius = dDR;
-                        pFarthest = pt->m_ptRight;
-                    }
-                    if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dRadius,dDR,pt->m_dMaxRight))
-                    { // we did the left and now we finished the right, go down
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        eDir = left;
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                if ( eDir == left )
-                {
-                    const DistanceTypeNode dDL = DistanceBetween( t , m_ObjectStore[pt->m_ptLeft] );
-                    if ( dDL >= dRadius )
-                    {
-                        dRadius = dDL;
-                        pFarthest = pt->m_ptLeft;
-                    }
-                    if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right m_Object
-                    {
-                        sStack.push_back( qt );
-                    }
-                    if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
-                    { // we did the left, go down
-                        qt = pt->m_pLeftBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                
-                if ( eDir == end && !sStack.empty( ) )
-                {
-                    qt = sStack.back( );
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    sStack.pop_back( );
-                    eDir = right;
-                }
-            }
-            if ( !sStack.empty( ) ) // for safety !!!
-            {
-                std::vector <size_t > sTemp;
-                sTemp.swap( sStack );
-            }
-            if ( pFarthest != ULONG_MAX )
-                tFarthest = m_ObjectStore[pFarthest];
-            return ( pFarthest != ULONG_MAX );
-        };   //  end LeftFarthest
-        
-    //=======================================================================
-    //  bool SummedFarthest ( DistanceTypeNode& dSumDist,  TNode& tFarthest,
-    //          const ContainerType& t, size_t& pFarthest,
-    //          const std::vector<TNode>& objectStore) const
-    //
-    //  Private function to search a NearTree for the object farthest from some probe point, t.
-    //  This function is only called by FarthestNeighbor.
-    //
-    //    dSumDist is the largest currently known sum of distances of an object from the probe points.
-    //    tFarthest is an object of the templated type and is the returned farthest point
-    //             from the probe point that can be found in the NearTree
-    //    t  is the container of probe points
-    //
-    //    the return value is true only if a point was found (should only be false for
-    //             an empty tree)
-    //
-    //=======================================================================
-    template<typename ContainerType>
-    bool SummedFarthest (
-                   DistanceTypeNode& dSumDist,
-                   TNode& tFarthest,
-                   const ContainerType& t, size_t& pFarthest,
-                   const std::vector<TNode>& objectStore
-#ifdef CNEARTREE_INSTRUMENTED
-                   , size_t& VisitCount
-#endif
-    ) const
-    {
-        std::vector <NearTreeNode* > sStack;
-        DistanceTypeNode dDL=DistanceTypeNode(0), dDR=DistanceTypeNode(0);
-        size_t tsize;
-        NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-        pFarthest = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-        ++VisitCount;
-#endif
-        
-        tsize = t.size();
-        if ( pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
-        while ( pt->m_ptLeft != ULONG_MAX ||
-               pt->m_ptRight != ULONG_MAX ||
-               !sStack.empty( ) )
-        {
-            if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
-                if (!sStack.empty( )) {
-                    pt = sStack.back();
-                    sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    continue;
-                }
-                break;
-            }
-            if (pt->m_ptLeft != ULONG_MAX) {
-                dDL = SummedDistance( t, objectStore[pt->m_ptLeft] );
-                if ( dDL >= dSumDist )
-                {
-                    dSumDist = dDL;
-                    pFarthest = pt->m_ptLeft;
-                }
-            }
-            if (pt->m_ptRight != ULONG_MAX) {
-#ifdef CNEARTREE_INSTRUMENTED
-                ++VisitCount;
-#endif
-                dDR = SummedDistance( t, objectStore[pt->m_ptRight]);
-                if ( dDR >= dSumDist )
-                {
-                    dSumDist = dDR;
-                    pFarthest = pt->m_ptRight;
-                }
-            }
             
-            /*
-             See if both branches are populated.  In that case, save one branch
-             on the stack, and process the other one based on which one seems
-             larger, but useful first]
-             */
-            if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
-                if (dDL+tsize*pt->m_dMaxLeft > dDR+tsize*pt->m_dMaxRight || pt->m_pRightBranch == 0) {
-                    if ( TRIANG(dSumDist,dDL,tsize*pt->m_dMaxLeft)) {
-                        if ( TRIANG(dSumDist,dDR,tsize*pt->m_dMaxRight)) {
-                            sStack.push_back(pt->m_pRightBranch);
-                        }
-                        pt = pt->m_pLeftBranch;
+            tsize = t.size();
+            if ( pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
+            while ( pt->m_ptLeft != ULONG_MAX ||
+                   pt->m_ptRight != ULONG_MAX ||
+                   !sStack.empty( ) )
+            {
+                if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
+                    if (!sStack.empty( )) {
+                        pt = sStack.back();
+                        sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
                         ++VisitCount;
 #endif
                         continue;
                     }
-                    /* If we are here, the left branch was not useful
-                     Fall through to use the right
-                     */
+                    break;
+                }
+                if (pt->m_ptLeft != ULONG_MAX) {
+                    dDL = SummedDistance( t, objectStore[pt->m_ptLeft] );
+                    if ( dDL >= dSumDist )
+                    {
+                        dSumDist = dDL;
+                        pFarthest = pt->m_ptLeft;
+                    }
+                }
+                if (pt->m_ptRight != ULONG_MAX) {
+#ifdef CNEARTREE_INSTRUMENTED
+                    ++VisitCount;
+#endif
+                    dDR = SummedDistance( t, objectStore[pt->m_ptRight]);
+                    if ( dDR >= dSumDist )
+                    {
+                        dSumDist = dDR;
+                        pFarthest = pt->m_ptRight;
+                    }
                 }
                 
-                /* We come here either because pursuing the left branch was not useful
-                 of the right branch look shorter
+                /*
+                 See if both branches are populated.  In that case, save one branch
+                 on the stack, and process the other one based on which one seems
+                 larger, but useful first]
                  */
-                if ( TRIANG(dSumDist,dDR,tsize*pt->m_dMaxRight)) {
-                    if ( TRIANG(dSumDist,dDL,tsize*pt->m_dMaxLeft)) {
-                        sStack.push_back(pt->m_pLeftBranch);
+                if (pt->m_pLeftBranch != 0 && pt->m_pRightBranch != 0 ) {
+                    if (dDL+tsize*pt->m_dMaxLeft > dDR+tsize*pt->m_dMaxRight || pt->m_pRightBranch == 0) {
+                        if ( TRIANG(dSumDist,dDL,tsize*pt->m_dMaxLeft)) {
+                            if ( TRIANG(dSumDist,dDR,tsize*pt->m_dMaxRight)) {
+                                sStack.push_back(pt->m_pRightBranch);
+                            }
+                            pt = pt->m_pLeftBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                            ++VisitCount;
+#endif
+                            continue;
+                        }
+                        /* If we are here, the left branch was not useful
+                         Fall through to use the right
+                         */
                     }
+                    
+                    /* We come here either because pursuing the left branch was not useful
+                     of the right branch look shorter
+                     */
+                    if ( TRIANG(dSumDist,dDR,tsize*pt->m_dMaxRight)) {
+                        if ( TRIANG(dSumDist,dDL,tsize*pt->m_dMaxLeft)) {
+                            sStack.push_back(pt->m_pLeftBranch);
+                        }
+                        pt = pt->m_pRightBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                        ++VisitCount;
+#endif
+                        continue;
+                    }
+                }
+                
+                /* Only one branch is viable, try them one at a time
+                 */
+                if ( pt->m_pLeftBranch != 0 && TRIANG(dSumDist,dDL,tsize*pt->m_dMaxLeft)) {
+                    pt = pt->m_pLeftBranch;
+#ifdef CNEARTREE_INSTRUMENTED
+                    ++VisitCount;
+#endif
+                    continue;
+                }
+                
+                if ( pt->m_pRightBranch != 0 && TRIANG(dSumDist,dDR,tsize*pt->m_dMaxRight)) {
                     pt = pt->m_pRightBranch;
 #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
 #endif
                     continue;
                 }
-            }
-            
-            /* Only one branch is viable, try them one at a time
-             */
-            if ( pt->m_pLeftBranch != 0 && TRIANG(dSumDist,dDL,tsize*pt->m_dMaxLeft)) {
-                pt = pt->m_pLeftBranch;
+                
+                /* We have procesed both sides, we need to go to the stack */
+                
+                if (!sStack.empty( )) {
+                    pt = sStack.back();
+                    sStack.pop_back();
 #ifdef CNEARTREE_INSTRUMENTED
-                ++VisitCount;
-#endif
-                continue;
-            }
-            
-            if ( pt->m_pRightBranch != 0 && TRIANG(dSumDist,dDR,tsize*pt->m_dMaxRight)) {
-                pt = pt->m_pRightBranch;
-#ifdef CNEARTREE_INSTRUMENTED
-                ++VisitCount;
-#endif
-                continue;
-            }
-            
-            /* We have procesed both sides, we need to go to the stack */
-            
-            if (!sStack.empty( )) {
-                pt = sStack.back();
-                sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
-                ++VisitCount;
+                    ++VisitCount;
 #endif                            
-                continue;
+                    continue;
+                }
+                break;
             }
-            break;
-        }
-        if ( !sStack.empty( ) ) // for safety !!!
-        {
-            std::vector <NearTreeNode* > sTemp;
-            sTemp.swap( sStack );
-        }
-        if ( pFarthest != ULONG_MAX )
-            tFarthest = objectStore[pFarthest];
-        return ( pFarthest != ULONG_MAX );
-    };   // end SummedFarthest
-
-
+            if ( !sStack.empty( ) ) // for safety !!!
+            {
+                std::vector <NearTreeNode* > sTemp;
+                sTemp.swap( sStack );
+            }
+            if ( pFarthest != ULONG_MAX )
+                tFarthest = objectStore[pFarthest];
+            return ( pFarthest != ULONG_MAX );
+        }   // end SummedFarthest
+        
+        
         //=======================================================================
         //  long InSphere (
         //                const DistanceTypeNode& dRadius,
@@ -5658,7 +4552,7 @@ public:
 #ifdef CNEARTREE_INSTRUMENTED
                        , size_t& VisitCount
 #endif
-                       ) const
+        ) const
         {
             std::vector <size_t > sStack;
             DistanceTypeNode dDL=DistanceTypeNode(0), dDR=DistanceTypeNode(0);
@@ -5840,7 +4734,7 @@ public:
 #ifdef CNEARTREE_INSTRUMENTED
                        , size_t& VisitCount
 #endif
-                       ) const
+        ) const
         {
             std::vector <size_t > sStack;
             DistanceTypeNode dDL=0., dDR=0.;
@@ -6019,283 +4913,6 @@ public:
         }   // end InSphere
         
         
-        //=======================================================================
-        //  long LeftInSphere (
-        //                const DistanceTypeNode& dRadius,
-        //                ContainerType& tClosest,
-        //                const TNode& t,
-        //                ) const
-        //
-        //  Private function to search a NearTree for the objects inside of the specified radius
-        //     from the probe point
-        //  This function is only called by FindInSphere.
-        //
-        //    dRadius is the search radius
-        //    tClosest is a CNearTree of objects of the templated type found within dRadius of the
-        //         probe point
-        //    t  is the probe point
-        //
-        // returns the number of objects returned in the container (for sets, that may not equal the number found)
-        //
-        // This version searches to the left first
-        //
-        //=======================================================================
-        template<typename ContainerType>
-        long LeftInSphere (
-                           const DistanceTypeNode& dRadius,
-                           ContainerType& tClosest,
-                           const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                           , size_t& VisitCount
-#endif
-                           ) const
-        {
-            std::vector <size_t > sStack;
-            enum  { left, right, end } eDir;
-            eDir = left; // examine the left nodes first
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-            if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            while ( ! ( eDir == end && sStack.empty( ) ) )
-            {
-                if ( eDir == right )
-                {
-                    const DistanceTypeNode dDR =  DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                    if ( dDR <= dRadius )
-                    {
-                        size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tClosest.insert( tClosest.end(), m_ObjectStore[pt->m_ptRight] );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), m_ObjectStore[m_ObjectCollide[collide]] );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                        
-                    }
-                    if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
-                    { // we did the left and now we finished the right, go down
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        eDir = left;
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                if ( eDir == left )
-                {
-                    const DistanceTypeNode dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]  );
-                    if ( dDL <= dRadius )
-                    {
-                        size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tClosest.insert( tClosest.end(), m_ObjectStore[pt->m_ptLeft] );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), m_ObjectStore[m_ObjectCollide[collide]] );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right m_Object
-                    {
-                        sStack.push_back( qt );
-                    }
-                    if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dDL,pt->m_dMaxLeft,dRadius) )
-                    { // we did the left, go down
-                        qt = pt->m_pLeftBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                
-                if ( eDir == end && !sStack.empty( ) )
-                {
-                    qt = sStack.back( );
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    sStack.pop_back( );
-                    eDir = right;
-                }
-            }
-            
-            return ( (long)tClosest.size() );
-        }  //  end LeftInSphere
-        
-        template<typename ContainerType>
-        long LeftInSphere (
-                           const DistanceTypeNode& dRadius,
-                           ContainerType& tClosest,
-                           std::vector<size_t>& tIndices,
-                           const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                           , size_t& VisitCount
-#endif
-                           ) const
-        {
-            std::vector <size_t > sStack;
-            enum  { left, right, end } eDir;
-            eDir = left; // examine the left nodes first
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
-            while ( ! ( eDir == end && sStack.empty( ) ) )
-            {
-                if ( eDir == right )
-                {
-                    const DistanceTypeNode dDR =  DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                    if ( dDR <= dRadius )
-                    {
-                        size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tClosest.insert( tClosest.end(), m_ObjectStore[pt->m_ptRight] );
-                        tIndices.insert( tIndices.end(), pt->m_ptRight);
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), m_ObjectStore[m_ObjectCollide[collide]] );
-                            tIndices.insert( tIndices.end(), m_ObjectCollide[collide]);
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
-                    { // we did the left and now we finished the right, go down
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        eDir = left;
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                if ( eDir == left )
-                {
-                    const DistanceTypeNode dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]  );
-                    if ( dDL <= dRadius )
-                    {
-                        size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tClosest.insert( tClosest.end(), m_ObjectStore[pt->m_ptLeft] );
-                        tIndices.insert( tIndices.end(), pt->m_ptLeft);
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), m_ObjectStore[m_ObjectCollide[collide]] );
-                            tIndices.insert( tIndices.end(), m_ObjectCollide[collide]);
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right m_Object
-                    {
-                        sStack.push_back( qt );
-                    }
-                    if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dDL,pt->m_dMaxLeft,dRadius) )
-                    { // we did the left, go down
-                        qt = pt->m_pLeftBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                
-                if ( eDir == end && !sStack.empty( ) )
-                {
-                    qt = sStack.back( );
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    sStack.pop_back( );
-                    eDir = right;
-                }
-            }
-            
-            return ( (long)tClosest.size() );
-        }  //  end LeftInSphere
-        
         
         //=======================================================================
         //  long OutSphere (
@@ -6324,7 +4941,7 @@ public:
 #ifdef CNEARTREE_INSTRUMENTED
                         , size_t& VisitCount
 #endif
-                        ) const
+        ) const
         {
             std::vector <size_t > sStack;
             DistanceTypeNode dDL=0., dDR=0.;
@@ -6505,7 +5122,7 @@ public:
 #ifdef CNEARTREE_INSTRUMENTED
                         , size_t& VisitCount
 #endif
-                        ) const
+        ) const
         {
             std::vector <size_t > sStack;
             DistanceTypeNode dDL=0., dDR=0.;
@@ -6680,276 +5297,6 @@ public:
         }   // end OutSphere
         
         
-        //=======================================================================
-        //  long LeftOutSphere (
-        //                const DistanceTypeNode& dRadius,
-        //                ContainerType& tFarthest,
-        //                const TNode& t
-        //                ) const
-        //
-        //  Private function to search a NearTree for the objects outside of the specified radius
-        //     from the probe point
-        //  This function is only called by FindOutSphere.
-        //
-        //    dRadius is the search radius
-        //    tFarthest is a CNearTree of objects of the templated type found within dRadius of the
-        //         probe point
-        //    t  is the probe point
-        //
-        // returns the number of objects returned in the container (for sets, that may not equal the number found)
-        //
-        //=======================================================================
-        template<typename ContainerType>
-        long LeftOutSphere (
-                            const DistanceTypeNode& dRadius,
-                            ContainerType& tFarthest,
-                            const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                            , size_t& VisitCount
-#endif
-                            ) const
-        {
-            std::vector <size_t > sStack;
-            enum  { left, right, end } eDir;
-            eDir = left; // examine the left nodes first
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
-            while ( ! ( eDir == end && sStack.empty( ) ) )
-            {
-                if ( eDir == right )
-                {
-                    const DistanceTypeNode dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                    if ( dDR >= dRadius )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tFarthest.insert( tFarthest.end(), m_ObjectStore[pt->m_ptRight] );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tFarthest.insert( tFarthest.end(), m_ObjectStore[m_ObjectCollide[collide]] );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
-                    { // we did the left and now we finished the right, go down
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        eDir = left;
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                if ( eDir == left )
-                {
-                    const DistanceTypeNode dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]  );
-                    if ( dDL >= dRadius )
-                    {
-                        size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tFarthest.insert( tFarthest.end(), m_ObjectStore[pt->m_ptLeft] );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tFarthest.insert( tFarthest.end(), m_ObjectStore[m_ObjectCollide[collide]] );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right m_Object
-                    {
-                        sStack.push_back( qt );
-                    }
-                    if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
-                    { // we did the left, go down
-                        qt = pt->m_pLeftBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                
-                if ( eDir == end && !sStack.empty( ) )
-                {
-                    qt = sStack.back( );
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    sStack.pop_back( );
-                    eDir = right;
-                }
-            }
-            
-            return ( (long)tFarthest.size() );
-        }  //  end LeftOutSphere
-        
-        template<typename ContainerType>
-        long LeftOutSphere (
-                            const DistanceTypeNode& dRadius,
-                            ContainerType& tFarthest,
-                            std::vector<size_t>& tIndices,
-                            const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                            , size_t& VisitCount
-#endif
-                            ) const
-        {
-            std::vector <size_t > sStack;
-            enum  { left, right, end } eDir;
-            eDir = left; // examine the left nodes first
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
-            while ( ! ( eDir == end && sStack.empty( ) ) )
-            {
-                if ( eDir == right )
-                {
-                    const DistanceTypeNode dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                    if ( dDR >= dRadius )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tFarthest.insert( tFarthest.end(), m_ObjectStore[pt->m_ptRight] );
-                        tIndices.insert( tIndices.end(), pt->m_ptRight );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tFarthest.insert( tFarthest.end(), m_ObjectStore[m_ObjectCollide[collide]] );
-                            tIndices.insert( tIndices.end(), m_ObjectCollide[collide] );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
-                    { // we did the left and now we finished the right, go down
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        eDir = left;
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                if ( eDir == left )
-                {
-                    const DistanceTypeNode dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]  );
-                    if ( dDL >= dRadius )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tFarthest.insert( tFarthest.end(), m_ObjectStore[pt->m_ptLeft] );
-                        tIndices.insert( tIndices.end(), pt->m_ptLeft );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tFarthest.insert( tFarthest.end(), m_ObjectStore[m_ObjectCollide[collide]] );
-                            tIndices.insert( tIndices.end(), m_ObjectCollide[collide] );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right m_Object
-                    {
-                        sStack.push_back( qt );
-                    }
-                    if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
-                    { // we did the left, go down
-                        qt = pt->m_pLeftBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                
-                if ( eDir == end && !sStack.empty( ) )
-                {
-                    qt = sStack.back( );
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    sStack.pop_back( );
-                    eDir = right;
-                }
-            }
-            
-            return ( (long)tFarthest.size() );
-        }  //  end LeftOutSphere
         
         //=======================================================================
         //  long InAnnulus ( const DistanceTypeNode& dRadius1,
@@ -6975,7 +5322,7 @@ public:
 #ifdef CNEARTREE_INSTRUMENTED
                         , size_t& VisitCount
 #endif
-                        ) const
+        ) const
         {
             std::vector <size_t > sStack;
             DistanceTypeNode dDL=0., dDR=0.;
@@ -7155,7 +5502,7 @@ public:
 #ifdef CNEARTREE_INSTRUMENTED
                         , size_t& VisitCount
 #endif
-                        ) const
+        ) const
         {
             std::vector <size_t > sStack;
             DistanceTypeNode dDL=0., dDR=0.;
@@ -7330,335 +5677,100 @@ public:
         
         
         //=======================================================================
-        //  long LeftInAnnulus ( const DistanceTypeNode& dRadius1,
-        //  const DistanceTypeNode& dRadius2, CNearTree< TNode >& tAnnular,
-        //  const TNode& t ) const
+        // template< typename ProbeContainerType > 
+        // inline DistanceTypeNode AvgDistFrom(
+        //              ProbeContainerType& t,               // container of probe points
+        //              TNode p)                             // the point being tested
         //
-        //  Private function to search a NearTree for the objects within a specified annulus from probe point
-        //  This function is only called by FindInAnnulus.
-        //
-        //    dRadius1, dRadius2 specifies the range of the annulus
-        //    tAnnular is a NearTree of objects of the templated type found between the two radii
-        //    t  is the probe point
-        //
-        // returns the number of objects returned in the container (for sets, that may not equal the number found)
-        //
+        // Private function to compile the average distance from the points
+        // in a probe container to a specificed point to be tested.  Return
+        // TNode(0.0) for an empty probe container as well as for the case
+        // where all the distances are zero.
         //=======================================================================
-        template<typename ContainerType>
-        long LeftInAnnulus (
-                            const DistanceTypeNode& dRadius1,
-                            const DistanceTypeNode& dRadius2,
-                            ContainerType& tAnnular,
-                            const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                            , size_t& VisitCount
-#endif
-                            ) const
+
+        template< typename ProbeContainerType >
+        inline DistanceTypeNode AvgDistFrom(
+                     ProbeContainerType& t,               // container of probe points
+                     TNode p)                             // the point being tested
         {
-            std::vector <size_t > sStack;
-            enum  { left, right, end } eDir;
-            eDir = left; // examine the left nodes first
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
-            while ( ! ( eDir == end && sStack.empty( ) ) )
+          DistanceTypeNode avg( DistanceTypeNode(0.0) );
+          typename ProbeContainerType::iterator it;
+          size_t count = t.size();
+          if ( count > 0 ) {
+            for ( it = t.begin(); it!=t.end(); ++it)
             {
-                if ( eDir == right )
-                {
-                    const DistanceTypeNode dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                    if ( dDR <= dRadius2 && dDR >= dRadius1 )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tAnnular.insert( tAnnular.end( ), m_ObjectStore[pt->m_ptRight] );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tAnnular.insert( tAnnular.end(), m_ObjectStore[m_ObjectCollide[collide]] );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_pRightBranch != ULONG_MAX && (TRIANG(dRadius1,dDR,pt->m_dMaxRight)) && (TRIANG(dDR,pt->m_dMaxRight,dRadius2) ) )
-                    { // we did the left and now we finished the right, go down
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        eDir = left;
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                if ( eDir == left )
-                {
-                    const DistanceTypeNode dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]  );
-                    if ( dDL <= dRadius2 && dDL >= dRadius1 )
-                    {
-                        size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tAnnular.insert( tAnnular.end(), m_ObjectStore[pt->m_ptLeft] );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tAnnular.insert( tAnnular.end(), m_ObjectStore[m_ObjectCollide[collide]] );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right m_Object
-                    {
-                        sStack.push_back( qt );
-                    }
-                    if ( pt->m_pLeftBranch != ULONG_MAX && (TRIANG(dRadius1,dDL,pt->m_dMaxLeft)) && (TRIANG(dDL,pt->m_dMaxLeft,dRadius2)  ) )
-                    { // we did the left, go down
-                        qt = pt->m_pLeftBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                
-                if ( eDir == end && !sStack.empty( ) )
-                {
-                    qt = sStack.back( );
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    sStack.pop_back( );
-                    eDir = right;
-                }
+              avg  += DistanceBetween( *it, p );
             }
-            
-            return ( (long)tAnnular.size() );
-        }  // end LeftInAnnulus
-        
-        template<typename ContainerType>
-        long LeftInAnnulus (
-                            const DistanceTypeNode& dRadius1,
-                            const DistanceTypeNode& dRadius2,
-                            ContainerType& tAnnular,
-                            std::vector<size_t>& tIndices,
-                            const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                            , size_t& VisitCount
-#endif
-                            ) const
-        {
-            std::vector <size_t > sStack;
-            enum  { left, right, end } eDir;
-            eDir = left; // examine the left nodes first
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
-            while ( ! ( eDir == end && sStack.empty( ) ) )
-            {
-                if ( eDir == right )
-                {
-                    const DistanceTypeNode dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                    if ( dDR <= dRadius2 && dDR >= dRadius1 )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tAnnular.insert( tAnnular.end( ), m_ObjectStore[pt->m_ptRight] );
-                        tIndices.insert( tIndices.end( ), pt->m_ptRight );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tAnnular.insert( tAnnular.end(), m_ObjectStore[m_ObjectCollide[collide]] );
-                            tIndices.insert( tIndices.end( ), m_ObjectCollide[collide] );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_pRightBranch != ULONG_MAX && (TRIANG(dRadius1,dDR,pt->m_dMaxRight)) && (TRIANG(dDR,pt->m_dMaxRight,dRadius2) ) )
-                    { // we did the left and now we finished the right, go down
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        eDir = left;
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                if ( eDir == left )
-                {
-                    const DistanceTypeNode dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]  );
-                    if ( dDL <= dRadius2 && dDL >= dRadius1 )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tAnnular.insert( tAnnular.end(), m_ObjectStore[pt->m_ptLeft] );
-                        tIndices.insert( tIndices.end( ), pt->m_ptLeft );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tAnnular.insert( tAnnular.end(), m_ObjectStore[m_ObjectCollide[collide]] );
-                            tIndices.insert( tIndices.end( ), m_ObjectCollide[collide] );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right m_Object
-                    {
-                        sStack.push_back( qt );
-                    }
-                    if ( pt->m_pLeftBranch != ULONG_MAX && (TRIANG(dRadius1,dDL,pt->m_dMaxLeft)) && (TRIANG(dDL,pt->m_dMaxLeft,dRadius2)  ) )
-                    { // we did the left, go down
-                        qt = pt->m_pLeftBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                
-                if ( eDir == end && !sStack.empty( ) )
-                {
-                    qt = sStack.back( );
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    sStack.pop_back( );
-                    eDir = right;
-                }
-            }
-            
-            return ( (long)tAnnular.size() );
-        }  // end LeftInAnnulus
-        
-        
- 
-        
+            avg /= DistanceType(count);
+          }
+          return ( avg );
+        }   // end AvgDist
+
         //=======================================================================
-        //  long K_Near ( const size_t k,
-        //                const bool shell,
-        //                const bool closed,
-        //                const DistanceTypeNode dRadiusInner,
-        //                DistanceTypeNode& dRadiusOuter,
-        //                std::vector<std::pair<DistanceTypeNode,T> >& tClosest) const
-        //  long K_Near ( const size_t k,
-        //                const bool shell,
-        //                const bool closed,
-        //                const DistanceTypeNode dRadiusInner,
-        //                DistanceTypeNode& dRadiusOuter,
-        //                std::vector<triple<DistanceTypeNode,T,size_t> >& tClosest) const
-        //
-        //  Private function to search a NearTree for the objects
-        //     in the annular region defined the the half-open radial interval
-        //         (dRadiusInner,dRadiusOuter] from the probe point
-        //     unless nearest is true, in which case the closed interval
-        //         [dRadiusInner,dRadiusOuter] is used for the search and
-        //     only up to k points at the nearest distance are accepted.
-        //
-        //  This function is only called by FindK_Nearest.
-        //
-        // k:           the maximum number of m_Object to return, giving preference to the nearest
-        // shell:          if true, the search only returns hits in the nearest thin shell
-        // closed:         if true, the search in inlcusive of the inner radius
-        // dRadiusInner:   the lower bound on the search radius
-        // dRadiusOuter:   the excluded upper bound on the search radius,
-        //                 which will be updated when the internal store is resized
-        // tClosest:       is a vector of pairs of Nodes and objects or of triples
-        //                 of Nodes, objects and ordinals of objects where the objects
-        //                 are of the templated type found within dRadius of the
-        //                 probe point, limited by the k-near search
-        // t:              is the probe point
-        //
-        // returns the number of objects returned in the container (for sets, that may not equal the number found)
-        //
-        /*=======================================================================*/
-        long K_Near (const size_t k,
-                     const bool shell,
-                     const bool closed,
-                     const DistanceTypeNode dRadiusInner,
-                     DistanceTypeNode& dRadiusOuter,
-                     std::vector<std::pair<DistanceTypeNode,T> >& tClosest,
-                     const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                     , size_t& VisitCount
-#endif
+        // template< typename ProbeContainerType >
+        // long K_Extreme (const size_t k, // the target number of points to find
+        //             const bool near,   // if true, search nearest, else to search farthest
+        //             const bool shell,  // if true, the search only returns hits in the nearest or farthest thin shell
+        //             const bool closed, // if true, the search in inlcusive of the inner radius
+        //             const bool cache,  // if true, use the distance cache dDistanceCache map
+        //             std::map<size_t,double> &dDistanceCache, // parallel map to m_ObjectStore containing
+        //              //                 cached distances from the probe to that object or DBL_MAX;
+        //              DistanceTypeNode& dAvgDistInner, // the inner bound on the search radius or average sum
+        //              //                 of distances, which will be updated if near is false when the
+        //              //                 internal store is resized
+        //              DistanceTypeNode& dAvgDistOuter,     // the excluded outer bound on the search radius or
+        //              //                 average sum, which will be updated if near is true when  the internal
+        //              //                 store is resized
+        //              std::vector<std::pair<DistanceTypeNode,size_t> >& tExtreme,
+        //              //                 a vector of pair of Nodes and ordinals of objects where
+        //              //                 the objects are of the templated type found between dAvgDistInner and
+        //              //                 dAvgDistOuter as an average of distance from probe points, limited
+        //              //                 by the k-extreme search
+        //              ProbeContainerType& t                // container of probe points
+        //              #ifdef CNEARTREE_INSTRUMENTED
+        //            , size_t& VisitCount
+        //            , std::map<size_t,size_t> &sDistanceCacheHits
+        //              #endif
+        //)
+        // Private function to perform all the varieties of near and far searches
+        //=======================================================================
+
+        template< typename ProbeContainerType >
+        long K_Extreme (const size_t k, // the target number of points to find
+                     const bool near,   // if true, search nearest, else to search farthest
+                     const bool shell,  // if true, the search only returns hits in the nearest or farthest thin shell
+                     const bool closed, // if true, the search in inlcusive of the inner radius
+                     const bool cache,  // if true, use the distance cache map dDistanceCache
+                     std::map<size_t,double> &dDistanceCache, // parallel map to m_ObjectStore containing
+                     //                 cached distances from the probe to that object or DBL_MAX;
+                     DistanceTypeNode& dAvgDistInner, // the inner bound on the search radius or average sum
+                     //                 of distances, which will be updated if near is false when the
+                     //                 internal store is resized
+                     DistanceTypeNode& dAvgDistOuter,     // the excluded outer bound on the search radius or
+                     //                 average sum, which will be updated if near is true when  the internal
+                     //                 store is resized
+                     std::vector<std::pair<DistanceTypeNode,size_t> >& tExtreme,
+                     //                 a vector of pair of Nodes and ordinals of objects where
+                     //                 the objects are of the templated type found between dAvgDistInner and
+                     //                 dAvgDistOuter as an average of distance from probe points, limited
+                     //                 by the k-extreme search
+                     ProbeContainerType& t                // container of probe points
+                     #ifdef CNEARTREE_INSTRUMENTED
+                   , size_t& VisitCount
+                   , std::map<size_t,size_t> &sDistanceCacheHits
+                     #endif
         )
         {
             std::vector <size_t > sStack;
             DistanceTypeNode dDL=0., dDR=0.;
             NearTreeNode* pt = const_cast<NearTreeNode*>(this);
             size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
+            double direction;
+            #ifdef CNEARTREE_INSTRUMENTED
             size_t colcount;
             ++VisitCount;
-#endif
+            #endif
+            direction=near?1.:-1.;
             if ( pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
             while ( pt->m_ptLeft != ULONG_MAX ||
                    pt->m_ptRight != ULONG_MAX ||
@@ -7673,87 +5785,124 @@ public:
                             pt = const_cast<NearTreeNode*>(this);
                         }
                         sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         ++VisitCount;
-#endif
+                        #endif
                         continue;
                     }
                     break;
                 }
                 if (pt->m_ptLeft != ULONG_MAX) {
-                    dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft] );
-                    if ( dDL <= dRadiusOuter
-                        && (dDL > dRadiusInner
-                            || (closed && dDL == dRadiusInner )))
+                    double dc;
+                    if (cache && (dc=dDistanceCache[pt->m_ptLeft]) >= 1.) {
+                        dDL = dc-1.;
+                        #ifdef CNEARTREE_INSTRUMENTED
+                        sDistanceCacheHits[pt->m_ptLeft] += 1;
+                        #endif
+                    } else {
+                        dDL =AvgDistFrom( t, m_ObjectStore[pt->m_ptLeft] );
+                        if (cache) dDistanceCache[pt->m_ptLeft] = 1.+(double)dDL;
+                        #ifdef CNEARTREE_INSTRUMENTED
+                        if (cache) sDistanceCacheHits[pt->m_ptLeft] = 1;
+                        #endif
+                    }
+                    if ( dDL <= dAvgDistOuter
+                        && (dDL > dAvgDistInner
+                            || (closed && dDL == dAvgDistInner )))
                     {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         colcount = 1;
-#endif
-                        if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
-                            /* fprintf (stderr,"reduced dRadiusOuter %g\n",
-                                     (double)dRadiusOuter); */
+                        #endif
+                        if ((k == 1 || shell) && dDL <= dAvgDistOuter) {
+                            if (dDL < dAvgDistOuter) tExtreme.clear();
+                            dAvgDistOuter = dDL;
+                            /* fprintf (stderr,"reduced dAvgDistOuter %g\n",
+                             (double)dAvgDistOuter); */
                         }
-                        tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[pt->m_ptLeft] ) );
-                        if( tClosest.size( ) > k) K_Resize( k, t, tClosest, dRadiusOuter );
+                        tExtreme.insert( tExtreme.end(), std::make_pair( direction*dDL, pt->m_ptLeft ) );
+                        if( tExtreme.size( ) > k ) {
+                          if (near) K_Resize( k, tExtreme, dAvgDistOuter );
+                          else K_Resize( k, tExtreme, dAvgDistInner );
+                        }
                         collide = pt->m_ptLeft;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+                            tExtreme.insert( tExtreme.end(), std::make_pair( direction*dDL, m_ObjectCollide[collide] ) );
+                            if( tExtreme.size( ) > k ) {
+                              if (near) K_Resize( k, tExtreme, dAvgDistOuter );
+                              else  K_Resize( k, tExtreme, dAvgDistInner );
+                            }
                             collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
+                            #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
-#endif
+                            #endif
                         }
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         if (colcount != pt->m_imultLeft) {
                             std::cerr << " Collision discrepancy colcount = "
                             << colcount << " m_imultLeft = " << pt->m_imultLeft
                             << std::endl;
                         }
-#endif
+                        #endif
                     }
                 }
                 if (pt->m_ptRight != ULONG_MAX) {
-#ifdef CNEARTREE_INSTRUMENTED
+                    double dc;
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
-                    dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                    if ( dDR <= dRadiusOuter
-                        && (dDR > dRadiusInner
-                            || (closed && dDR == dRadiusInner)))
+                    #endif
+                    if (cache && (dc=dDistanceCache[pt->m_ptRight]) >= 1.) {
+                        dDR = dc-1.;
+                        #ifdef CNEARTREE_INSTRUMENTED
+                        sDistanceCacheHits[pt->m_ptRight] += 1;
+                        #endif
+                    } else {
+                        dDR = AvgDistFrom( t, m_ObjectStore[pt->m_ptRight] );
+                        if (cache) dDistanceCache[pt->m_ptRight] = 1.+(double)dDR;
+                        #ifdef CNEARTREE_INSTRUMENTED
+                        if (cache) sDistanceCacheHits[pt->m_ptRight] = 1;
+                        #endif
+                    }
+
+                    if ( dDR <= dAvgDistOuter
+                        && (dDR > dAvgDistInner
+                            || (closed && dDR == dAvgDistInner)))
                     {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         colcount = 1;
-#endif
-                        if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
-                            /* fprintf (stderr,"reduced dRadiusOuter %g\n",
-                                     (double)dRadiusOuter); */
+                        #endif
+                        if ((k == 1 || shell) && dDR <= dAvgDistOuter) {
+                            if (dDR < dAvgDistOuter) tExtreme.clear();
+                            dAvgDistOuter = dDR;
+                            /* fprintf (stderr,"reduced dAvgDistOuter %g\n",
+                             (double)dAvgDistOuter); */
                         }
-                        tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[pt->m_ptRight] ) );
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+                        tExtreme.insert( tExtreme.end(), std::make_pair( direction*dDR, pt->m_ptRight ) );
+                        if( tExtreme.size( ) > k ) {
+                          if (near) K_Resize( k, tExtreme, dAvgDistOuter );
+                          else K_Resize( k, tExtreme, dAvgDistInner );
+                        }
                         collide = pt->m_ptRight;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+                            tExtreme.insert( tExtreme.end(), std::make_pair( direction*dDR, m_ObjectCollide[collide]));
+                            if( tExtreme.size( ) > k ) {
+                              if (near) K_Resize( k, tExtreme, dAvgDistOuter );
+                              else K_Resize( k, tExtreme, dAvgDistInner );
+                            }
                             collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
+                            #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
-#endif
+                            #endif
                         }
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         if (colcount != pt->m_imultRight) {
                             std::cerr << " Collision discrepancy colcount = "
                             << colcount << " m_imultLeft = " << pt->m_imultRight
                             << std::endl;
                         }
-#endif
+                        #endif
                     }
                 }
-                
+
                 /*
                  See if both branches are populated.  In that case, save one branch
                  on the stack, and process the other one based on which one seems
@@ -7764,70 +5913,70 @@ public:
                     /* if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight */
                     if (dDL <= dDR || dDL+pt->m_dMaxLeft <= dDR+pt->m_dMaxRight
                         || pt->m_pRightBranch == ULONG_MAX) {
-                        if ( (TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft))
-                            && (TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)  )) {
-                            if ( (TRIANG(dRadiusInner,dDR,pt->m_dMaxRight))
-                                && (TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter) )) {
-                                
+                        if ( (TRIANG(dAvgDistInner,dDL,pt->m_dMaxLeft))
+                            && (TRIANG(dDL,pt->m_dMaxLeft,dAvgDistOuter)  )) {
+                            if ( (TRIANG(dAvgDistInner,dDR,pt->m_dMaxRight))
+                                && (TRIANG(dDR,pt->m_dMaxRight,dAvgDistOuter) )) {
+
                                 sStack.push_back(pt->m_pRightBranch);
                             }
                             qt = pt->m_pLeftBranch;
                             pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
+                            #ifdef CNEARTREE_INSTRUMENTED
                             ++VisitCount;
-#endif
+                            #endif
                             continue;
                         }
                         /* If we are here, the left branch was not useful
                          Fall through to use the right
                          */
                     }
-                    
+
                     /* We come here either because pursuing the left branch was not useful
-                     or the right branch look shorter
+                     of the right branch looks shorter (near true) or farther (near false)
                      */
                     if ( pt->m_pRightBranch != ULONG_MAX
-                        && TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter)
-                        && TRIANG(dRadiusInner,dDR,pt->m_dMaxRight)) {
-                        if ( TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)
-                            && TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft) ) {
+                        && TRIANG(dDR,pt->m_dMaxRight,dAvgDistOuter)
+                        && TRIANG(dAvgDistInner,dDR,pt->m_dMaxRight)) {
+                        if ( TRIANG(dDL,pt->m_dMaxLeft,dAvgDistOuter)
+                            && TRIANG(dAvgDistInner,dDL,pt->m_dMaxLeft) ) {
                             sStack.push_back(pt->m_pLeftBranch);
                         }
                         qt = pt->m_pRightBranch;
                         pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         ++VisitCount;
-#endif
+                        #endif
                         continue;
                     }
                 }
-                
+
                 /* Only one branch is viable, try them one at a time
                  */
                 if ( pt->m_pLeftBranch != ULONG_MAX
-                    && TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)
-                    && TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft)) {
+                    && TRIANG(dDL,pt->m_dMaxLeft,dAvgDistOuter)
+                    && TRIANG(dAvgDistInner,dDL,pt->m_dMaxLeft)) {
                     qt = pt->m_pLeftBranch;
                     pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     continue;
                 }
-                
+
                 if ( pt->m_pRightBranch != ULONG_MAX
-                    && TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter)
-                    && TRIANG(dRadiusInner,dDR,pt->m_dMaxRight)) {
+                    && TRIANG(dDR,pt->m_dMaxRight,dAvgDistOuter)
+                    && TRIANG(dAvgDistInner,dDR,pt->m_dMaxRight)) {
                     qt = pt->m_pRightBranch;
                     pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     continue;
                 }
-                
+
                 /* We have procesed both sides, we need to go to the stack */
-                
+
                 if (!sStack.empty( )) {
                     qt = sStack.back();
                     if (qt != ULONG_MAX) {
@@ -7836,9 +5985,9 @@ public:
                         pt = const_cast<NearTreeNode*>(this);
                     }
                     sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     continue;
                 }
                 break;
@@ -7848,31 +5997,96 @@ public:
                 std::vector <size_t > sTemp;
                 sTemp.swap( sStack );
             }
-            if( tClosest.size( ) > 1 ) K_Resize( k, t, tClosest, dRadiusOuter );
-            return ( (long)tClosest.size( ) );
-            
-        }   // end K_Near
-        
+            if( tExtreme.size( ) > 1 ) {
+                if (near)  K_Resize( k, tExtreme, dAvgDistOuter );
+                else K_Resize( k, tExtreme, dAvgDistInner );
+            }
+            return ( (long)tExtreme.size( ) );
+        } // end K_Extreme
+
+        //=======================================================================
+        //  long K_Near ( const size_t k,
+        //                const bool shell,
+        //                const bool closed,
+        //                const DistanceTypeNode dRadiusInner,
+        //                DistanceTypeNode& dRadiusOuter,
+        //                std::vector<std::pair<DistanceTypeNode,size_t> >& tClosest) const
+        //  Private function to search a NearTree for the objects
+        //     in the annular region defined the the half-open radial interval
+        //         (dRadiusInner,dRadiusOuter] from the probe point
+        //     unless nearest is true, in which case the closed interval
+        //         [dRadiusInner,dRadiusOuter] is used for the search and
+        //     only up to k points at the nearest distance are accepted.
+        //
+        //  This function is only called by FindK_Nearest.
+        //
+        // k:             the maximum number of m_Object to return, giving preference 
+        //                  to the nearest
+        // shell:         if true, the search only returns hits in the nearest thin shell
+        // closed:        if true, the search in inlcusive of the inner radius
+        // dRadiusInner:  the lower bound on the search radius
+        // dRadiusOuter:  the excluded upper bound on the search radius,
+        //                  which will be updated when the internal store is resized
+        // tClosest:      is a vector of pairs of Nodes and ordinals of objects in 
+        //                  m_ObjectStore where the objects are of the templated type
+        //                  found within dRadius of the probe point, limited by the 
+        //                  k-near search
+        // t:             is the probe point
+        //
+        // returns the number of objects returned in the container (for sets, that may not equal the number found)
+        //
+        //=======================================================================
+#ifndef CNEARTREE_OBS
+        inline long K_Near ( const size_t k,
+                       const bool shell,
+                       const bool closed,
+                       const DistanceTypeNode dRadiusInner,
+                       DistanceTypeNode& dRadiusOuter,
+                       std::vector<std::pair<DistanceTypeNode,size_t> >& tClosest,
+                       const TNode& t
+                       #ifdef CNEARTREE_INSTRUMENTED
+                     , size_t& VisitCount
+                       #endif
+        ) {
+            std::map<size_t,double> dDistanceCache;
+            DistanceTypeNode tmpdRadiusInner=dRadiusInner;
+            const bool near=true;
+            const bool cache=false;
+            const TNode ttmp = t;
+            std::vector<TNode> probe_container = {ttmp};
+            #ifdef CNEARTREE_INSTRUMENTED
+            std::map<size_t,size_t> sDistanceCacheHits;
+            #endif
+            return K_Extreme(k, near, shell, closed, cache, dDistanceCache, 
+                tmpdRadiusInner, dRadiusOuter, tClosest,probe_container
+                #ifdef CNEARTREE_INSTRUMENTED
+              , VisitCount
+              , sDistanceCacheHits 
+                #endif
+            );
+        } 
+#else
+        /*=======================================================================*/
         long K_Near (const size_t k,
                      const bool shell,
                      const bool closed,
                      const DistanceTypeNode dRadiusInner,
                      DistanceTypeNode& dRadiusOuter,
-                     std::vector<triple<DistanceTypeNode,T,size_t> >& tClosest,
+                     std::vector<std::pair<DistanceTypeNode,size_t> >& tClosest,
                      const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                     , size_t& VisitCount
-#endif
+                     #ifdef CNEARTREE_INSTRUMENTED
+                   , size_t& VisitCount
+                     #endif
         )
         {
             std::vector <size_t > sStack;
             DistanceTypeNode dDL=0., dDR=0.;
             NearTreeNode* pt = const_cast<NearTreeNode*>(this);
             size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
+            #ifdef CNEARTREE_INSTRUMENTED
             size_t colcount;
             ++VisitCount;
-#endif
+            #endif
             if ( pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
             while ( pt->m_ptLeft != ULONG_MAX ||
                    pt->m_ptRight != ULONG_MAX ||
@@ -7887,9 +6101,9 @@ public:
                             pt = const_cast<NearTreeNode*>(this);
                         }
                         sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         ++VisitCount;
-#endif
+                        #endif
                         continue;
                     }
                     break;
@@ -7900,74 +6114,74 @@ public:
                         && (dDL > dRadiusInner
                             || (closed && dDL == dRadiusInner )))
                     {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         colcount = 1;
-#endif
+                        #endif
                         if ((k == 1 || shell) && dDL <= dRadiusOuter) {
                             if (dDL < dRadiusOuter) tClosest.clear();
                             dRadiusOuter = dDL;
                             /* fprintf (stderr,"reduced dRadiusOuter %g\n",
-                                     (double)dRadiusOuter); */
+                             (double)dRadiusOuter); */
                         }
-                        tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[pt->m_ptLeft], pt->m_ptLeft ) );
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+                        tClosest.insert( tClosest.end(), std::make_pair( dDL, pt->m_ptLeft ) );
+                        if( tClosest.size( ) > k ) K_Resize( k, tClosest, dRadiusOuter );
                         collide = pt->m_ptLeft;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide] ) );
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+                            tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectCollide[collide] ) );
+                            if( tClosest.size( ) > k ) K_Resize( k, tClosest, dRadiusOuter );
                             collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
+                            #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
-#endif
+                            #endif
                         }
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         if (colcount != pt->m_imultLeft) {
                             std::cerr << " Collision discrepancy colcount = "
                             << colcount << " m_imultLeft = " << pt->m_imultLeft
                             << std::endl;
                         }
-#endif
+                        #endif
                     }
                 }
                 if (pt->m_ptRight != ULONG_MAX) {
-#ifdef CNEARTREE_INSTRUMENTED
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
                     if ( dDR <= dRadiusOuter
                         && (dDR > dRadiusInner
                             || (closed && dDR == dRadiusInner)))
                     {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         colcount = 1;
-#endif
+                        #endif
                         if ((k == 1 || shell) && dDR <= dRadiusOuter) {
                             if (dDR < dRadiusOuter) tClosest.clear();
                             dRadiusOuter = dDR;
                             /* fprintf (stderr,"reduced dRadiusOuter %g\n",
-                                     (double)dRadiusOuter); */
+                             (double)dRadiusOuter); */
                         }
-                        tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[pt->m_ptRight], pt->m_ptRight ) );
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+                        tClosest.insert( tClosest.end(), std::make_pair( dDR, pt->m_ptRight ) );
+                        if( tClosest.size( ) > k ) K_Resize( k, tClosest, dRadiusOuter );
                         collide = pt->m_ptRight;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[m_ObjectCollide[collide]],  m_ObjectCollide[collide]));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+                            tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectCollide[collide]));
+                            if( tClosest.size( ) > k ) K_Resize( k, tClosest, dRadiusOuter );
                             collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
+                            #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
-#endif
+                            #endif
                         }
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         if (colcount != pt->m_imultRight) {
                             std::cerr << " Collision discrepancy colcount = "
                             << colcount << " m_imultLeft = " << pt->m_imultRight
                             << std::endl;
                         }
-#endif
+                        #endif
                     }
                 }
-                
+
                 /*
                  See if both branches are populated.  In that case, save one branch
                  on the stack, and process the other one based on which one seems
@@ -7982,21 +6196,21 @@ public:
                             && (TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)  )) {
                             if ( (TRIANG(dRadiusInner,dDR,pt->m_dMaxRight))
                                 && (TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter) )) {
-                                
+
                                 sStack.push_back(pt->m_pRightBranch);
                             }
                             qt = pt->m_pLeftBranch;
                             pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
+                            #ifdef CNEARTREE_INSTRUMENTED
                             ++VisitCount;
-#endif
+                            #endif
                             continue;
                         }
                         /* If we are here, the left branch was not useful
                          Fall through to use the right
                          */
                     }
-                    
+
                     /* We come here either because pursuing the left branch was not useful
                      of the right branch look shorter
                      */
@@ -8009,13 +6223,13 @@ public:
                         }
                         qt = pt->m_pRightBranch;
                         pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         ++VisitCount;
-#endif
+                        #endif
                         continue;
                     }
                 }
-                
+
                 /* Only one branch is viable, try them one at a time
                  */
                 if ( pt->m_pLeftBranch != ULONG_MAX
@@ -8023,25 +6237,25 @@ public:
                     && TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft)) {
                     qt = pt->m_pLeftBranch;
                     pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     continue;
                 }
-                
+
                 if ( pt->m_pRightBranch != ULONG_MAX
                     && TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter)
                     && TRIANG(dRadiusInner,dDR,pt->m_dMaxRight)) {
                     qt = pt->m_pRightBranch;
                     pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     continue;
                 }
-                
+
                 /* We have procesed both sides, we need to go to the stack */
-                
+
                 if (!sStack.empty( )) {
                     qt = sStack.back();
                     if (qt != ULONG_MAX) {
@@ -8050,9 +6264,9 @@ public:
                         pt = const_cast<NearTreeNode*>(this);
                     }
                     sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     continue;
                 }
                 break;
@@ -8062,10 +6276,11 @@ public:
                 std::vector <size_t > sTemp;
                 sTemp.swap( sStack );
             }
-            if( tClosest.size( ) > 1 ) K_Resize( k, t, tClosest, dRadiusOuter );
+            if( tClosest.size( ) > 1 ) K_Resize( k, tClosest, dRadiusOuter );
             return ( (long)tClosest.size( ) );
-            
+
         }   // end K_Near
+#endif 
 
         //=======================================================================
         //  long K_Near ( const size_t k,
@@ -8074,14 +6289,12 @@ public:
         //                std::vector<double> &dDistanceCache,
         //                const DistanceTypeNode dRadiusInner,
         //                DistanceTypeNode& dRadiusOuter,
-        //                std::vector<std::pair<DistanceTypeNode,T> >& tClosest) const
-        //  long K_Near ( const size_t k,
-        //                const bool shell,
-        //                const bool closed,
-        //                std::vector<double> &dDistanceCache,
-        //                const DistanceTypeNode dRadiusInner,
-        //                DistanceTypeNode& dRadiusOuter,
-        //                std::vector<triple<DistanceTypeNode,T,size_t> >& tClosest) const
+        //                std::vector<std::pair<DistanceTypeNode,size_t> >& tClosest) const
+        //                #ifdef CNEARTREE_INSTRUMENTED
+        //              , size_t& VisitCount
+        //              , std::map<size_t,size_t> &sDistanceCacheHits
+        //                #endif
+        //              )
         //
         //  Private function to search a NearTree for the objects
         //     in the annular region defined the the half-open radial interval
@@ -8092,803 +6305,78 @@ public:
         //
         //  This function is only called by FindK_Nearest.
         //
-        // k:           the maximum number of m_Object to return, giving preference to the nearest
-        // shell:          if true, the search only returns hits in the nearest thin shell
-        // closed:         if true, the search in inlcusive of the inner radius
-        // dDistanceCache: a parallel vector to m_ObjectStore containing
-        //                 cached distances from the probe to that object or DBL_MAX;
-        // dRadiusInner:   the lower bound on the search radius
-        // dRadiusOuter:   the excluded upper bound on the search radius,
-        //                 which will be updated when the internal store is resized
-        // tClosest:       is a vector of pairs of Nodes and objects or of triples
-        //                 of Nodes, objects and ordinals of objects where the objects
-        //                 are of the templated type found within dRadius of the
-        //                 probe point, limited by the k-near search
-        // t:              is the probe point
-        //
-        // returns the number of objects returned in the container (for sets, that may not equal the number found)
-        //
-        /*=======================================================================*/
-        long K_Near (const size_t k,
-                     const bool shell,
-                     const bool closed,
-                     std::vector<double> &dDistanceCache,
-                     const DistanceTypeNode dRadiusInner,
-                     DistanceTypeNode& dRadiusOuter,
-                     std::vector<std::pair<DistanceTypeNode,T> >& tClosest,
-                     const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                     , size_t& VisitCount
-#endif
-        )
-        {
-            std::vector <size_t > sStack;
-            DistanceTypeNode dDL=0., dDR=0.;
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if ( pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
-            while ( pt->m_ptLeft != ULONG_MAX ||
-                   pt->m_ptRight != ULONG_MAX ||
-                   !sStack.empty( ) )
-            {
-                if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
-                    if (!sStack.empty( )) {
-                        qt = sStack.back();
-                        if (qt != ULONG_MAX) {
-                            pt = m_NearTreeNodes[qt];
-                        } else {
-                            pt = const_cast<NearTreeNode*>(this);
-                        }
-                        sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        continue;
-                    }
-                    break;
-                }
-                if (pt->m_ptLeft != ULONG_MAX) {
-                    if (pt->m_ptLeft < dDistanceCache.size()) {
-                        dDL = dDistanceCache[pt->m_ptLeft];
-                        if (dDistanceCache[pt->m_ptLeft] == DBL_MAX) {
-                            dDistanceCache[pt->m_ptLeft]
-                            = (double)(dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]));
-                        }
-                    } else {
-                        dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft] );
-                        dDistanceCache.resize(pt->m_ptLeft+1,DBL_MAX);
-                        dDistanceCache[pt->m_ptLeft] = (double)dDL;
-                    }
-                    if ( dDL <= dRadiusOuter
-                        && (dDL > dRadiusInner
-                            || (closed && dDL == dRadiusInner )))
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
-                            /* fprintf (stderr,"reduced dRadiusOuter %g\n",
-                             (double)dRadiusOuter); */
-                        }
-                        tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[pt->m_ptLeft] ) );
-                        if( tClosest.size( ) > k) K_Resize( k, t, tClosest, dRadiusOuter );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                    }
-                }
-                if (pt->m_ptRight != ULONG_MAX) {
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    if (pt->m_ptRight < dDistanceCache.size()) {
-                        dDR = dDistanceCache[pt->m_ptRight];
-                        if (dDistanceCache[pt->m_ptRight] == DBL_MAX) {
-                            dDistanceCache[pt->m_ptRight]
-                            = (double)(dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight]));
-                        }
-                    } else {
-                        dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                        dDistanceCache.resize(pt->m_ptRight+1,DBL_MAX);
-                        dDistanceCache[pt->m_ptRight] = (double)dDL;
-                    }
-                    
-                    if ( dDR <= dRadiusOuter
-                        && (dDR > dRadiusInner
-                            || (closed && dDR == dRadiusInner)))
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
-                            /* fprintf (stderr,"reduced dRadiusOuter %g\n",
-                             (double)dRadiusOuter); */
-                        }
-                        tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[pt->m_ptRight] ) );
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                }
-                
-                /*
-                 See if both branches are populated.  In that case, save one branch
-                 on the stack, and process the other one based on which one seems
-                 smaller, but useful first]
-                 */
-                if (pt->m_pLeftBranch != ULONG_MAX
-                    && pt->m_pRightBranch != ULONG_MAX ) {
-                    /* if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight */
-                    if (dDL <= dDR || dDL+pt->m_dMaxLeft <= dDR+pt->m_dMaxRight
-                        || pt->m_pRightBranch == ULONG_MAX) {
-                        if ( (TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft))
-                            && (TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)  )) {
-                            if ( (TRIANG(dRadiusInner,dDR,pt->m_dMaxRight))
-                                && (TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter) )) {
-                                
-                                sStack.push_back(pt->m_pRightBranch);
-                            }
-                            qt = pt->m_pLeftBranch;
-                            pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                            ++VisitCount;
-#endif
-                            continue;
-                        }
-                        /* If we are here, the left branch was not useful
-                         Fall through to use the right
-                         */
-                    }
-                    
-                    /* We come here either because pursuing the left branch was not useful
-                     or the right branch look shorter
-                     */
-                    if ( pt->m_pRightBranch != ULONG_MAX
-                        && TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter)
-                        && TRIANG(dRadiusInner,dDR,pt->m_dMaxRight)) {
-                        if ( TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)
-                            && TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft) ) {
-                            sStack.push_back(pt->m_pLeftBranch);
-                        }
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        continue;
-                    }
-                }
-                
-                /* Only one branch is viable, try them one at a time
-                 */
-                if ( pt->m_pLeftBranch != ULONG_MAX
-                    && TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)
-                    && TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft)) {
-                    qt = pt->m_pLeftBranch;
-                    pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    continue;
-                }
-                
-                if ( pt->m_pRightBranch != ULONG_MAX
-                    && TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter)
-                    && TRIANG(dRadiusInner,dDR,pt->m_dMaxRight)) {
-                    qt = pt->m_pRightBranch;
-                    pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    continue;
-                }
-                
-                /* We have procesed both sides, we need to go to the stack */
-                
-                if (!sStack.empty( )) {
-                    qt = sStack.back();
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-                    sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    continue;
-                }
-                break;
-            }
-            if ( !sStack.empty( ) ) // for safety !!!
-            {
-                std::vector <size_t > sTemp;
-                sTemp.swap( sStack );
-            }
-            if( tClosest.size( ) > 1 ) K_Resize( k, t, tClosest, dRadiusOuter );
-            return ( (long)tClosest.size( ) );
-            
-        }   // end K_Near
-        
-        long K_Near (const size_t k,
-                     const bool shell,
-                     const bool closed,
-                     std::vector<double> &dDistanceCache,
-                     const DistanceTypeNode dRadiusInner,
-                     DistanceTypeNode& dRadiusOuter,
-                     std::vector<triple<DistanceTypeNode,T,size_t> >& tClosest,
-                     const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                     , size_t& VisitCount
-#endif
-        )
-        {
-            std::vector <size_t > sStack;
-            DistanceTypeNode dDL=0., dDR=0.;
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if ( pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
-            while ( pt->m_ptLeft != ULONG_MAX ||
-                   pt->m_ptRight != ULONG_MAX ||
-                   !sStack.empty( ) )
-            {
-                if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
-                    if (!sStack.empty( )) {
-                        qt = sStack.back();
-                        if (qt != ULONG_MAX) {
-                            pt = m_NearTreeNodes[qt];
-                        } else {
-                            pt = const_cast<NearTreeNode*>(this);
-                        }
-                        sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        continue;
-                    }
-                    break;
-                }
-                if (pt->m_ptLeft != ULONG_MAX) {
-                    if (pt->m_ptLeft < dDistanceCache.size()) {
-                        dDL = dDistanceCache[pt->m_ptLeft];
-                        if (dDistanceCache[pt->m_ptLeft] == DBL_MAX) {
-                            dDistanceCache[pt->m_ptLeft]
-                            = (double)(dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]));
-                        }
-                    } else {
-                        dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft] );
-                        dDistanceCache.resize(pt->m_ptLeft+1,DBL_MAX);
-                        dDistanceCache[pt->m_ptLeft] = (double)dDL;
-                    }
-                    if ( dDL <= dRadiusOuter
-                        && (dDL > dRadiusInner
-                            || (closed && dDL == dRadiusInner )))
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
-                            /* fprintf (stderr,"reduced dRadiusOuter %g\n",
-                             (double)dRadiusOuter); */
-                        }
-                        tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[pt->m_ptLeft], pt->m_ptLeft ) );
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide] ) );
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                    }
-                }
-                if (pt->m_ptRight != ULONG_MAX) {
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    if (pt->m_ptRight < dDistanceCache.size()) {
-                        dDR = dDistanceCache[pt->m_ptRight];
-                        if (dDistanceCache[pt->m_ptRight] == DBL_MAX) {
-                            dDistanceCache[pt->m_ptRight]
-                            = (double)(dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight]));
-                        }
-                    } else {
-                        dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                        dDistanceCache.resize(pt->m_ptRight+1,DBL_MAX);
-                        dDistanceCache[pt->m_ptRight] = (double)dDL;
-                    }
-                    
-                    if ( dDR <= dRadiusOuter
-                        && (dDR > dRadiusInner
-                            || (closed && dDR == dRadiusInner)))
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
-                            /* fprintf (stderr,"reduced dRadiusOuter %g\n",
-                             (double)dRadiusOuter); */
-                        }
-                        tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[pt->m_ptRight], pt->m_ptRight ) );
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[m_ObjectCollide[collide]],  m_ObjectCollide[collide]));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                }
-                
-                /*
-                 See if both branches are populated.  In that case, save one branch
-                 on the stack, and process the other one based on which one seems
-                 smaller, but useful first]
-                 */
-                if (pt->m_pLeftBranch != ULONG_MAX
-                    && pt->m_pRightBranch != ULONG_MAX ) {
-                    /* if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight */
-                    if (dDL <= dDR || dDL+pt->m_dMaxLeft <= dDR+pt->m_dMaxRight
-                        || pt->m_pRightBranch == ULONG_MAX) {
-                        if ( (TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft))
-                            && (TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)  )) {
-                            if ( (TRIANG(dRadiusInner,dDR,pt->m_dMaxRight))
-                                && (TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter) )) {
-                                
-                                sStack.push_back(pt->m_pRightBranch);
-                            }
-                            qt = pt->m_pLeftBranch;
-                            pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                            ++VisitCount;
-#endif
-                            continue;
-                        }
-                        /* If we are here, the left branch was not useful
-                         Fall through to use the right
-                         */
-                    }
-                    
-                    /* We come here either because pursuing the left branch was not useful
-                     of the right branch look shorter
-                     */
-                    if ( pt->m_pRightBranch != ULONG_MAX
-                        && TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter)
-                        && TRIANG(dRadiusInner,dDR,pt->m_dMaxRight)) {
-                        if ( TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)
-                            && TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft) ) {
-                            sStack.push_back(pt->m_pLeftBranch);
-                        }
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        continue;
-                    }
-                }
-                
-                /* Only one branch is viable, try them one at a time
-                 */
-                if ( pt->m_pLeftBranch != ULONG_MAX
-                    && TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)
-                    && TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft)) {
-                    qt = pt->m_pLeftBranch;
-                    pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    continue;
-                }
-                
-                if ( pt->m_pRightBranch != ULONG_MAX
-                    && TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter)
-                    && TRIANG(dRadiusInner,dDR,pt->m_dMaxRight)) {
-                    qt = pt->m_pRightBranch;
-                    pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    continue;
-                }
-                
-                /* We have procesed both sides, we need to go to the stack */
-                
-                if (!sStack.empty( )) {
-                    qt = sStack.back();
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-                    sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    continue;
-                }
-                break;
-            }
-            if ( !sStack.empty( ) ) // for safety !!!
-            {
-                std::vector <size_t > sTemp;
-                sTemp.swap( sStack );
-            }
-            if( tClosest.size( ) > 1 ) K_Resize( k, t, tClosest, dRadiusOuter );
-            return ( (long)tClosest.size( ) );
-            
-        }   // end K_Near
-
-        
-        
-        //=======================================================================
-        //  long K_Near ( const size_t k,
-        //                const bool shell,
-        //                const bool closed,
-        //                std::map<size_t,double> &dDistanceCache,
-        //                const DistanceTypeNode dRadiusInner,
-        //                DistanceTypeNode& dRadiusOuter,
-        //                std::vector<std::pair<DistanceTypeNode,T> >& tClosest) const
-        //  long K_Near ( const size_t k,
-        //                const bool shell,
-        //                const bool closed,
-        //                std::map<size_t,double> &dDistanceCache,
-        //                const DistanceTypeNode dRadiusInner,
-        //                DistanceTypeNode& dRadiusOuter,
-        //                std::vector<triple<DistanceTypeNode,T,size_t> >& tClosest) const
-        //
-        //  Private function to search a NearTree for the objects
-        //     in the annular region defined the the half-open radial interval
-        //         (dRadiusInner,dRadiusOuter] from the probe point
-        //     unless nearest is true, in which case the closed interval
-        //         [dRadiusInner,dRadiusOuter] is used for the search and
-        //     only up to k points at the nearest distance are accepted.
-        //
-        //  This function is only called by FindK_Nearest.
-        //
-        // k:           the maximum number of m_Object to return, giving preference to the nearest
-        // shell:          if true, the search only returns hits in the nearest thin shell
+        // k:              the maximum number of m_Object to return, giving 
+        //                   preference to the nearest
+        // shell:          if true, the search only returns hits in the 
+        //                   nearest thin shell
         // closed:         if true, the search in inlcusive of the inner radius
         // dDistanceCache: a parallel map to m_ObjectStore containing
-        //                 cached distances from the probe to that object or DBL_MAX;
+        //                   cached distances from the probe to that object or 
+        //                   DBL_MAX;
         // dRadiusInner:   the lower bound on the search radius
         // dRadiusOuter:   the excluded upper bound on the search radius,
-        //                 which will be updated when the internal store is resized
-        // tClosest:       is a vector of pairs of Nodes and objects or of triples
-        //                 of Nodes, objects and ordinals of objects where the objects
-        //                 are of the templated type found within dRadius of the
-        //                 probe point, limited by the k-near search
+        //                   which will be updated when the internal store is resized
+        // tClosest:       is a vector of pairs of Nodes and ordinals of objects 
+        //                   where the objects are of the templated type found 
+        //                   within dRadius of the probe point, limited by the 
+        //                   k-near search
         // t:              is the probe point
         //
-        // returns the number of objects returned in the container (for sets, that may not equal the number found)
+        // returns the number of objects returned in the container (for sets, 
+        // that may not equal the number found)
         //
         /*=======================================================================*/
-        long K_Near (const size_t k,
-                     const bool shell,
-                     const bool closed,
-                     std::map<size_t,double> &dDistanceCache,
-                     const DistanceTypeNode dRadiusInner,
-                     DistanceTypeNode& dRadiusOuter,
-                     std::vector<std::pair<DistanceTypeNode,T> >& tClosest,
-                     const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                     , size_t& VisitCount
-                     , std::map<size_t, size_t> &sDistanceCacheHits
-#endif
-        )
-        {
-            std::vector <size_t > sStack;
-            DistanceTypeNode dDL=0., dDR=0.;
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if ( pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
-            while ( pt->m_ptLeft != ULONG_MAX ||
-                   pt->m_ptRight != ULONG_MAX ||
-                   !sStack.empty( ) )
-            {
-                if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
-                    if (!sStack.empty( )) {
-                        qt = sStack.back();
-                        if (qt != ULONG_MAX) {
-                            pt = m_NearTreeNodes[qt];
-                        } else {
-                            pt = const_cast<NearTreeNode*>(this);
-                        }
-                        sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        continue;
-                    }
-                    break;
-                }
-                if (pt->m_ptLeft != ULONG_MAX) {
-                    double dc;
-                    if ((dc=dDistanceCache[pt->m_ptLeft]) >= 1.) {
-                        dDL = dc-1.;
-#ifdef CNEARTREE_INSTRUMENTED
-                        sDistanceCacheHits[pt->m_ptLeft] += 1;
-#endif
-                    } else {
-                        dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft] );
-                        dDistanceCache[pt->m_ptLeft] = 1.+(double)dDL;
-#ifdef CNEARTREE_INSTRUMENTED
-                        sDistanceCacheHits[pt->m_ptLeft] = 1;
-#endif
-                    }
-                    if ( dDL <= dRadiusOuter
-                        && (dDL > dRadiusInner
-                            || (closed && dDL == dRadiusInner )))
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
-                            /* fprintf (stderr,"reduced dRadiusOuter %g\n",
-                             (double)dRadiusOuter); */
-                        }
-                        tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[pt->m_ptLeft] ) );
-                        if( tClosest.size( ) > k) K_Resize( k, t, tClosest, dRadiusOuter );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                    }
-                }
-                if (pt->m_ptRight != ULONG_MAX) {
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    double dc;
-                    if ((dc=dDistanceCache[pt->m_ptRight]) >= 1.) {
-                        dDR = dc-1.;
-#ifdef CNEARTREE_INSTRUMENTED
-                        sDistanceCacheHits[pt->m_ptRight] += 1;
-#endif
 
-                    } else {
-                        dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                        dDistanceCache[pt->m_ptRight] = 1.+(double)dDR;
-#ifdef CNEARTREE_INSTRUMENTED
-                        sDistanceCacheHits[pt->m_ptRight] = 1;
-#endif
-                    }
-                    
-                    if ( dDR <= dRadiusOuter
-                        && (dDR > dRadiusInner
-                            || (closed && dDR == dRadiusInner)))
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
-                            /* fprintf (stderr,"reduced dRadiusOuter %g\n",
-                             (double)dRadiusOuter); */
-                        }
-                        tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[pt->m_ptRight] ) );
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                }
-                
-                /*
-                 See if both branches are populated.  In that case, save one branch
-                 on the stack, and process the other one based on which one seems
-                 smaller, but useful first]
-                 */
-                if (pt->m_pLeftBranch != ULONG_MAX
-                    && pt->m_pRightBranch != ULONG_MAX ) {
-                    /* if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight */
-                    if (dDL <= dDR || dDL+pt->m_dMaxLeft <= dDR+pt->m_dMaxRight
-                        || pt->m_pRightBranch == ULONG_MAX) {
-                        if ( (TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft))
-                            && (TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)  )) {
-                            if ( (TRIANG(dRadiusInner,dDR,pt->m_dMaxRight))
-                                && (TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter) )) {
-                                
-                                sStack.push_back(pt->m_pRightBranch);
-                            }
-                            qt = pt->m_pLeftBranch;
-                            pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                            ++VisitCount;
-#endif
-                            continue;
-                        }
-                        /* If we are here, the left branch was not useful
-                         Fall through to use the right
-                         */
-                    }
-                    
-                    /* We come here either because pursuing the left branch was not useful
-                     or the right branch look shorter
-                     */
-                    if ( pt->m_pRightBranch != ULONG_MAX
-                        && TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter)
-                        && TRIANG(dRadiusInner,dDR,pt->m_dMaxRight)) {
-                        if ( TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)
-                            && TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft) ) {
-                            sStack.push_back(pt->m_pLeftBranch);
-                        }
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        continue;
-                    }
-                }
-                
-                /* Only one branch is viable, try them one at a time
-                 */
-                if ( pt->m_pLeftBranch != ULONG_MAX
-                    && TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)
-                    && TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft)) {
-                    qt = pt->m_pLeftBranch;
-                    pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    continue;
-                }
-                
-                if ( pt->m_pRightBranch != ULONG_MAX
-                    && TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter)
-                    && TRIANG(dRadiusInner,dDR,pt->m_dMaxRight)) {
-                    qt = pt->m_pRightBranch;
-                    pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    continue;
-                }
-                
-                /* We have procesed both sides, we need to go to the stack */
-                
-                if (!sStack.empty( )) {
-                    qt = sStack.back();
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-                    sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    continue;
-                }
-                break;
-            }
-            if ( !sStack.empty( ) ) // for safety !!!
-            {
-                std::vector <size_t > sTemp;
-                sTemp.swap( sStack );
-            }
-            if( tClosest.size( ) > 1 ) K_Resize( k, t, tClosest, dRadiusOuter );
-            return ( (long)tClosest.size( ) );
-            
-        }   // end K_Near
-        
-        long K_Near (const size_t k,
-                     const bool shell,
-                     const bool closed,
-                     std::map<size_t,double> &dDistanceCache,
-                     const DistanceTypeNode dRadiusInner,
-                     DistanceTypeNode& dRadiusOuter,
-                     std::vector<triple<DistanceTypeNode,T,size_t> >& tClosest,
-                     const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
+#ifndef CNEARTREE_OBS
+        inline long K_Near ( const size_t k,
+                       const bool shell,
+                       const bool closed,
+                       std::map<size_t,double> &dDistanceCache,
+                       const DistanceTypeNode dRadiusInner,
+                       DistanceTypeNode& dRadiusOuter,
+                       std::vector<std::pair<DistanceTypeNode,size_t> >& tClosest,
+                       const TNode& t
+                       #ifdef CNEARTREE_INSTRUMENTED
                      , size_t& VisitCount
                      , std::map<size_t,size_t> &sDistanceCacheHits
-#endif
-        )
+                       #endif
+        ) {
+            bool near=true;
+            bool cache=true;
+            DistanceTypeNode tmpdRadiusInner=dRadiusInner;
+            const TNode ttmp = t;
+            std::vector<TNode>  probe_container={ttmp};
+            return K_Extreme(k, near, shell, closed, cache, dDistanceCache, 
+                tmpdRadiusInner, dRadiusOuter, tClosest,probe_container
+                #ifdef CNEARTREE_INSTRUMENTED
+              , VisitCount
+	      , sDistanceCacheHits 
+                #endif
+            );
+        } 
+#else
+        long K_Near (const size_t k,
+                     const bool shell,
+                     const bool closed,
+                     std::map<size_t,double> &dDistanceCache,
+                     const DistanceTypeNode dRadiusInner,
+                     DistanceTypeNode& dRadiusOuter,
+                     std::vector<std::pair<DistanceTypeNode,size_t> >& tClosest,
+                     const TNode& t
+                     #ifdef CNEARTREE_INSTRUMENTED
+                   , size_t& VisitCount
+                   , std::map<size_t,size_t> &sDistanceCacheHits
+                     #endif
+                   )
         {
             std::vector <size_t > sStack;
             DistanceTypeNode dDL=0., dDR=0.;
             NearTreeNode* pt = const_cast<NearTreeNode*>(this);
             size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
+            #ifdef CNEARTREE_INSTRUMENTED
             size_t colcount;
             ++VisitCount;
-#endif
+            #endif
             if ( pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
             while ( pt->m_ptLeft != ULONG_MAX ||
                    pt->m_ptRight != ULONG_MAX ||
@@ -8903,9 +6391,9 @@ public:
                             pt = const_cast<NearTreeNode*>(this);
                         }
                         sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         ++VisitCount;
-#endif
+                        #endif
                         continue;
                     }
                     break;
@@ -8914,101 +6402,101 @@ public:
                     double dc;
                     if ((dc=dDistanceCache[pt->m_ptLeft]) >= 1.) {
                         dDL = dc-1.;
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         sDistanceCacheHits[pt->m_ptLeft] += 1;
-#endif
+                        #endif
                     } else {
                         dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft] );
                         dDistanceCache[pt->m_ptLeft] = 1.+(double)dDL;
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         sDistanceCacheHits[pt->m_ptLeft] = 1;
-#endif
+                        #endif
                     }
                     if ( dDL <= dRadiusOuter
                         && (dDL > dRadiusInner
                             || (closed && dDL == dRadiusInner )))
                     {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         colcount = 1;
-#endif
+                        #endif
                         if ((k == 1 || shell) && dDL <= dRadiusOuter) {
                             if (dDL < dRadiusOuter) tClosest.clear();
                             dRadiusOuter = dDL;
                             /* fprintf (stderr,"reduced dRadiusOuter %g\n",
                              (double)dRadiusOuter); */
                         }
-                        tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[pt->m_ptLeft], pt->m_ptLeft ) );
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+                        tClosest.insert( tClosest.end(), std::make_pair( dDL, pt->m_ptLeft ) );
+                        if( tClosest.size( ) > k ) K_Resize( k, tClosest, dRadiusOuter );
                         collide = pt->m_ptLeft;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide] ) );
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+                            tClosest.insert( tClosest.end(), std::make_pair( dDL,  m_ObjectCollide[collide] ) );
+                            if( tClosest.size( ) > k ) K_Resize( k, tClosest, dRadiusOuter );
                             collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
+                            #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
-#endif
+                            #endif
                         }
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         if (colcount != pt->m_imultLeft) {
                             std::cerr << " Collision discrepancy colcount = "
                             << colcount << " m_imultLeft = " << pt->m_imultLeft
                             << std::endl;
                         }
-#endif
+                        #endif
                     }
                 }
                 if (pt->m_ptRight != ULONG_MAX) {
                     double dc;
-#ifdef CNEARTREE_INSTRUMENTED
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     if ((dc=dDistanceCache[pt->m_ptRight]) >= 1.) {
                         dDR = dc-1.;
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         sDistanceCacheHits[pt->m_ptRight] += 1;
-#endif
+                        #endif
                     } else {
                         dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
                         dDistanceCache[pt->m_ptRight] = 1.+(double)dDR;
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         sDistanceCacheHits[pt->m_ptRight] = 1;
-#endif
+                        #endif
                     }
-                    
+
                     if ( dDR <= dRadiusOuter
                         && (dDR > dRadiusInner
                             || (closed && dDR == dRadiusInner)))
                     {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         colcount = 1;
-#endif
+                        #endif
                         if ((k == 1 || shell) && dDR <= dRadiusOuter) {
                             if (dDR < dRadiusOuter) tClosest.clear();
                             dRadiusOuter = dDR;
                             /* fprintf (stderr,"reduced dRadiusOuter %g\n",
                              (double)dRadiusOuter); */
                         }
-                        tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[pt->m_ptRight], pt->m_ptRight ) );
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+                        tClosest.insert( tClosest.end(), std::make_pair( dDR,  pt->m_ptRight ) );
+                        if( tClosest.size( ) > k ) K_Resize( k, tClosest, dRadiusOuter );
                         collide = pt->m_ptRight;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[m_ObjectCollide[collide]],  m_ObjectCollide[collide]));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+                            tClosest.insert( tClosest.end(), std::make_pair( dDR,  m_ObjectCollide[collide]));
+                            if( tClosest.size( ) > k ) K_Resize( k, tClosest, dRadiusOuter );
                             collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
+                            #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
-#endif
+                            #endif
                         }
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         if (colcount != pt->m_imultRight) {
                             std::cerr << " Collision discrepancy colcount = "
                             << colcount << " m_imultLeft = " << pt->m_imultRight
                             << std::endl;
                         }
-#endif
+                        #endif
                     }
                 }
-                
+
                 /*
                  See if both branches are populated.  In that case, save one branch
                  on the stack, and process the other one based on which one seems
@@ -9023,21 +6511,21 @@ public:
                             && (TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)  )) {
                             if ( (TRIANG(dRadiusInner,dDR,pt->m_dMaxRight))
                                 && (TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter) )) {
-                                
+
                                 sStack.push_back(pt->m_pRightBranch);
                             }
                             qt = pt->m_pLeftBranch;
                             pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
+                            #ifdef CNEARTREE_INSTRUMENTED
                             ++VisitCount;
-#endif
+                            #endif
                             continue;
                         }
                         /* If we are here, the left branch was not useful
                          Fall through to use the right
                          */
                     }
-                    
+
                     /* We come here either because pursuing the left branch was not useful
                      of the right branch look shorter
                      */
@@ -9050,13 +6538,13 @@ public:
                         }
                         qt = pt->m_pRightBranch;
                         pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         ++VisitCount;
-#endif
+                        #endif
                         continue;
                     }
                 }
-                
+
                 /* Only one branch is viable, try them one at a time
                  */
                 if ( pt->m_pLeftBranch != ULONG_MAX
@@ -9064,23 +6552,23 @@ public:
                     && TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft)) {
                     qt = pt->m_pLeftBranch;
                     pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     continue;
                 }
-                
+
                 if ( pt->m_pRightBranch != ULONG_MAX
                     && TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter)
                     && TRIANG(dRadiusInner,dDR,pt->m_dMaxRight)) {
                     qt = pt->m_pRightBranch;
                     pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     continue;
                 }
-                
+
                 /* We have procesed both sides, we need to go to the stack */
                 
                 if (!sStack.empty( )) {
@@ -9091,9 +6579,9 @@ public:
                         pt = const_cast<NearTreeNode*>(this);
                     }
                     sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     continue;
                 }
                 break;
@@ -9103,50 +6591,87 @@ public:
                 std::vector <size_t > sTemp;
                 sTemp.swap( sStack );
             }
-            if( tClosest.size( ) > 1 ) K_Resize( k, t, tClosest, dRadiusOuter );
+            if( tClosest.size( ) > 1 ) K_Resize( k, tClosest, dRadiusOuter );
             return ( (long)tClosest.size( ) );
             
         }   // end K_Near
-
+#endif
+        
         //=======================================================================
-        //  long K_Near ( const DistanceTypeNode dRadius,
-        //                std::vector<std::pair<DistanceTypeNode,T> >& tClosest) const
-        //  long K_Near ( const DistanceTypeNode dRadius,
-        //                std::vector<triple<DistanceTypeNode,T,size_t> >& tClosest) const
+        //  long K_Near ( const size_t k,
+        //                const DistanceTypeNode dRadius,
+        //                std::vector<std::pair<<DistanceTypeNode,size_t> >& tClosest
+        //                const TNode& t
+        //                #ifdef CNEARTREE_INSTRUMENTED
+        //              , size_t& VisitCount
+        //                #endif
+        //              ) const
         //
-        //  Private function to search a NearTree for the objects inside of the specified radius
-        //     from the probe point
+        //  Private function to search a NearTree for the objects inside of the 
+        //     specified radius from the probe point
         //  This function is only called by FindK_Nearest.
         //
-        // k:           the maximum number of m_Object to return, giving preference to the nearest
-        // dRadius:     the search radius, which will be updated when the internal store is resized
-        // tClosest:    is a vector of pairs of Nodes and objects or of triples
-        //                 of Nodes, objects and ordinals of objects where the objects
-        //                 are of the templated type found within dRadius of the
-        //                 probe point, limited by the k-near search
+        // k:           the maximum number of m_Object to return, giving preference 
+        //                 to the nearest
+        // dRadius:     the search radius, which will be updated when the internal 
+        //                 store is resized
+        // tClosest:    is a vector of pairs of Nodes and ordinals of objects where 
+        //                 the objects are of the templated type found within 
+        //                 dRadius of the probe point, limited by the k-near search
         // t:           is the probe point
         //
-        // returns the number of objects returned in the container (for sets, that may not equal the number found)
+        // returns the number of objects returned in the container (for sets, 
+        // that may not equal the number found)
         //
         /*=======================================================================*/
+#ifndef CNEARTREE_OBS
+        inline long K_Near ( 
+                       const size_t k,
+                       DistanceTypeNode& dRadiusOuter,
+                       std::vector<std::pair<DistanceTypeNode,size_t> >& tClosest,
+                       const TNode& t
+                       #ifdef CNEARTREE_INSTRUMENTED
+                     , size_t& VisitCount
+                       #endif
+        ) {
+            bool near=true;
+            bool shell=false;
+            bool closed=true;
+            bool cache=false;
+            std::map<size_t,double> dDistanceCache;
+            #ifdef CNEARTREE_INSTRUMENTED
+            std::map<size_t,size_t> sDistanceCacheHits;
+            #endif
+            DistanceTypeNode tmpdRadiusInner=0;
+            const TNode ttmp = t;
+            std::vector<TNode> probe_container={ttmp};
+            return K_Extreme(k, near, shell, closed, cache, dDistanceCache, 
+                tmpdRadiusInner, dRadiusOuter, tClosest, probe_container
+                #ifdef CNEARTREE_INSTRUMENTED
+              , VisitCount
+	      , sDistanceCacheHits 
+                #endif
+            );
+        } 
+#else
         long K_Near (
                      const size_t k,
                      DistanceTypeNode& dRadius,
-                     std::vector<std::pair<DistanceTypeNode,T> >& tClosest,
+                     std::vector<std::pair<DistanceTypeNode,size_t> >& tClosest,
                      const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
+                     #ifdef CNEARTREE_INSTRUMENTED
                      , size_t& VisitCount
-#endif
-                     )
+                     #endif
+        )
         {
             std::vector <size_t > sStack;
             DistanceTypeNode dDL=0., dDR=0.;
             NearTreeNode* pt = const_cast<NearTreeNode*>(this);
             size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
+            #ifdef CNEARTREE_INSTRUMENTED
             size_t colcount;
             ++VisitCount;
-#endif
+            #endif
             if ( pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
             while ( pt->m_ptLeft != ULONG_MAX ||
                    pt->m_ptRight != ULONG_MAX ||
@@ -9161,9 +6686,9 @@ public:
                             pt = const_cast<NearTreeNode*>(this);
                         }
                         sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         ++VisitCount;
-#endif
+                        #endif
                         continue;
                     }
                     break;
@@ -9172,248 +6697,62 @@ public:
                     dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft] );
                     if ( dDL <= dRadius )
                     {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         colcount = 1;
-#endif
-                        tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[pt->m_ptLeft] ) );
-                        if( tClosest.size( ) > k) K_Resize( k, t, tClosest, dRadius );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                    }
-                }
-                if (pt->m_ptRight != ULONG_MAX) {
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight]);
-                    if ( dDR <= dRadius )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[pt->m_ptRight] ) );
-                        if (k == 1 && dDR < dRadius) dRadius = dDR;
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                }
-                
-                /*
-                 See if both branches are populated.  In that case, save one branch
-                 on the stack, and process the other one based on which one seems
-                 smaller, but useful first]
-                 */
-                if (pt->m_pLeftBranch != ULONG_MAX && pt->m_pRightBranch != ULONG_MAX ) {
-                    /* if (dDL+pt->m_dMaxLeft < dDR+pt->m_dMaxRight */
-                    if (dDL <= dDR || dDL+pt->m_dMaxLeft <= dDR+pt->m_dMaxRight
-                        || pt->m_pRightBranch == ULONG_MAX) {
-                        if ( TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
-                            if ( TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
-                                sStack.push_back(pt->m_pRightBranch);
-                            }
-                            qt = pt->m_pLeftBranch;
-                            pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                            ++VisitCount;
-#endif
-                            continue;
-                        }
-                        /* If we are here, the left branch was not useful
-                         Fall through to use the right
-                         */
-                    }
-                    
-                    /* We come here either because pursuing the left branch was not useful
-                     of the right branch look shorter
-                     */
-                    if ( TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
-                        if ( TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
-                            sStack.push_back(pt->m_pLeftBranch);
-                        }
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        continue;
-                    }
-                }
-                
-                /* Only one branch is viable, try them one at a time
-                 */
-                if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
-                    qt = pt->m_pLeftBranch;
-                    pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    continue;
-                }
-                
-                if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
-                    qt = pt->m_pRightBranch;
-                    pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    continue;
-                }
-                
-                /* We have procesed both sides, we need to go to the stack */
-                
-                if (!sStack.empty( )) {
-                    qt = sStack.back();
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-                    sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    continue;
-                }
-                break;
-            }
-            if ( !sStack.empty( ) ) // for safety !!!
-            {
-                std::vector <size_t > sTemp;
-                sTemp.swap( sStack );
-            }
-            if( tClosest.size( ) > 1 ) K_Resize( k, t, tClosest, dRadius );
-            return ( (long)tClosest.size( ) );
-            
-        }   // end K_Near
-        
-        long K_Near (
-                     const size_t k,
-                     DistanceTypeNode& dRadius,
-                     std::vector<triple<DistanceTypeNode,T,size_t> >& tClosest,
-                     const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                     , size_t& VisitCount
-#endif
-                     )
-        {
-            std::vector <size_t > sStack;
-            DistanceTypeNode dDL=0., dDR=0.;
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if ( pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
-            while ( pt->m_ptLeft != ULONG_MAX ||
-                   pt->m_ptRight != ULONG_MAX ||
-                   !sStack.empty( ) )
-            {
-                if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
-                    if (!sStack.empty( )) {
-                        qt = sStack.back();
-                        if (qt != ULONG_MAX) {
-                            pt = m_NearTreeNodes[qt];
-                        } else {
-                            pt = const_cast<NearTreeNode*>(this);
-                        }
-                        sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        continue;
-                    }
-                    break;
-                }
-                if (pt->m_ptLeft != ULONG_MAX) {
-                    dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft] );
-                    if ( dDL <= dRadius )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[pt->m_ptLeft], pt->m_ptLeft ) );
+                        #endif
+                        tClosest.insert( tClosest.end(), std::make_pair( dDL, pt->m_ptLeft ) );
                         if (k == 1 && dDL < dRadius) dRadius = dDL;
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
+                        if( tClosest.size( ) > k ) K_Resize( k, tClosest, dRadius );
                         collide = pt->m_ptLeft;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide] ) );
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
+                            tClosest.insert( tClosest.end(), std::make_pair( dDL,  m_ObjectCollide[collide] ) );
+                            if( tClosest.size( ) > k ) K_Resize( k, tClosest, dRadius );
                             collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
+                            #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
-#endif
+                            #endif
                         }
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         if (colcount != pt->m_imultLeft) {
                             std::cerr << " Collision discrepancy colcount = "
                             << colcount << " m_imultLeft = " << pt->m_imultLeft
                             << std::endl;
                         }
-#endif
+                        #endif
                     }
                 }
                 if (pt->m_ptRight != ULONG_MAX) {
-#ifdef CNEARTREE_INSTRUMENTED
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight]);
                     if ( dDR <= dRadius )
                     {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         colcount = 1;
-#endif
-                        tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[pt->m_ptRight], pt->m_ptRight ) );
+                        #endif
+                        tClosest.insert( tClosest.end(), std::make_pair( dDR, pt->m_ptRight ) );
                         if (k == 1 && dDR < dRadius) dRadius = dDR;
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
+                        if( tClosest.size( ) > k ) K_Resize( k, tClosest, dRadius );
                         collide = pt->m_ptRight;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[m_ObjectCollide[collide]],  m_ObjectCollide[collide]));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
+                            tClosest.insert( tClosest.end(), std::make_pair( dDR,  m_ObjectCollide[collide]));
+                            if( tClosest.size( ) > k ) K_Resize( k, tClosest, dRadius );
                             collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
+                            #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
-#endif
+                            #endif
                         }
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         if (colcount != pt->m_imultRight) {
                             std::cerr << " Collision discrepancy colcount = "
                             << colcount << " m_imultLeft = " << pt->m_imultRight
                             << std::endl;
                         }
-#endif
+                        #endif
                     }
                 }
-                
+
                 /*
                  See if both branches are populated.  In that case, save one branch
                  on the stack, and process the other one based on which one seems
@@ -9429,16 +6768,16 @@ public:
                             }
                             qt = pt->m_pLeftBranch;
                             pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
+                            #ifdef CNEARTREE_INSTRUMENTED
                             ++VisitCount;
-#endif
+                            #endif
                             continue;
                         }
                         /* If we are here, the left branch was not useful
                          Fall through to use the right
                          */
                     }
-                    
+
                     /* We come here either because pursuing the left branch was not useful
                      of the right branch look shorter
                      */
@@ -9448,35 +6787,35 @@ public:
                         }
                         qt = pt->m_pRightBranch;
                         pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         ++VisitCount;
-#endif
+                        #endif
                         continue;
                     }
                 }
-                
+
                 /* Only one branch is viable, try them one at a time
                  */
                 if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dDL,pt->m_dMaxLeft,dRadius)) {
                     qt = pt->m_pLeftBranch;
                     pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     continue;
                 }
-                
+ 
                 if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dDR,pt->m_dMaxRight,dRadius)) {
                     qt = pt->m_pRightBranch;
                     pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     continue;
                 }
-                
+
                 /* We have procesed both sides, we need to go to the stack */
-                
+
                 if (!sStack.empty( )) {
                     qt = sStack.back();
                     if (qt != ULONG_MAX) {
@@ -9485,9 +6824,9 @@ public:
                         pt = const_cast<NearTreeNode*>(this);
                     }
                     sStack.pop_back();
-#ifdef CNEARTREE_INSTRUMENTED
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     continue;
                 }
                 break;
@@ -9497,25 +6836,26 @@ public:
                 std::vector <size_t > sTemp;
                 sTemp.swap( sStack );
             }
-            if( tClosest.size( ) > 1 ) K_Resize( k, t, tClosest, dRadius );
+            if( tClosest.size( ) > 1 ) K_Resize( k, tClosest, dRadius );
             return ( (long)tClosest.size( ) );
-            
+
         }   // end K_Near
-        
-        
+#endif  
+
         //=======================================================================
-        //  long K_Far ( const DistanceTypeNode dRadius, std::vector<std::pair<DistanceTypeNode,T> >& tFarthest, const TNode& t ) const
-        //  long K_Far ( const DistanceTypeNode dRadius, std::vector<triple<DistanceTypeNode,T,size_t> >& tFarthest, tFarthest, const TNode& t ) const
+        //  long K_Far ( const DistanceTypeNode dRadius, 
+        //      std::vector<std::pair<DistanceTypeNode,size_t> >& tFarthest,
+        //       tFarthest, const TNode& t ) const
         //
-        //  Private function to search a NearTree for the objects inside of the specified radius
-        //     from the probe point. Distances are stored in an intermediate array as negative values
-        //     so that the same logic as K_Near can be used.
+        //  Private function to search a NearTree for the objects inside of 
+        //     the specified radius from the probe point. Distances are stored 
+        //     in an intermediate array as negative values so that the same 
+        //     logic as K_Near can be used.
         //  This function is only called by FindK_Farthest.
         //
         // k:           the maximum number of m_Object to return, giving preference to the nearest
         // dRadius:     the search radius, which will be updated when the internal store is resized
-        // tFarthest:    is a vector of pairs of Nodes and objects or of triples
-        //                 of Nodes, objects and ordinals of objects where the objects
+        // tFarthest:    is a vector of pairs of Nodes and ordinals of objects where the objects
         //                 are of the templated type found outside of dRadius of the
         //                 probe point, limited by the k-farthest search
         // t:           is the probe point
@@ -9523,24 +6863,54 @@ public:
         // returns the number of objects returned in the container (for sets, that may not equal the number found)
         //
         /*=======================================================================*/
+#ifndef CNEARTREE_OBS
+        inline long K_Far ( 
+                       const size_t k,
+                       DistanceTypeNode& dRadiusInner,
+                       std::vector<std::pair<DistanceTypeNode,size_t> >& tFarthest,
+                       const TNode& t
+                       #ifdef CNEARTREE_INSTRUMENTED
+                     , size_t& VisitCount
+                       #endif
+        ) {
+            bool near=false;
+            bool shell=false;
+            bool closed=true;
+            bool cache=false;
+            std::map<size_t,double> dDistanceCache;
+            #ifdef CNEARTREE_INSTRUMENTED
+            std::map<size_t,size_t> sDistanceCacheHits;
+            #endif
+            DistanceTypeNode tmpdRadiusOuter=DBL_MAX;
+            const TNode ttmp = t;
+            std::vector<TNode> probe_container={ttmp};
+            return K_Extreme(k, near, shell, closed, cache, dDistanceCache, 
+                dRadiusInner, tmpdRadiusOuter, tFarthest, probe_container
+                #ifdef CNEARTREE_INSTRUMENTED
+              , VisitCount
+	      , sDistanceCacheHits 
+                #endif
+            );
+        } 
+#else
         long K_Far (
                     const size_t k,
                     DistanceTypeNode& dRadius,
-                    std::vector<std::pair<DistanceTypeNode,T> >& tFarthest,
+                    std::vector<std::pair<DistanceTypeNode,size_t> >& tFarthest,
                     const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                    , size_t& VisitCount
-#endif
-                    )
+                    #ifdef CNEARTREE_INSTRUMENTED
+                  , size_t& VisitCount
+                    #endif
+        )
         {
             std::vector <size_t > sStack;
             DistanceTypeNode dDL=0., dDR=0.;
             NearTreeNode* pt = const_cast<NearTreeNode*>(this);
             size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
+            #ifdef CNEARTREE_INSTRUMENTED
             size_t colcount;
             ++VisitCount;
-#endif
+            #endif
             if ( pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
             while ( pt->m_ptLeft != ULONG_MAX ||
                    pt->m_ptRight != ULONG_MAX ||
@@ -9555,10 +6925,10 @@ public:
                             pt = const_cast<NearTreeNode*>(this);
                         }
                         sStack.pop_back();
-                        
-#ifdef CNEARTREE_INSTRUMENTED
+
+                        #ifdef CNEARTREE_INSTRUMENTED
                         ++VisitCount;
-#endif
+                        #endif
                         continue;
                     }
                     break;
@@ -9567,64 +6937,64 @@ public:
                     dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft] );
                     if ( dDL >= dRadius )
                     {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         colcount = 1;
-#endif
+                        #endif
                         tFarthest.insert( tFarthest.end(), std::make_pair( -dDL, m_ObjectStore[pt->m_ptLeft] ) );
                         if (k == 1 && dDL > dRadius) dRadius = dDL;
-                        if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
+                        if( tFarthest.size( ) > k ) K_Resize( k, tFarthest, dRadius );
                         collide = pt->m_ptLeft;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tFarthest.insert( tFarthest.end(), std::make_pair( -dDL, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
+                            if( tFarthest.size( ) > k ) K_Resize( k, tFarthest, dRadius );
                             collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
+                            #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
-#endif
+                            #endif
                         }
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         if (colcount != pt->m_imultLeft) {
                             std::cerr << " Collision discrepancy colcount = "
                             << colcount << " m_imultLeft = " << pt->m_imultLeft
                             << std::endl;
                         }
-#endif
+                        #endif
                     }
                 }
                 if (pt->m_ptRight != ULONG_MAX) {
-                    
-#ifdef CNEARTREE_INSTRUMENTED
+
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight]);
                     if ( dDR >= dRadius )
                     {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         colcount = 1;
-#endif
+                        #endif
                         tFarthest.insert( tFarthest.end(), std::make_pair( -dDR, m_ObjectStore[pt->m_ptRight] ) );
                         if (k == 1 && dDR > dRadius) dRadius = dDR;
-                        if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
+                        if( tFarthest.size( ) > k ) K_Resize( k, tFarthest, dRadius );
                         collide = pt->m_ptRight;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tFarthest.insert( tFarthest.end(), std::make_pair( -dDR, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
+                            if( tFarthest.size( ) > k ) K_Resize( k, tFarthest, dRadius );
                             collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
+                            #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
-#endif
+                            #endif
                         }
-#ifdef CNEARTREE_INSTRUMENTED
+                        #ifdef CNEARTREE_INSTRUMENTED
                         if (colcount != pt->m_imultRight) {
                             std::cerr << " Collision discrepancy colcount = "
                             << colcount << " m_imultLeft = " << pt->m_imultRight
                             << std::endl;
                         }
-#endif
-                        
+                        #endif
+
                     }
                 }
-                
+
                 /*
                  See if both branches are populated.  In that case, save one branch
                  on the stack, and process the other one based on which one seems
@@ -9638,17 +7008,17 @@ public:
                             }
                             qt = pt->m_pLeftBranch;
                             pt = m_NearTreeNodes[qt];
-                            
-#ifdef CNEARTREE_INSTRUMENTED
+
+                            #ifdef CNEARTREE_INSTRUMENTED
                             ++VisitCount;
-#endif
+                            #endif
                             continue;
                         }
                         /* If we are here, the left branch was not useful
                          Fall through to use the right
                          */
                     }
-                    
+
                     /* We come here either because pursuing the left branch was not useful
                      of the right branch look shorter
                      */
@@ -9658,37 +7028,37 @@ public:
                         }
                         qt = pt->m_pRightBranch;
                         pt = m_NearTreeNodes[qt];
-                        
+
 #ifdef CNEARTREE_INSTRUMENTED
                         ++VisitCount;
 #endif
                         continue;
                     }
                 }
-                
+
                 /* Only one branch is viable, try them one at a time
                  */
                 if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
                     qt = pt->m_pLeftBranch;
                     pt = m_NearTreeNodes[qt];
-                    
-#ifdef CNEARTREE_INSTRUMENTED
+
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     continue;
                 }
-                
+
                 if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
                     qt = pt->m_pRightBranch;
                     pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     continue;
                 }
-                
+
                 /* We have procesed both sides, we need to go to the stack */
-                
+
                 if (!sStack.empty( )) {
                     qt = sStack.back();
                     if (qt != ULONG_MAX) {
@@ -9697,10 +7067,10 @@ public:
                         pt = const_cast<NearTreeNode*>(this);
                     }
                     sStack.pop_back();
-                    
-#ifdef CNEARTREE_INSTRUMENTED
+
+                    #ifdef CNEARTREE_INSTRUMENTED
                     ++VisitCount;
-#endif
+                    #endif
                     continue;
                 }
                 break;
@@ -9710,1571 +7080,53 @@ public:
                 std::vector <size_t > sTemp;
                 sTemp.swap( sStack );
             }
-            if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
+            if( tFarthest.size( ) > k ) K_Resize( k, tFarthest, dRadius );
             return ( (long)tFarthest.size( ) );
-        }   // end KFar
-        
-        long K_Far (
-                    const size_t k,
-                    DistanceTypeNode& dRadius,
-                    std::vector<triple<DistanceTypeNode,T,size_t> >& tFarthest,
-                    const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                    , size_t& VisitCount
+        }   // end K_Far
 #endif
-                    )
-        {
-            std::vector <size_t > sStack;
-            DistanceTypeNode dDL=0., dDR=0.;
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if ( pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
-            while ( pt->m_ptLeft != ULONG_MAX ||
-                   pt->m_ptRight != ULONG_MAX ||
-                   !sStack.empty( ) )
-            {
-                if (pt->m_ptLeft == ULONG_MAX && pt->m_ptRight == ULONG_MAX) {
-                    if (!sStack.empty( )) {
-                        qt = sStack.back();
-                        if (qt != ULONG_MAX) {
-                            pt = m_NearTreeNodes[qt];
-                        } else {
-                            pt = const_cast<NearTreeNode*>(this);
-                        }
-                        sStack.pop_back();
-                        
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        continue;
-                    }
-                    break;
-                }
-                if (pt->m_ptLeft != ULONG_MAX) {
-                    dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft] );
-                    if ( dDL >= dRadius )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tFarthest.insert( tFarthest.end(), make_triple( -dDL, m_ObjectStore[pt->m_ptLeft], pt->m_ptLeft) );
-                        if (k == 1 && dDL > dRadius) dRadius = dDL;
-                        if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tFarthest.insert( tFarthest.end(), make_triple( -dDL, m_ObjectStore[m_ObjectCollide[collide]],  m_ObjectCollide[collide]));
-                            if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                    }
-                }
-                if (pt->m_ptRight != ULONG_MAX) {
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight]);
-                    if ( dDR >= dRadius )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tFarthest.insert( tFarthest.end(), make_triple( -dDR, m_ObjectStore[pt->m_ptRight], pt->m_pt_Right ) );
-                        if (k == 1 && dDR > dRadius) dRadius = dDR;
-                        if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tFarthest.insert( tFarthest.end(), make_triple( -dDR, m_ObjectStore[m_ObjectCollide[collide]],  m_ObjectCollide[collide]));
-                            if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
-                            collide = m_ObjectCollide[collide];
-                            
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                }
-                
-                /*
-                 See if both branches are populated.  In that case, save one branch
-                 on the stack, and process the other one based on which one seems
-                 larger, but useful first]
-                 */
-                if (pt->m_pLeftBranch != ULONG_MAX && pt->m_pRightBranch != ULONG_MAX ) {
-                    if (dDL+pt->m_dMaxLeft > dDR+pt->m_dMaxRight || pt->m_pRightBranch == ULONG_MAX) {
-                        if ( TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
-                            if ( TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
-                                sStack.push_back(pt->m_pRightBranch);
-                            }
-                            qt = pt->m_pLeftBranch;
-                            pt = m_NearTreeNodes[qt];
-                            
-#ifdef CNEARTREE_INSTRUMENTED
-                            ++VisitCount;
-#endif
-                            continue;
-                        }
-                        /* If we are here, the left branch was not useful
-                         Fall through to use the right
-                         */
-                    }
-                    
-                    /* We come here either because pursuing the left branch was not useful
-                     of the right branch look shorter
-                     */
-                    if ( TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
-                        if ( TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
-                            sStack.push_back(pt->m_pLeftBranch);
-                        }
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-                        
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        continue;
-                    }
-                }
-                
-                /* Only one branch is viable, try them one at a time
-                 */
-                if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dRadius,dDL,pt->m_dMaxLeft)) {
-                    qt = pt->m_pLeftBranch;
-                    pt = m_NearTreeNodes[qt];
-                    
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    continue;
-                }
-                
-                if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dRadius,dDR,pt->m_dMaxRight)) {
-                    qt = pt->m_pRightBranch;
-                    pt = m_NearTreeNodes[qt];
-                    
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    continue;
-                }
-                
-                /* We have procesed both sides, we need to go to the stack */
-                
-                if (!sStack.empty( )) {
-                    qt = sStack.back();
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-                    sStack.pop_back();
-                    
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    continue;
-                }
-                break;
-            }
-            if ( !sStack.empty( ) ) // for safety !!!
-            {
-                std::vector <size_t > sTemp;
-                sTemp.swap( sStack );
-            }
-            if( tFarthest.size( ) > 1 ) K_Resize( k, t, tFarthest, dRadius );
-            return ( (long)tFarthest.size( ) );
-        }   // end KFar
-        
-        
+ 
         //=======================================================================
-        //  long LeftK_Near ( const size_t k,
-        //                const bool shell,
-        //                const bool closed,
-        //                std::vector<double> &dDistanceCache,
-        //                const DistanceTypeNode dRadiusInner,
-        //                DistanceTypeNode& dRadiusOuter,
-        //                std::vector<std::pair<DistanceTypeNode,T> >& tClosest,
-        //                const TNode& t ) const
-        //  long LeftK_Near ( const size_t k,
-        //                const bool shell,
-        //                const bool closed,
-        //                std::vector<double> &dDistanceCache,
-        //                const DistanceTypeNode dRadiusInner,
-        //                DistanceTypeNode& dRadiusOuter,
-        //                std::vector<triple<DistanceTypeNode,T,size_t> >& tClosest,
-        //                const TNode& t ) const
+        // static bool K_Sorter2( const std::pair<DistanceTypeNode, size_t>& t1, 
+        //     const std::pair<DistanceTypeNode, T>& t2 )
         //
-        //  Private function to search a NearTree for the objects
-        //     in the annular region defined the the half-open radial interval
-        //         (dRadiusInner,dRadiusOuter] from the probe point
-        //     unless nearest is true, in which case the closed interval
-        //         [dRadiusInner,dRadiusOuter] is used for the search and
-        //     only up to k points at the nearest distance are accepted.
-        //
-        //  This function is only called by LeftFindK_Nearest.
-        //
-        // k:           the maximum number of m_Object to return, giving preference to the nearest
-        // nearest:       if true, the search only returns hits in the nearest thin shell
-        // dRadiusInner:  the lower bound on the search radius
-        // dRadiusOuter:  the excluded upper bound on the search radius,
-        //                which will be updated when the internal store is resized
-        // tClosest:    is a vector of pairs of Nodes and objects or of triples
-        //                 of Nodes, objects and ordinals of objects where the objects
-        //                 are of the templated type found within dRadius of the
-        //                 probe point, limited by the k-near search
-        // t:           is the probe point
-        //
-        // returns the number of objects returned in the container (for sets, that may not equal the number found)
-        //
-        /*=======================================================================*/
-        long LeftK_Near (const size_t k,
-                         const bool shell,
-                         const bool closed,
-                         std::vector<double> &dDistanceCache,
-                         const DistanceTypeNode dRadiusInner,
-                         DistanceTypeNode& dRadiusOuter,
-                         std::vector<std::pair<DistanceTypeNode,T> >& tClosest,
-                         const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                         , size_t& VisitCount
-#endif
-        )
-        {
-            std::vector <size_t > sStack;
-            DistanceTypeNode dDL=0., dDR=0.;
-            enum  { left, right, end } eDir;
-            eDir = left; // examine the left nodes first
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if (pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
-            while ( ! ( eDir == end && sStack.empty( ) ) )
-            {
-                if ( eDir == right )
-                {
-                    if (pt->m_ptRight < dDistanceCache.size()) {
-                        dDR = dDistanceCache[pt->m_ptRight];
-                        if (dDistanceCache[pt->m_ptRight] == DBL_MAX) {
-                            dDistanceCache[pt->m_ptRight]
-                            = (double)(dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight]));
-                        }
-                    } else {
-                        dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                        dDistanceCache.resize(pt->m_ptRight+1,DBL_MAX);
-                        dDistanceCache[pt->m_ptRight] = (double)dDL;
-                    }
-                    
-                    if ( dDR <= dRadiusOuter
-                        && (dDR > dRadiusInner
-                            || (closed && dDR == dRadiusInner)))
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
-                        }
-                        tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[pt->m_ptRight] ) );
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_pRightBranch != ULONG_MAX
-                        && TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter)
-                        && TRIANG(dRadiusInner,dDR,pt->m_dMaxRight))
-                    { // we did the left and now we finished the right, go down
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        eDir = left;
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                if ( eDir == left )
-                {
-                    if (pt->m_ptLeft < dDistanceCache.size()) {
-                        dDL = dDistanceCache[pt->m_ptLeft];
-                        if (dDistanceCache[pt->m_ptLeft] == DBL_MAX) {
-                            dDistanceCache[pt->m_ptLeft]
-                            = (double)(dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]));
-                        }
-                    } else {
-                        dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft] );
-                        dDistanceCache.resize(pt->m_ptLeft+1,DBL_MAX);
-                        dDistanceCache[pt->m_ptLeft] = (double)dDL;
-                    }
-
-                    if ( dDL <= dRadiusOuter
-                        && (dDL > dRadiusInner
-                            || (closed && dDL == dRadiusInner )) )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
-                        }
-                        tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[pt->m_ptLeft] ) );
-                         if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right m_Object
-                    {
-                        sStack.push_back( qt );
-                    }
-                    if ( pt->m_pLeftBranch != ULONG_MAX
-                        && TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)
-                        && TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft))
-                    { // we did the left, go down
-                        qt = pt->m_pLeftBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                
-                if ( eDir == end && !sStack.empty( ) )
-                {
-                    qt = sStack.back( );
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    sStack.pop_back( );
-                    eDir = right;
-                }
-            }
-            
-            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-            return ( (long)tClosest.size( ) );
-        }  // end LeftK_Near
-        long LeftK_Near (const size_t k,
-                         const bool shell,
-                         const bool closed,
-                         std::vector<double> &dDistanceCache,
-                         const DistanceTypeNode dRadiusInner,
-                         DistanceTypeNode& dRadiusOuter,
-                         std::vector<triple<DistanceTypeNode,T,size_t> >& tClosest,
-                         const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                         , size_t& VisitCount
-#endif
-        )
-        {
-            std::vector <size_t > sStack;
-            DistanceTypeNode dDL=0., dDR=0.;
-            enum  { left, right, end } eDir;
-            eDir = left; // examine the left nodes first
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
-            while ( ! ( eDir == end && sStack.empty( ) ) )
-            {
-                if ( eDir == right )
-                {
-                    if (pt->m_ptRight < dDistanceCache.size()) {
-                        dDR = dDistanceCache[pt->m_ptRight];
-                        if (dDistanceCache[pt->m_ptRight] == DBL_MAX) {
-                            dDistanceCache[pt->m_ptRight]
-                            = (double)(dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight]));
-                        }
-                    } else {
-                        dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                        dDistanceCache.resize(pt->m_ptRight+1,DBL_MAX);
-                        dDistanceCache[pt->m_ptRight] = (double)dDL;
-                    }
-
-                    if ( dDR <= dRadiusOuter
-                        && (dDR > dRadiusInner
-                            || (closed && dDR == dRadiusInner)))
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
-                        }
-                        tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[pt->m_ptRight], pt->m_ptRight ) );
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide]) );
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_pRightBranch != ULONG_MAX
-                        && TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter)
-                        && TRIANG(dRadiusInner,dDR,pt->m_dMaxRight))
-                    { // we did the left and now we finished the right, go down
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        eDir = left;
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                if ( eDir == left )
-                {
-                    if (pt->m_ptLeft < dDistanceCache.size()) {
-                        dDL = dDistanceCache[pt->m_ptLeft];
-                        if (dDistanceCache[pt->m_ptLeft] == DBL_MAX) {
-                            dDistanceCache[pt->m_ptLeft]
-                            = (double)(dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]));
-                        }
-                    } else {
-                        dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft] );
-                        dDistanceCache.resize(pt->m_ptLeft+1,DBL_MAX);
-                        dDistanceCache[pt->m_ptLeft] = (double)dDL;
-                    }
-                    if ( dDL <= dRadiusOuter
-                        && (dDL > dRadiusInner
-                            || (closed && dDL == dRadiusInner )))
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
-                        }
-                        tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[pt->m_ptLeft], pt->m_ptLeft ) );
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide] ) );
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                        
-                    }
-                    if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right m_Object
-                    {
-                        sStack.push_back( qt );
-                    }
-                    if ( pt->m_pLeftBranch != ULONG_MAX
-                        && TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)
-                        && TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft))
-                    { // we did the left, go down
-                        qt = pt->m_pLeftBranch;
-                        pt = m_NearTreeNodes[qt];
-                        
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                
-                if ( eDir == end && !sStack.empty( ) )
-                {
-                    qt = sStack.back( );
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    sStack.pop_back( );
-                    eDir = right;
-                }
-            }
-            
-            if( tClosest.size( ) > 1 ) K_Resize( k, t, tClosest, dRadiusOuter );
-            return ( (long)tClosest.size( ) );
-        }  // end LeftK_Near
-
-        //=======================================================================
-        //  long LeftK_Near ( const size_t k,
-        //                const bool shell,
-        //                const bool closed,
-        //                std::map<size_t,double> &dDistanceCache,
-        //                const DistanceTypeNode dRadiusInner,
-        //                DistanceTypeNode& dRadiusOuter,
-        //                std::vector<std::pair<DistanceTypeNode,T> >& tClosest,
-        //                const TNode& t ) const
-        //  long LeftK_Near ( const size_t k,
-        //                const bool shell,
-        //                const bool closed,
-        //                std::map<size_t,double> &dDistanceCache,
-        //                const DistanceTypeNode dRadiusInner,
-        //                DistanceTypeNode& dRadiusOuter,
-        //                std::vector<triple<DistanceTypeNode,T,size_t> >& tClosest,
-        //                const TNode& t ) const
-        //
-        //  Private function to search a NearTree for the objects
-        //     in the annular region defined the the half-open radial interval
-        //         (dRadiusInner,dRadiusOuter] from the probe point
-        //     unless nearest is true, in which case the closed interval
-        //         [dRadiusInner,dRadiusOuter] is used for the search and
-        //     only up to k points at the nearest distance are accepted.
-        //
-        //  This function is only called by LeftFindK_Nearest.
-        //
-        // k:           the maximum number of m_Object to return, giving preference to the nearest
-        // nearest:       if true, the search only returns hits in the nearest thin shell
-        // dRadiusInner:  the lower bound on the search radius
-        // dRadiusOuter:  the excluded upper bound on the search radius,
-        //                which will be updated when the internal store is resized
-        // tClosest:    is a vector of pairs of Nodes and objects or of triples
-        //                 of Nodes, objects and ordinals of objects where the objects
-        //                 are of the templated type found within dRadius of the
-        //                 probe point, limited by the k-near search
-        // t:           is the probe point
-        //
-        // returns the number of objects returned in the container (for sets, that may not equal the number found)
-        //
-        /*=======================================================================*/
-        long LeftK_Near (const size_t k,
-                         const bool shell,
-                         const bool closed,
-                         std::map<size_t,double> &dDistanceCache,
-                         const DistanceTypeNode dRadiusInner,
-                         DistanceTypeNode& dRadiusOuter,
-                         std::vector<std::pair<DistanceTypeNode,T> >& tClosest,
-                         const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                         , size_t& VisitCount
-                         , std::map<size_t,size_t> &dDistanceCacheHits
-#endif
-        )
-        {
-            std::vector <size_t > sStack;
-            DistanceTypeNode dDL=0., dDR=0.;
-            enum  { left, right, end } eDir;
-            eDir = left; // examine the left nodes first
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if (pt->m_ptLeft == ULONG_MAX &&  pt->m_ptRight == ULONG_MAX) return false; // test for empty
-            while ( ! ( eDir == end && sStack.empty( ) ) )
-            {
-                if ( eDir == right )
-                {
-                    double dc;
-                    if ((dc=dDistanceCache[pt->m_ptRight]) >= 1.) {
-                        dDR = dc-1.;
-                    } else {
-                        dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                        dDistanceCache[pt->m_ptRight] = 1.+(double)dDR;
-                    }
-                    
-                    if ( dDR <= dRadiusOuter
-                        && (dDR > dRadiusInner
-                            || (closed && dDR == dRadiusInner)))
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
-                        }
-                        tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[pt->m_ptRight] ) );
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_pRightBranch != ULONG_MAX
-                        && TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter)
-                        && TRIANG(dRadiusInner,dDR,pt->m_dMaxRight))
-                    { // we did the left and now we finished the right, go down
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        eDir = left;
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                if ( eDir == left )
-                {
-                    double dc;
-                    if ((dc=dDistanceCache[pt->m_ptLeft]) >= 1.) {
-                        dDL = dc-1.;
-                    } else {
-                        dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft] );
-                        dDistanceCache[pt->m_ptLeft] = 1.+(double)dDL;
-                    }
-                    
-                    if ( dDL <= dRadiusOuter
-                        && (dDL > dRadiusInner
-                            || (closed && dDL == dRadiusInner )) )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
-                        }
-                        tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[pt->m_ptLeft] ) );
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right m_Object
-                    {
-                        sStack.push_back( qt );
-                    }
-                    if ( pt->m_pLeftBranch != ULONG_MAX
-                        && TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)
-                        && TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft))
-                    { // we did the left, go down
-                        qt = pt->m_pLeftBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                
-                if ( eDir == end && !sStack.empty( ) )
-                {
-                    qt = sStack.back( );
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    sStack.pop_back( );
-                    eDir = right;
-                }
-            }
-            
-            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-            return ( (long)tClosest.size( ) );
-        }  // end LeftK_Near
-        long LeftK_Near (const size_t k,
-                         const bool shell,
-                         const bool closed,
-                         std::map<size_t,double> &dDistanceCache,
-                         const DistanceTypeNode dRadiusInner,
-                         DistanceTypeNode& dRadiusOuter,
-                         std::vector<triple<DistanceTypeNode,T,size_t> >& tClosest,
-                         const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                         , size_t& VisitCount
-                         , std::map<size_t,size_t> &sDistanceCacheHits
-#endif
-        )
-        {
-            std::vector <size_t > sStack;
-            DistanceTypeNode dDL=0., dDR=0.;
-            enum  { left, right, end } eDir;
-            eDir = left; // examine the left nodes first
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
-            while ( ! ( eDir == end && sStack.empty( ) ) )
-            {
-                if ( eDir == right )
-                {   double dc;
-                    if ((dc=dDistanceCache[pt->m_ptRight]) >= 1.) {
-                        dDR = dc-1.;
-                    } else {
-                        dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                        dDistanceCache[pt->m_ptRight] = 1.+(double)dDR;
-                    }
-                    
-                    if ( dDR <= dRadiusOuter
-                        && (dDR > dRadiusInner
-                            || (closed && dDR == dRadiusInner)))
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
-                        }
-                        tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[pt->m_ptRight], pt->m_ptRight ) );
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide]) );
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_pRightBranch != ULONG_MAX
-                        && TRIANG(dDR,pt->m_dMaxRight,dRadiusOuter)
-                        && TRIANG(dRadiusInner,dDR,pt->m_dMaxRight))
-                    { // we did the left and now we finished the right, go down
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        eDir = left;
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                if ( eDir == left )
-                {
-                    double dc;
-                    if ((dc=dDistanceCache[pt->m_ptRight]) >= 1.) {
-                        dDL = dc-1.;
-                    } else {
-                        dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft] );
-                        dDistanceCache[pt->m_ptLeft] = 1.+(double)dDL;
-                    }
-                    if ( dDL <= dRadiusOuter
-                        && (dDL > dRadiusInner
-                            || (closed && dDL == dRadiusInner )))
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
-                        }
-                        tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[pt->m_ptLeft], pt->m_ptLeft ) );
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide] ) );
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                        
-                    }
-                    if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right m_Object
-                    {
-                        sStack.push_back( qt );
-                    }
-                    if ( pt->m_pLeftBranch != ULONG_MAX
-                        && TRIANG(dDL,pt->m_dMaxLeft,dRadiusOuter)
-                        && TRIANG(dRadiusInner,dDL,pt->m_dMaxLeft))
-                    { // we did the left, go down
-                        qt = pt->m_pLeftBranch;
-                        pt = m_NearTreeNodes[qt];
-                        
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                
-                if ( eDir == end && !sStack.empty( ) )
-                {
-                    qt = sStack.back( );
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    sStack.pop_back( );
-                    eDir = right;
-                }
-            }
-            
-            if( tClosest.size( ) > 1 ) K_Resize( k, t, tClosest, dRadiusOuter );
-            return ( (long)tClosest.size( ) );
-        }  // end LeftK_Near
-
-        
-        //=======================================================================
-        //  long LeftK_Near ( const DistanceTypeNode dRadius,
-        //                std::vector<std::pair<DistanceTypeNode,T> >& tClosest,
-        //                const TNode& t ) const
-        //  long LeftK_Near ( const DistanceTypeNode dRadius,
-        //                std::vector<triple<DistanceTypeNode,T,size_t> >& tClosest,
-        //                const TNode& t ) const
-        //
-        //  Private function to search a NearTree for the objects inside of the specified radius
-        //     from the probe point
-        //  This function is only called by LeftFindK_Nearest.
-        //
-        // k:           the maximum number of m_Object to return, giving preference to the nearest
-        // dRadius:     the search radius, which will be updated when the internal store is resized
-        // tClosest:    is a vector of pairs of Nodes and objects or of triples
-        //                 of Nodes, objects and ordinals of objects where the objects
-        //                 are of the templated type found within dRadius of the
-        //                 probe point, limited by the k-near search
-        // t:           is the probe point
-        //
-        // returns the number of objects returned in the container (for sets, that may not equal the number found)
-        //
-        /*=======================================================================*/
-        long LeftK_Near (
-                         const size_t k,
-                         DistanceTypeNode& dRadius,
-                         std::vector<std::pair<DistanceTypeNode,T> >& tClosest,
-                         const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                         , size_t& VisitCount
-#endif
-                         )
-        {
-            std::vector <size_t > sStack;
-            enum  { left, right, end } eDir;
-            eDir = left; // examine the left nodes first
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
-            while ( ! ( eDir == end && sStack.empty( ) ) )
-            {
-                if ( eDir == right )
-                {
-                    const DistanceTypeNode dDR =  DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                    if ( dDR <= dRadius )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[pt->m_ptRight] ) );
-                        if (k == 1 && dDR < dRadius) dRadius = dDR;
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
-                    { // we did the left and now we finished the right, go down
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        eDir = left;
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                if ( eDir == left )
-                {
-                    const DistanceTypeNode dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]  );
-                    if ( dDL <= dRadius )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[pt->m_ptLeft] ) );
-                        if (k == 1 && dDL < dRadius) dRadius = dDL;
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right m_Object
-                    {
-                        sStack.push_back( qt );
-                    }
-                    if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dDL,pt->m_dMaxLeft,dRadius) )
-                    { // we did the left, go down
-                        qt = pt->m_pLeftBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                
-                if ( eDir == end && !sStack.empty( ) )
-                {
-                    qt = sStack.back( );
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    sStack.pop_back( );
-                    eDir = right;
-                }
-            }
-            
-            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
-            return ( (long)tClosest.size( ) );
-        }  // end LeftK_Near
-        long LeftK_Near (
-                         const size_t k,
-                         DistanceTypeNode& dRadius,
-                         std::vector<triple<DistanceTypeNode,T,size_t> >& tClosest,
-                         const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                         , size_t& VisitCount
-#endif
-                         )
-        {
-            std::vector <size_t > sStack;
-            enum  { left, right, end } eDir;
-            eDir = left; // examine the left nodes first
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
-            while ( ! ( eDir == end && sStack.empty( ) ) )
-            {
-                if ( eDir == right )
-                {
-                    const DistanceTypeNode dDR =  DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                    if ( dDR <= dRadius )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[pt->m_ptRight], pt->m_ptRight ) );
-                        if (k == 1 && dDR < dRadius) dRadius = dDR;
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide]) );
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dDR,pt->m_dMaxRight,dRadius) )
-                    { // we did the left and now we finished the right, go down
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        eDir = left;
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                if ( eDir == left )
-                {
-                    const DistanceTypeNode dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]  );
-                    if ( dDL <= dRadius )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[pt->m_ptLeft], pt->m_ptLeft ) );
-                        if (k == 1 && dDL < dRadius) dRadius = dDL;
-                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide] ) );
-                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                        
-                    }
-                    if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right m_Object
-                    {
-                        sStack.push_back( qt );
-                    }
-                    if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dDL,pt->m_dMaxLeft,dRadius) )
-                    { // we did the left, go down
-                        qt = pt->m_pLeftBranch;
-                        pt = m_NearTreeNodes[qt];
-                        
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                
-                if ( eDir == end && !sStack.empty( ) )
-                {
-                    qt = sStack.back( );
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    sStack.pop_back( );
-                    eDir = right;
-                }
-            }
-            
-            if( tClosest.size( ) > 1 ) K_Resize( k, t, tClosest, dRadius );
-            return ( (long)tClosest.size( ) );
-        }  // end LeftK_Near
-        
-        //=======================================================================
-        //  long LeftK_Far ( const DistanceTypeNode dRadius, std::vector<std::pair<DistanceTypeNode,T> >& tFarthest, const TNode& t ) const
-        //  long LeftK_Far ( const DistanceTypeNode dRadius, std::vector<triple<DistanceTypeNode,T,size_t> >& tFarthest, tFarthest, const TNode& t ) const
-        //
-        //  Private function to search a NearTree for the objects inside of the specified radius
-        //     from the probe point. Distances are stored in an intermediate array as negative values
-        //     so that the same logic as K_Near can be used.
-        //  This function is only called by LeftFindK_Farthest.
-        //
-        // k:           the maximum number of m_Object to return, giving preference to the nearest
-        // dRadius:     the search radius, which will be updated when the internal store is resized
-        // tFarthest:    is a vector of pairs of Nodes and objects or of triples
-        //                 of Nodes, objects and ordinals of objects where the objects
-        //                 are of the templated type found outside of dRadius of the
-        //                 probe point, limited by the k-farthest search
-        // t:           is the probe point
-        //
-        // returns the number of objects returned in the container (for sets, that may not equal the number found)
-        //
-        /*=======================================================================*/
-        long LeftK_Far (
-                        const size_t k,
-                        DistanceTypeNode& dRadius,
-                        std::vector<std::pair<DistanceTypeNode,T> >& tFarthest,
-                        const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                        , size_t& VisitCount
-#endif
-                        )
-        {
-            std::vector <size_t > sStack;
-            enum  { left, right, end } eDir;
-            eDir = left; // examine the left nodes first
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
-            while ( ! ( eDir == end && sStack.empty( ) ) )
-            {
-                if ( eDir == right )
-                {
-                    const DistanceTypeNode dDR =  DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                    if ( dDR >= dRadius )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tFarthest.insert( tFarthest.end(), std::make_pair( -dDR, m_ObjectStore[pt->m_ptRight] ) );
-                        if (k == 1 && dDR > dRadius) dRadius = dDR;
-                        if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tFarthest.insert( tFarthest.end(), std::make_pair( -dDR, m_ObjectStore[m_ObjectCollide[collide]]) );
-                            if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
-                    { // we did the left and now we finished the right, go down
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        eDir = left;
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                if ( eDir == left )
-                {
-                    const DistanceTypeNode dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]  );
-                    if ( dDL >= dRadius )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tFarthest.insert( tFarthest.end(), std::make_pair( -dDL, m_ObjectStore[pt->m_ptLeft] ) );
-                        if (k == 1 && dDL > dRadius) dRadius = dDL;
-                        if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tFarthest.insert( tFarthest.end(), std::make_pair( -dDL, m_ObjectStore[m_ObjectCollide[collide]]) );
-                            if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right m_Object
-                    {
-                        sStack.push_back( qt );
-                    }
-                    if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
-                    { // we did the left, go down
-                        qt = pt->m_pLeftBranch;
-                        pt = m_NearTreeNodes[qt];
-                        
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                
-                if ( eDir == end && !sStack.empty( ) )
-                {
-                    qt = sStack.back( );
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    sStack.pop_back( );
-                    eDir = right;
-                }
-            }
-            
-            if( tFarthest.size( ) > 1 ) K_Resize( k, t, tFarthest, dRadius );
-            return ( (long)tFarthest.size( ) );
-        }  //  end K_Far
-        
-        long LeftK_Far (
-                        const size_t k,
-                        DistanceTypeNode& dRadius,
-                        std::vector<triple<DistanceTypeNode,T,size_t> >& tFarthest,
-                        const TNode& t
-#ifdef CNEARTREE_INSTRUMENTED
-                        , size_t& VisitCount
-#endif
-                        )
-        {
-            std::vector <size_t > sStack;
-            enum  { left, right, end } eDir;
-            eDir = left; // examine the left nodes first
-            NearTreeNode* pt = const_cast<NearTreeNode*>(this);
-            size_t qt = ULONG_MAX;
-#ifdef CNEARTREE_INSTRUMENTED
-            size_t colcount;
-            ++VisitCount;
-#endif
-            if (pt->m_ptLeft == ULONG_MAX) return false; // test for empty
-            while ( ! ( eDir == end && sStack.empty( ) ) )
-            {
-                if ( eDir == right )
-                {
-                    const DistanceTypeNode dDR =  DistanceBetween( t, m_ObjectStore[pt->m_ptRight] );
-                    if ( dDR >= dRadius )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tFarthest.insert( tFarthest.end(), make_triple( -dDR, m_ObjectStore[pt->m_ptRight], pt->m_pt_Right ) );
-                        if (k == 1 && dDR > dRadius) dRadius = dDR;
-                        if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
-                        collide = pt->m_ptRight;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tFarthest.insert( tFarthest.end(), make_triple( -dDR, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide]) );
-                            if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultRight) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultRight
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_pRightBranch != ULONG_MAX && TRIANG(dRadius,dDR,pt->m_dMaxRight) )
-                    { // we did the left and now we finished the right, go down
-                        qt = pt->m_pRightBranch;
-                        pt = m_NearTreeNodes[qt];
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                        eDir = left;
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                if ( eDir == left )
-                {
-                    const DistanceTypeNode dDL = DistanceBetween( t, m_ObjectStore[pt->m_ptLeft]  );
-                    if ( dDL >= dRadius )
-                    {   size_t collide;
-#ifdef CNEARTREE_INSTRUMENTED
-                        colcount = 1;
-#endif
-                        tFarthest.insert( tFarthest.end(), make_triple( -dDL, m_ObjectStore[pt->m_ptLeft], pt->m_ptLeft) );
-                        if (k == 1 && dDL > dRadius) dRadius = dDL;
-                        if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
-                        collide = pt->m_ptLeft;
-                        while (m_ObjectCollide[collide] != ULONG_MAX ) {
-                            tFarthest.insert( tFarthest.end(), make_triple( -dDL, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide]) );
-                            if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
-                            collide = m_ObjectCollide[collide];
-#ifdef CNEARTREE_INSTRUMENTED
-                            colcount++;
-#endif
-                        }
-#ifdef CNEARTREE_INSTRUMENTED
-                        if (colcount != pt->m_imultLeft) {
-                            std::cerr << " Collision discrepancy colcount = "
-                            << colcount << " m_imultLeft = " << pt->m_imultLeft
-                            << std::endl;
-                        }
-#endif
-                    }
-                    if ( pt->m_ptRight != ULONG_MAX ) // only stack if there's a right m_Object
-                    {
-                        sStack.push_back( qt );
-                    }
-                    if ( pt->m_pLeftBranch != ULONG_MAX && TRIANG(dRadius,dDL,pt->m_dMaxLeft) )
-                    { // we did the left, go down
-                        qt = pt->m_pLeftBranch;
-                        pt = m_NearTreeNodes[qt];
-                        
-#ifdef CNEARTREE_INSTRUMENTED
-                        ++VisitCount;
-#endif
-                    }
-                    else
-                    {
-                        eDir = end;
-                    }
-                }
-                
-                if ( eDir == end && !sStack.empty( ) )
-                {
-                    qt = sStack.back( );
-                    if (qt != ULONG_MAX) {
-                        pt = m_NearTreeNodes[qt];
-                    } else {
-                        pt = const_cast<NearTreeNode*>(this);
-                    }
-#ifdef CNEARTREE_INSTRUMENTED
-                    ++VisitCount;
-#endif
-                    sStack.pop_back( );
-                    eDir = right;
-                }
-            }
-            
-            if( tFarthest.size( ) > 1 ) K_Resize( k, t, tFarthest, dRadius );
-            return ( (long)tFarthest.size( ) );
-        }  //  end LeftK_Far
-        
-        
-        //=======================================================================
-        // static bool K_Sorter2( const std::pair<DistanceTypeNode, T>& t1, const std::pair<DistanceTypeNode, T>& t2 )
-        // static bool K_Sorter3( const triple<DistanceTypeNode, T, size_t>& t1, const std::pair<DistanceTypeNode, T>& t2 )
-        //
-        //  Private static function used to sort the K-near/far internal data stores. This 
+        //  Private static function used to sort the K-near/far internal data stores. This
         //  replaces the default less<>, which doesn't necessarily exist for all objects.
         //  All this does is compare the distances, so only the .first element needs
         //  to be examined.
         //
         //=======================================================================
-        static bool K_Sorter2( const std::pair<DistanceTypeNode, T>& t1, const std::pair<DistanceTypeNode, T>& t2 )
+        static bool K_Sorter2( const std::pair<DistanceTypeNode, size_t>& t1, 
+            const std::pair<DistanceTypeNode, size_t>& t2 )
         {
             return ( t1.first < t2.first );
         }
-        static bool K_Sorter3( const triple<DistanceTypeNode, T, size_t>& t1, const triple<DistanceTypeNode, T, size_t>& t2 )
-        {
-            return ( t1.GetFirst() < t2.GetFirst() );
-        }
         
         //=======================================================================
-        //  void K_Resize ( const size_t k, const TNode& t, std::vector<std::pair<DistanceTypeNode, T> >& tClosest, DistanceTypeNode& dRadius ) const
-        //  void K_Resize ( const size_t k, const TNode& t, std::vector<triple<DistanceTypeNode, T, size_t> >& tClosest, DistanceTypeNode& dRadius ) const
+        //  void K_Resize ( const size_t k,
+        //      std::vector<std::pair<DistanceTypeNode, size_t> >& tClosest, 
+        //      DistanceTypeNode& dRadius ) const
         //
-        //  Private function to limit the size of internally stored data for K-nearest/farthest-neighbor searches
+        //  Private function to limit the size of internally stored data for 
+        //      K-nearest/farthest-neighbor searches
         //  This function is only called by K_Near and K_Far.
         //
         //    dRadius is the search radius, updated to the best-known value
-        //    tClosest is a vector of pairs of Nodes and objects or of triples 
-        //         of Nodes, objects and ordinals of objects where the objects
-        //         are of the templated type found within dRadius of the
-        //         probe point
-        //    t  is the probe point
+        //    tClosest is a vector of pairs of Nodes and ordinals of objects
+        //         objects where the objects are of the templated type
+        //         found within dRadius of the probe point
         //
         //=======================================================================
-        void K_Resize( const size_t k, const TNode& t, std::vector<std::pair<DistanceTypeNode, T> >& tClosest, DistanceTypeNode& dRadius )
+        void K_Resize( const size_t k, 
+            std::vector<std::pair<DistanceTypeNode, size_t> >& tClosest, 
+            DistanceTypeNode& dRadius ) const
         {
             size_t target = tClosest.size();
             if (target > k ) target = k;
             std::sort( tClosest.begin(), tClosest.end(), &K_Sorter2 );
             tClosest.resize( target );
             dRadius = tClosest[tClosest.size()-1].first;
-	    if (dRadius < 0.) dRadius = -dRadius;
+            if (dRadius < 0.) dRadius = -dRadius;
         }  // end K_Resize
-        void K_Resize( const size_t k, const TNode& t, std::vector<triple<DistanceTypeNode, T, size_t> >& tClosest, DistanceTypeNode& dRadius )
-        {
-            size_t target = tClosest.size();
-            if (target > k ) target = k;
-            std::sort( tClosest.begin(), tClosest.end(), &K_Sorter3 );
-            tClosest.resize( target );
-            dRadius = tClosest[tClosest.size()-1].GetFirst();
-	    if (dRadius < 0.) dRadius = -dRadius;
-        }  // end K_Resize
-        
-        
         
         
         
@@ -11327,36 +7179,98 @@ public:
         const CNearTree< T, DistanceType, distMinValue >* parent;
         
     public:
-        iterator( void ) { }; // constructor
-        explicit iterator( const const_iterator& s ) { position = ((const_iterator)s).get_position(); parent = ((const_iterator)s).get_parent(); };// constructor
+        iterator( void ) {
+        }; // constructor
+        explicit iterator( const const_iterator& s ) {
+            position = ((const_iterator)s).get_position();
+                parent = ((const_iterator)s).get_parent(); 
+        };// constructor
         
-        iterator& operator=  ( const iterator& s )       { position = s.position; parent = s.parent; return ( *this ); };
-        iterator& operator=  ( const const_iterator& s ) { position = ((const_iterator&)s).get_position(); parent = ((const_iterator&)s).get_parent(); return ( *this ); };
-        iterator  operator++ ( const int n )             { iterator it(*this); position+=1+n; return ( it ); };
-        iterator  operator-- ( const int n )             { iterator it(*this); position-=1+n; return ( it ); };
-        iterator& operator++ ( void )                    { ++position; return ( *this ); };
-        iterator& operator-- ( void )                    { --position; return ( *this ); };
-        iterator  operator+  ( const long n ) const      { iterator it( position+n, parent); return ( it ); };
-        iterator  operator-  ( const long n ) const      { iterator it( position-n, parent); return ( it ); };
-        iterator& operator+= ( const long n )            { position += n; return ( *this ); };
-        iterator& operator-= ( const long n )            { position -= n; return ( *this ); };
-        T         operator*  ( void )         const      { return ( parent->m_ObjectStore[position] ); };
+        iterator& operator=  ( const iterator& s )       {
+            position = s.position;
+            parent = s.parent;
+            return ( *this ); 
+        };
+        iterator& operator=  ( const const_iterator& s ) {
+            position = ((const_iterator&)s).get_position();
+            parent = ((const_iterator&)s).get_parent();
+            return ( *this ); 
+        };
+        iterator  operator++ ( const int n )             {
+            iterator it(*this);
+             position+=1+n;
+             return ( it );
+        };
+        iterator  operator-- ( const int n )             {
+            iterator it(*this);
+            position-=1+n;
+            return ( it ); 
+        };
+        iterator& operator++ ( void )                    {
+            ++position; return ( *this ); 
+        };
+        iterator& operator-- ( void )                    {
+            --position; return ( *this ); 
+        };
+        iterator  operator+  ( const long n ) const      {
+            iterator it( position+n, parent);
+            return ( it );
+        };
+        iterator  operator-  ( const long n ) const      {
+            iterator it( position-n, parent);
+            return ( it ); 
+        };
+        iterator& operator+= ( const long n )            {
+            position += n; return ( *this ); 
+        };
+        iterator& operator-= ( const long n )            {
+            position -= n; return ( *this ); 
+        };
+        T         operator*  ( void )         const      {
+            return ( parent->m_ObjectStore[position] ); 
+        };
         
-        bool      operator== ( const iterator& t ) const { return ( t.position==(parent->m_ObjectStore.empty( )?1:position) && t.parent==parent ); };
-        bool      operator!= ( const iterator& t ) const { return ( ! (*this==t )); };
-        bool      operator== ( const const_iterator& t ) const { return ( ((const_iterator&)t).get_position()==(parent->m_ObjectStore.empty( )?1:position) &&  ((const_iterator&)t).get_parent()==parent ); };
-        bool      operator!= ( const const_iterator& t ) const { return ( ! (*this==t )); };
-        bool      operator>  ( const iterator& t       ) const { return ( (*this).get_position()>t.get_position() ); };
-        bool      operator>  ( const const_iterator& t ) const { return ( (*this).get_position()>t.get_position() ); };
-        bool      operator<  ( const iterator& t       ) const { return ( (*this).get_position()<t.get_position() ); };
-        bool      operator<  ( const const_iterator& t ) const { return ( (*this).get_position()<t.get_position() ); };
+        bool      operator== ( const iterator& t ) const {
+            return ( t.position==(parent->m_ObjectStore.empty( )?1:position) 
+                && t.parent==parent ); 
+        };
+        bool      operator!= ( const iterator& t ) const {
+            return ( ! (*this==t )); 
+        };
+        bool      operator== ( const const_iterator& t ) const {
+            return ( ((const_iterator&)t).get_position()==(parent->m_ObjectStore.empty( )?1:position) 
+                &&  ((const_iterator&)t).get_parent()==parent ); 
+        };
+        bool      operator!= ( const const_iterator& t ) const {
+            return ( ! (*this==t )); 
+        };
+        bool      operator>  ( const iterator& t       ) const {
+            return ( (*this).get_position()>t.get_position() ); 
+        };
+        bool      operator>  ( const const_iterator& t ) const {
+            return ( (*this).get_position()>t.get_position() ); 
+        };
+        bool      operator<  ( const iterator& t       ) const {
+            return ( (*this).get_position()<t.get_position() ); 
+        };
+        bool      operator<  ( const const_iterator& t ) const {
+            return ( (*this).get_position()<t.get_position() ); 
+        };
         
-        const T * const operator-> ( void )   const      { return ( &(const_cast<CNearTree*>(parent)->m_ObjectStore[position]) ); };
-        long get_position( void ) const {return position;};
-        const CNearTree< T, DistanceType, distMinValue >* get_parent( void ) {return parent;};
+        const T * const operator-> ( void )   const      {
+            return ( &(const_cast<CNearTree*>(parent)->m_ObjectStore[position]) ); 
+        };
+        long get_position( void ) const {
+            return position;
+        };
+        const CNearTree< T, DistanceType, distMinValue >* get_parent( void ) {
+            return parent;
+        };
         
     private:
-        iterator ( const long s, const CNearTree* const nt ) { position = s; parent = nt; }; // constructor
+        iterator ( const long s, const CNearTree* const nt ) {
+            position = s; parent = nt; 
+        }; // constructor
         
     }; // class iterator
     //====================================================================================
@@ -11374,35 +7288,94 @@ public:
         
     public:
         const_iterator( void ) { }; // constructor
-        explicit const_iterator( const iterator& s ) { position = ((iterator)s).get_position(); parent = ((iterator)s).get_parent(); }; // constructor
+        explicit const_iterator( const iterator& s ) {
+             position = ((iterator)s).get_position();
+             parent = ((iterator)s).get_parent(); 
+        }; // constructor
         
-        const_iterator& operator=  ( const const_iterator& s ) { position = s.position; parent = s.parent; return ( *this ); };
-        const_iterator& operator=  ( const       iterator& s ) { position = ((iterator &)s).get_position(); parent = ((iterator &)s).get_parent(); return ( *this ); };
-        const_iterator  operator++ ( const int n )             { const_iterator it(*this); position+=1+n; return ( it ); };
-        const_iterator  operator-- ( const int n )             { const_iterator it(*this); position-=1+n; return ( it ); };
-        const_iterator& operator++ ( void )                    { ++position; return ( *this ); };
-        const_iterator& operator-- ( void )                    { --position; return ( *this ); };
-        const_iterator  operator+  ( const long n ) const      { const_iterator it( position+n, parent); return ( it ); };
-        const_iterator  operator-  ( const long n ) const      { const_iterator it( position-n, parent); return ( it ); };
-        const_iterator& operator+= ( const long n )            { position += n; return ( *this ); };
-        const_iterator& operator-= ( const long n )            { position -= n; return ( *this ); };
-        T               operator*  ( void )         const      { return ( parent->m_ObjectStore[position] ); };
+        const_iterator& operator=  ( const const_iterator& s ) {
+             position = s.position; parent = s.parent;
+             return ( *this );
+        };
+        const_iterator& operator=  ( const       iterator& s ) {
+             position = ((iterator &)s).get_position();
+             parent = ((iterator &)s).get_parent();
+             return ( *this );
+        };
+        const_iterator  operator++ ( const int n )             {
+             const_iterator it(*this);
+             position+=1+n; return ( it ); 
+        };
+        const_iterator  operator-- ( const int n )             {
+             const_iterator it(*this);
+             position-=1+n; return ( it ); 
+        };
+        const_iterator& operator++ ( void )                    {
+             ++position; return ( *this ); 
+        };
+        const_iterator& operator-- ( void )                    {
+             --position; return ( *this ); 
+        };
+        const_iterator  operator+  ( const long n ) const      {
+             const_iterator it( position+n, parent);
+             return ( it ); 
+        };
+        const_iterator  operator-  ( const long n ) const      {
+             const_iterator it( position-n, parent);
+              return ( it ); 
+        };
+        const_iterator& operator+= ( const long n )            {
+             position += n;
+             return ( *this ); 
+        };
+        const_iterator& operator-= ( const long n )            {
+             position -= n; return ( *this ); 
+        };
+        T               operator*  ( void )         const      {
+             return ( parent->m_ObjectStore[position] ); 
+        };
         
-        bool            operator== ( const const_iterator& t ) const { return ( t.position==(parent->m_ObjectStore.empty( )?1:position) && t.parent==parent ); };
-        bool            operator!= ( const const_iterator& t ) const { return ( ! (*this==t )); };
-        bool            operator== ( const iterator& t ) const { return ( ((iterator &)t).get_position()==(parent->m_ObjectStore.empty( )?1:position) && ((iterator &)t).get_parent()==parent ); };
-        bool            operator!= ( const iterator& t ) const { return ( ! (*this==t )); };
-        bool      operator>  ( const iterator& t       ) const { return ( (*this).get_position()>t.get_position() ); };
-        bool      operator>  ( const const_iterator& t ) const { return ( (*this).get_position()>t.get_position() ); };
-        bool      operator<  ( const iterator& t       ) const { return ( (*this).get_position()<t.get_position() ); };
-        bool      operator<  ( const const_iterator& t ) const { return ( (*this).get_position()<t.get_position() ); };
+        bool            operator== ( const const_iterator& t ) const {
+            return ( t.position==(parent->m_ObjectStore.empty( )?1:position) 
+                && t.parent==parent ); 
+        };
+        bool            operator!= ( const const_iterator& t ) const {
+            return ( ! (*this==t )); 
+        };
+        bool            operator== ( const iterator& t ) const {
+            return ( ((iterator &)t).get_position()==(parent->m_ObjectStore.empty( )?1:position) 
+              && ((iterator &)t).get_parent()==parent ); 
+        };
+        bool            operator!= ( const iterator& t ) const {
+            return ( ! (*this==t )); 
+        };
+        bool      operator>  ( const iterator& t       ) const {
+            return ( (*this).get_position()>t.get_position() ); 
+        };
+        bool      operator>  ( const const_iterator& t ) const {
+            return ( (*this).get_position()>t.get_position() ); 
+        };
+        bool      operator<  ( const iterator& t       ) const {
+            return ( (*this).get_position()<t.get_position() ); 
+        };
+        bool      operator<  ( const const_iterator& t ) const {
+            return ( (*this).get_position()<t.get_position() ); 
+        };
         
-        const T * const operator-> ( void )   const      { return ( &(const_cast<CNearTree*>(parent)->m_ObjectStore[position]) ); };
-        long get_position          ( void ) const  {return position;};
-        const CNearTree< T, DistanceType, distMinValue >* get_parent( void ) {return parent;};
+        const T * const operator-> ( void )   const      {
+            return ( &(const_cast<CNearTree*>(parent)->m_ObjectStore[position]) ); 
+        };
+        long get_position          ( void ) const  {
+            return position;
+        };
+        const CNearTree< T, DistanceType, distMinValue >* get_parent( void ) {
+            return parent;
+        };
         
     private:
-        const_iterator ( const long s, const CNearTree* nt ) { position = s; parent = nt; }; // constructor
+        const_iterator ( const long s, const CNearTree* nt ) {
+             position = s; parent = nt; 
+        }; // constructor
         
     }; // end class const_iterator
     //====================================================================================
@@ -11411,10 +7384,8 @@ public:
     
     
 }; // template class CNearTree
-
+    
 #endif // !defined(TNEAR_H_INCLUDED)
-
-
-
-
+    
+    
 

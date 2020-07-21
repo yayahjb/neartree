@@ -47,7 +47,7 @@
 # Version string
 VERSION = 7:0:0
 RELEASE = 4.0
-
+SHELL = /bin/bash
 
 #
 # Compiler and compilation flags
@@ -61,6 +61,7 @@ else
 CFLAGS  = -g -O2 -Wall  -DCNEARTREE_SAFE_TRIANG=1
 TIME = 
 endif
+CXXFLAGS = $(CFLAGS) -std=C++11
 
 #
 # libtool path if system default is not suitable
@@ -118,10 +119,10 @@ CPPLIBRARIES = -lm
 CLIBRARIES = $(CVECTOR_LIBLOC) -lCVector -lm
 
 COMPILE_COMMAND        =  $(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(INCLUDES) $(WARNINGS) -c
-CPPCOMPILE_COMMAND     =  $(LIBTOOL) --mode=compile $(CXX) $(CFLAGS) $(INCLUDES) $(WARNINGS) -c
+CPPCOMPILE_COMMAND     =  $(LIBTOOL) --mode=compile $(CXX) $(CXXFLAGS) $(INCLUDES) $(WARNINGS) -c
 LIBRARY_LINK_COMMAND   =  $(LIBTOOL) --mode=link $(CC) -version-info $(VERSION) -no-undefined -rpath $(INSTALL_PREFIX)/lib
 BUILD_COMMAND_LOCAL    =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) $(INCLUDES)
-CPPBUILD_COMMAND_LOCAL =  $(LIBTOOL) --mode=link $(CXX) -no-undefined $(CFLAGS) $(INCLUDES)
+CPPBUILD_COMMAND_LOCAL =  $(LIBTOOL) --mode=link $(CXX) -no-undefined $(CCCFLAGS) $(INCLUDES)
 BUILD_COMMAND_DYNAMIC  =  $(LIBTOOL) --mode=link $(CC) -no-undefined $(CFLAGS) -shared -I$(INSTALL_PREFIX)/include
 BUILD_COMMAND_STATIC   =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) -static-libtool-libs -I$(INSTALL_PREFIX)/include
 INSTALL_COMMAND        =  $(LIBTOOL) --mode=install cp
