@@ -2139,12 +2139,16 @@ public:
     //=======================================================================
     //  long FindK_NearestNeighbors(  const size_t k, const DistanceType& dRadius,
     //     OutputContainerType& tClosest, const T& t ) const
+    //  long FindK_NearestNeighbors(  const size_t k, std::vector<size_t> & ExclusionVector,
+    //     const DistanceType& dRadius,
+    //     OutputContainerType& tClosest, const T& t ) const
     //
     //  Function to search a NearTree for the set of objects closer to some probe point, t,
     //  than dRadius. This is only here so that tClosest can be cleared before starting the work
     //   and radius can be updated while processing.
     //
     //    k is the maximum number of points to return
+    //    sExclusionVector is a vector of indices of objects to be excluded from the search
     //    dRadius is the maximum search radius - any point farther than dRadius from the probe
     //             point will be ignored
     //    tClosest is returned as a container of objects of the templated type and is the
@@ -2640,6 +2644,539 @@ public:
                     } else {
                         lFound = (this->m_BaseNode).K_Near( k-tClosest.size(),
                                                            true, false,
+                                                           dRadiusInner,
+                                                           dRadiusOuter,
+                                                           K_Storage,
+                                                           t
+#ifdef CNEARTREE_INSTRUMENTED
+                                                           , m_NodeVisits
+#endif
+                                                           );
+                        
+                    }
+                    if (lFound > 0) break;
+                    dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*1.1;
+                    dRadiusInner = dRadiusOuterSave;
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+                    if (dRadiusOuter > radius) dRadiusOuter = radius;
+                    
+                } while (lFound == 0 && dRadiusOuterSave < radius);
+                /* fprintf(stderr,"found %ld points\n",lFound); */
+                for( unsigned int i=0; i<K_Storage.size( ); ++i )
+                {
+                    tClosest.insert( tClosest.end( ), m_ObjectStore[K_Storage[i].second] );
+                    tIndices.insert( tIndices.end( ), K_Storage[i].second );
+                    tDistances.insert( tDistances.end(),K_Storage[i].first );
+                }
+                if (dRadiusOuter >= radius-1.e-36) break;
+            }
+            
+            return( tClosest.size() );
+        }
+    }  //  FindK_NearestNeighbors
+    
+    template<typename OutputContainerType>
+    long FindK_NearestNeighbors ( const size_t k, std::vector<size_t>& ExclusionVector, 
+        const DistanceType& radius,  OutputContainerType& tClosest,   const T& t )
+    {
+        // clear the contents of the return vector so that things don't accidentally accumulate
+        tClosest.clear( );
+        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+        
+        if( this->empty( ) )
+        {
+            return( 0L );
+        }
+        else
+        {
+            std::set<size_t> sExclusionSet(ExclusionVector.begin(),ExclusionVector.end());
+            std::map<size_t,double> dDistanceCache;
+#ifdef CNEARTREE_INSTRUMENTED
+            std::map<size_t,size_t> sDistanceCacheHits;
+#endif
+            DistanceType dRadiusInner = 0;
+            DistanceType dRadiusOuterSave;
+            DistanceType dRadiusOuter;
+            double minradinc;
+            double radlist[cneartree_dimsamples];
+            double dimlist[cneartree_dimsamples-1];
+            double dimest = 1.;
+            double foundatrad[cneartree_dimsamples];
+            size_t numrad;
+            bool shell, closed;
+            long lFound;
+            std::vector<std::pair<DistanceType, size_t> > K_Storage;
+            dRadiusOuter = minradinc = 0.333*(m_SumSpacings/((double)(1+m_ObjectStore.size()))+ sqrt(m_SumSpacingsSq/((double)(1+m_ObjectStore.size()))));
+            if (minradinc < 1.e-38) minradinc = 1.;
+            if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner + minradinc;
+            if (dRadiusOuter > radius) dRadiusOuter = radius;
+            numrad = 0;
+            shell = true;
+            closed = true;
+            if ((m_Flags & NTF_SphericalKNN) || k > 1+(m_ObjectStore.size())/200 ) {
+                dRadiusOuter = radius;
+                shell = false;
+            }
+            /* First find the nearest k inner shell */
+            if (!(m_Flags & NTF_NoDistanceCache))dDistanceCache.clear();
+            do {
+                dRadiusOuterSave = dRadiusOuter;
+                /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
+                 (double)(dRadiusInner), (double)(dRadiusOuter)); */
+                if (!(m_Flags & NTF_NoDistanceCache)) {
+                    lFound = (this->m_BaseNode).K_Near( k, shell, closed,
+                                                       dDistanceCache,
+                                                       sExclusionSet,
+                                                       dRadiusInner,
+                                                       dRadiusOuter,
+                                                       K_Storage,
+                                                       t
+                                                       #ifdef CNEARTREE_INSTRUMENTED
+                                                       , m_NodeVisits
+                                                       , sDistanceCacheHits
+                                                       #endif
+                                                       );
+                } else {
+                    lFound = (this->m_BaseNode).K_Near( k, shell, closed,
+                                                       sExclusionSet,
+                                                       dRadiusInner,
+                                                       dRadiusOuter,
+                                                       K_Storage,
+                                                       t
+                                                       #ifdef CNEARTREE_INSTRUMENTED
+                                                       , m_NodeVisits
+                                                       #endif
+                                                       );
+                    
+                }
+                /*fprintf(stderr,"found %ld points\n",lFound);*/
+                if (lFound > 0) break;
+                dRadiusOuter = dRadiusOuterSave+
+                (dRadiusOuterSave-dRadiusInner)*2.;
+                dRadiusInner = dRadiusOuterSave;
+                if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+minradinc;
+                if (dRadiusOuter > radius) dRadiusOuter = radius;
+            } while (lFound == 0 && dRadiusOuterSave < radius);
+            if (lFound < 1) return (0L);
+            for( unsigned int i=0; i<K_Storage.size( ); ++i )
+            {
+                tClosest.insert( tClosest.end( ), m_ObjectStore[K_Storage[i].second] );
+            }
+            while ( tClosest.size() < k && dRadiusOuter < radius) {
+                if (numrad < cneartree_dimsamples) {
+                    foundatrad[numrad] = (double)tClosest.size();
+                    radlist[numrad++] = dRadiusOuter;
+                    if (numrad > 1) {
+                        foundatrad[numrad-1]+= foundatrad[numrad-2];
+                        dimlist[numrad-2]
+                        = log(foundatrad[numrad-1]-foundatrad[numrad-2])
+                        /(log(radlist[numrad-1]-radlist[numrad-2])+1.e-38);
+                    }
+                    shell = true;
+                    closed= false;
+                    dRadiusInner = dRadiusOuter;
+                    dRadiusOuter = dRadiusInner+minradinc;
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+minradinc;
+                    if (dRadiusOuter > radius) dRadiusOuter = radius;
+                    if (numrad == cneartree_dimsamples) {
+                        size_t ii;
+                        dimest = 0.;
+                        for (ii=0; ii < numrad-1; ii++) {
+                            dimest += dimlist[ii];
+                        }
+                        dimest = dimest/((double) (numrad-1));
+                    }
+                } else {
+                    shell = false;
+                    closed = false;
+                    dRadiusInner = dRadiusOuter;
+                    dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(3.*dimest));
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+minradinc;
+                    if (dRadiusOuter > radius) dRadiusOuter = radius;
+                }
+                K_Storage.clear();
+                /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
+                 (double)(dRadiusInner), (double)(dRadiusOuter)); */
+                /* Add any point from the next annular shell */
+                do {
+                    dRadiusOuterSave = dRadiusOuter;
+                    /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
+                     (double)(dRadiusInner), (double)(dRadiusOuter)); */
+                    
+                    if (!(m_Flags & NTF_NoDistanceCache)) {
+                        lFound = (this->m_BaseNode).K_Near( k-tClosest.size(),
+                                                           shell,
+                                                           closed,
+                                                           dDistanceCache,
+                                                           sExclusionSet,
+                                                           dRadiusInner,
+                                                           dRadiusOuter,
+                                                           K_Storage,
+                                                           t
+#ifdef CNEARTREE_INSTRUMENTED
+                                                           ,  m_NodeVisits
+                                                           , sDistanceCacheHits
+#endif
+                                                           );
+                    } else {
+                        lFound = (this->m_BaseNode).K_Near( k-tClosest.size(),
+                                                           shell,
+                                                           closed,
+                                                           sExclusionSet,
+                                                           dRadiusInner,
+                                                           dRadiusOuter,
+                                                           K_Storage,
+                                                           t
+#ifdef CNEARTREE_INSTRUMENTED
+                                                           ,  m_NodeVisits
+#endif
+                                                           );
+                    }
+                    if (lFound > 0) break;
+                    dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*1.1;
+                    dRadiusInner = dRadiusOuterSave;
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+minradinc;
+                    if (dRadiusOuter > radius) dRadiusOuter = radius;
+                    
+                } while (lFound == 0 && dRadiusOuterSave < radius);
+                /*fprintf(stderr,"found %ld points\n",lFound); */
+                for( unsigned int i=0; i<K_Storage.size( ); ++i )
+                {
+                    tClosest.insert( tClosest.end( ), m_ObjectStore[K_Storage[i].second] );
+                }
+                
+                if (dRadiusOuter >= radius-1.e-36) break;
+            }
+            
+            return( tClosest.size() );
+        }
+    }  //  FindK_NearestNeighbors
+    template<typename OutputContainerType>
+    long FindK_NearestNeighbors ( const size_t k, std::vector<size_t>&  ExclusionVector,
+                                 const DistanceType& radius,
+                                 OutputContainerType& tClosest,
+                                 std::vector<size_t>& tIndices, const T& t )
+    {
+        // clear the contents of the return vector so that things don't accidentally accumulate
+        tClosest.clear( );
+        tIndices.clear( );
+        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+        
+        if( this->empty( ) )
+        {
+            return( 0L );
+        }
+        else
+        {
+            std::set<size_t> sExclusionSet(ExclusionVector.begin(),ExclusionVector.end());
+            std::map<size_t,double> dDistanceCache;
+#ifdef CNEARTREE_INSTRUMENTED
+            std::map<size_t,size_t> sDistanceCacheHits;
+#endif
+            DistanceType dRadiusInner = 0;
+            DistanceType dRadiusOuterSave;
+            DistanceType dRadiusOuter;
+            double minradinc;
+            double radlist[cneartree_dimsamples];
+            double dimlist[cneartree_dimsamples-1];
+            double dimest = 1.;
+            double foundatrad[cneartree_dimsamples];
+            size_t numrad;
+            bool shell, closed;
+            long lFound;
+            std::vector< std::pair<DistanceType, size_t> > K_Storage;
+            dRadiusOuter = minradinc = 0.333*(m_SumSpacings/((double)(1+m_ObjectStore.size()))+ sqrt(m_SumSpacingsSq/((double)(1+m_ObjectStore.size()))));
+            if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+            if (dRadiusOuter > radius) dRadiusOuter = radius;
+            numrad = 0;
+            shell = true;
+            closed = true;
+            if (m_Flags & NTF_SphericalKNN) {
+                dRadiusOuter = radius;
+                shell = false;
+            }
+            /* First find the nearest k inner shell */
+            if (!(m_Flags & NTF_NoDistanceCache))dDistanceCache.clear();
+            do {
+                dRadiusOuterSave = dRadiusOuter;
+                /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
+                 (double)(dRadiusInner), (double)(dRadiusOuter)); */
+                if (!(m_Flags & NTF_NoDistanceCache)) {
+                    lFound = (this->m_BaseNode).K_Near( k, shell, closed,
+                                                       dDistanceCache,
+                                                       sExclusionSet,
+                                                       dRadiusInner,
+                                                       dRadiusOuter,
+                                                       K_Storage,
+                                                       t
+#ifdef CNEARTREE_INSTRUMENTED
+                                                       , m_NodeVisits
+                                                       , sDistanceCacheHits
+#endif
+                                                       );
+                } else {
+                    lFound = (this->m_BaseNode).K_Near( k, shell, closed,
+                                                       sExclusionSet,
+                                                       dRadiusInner,
+                                                       dRadiusOuter,
+                                                       K_Storage,
+                                                       t
+#ifdef CNEARTREE_INSTRUMENTED
+                                                       , m_NodeVisits
+#endif
+                                                       );
+                }
+                /* fprintf(stderr,"found %ld points\n",lFound); */
+                if (lFound > 0) break;
+                dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*2.;
+                dRadiusInner = dRadiusOuterSave;
+                if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+minradinc;
+                if (dRadiusOuter > radius) dRadiusOuter = radius;
+            } while (lFound == 0 && dRadiusOuterSave < radius);
+            if (lFound < 1) return (0L);
+            for( unsigned int i=0; i<K_Storage.size( ); ++i )
+            {
+                tClosest.insert( tClosest.end( ), m_ObjectStore[K_Storage[i].second] );
+                tIndices.insert( tIndices.end( ), K_Storage[i].second );
+            }
+            while ( tClosest.size() < k && dRadiusOuter < radius) {
+                if (numrad < cneartree_dimsamples) {
+                    foundatrad[numrad] = (double)lFound;
+                    radlist[numrad++] = dRadiusOuter;
+                    if (numrad > 1) {
+                        foundatrad[numrad-1]+= foundatrad[numrad-2];
+                        dimlist[numrad-2]
+                        = log(foundatrad[numrad-1]-foundatrad[numrad-2])
+                        /(log(radlist[numrad-1]-radlist[numrad-2])+1.e-38);
+                    }
+                    shell = true;
+                    closed= false;
+                    dRadiusInner = dRadiusOuter;
+                    dRadiusOuter = dRadiusInner+m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+minradinc;
+                    if (dRadiusOuter > radius) dRadiusOuter = radius;
+                    if (numrad == cneartree_dimsamples) {
+                        size_t ii;
+                        dimest = 0.;
+                        for (ii=0; ii < numrad-1; ii++) {
+                            dimest += dimlist[ii];
+                        }
+                        dimest = dimest/((double) (numrad-1));
+                    }
+                } else {
+                    shell = false;
+                    closed = false;
+                    dRadiusInner = dRadiusOuter;
+                    dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(3.*dimest));
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+minradinc;
+                    if (dRadiusOuter > radius) dRadiusOuter = radius;
+                }
+                K_Storage.clear();
+                /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
+                 (double)(dRadiusInner), (double)(dRadiusOuter)); */
+                /* Add any point from the next annular shell */
+                do {
+                    dRadiusOuterSave = dRadiusOuter;
+                    /*fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
+                     (double)(dRadiusInner), (double)(dRadiusOuter)); */
+                    if (!(m_Flags & NTF_NoDistanceCache)) {
+                        lFound = (this->m_BaseNode).K_Near( k-tClosest.size(),
+                                                           shell, closed,
+                                                           dDistanceCache,
+                                                           sExclusionSet,
+                                                           dRadiusInner,
+                                                           dRadiusOuter,
+                                                           K_Storage,
+                                                           t
+#ifdef CNEARTREE_INSTRUMENTED
+                                                           , m_NodeVisits
+                                                           , sDistanceCacheHits
+#endif
+                                                           );
+                    } else {
+                        lFound = (this->m_BaseNode).K_Near( k-tClosest.size(),
+                                                           shell, closed,
+                                                           sExclusionSet,
+                                                           dRadiusInner,
+                                                           dRadiusOuter,
+                                                           K_Storage,
+                                                           t
+#ifdef CNEARTREE_INSTRUMENTED
+                                                           , m_NodeVisits
+#endif
+                                                           );
+                        
+                    }
+                    if (lFound > 0) break;
+                    dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*1.1;
+                    dRadiusInner = dRadiusOuterSave;
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+minradinc;
+                    if (dRadiusOuter > radius) dRadiusOuter = radius;
+                    
+                } while (lFound == 0 && dRadiusOuterSave < radius);
+                /* fprintf(stderr,"found %ld points\n",lFound); */
+                for( unsigned int i=0; i<K_Storage.size( ); ++i )
+                {
+                    tClosest.insert( tClosest.end( ), m_ObjectStore[K_Storage[i].second] );
+                    tIndices.insert( tIndices.end( ), K_Storage[i].second );
+                }
+                if (dRadiusOuter >= radius-1.e-36) break;
+            }
+            
+            return( tClosest.size() );
+        }
+    }  //  FindK_NearestNeighbors
+    template<typename OutputContainerType>
+    long FindK_NearestNeighbors ( const size_t k, std::vector<size_t>& ExclusionVector, 
+                                 const DistanceType& radius,
+                                 OutputContainerType& tClosest,
+                                 std::vector<size_t>& tIndices,
+                                 std::vector<DistanceType>& tDistances,
+                                 const T& t )
+    {
+        // clear the contents of the return vector so that things don't accidentally accumulate
+        tClosest.clear( );
+        tIndices.clear( );
+        tDistances.clear( );
+        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+        
+        if( this->empty( ) )
+        {
+            return( 0L );
+        }
+        else
+        {
+            std::set<size_t> sExclusionSet(ExclusionVector.begin(),ExclusionVector.end());
+            std::map<size_t,double> dDistanceCache;
+#ifdef CNEARTREE_INSTRUMENTED
+            std::map<size_t,size_t> sDistanceCacheHits;
+#endif
+            DistanceType dRadiusInner = 0;
+            DistanceType dRadiusOuterSave;
+            DistanceType dRadiusOuter;
+            double radlist[cneartree_dimsamples];
+            double dimlist[cneartree_dimsamples-1];
+            double dimest = 1.;
+            double foundatrad[cneartree_dimsamples];
+            int numrad;
+            bool shell, closed;
+            long lFound;
+            std::vector<std::pair<DistanceType, size_t> >K_Storage;
+            dRadiusOuter = m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
+            if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+            if (dRadiusOuter > radius) dRadiusOuter = radius;
+            numrad = 0;
+            shell = true;
+            closed = true;
+            if (m_Flags & NTF_SphericalKNN) {
+                dRadiusOuter = radius;
+                shell = false;
+            }
+            /* First find the nearest k inner shell */
+            if (!(m_Flags & NTF_NoDistanceCache))dDistanceCache.clear();
+            do {
+                dRadiusOuterSave = dRadiusOuter;
+                /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
+                 (double)(dRadiusInner), (double)(dRadiusOuter)); */
+                if (!(m_Flags & NTF_NoDistanceCache)) {
+                    lFound = (this->m_BaseNode).K_Near( k, shell, closed,
+                                                       dDistanceCache,
+                                                       sExclusionSet,
+                                                       dRadiusInner,
+                                                       dRadiusOuter,
+                                                       K_Storage,
+                                                       t
+#ifdef CNEARTREE_INSTRUMENTED
+                                                       , m_NodeVisits
+                                                       , sDistanceCacheHits
+#endif
+                                                       );
+                } else {
+                    lFound = (this->m_BaseNode).K_Near( k, shell, closed,
+                                                       sExclusionSet,
+                                                       dRadiusInner,
+                                                       dRadiusOuter,
+                                                       K_Storage,
+                                                       t
+#ifdef CNEARTREE_INSTRUMENTED
+                                                       , m_NodeVisits
+#endif
+                                                       );
+                }
+                /* fprintf(stderr,"found %ld points\n",lFound); */
+                if (lFound > 0) break;
+                dRadiusOuter = dRadiusOuterSave+(dRadiusOuterSave-dRadiusInner)*2.;
+                dRadiusInner = dRadiusOuterSave;
+                if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+                if (dRadiusOuter > radius) dRadiusOuter = radius;
+            } while (lFound == 0 && dRadiusOuterSave < radius);
+            if (lFound < 1) return (0L);
+            for( unsigned int i=0; i<K_Storage.size( ); ++i )
+            {
+                tClosest.insert( tClosest.end( ), m_ObjectStore[K_Storage[i].second] );
+                tIndices.insert( tIndices.end( ), K_Storage[i].second );
+                tDistances.insert( tDistances.end(),K_Storage[i].first );
+            }
+            while ( tClosest.size() < k && dRadiusOuter < radius) {
+                /*fprintf (stderr,"Doing annuli, k %d, iFound %d, radius %g dRadiusOuter %g\n",
+                 (int)k,(int)lFound, radius, dRadiusOuter );*/
+                if (numrad < cneartree_dimsamples) {
+                    foundatrad[numrad] = (double)tClosest.size();
+                    radlist[numrad++] = dRadiusOuter;
+                    if (numrad > 1) {
+                        foundatrad[numrad-1]+= foundatrad[numrad-2];
+                        dimlist[numrad-2]
+                        = log(foundatrad[numrad-1]-foundatrad[numrad-2])
+                        /(log(radlist[numrad-1]-radlist[numrad-2])+1.e-38);
+                    }
+                    shell = true;
+                    closed= false;
+                    dRadiusInner = dRadiusOuter;
+                    dRadiusOuter = dRadiusInner+m_SumSpacings/sqrt((double)(1+m_ObjectStore.size()));
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+                    if (dRadiusOuter > radius) dRadiusOuter = radius;
+                    if (numrad == cneartree_dimsamples) {
+                        int ii;
+                        dimest = 0.;
+                        for (ii=0; ii < numrad-1; ii++) {
+                            dimest += dimlist[ii];
+                        }
+                        dimest = dimest/((double) (numrad-1));
+                    }
+                } else {
+                    shell = false;
+                    closed = false;
+                    dRadiusInner = dRadiusOuter;
+                    dRadiusOuter = dRadiusInner*pow(((double)k)/((double)tClosest.size()),1./(3.*dimest));
+                    if (dRadiusOuter <= dRadiusInner) dRadiusOuter = dRadiusInner+1.;
+                    if (dRadiusOuter > radius) dRadiusOuter = radius;
+                }
+                K_Storage.clear();
+                /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
+                 (double)(dRadiusInner), (double)(dRadiusOuter)); */
+                /* Add any point from the next annular shell */
+                do {
+                    dRadiusOuterSave = dRadiusOuter;
+                    /* fprintf(stderr,"dRadiusInner, dRadiusOuter %g %g\n",
+                     (double)(dRadiusInner), (double)(dRadiusOuter)); */
+                    if (!(m_Flags & NTF_NoDistanceCache)) {
+                        lFound = (this->m_BaseNode).K_Near( k-tClosest.size(),
+                                                           true, false,
+                                                           dDistanceCache,
+                                                           sExclusionSet,
+                                                           dRadiusInner,
+                                                           dRadiusOuter,
+                                                           K_Storage,
+                                                           t
+#ifdef CNEARTREE_INSTRUMENTED
+                                                           , m_NodeVisits
+                                                           , sDistanceCacheHits
+#endif
+                                                           );
+                    } else {
+                        lFound = (this->m_BaseNode).K_Near( k-tClosest.size(),
+                                                           true, false,
+                                                           sExclusionSet,
                                                            dRadiusInner,
                                                            dRadiusOuter,
                                                            K_Storage,
@@ -5713,36 +6250,42 @@ public:
         //             const bool shell,  // if true, the search only returns hits in the nearest or farthest thin shell
         //             const bool closed, // if true, the search in inlcusive of the inner radius
         //             const bool cache,  // if true, use the distance cache dDistanceCache map
+        //             const bool exclude, // if true, use the exclusion set of sExclusionSet ordinals
         //             std::map<size_t,double> &dDistanceCache, // parallel map to m_ObjectStore containing
-        //              //                 cached distances from the probe to that object or DBL_MAX;
-        //              DistanceTypeNode& dAvgDistInner, // the inner bound on the search radius or average sum
-        //              //                 of distances, which will be updated if near is false when the
-        //              //                 internal store is resized
-        //              DistanceTypeNode& dAvgDistOuter,     // the excluded outer bound on the search radius or
-        //              //                 average sum, which will be updated if near is true when  the internal
-        //              //                 store is resized
-        //              std::vector<std::pair<DistanceTypeNode,size_t> >& tExtreme,
-        //              //                 a vector of pair of Nodes and ordinals of objects where
-        //              //                 the objects are of the templated type found between dAvgDistInner and
-        //              //                 dAvgDistOuter as an average of distance from probe points, limited
-        //              //                 by the k-extreme search
-        //              ProbeContainerType& t                // container of probe points
-        //              #ifdef CNEARTREE_INSTRUMENTED
-        //            , size_t& VisitCount
-        //            , std::map<size_t,size_t> &sDistanceCacheHits
-        //              #endif
+        //             //                 cached distances from the probe to that object or DBL_MAX;
+        //             std::set<size_t> &sExclusionSet, // optional set of m_ObjectStore ordinal to
+        //             //                 be excluded from all matches
+        //             DistanceTypeNode& dAvgDistInner, // the inner bound on the search radius or average sum
+        //             //                 of distances, which will be updated if near is false when the
+        //             //                 internal store is resized
+        //             DistanceTypeNode& dAvgDistOuter,     // the excluded outer bound on the search radius or
+        //             //                 average sum, which will be updated if near is true when  the internal
+        //             //                 store is resized
+        //             std::vector<std::pair<DistanceTypeNode,size_t> >& tExtreme,
+        //             //                 a vector of pair of Nodes and ordinals of objects where
+        //             //                 the objects are of the templated type found between dAvgDistInner and
+        //             //                 dAvgDistOuter as an average of distance from probe points, limited
+        //             //                 by the k-extreme search
+        //             ProbeContainerType& t                // container of probe points
+        //             #ifdef CNEARTREE_INSTRUMENTED
+        //           , size_t& VisitCount
+        //           , std::map<size_t,size_t> &sDistanceCacheHits
+        //             #endif
         //)
         // Private function to perform all the varieties of near and far searches
         //=======================================================================
 
-        template< typename ProbeContainerType >
+        template< typename ProbeContainerType, typename AssociativeContainerType >
         long K_Extreme (const size_t k, // the target number of points to find
                      const bool near,   // if true, search nearest, else to search farthest
                      const bool shell,  // if true, the search only returns hits in the nearest or farthest thin shell
                      const bool closed, // if true, the search in inlcusive of the inner radius
                      const bool cache,  // if true, use the distance cache map dDistanceCache
+                     const bool exclude, // if true, use the exclusion set of sExclusionSet ordinals
                      std::map<size_t,double> &dDistanceCache, // parallel map to m_ObjectStore containing
                      //                 cached distances from the probe to that object or DBL_MAX;
+                     AssociativeContainerType &sExclusionSet, // optional set or map of m_ObjectStore ordinals to
+                     //                 be excluded from all matches
                      DistanceTypeNode& dAvgDistInner, // the inner bound on the search radius or average sum
                      //                 of distances, which will be updated if near is false when the
                      //                 internal store is resized
@@ -5808,7 +6351,8 @@ public:
                     }
                     if ( dDL <= dAvgDistOuter
                         && (dDL > dAvgDistInner
-                            || (closed && dDL == dAvgDistInner )))
+                            || (closed && dDL == dAvgDistInner ))
+                        && (!exclude || sExclusionSet.find(pt->m_ptLeft)==sExclusionSet.end() ))
                     {   size_t collide;
                         #ifdef CNEARTREE_INSTRUMENTED
                         colcount = 1;
@@ -5865,7 +6409,8 @@ public:
 
                     if ( dDR <= dAvgDistOuter
                         && (dDR > dAvgDistInner
-                            || (closed && dDR == dAvgDistInner)))
+                            || (closed && dDR == dAvgDistInner))
+                        && (!exclude || sExclusionSet.find(pt->m_ptRight)==sExclusionSet.end() ))
                     {   size_t collide;
                         #ifdef CNEARTREE_INSTRUMENTED
                         colcount = 1;
@@ -6010,11 +6555,28 @@ public:
         //                const bool closed,
         //                const DistanceTypeNode dRadiusInner,
         //                DistanceTypeNode& dRadiusOuter,
-        //                std::vector<std::pair<DistanceTypeNode,size_t> >& tClosest) const
+        //                std::vector<std::pair<DistanceTypeNode,size_t> >& tClosest)
+        //                const TNode& t
+        //                #ifdef CNEARTREE_INSTRUMENTED
+        //              , size_t& VisitCount
+        //                #endif
+        //                )
+        //  long K_Near ( const size_t k,
+        //                const bool shell,
+        //                const bool closed,
+        //                std::set<size_t>& sExclusionSet,
+        //                const DistanceTypeNode dRadiusInner,
+        //                DistanceTypeNode& dRadiusOuter,
+        //                std::vector<std::pair<DistanceTypeNode,size_t> >& tClosest,
+        //                const TNode& t
+        //                #ifdef CNEARTREE_INSTRUMENTED
+        //              , size_t& VisitCount
+        //                #endif
+        //                )
         //  Private function to search a NearTree for the objects
         //     in the annular region defined the the half-open radial interval
         //         (dRadiusInner,dRadiusOuter] from the probe point
-        //     unless nearest is true, in which case the closed interval
+        //     unless closed is true, in which case the closed interval
         //         [dRadiusInner,dRadiusOuter] is used for the search and
         //     only up to k points at the nearest distance are accepted.
         //
@@ -6023,10 +6585,11 @@ public:
         // k:             the maximum number of m_Object to return, giving preference 
         //                  to the nearest
         // shell:         if true, the search only returns hits in the nearest thin shell
-        // closed:        if true, the search in inlcusive of the inner radius
+        // closed:        if true, the search is inclusive of the inner radius
         // dRadiusInner:  the lower bound on the search radius
         // dRadiusOuter:  the excluded upper bound on the search radius,
         //                  which will be updated when the internal store is resized
+        // sExclusionSet: the set of indices of excluded elements in ObjectStore
         // tClosest:      is a vector of pairs of Nodes and ordinals of objects in 
         //                  m_ObjectStore where the objects are of the templated type
         //                  found within dRadius of the probe point, limited by the 
@@ -6049,16 +6612,48 @@ public:
                        #endif
         ) {
             std::map<size_t,double> dDistanceCache;
+            std::set<size_t> sExclusionSet;
             DistanceTypeNode tmpdRadiusInner=dRadiusInner;
             const bool near=true;
             const bool cache=false;
+            const bool exclude=false;
             const TNode ttmp = t;
             std::vector<TNode> probe_container = {ttmp};
             #ifdef CNEARTREE_INSTRUMENTED
             std::map<size_t,size_t> sDistanceCacheHits;
             #endif
-            return K_Extreme(k, near, shell, closed, cache, dDistanceCache, 
-                tmpdRadiusInner, dRadiusOuter, tClosest,probe_container
+            return K_Extreme(k, near, shell, closed, cache, exclude, dDistanceCache, 
+                sExclusionSet, tmpdRadiusInner, dRadiusOuter, tClosest,probe_container
+                #ifdef CNEARTREE_INSTRUMENTED
+              , VisitCount
+              , sDistanceCacheHits 
+                #endif
+            );
+        } 
+        inline long K_Near ( const size_t k,
+                       const bool shell,
+                       const bool closed,
+                       std::set<size_t>& sExclusionSet,
+                       const DistanceTypeNode dRadiusInner,
+                       DistanceTypeNode& dRadiusOuter,
+                       std::vector<std::pair<DistanceTypeNode,size_t> >& tClosest,
+                       const TNode& t
+                       #ifdef CNEARTREE_INSTRUMENTED
+                     , size_t& VisitCount
+                       #endif
+        ) {
+            std::map<size_t,double> dDistanceCache;
+            DistanceTypeNode tmpdRadiusInner=dRadiusInner;
+            const bool near=true;
+            const bool cache=false;
+            const bool exclude=true;
+            const TNode ttmp = t;
+            std::vector<TNode> probe_container = {ttmp};
+            #ifdef CNEARTREE_INSTRUMENTED
+            std::map<size_t,size_t> sDistanceCacheHits;
+            #endif
+            return K_Extreme(k, near, shell, closed, cache, exclude, dDistanceCache, 
+                sExclusionSet, tmpdRadiusInner, dRadiusOuter, tClosest,probe_container
                 #ifdef CNEARTREE_INSTRUMENTED
               , VisitCount
               , sDistanceCacheHits 
@@ -6185,7 +6780,7 @@ public:
                 /*
                  See if both branches are populated.  In that case, save one branch
                  on the stack, and process the other one based on which one seems
-                 smaller, but useful first]
+                 smaller, but useful first
                  */
                 if (pt->m_pLeftBranch != ULONG_MAX
                     && pt->m_pRightBranch != ULONG_MAX ) {
@@ -6286,7 +6881,7 @@ public:
         //  long K_Near ( const size_t k,
         //                const bool shell,
         //                const bool closed,
-        //                std::vector<double> &dDistanceCache,
+        //                std::vector<double>& dDistanceCache,
         //                const DistanceTypeNode dRadiusInner,
         //                DistanceTypeNode& dRadiusOuter,
         //                std::vector<std::pair<DistanceTypeNode,size_t> >& tClosest) const
@@ -6295,6 +6890,20 @@ public:
         //              , std::map<size_t,size_t> &sDistanceCacheHits
         //                #endif
         //              )
+        //  long K_Near ( const size_t k,
+        //                const bool shell,
+        //                const bool closed,
+        //                std::vector<double>& dDistanceCache,
+        //                std::set<size_t>& sExclusionSet,
+        //                const DistanceTypeNode dRadiusInner,
+        //                DistanceTypeNode& dRadiusOuter,
+        //                std::vector<std::pair<DistanceTypeNode,size_t> >& tClosest,
+        //                const TNode& t
+        //                #ifdef CNEARTREE_INSTRUMENTED
+        //              , size_t& VisitCount
+        //              , std::map<size_t,size_t> &sDistanceCacheHits
+        //                #endif
+        //                )
         //
         //  Private function to search a NearTree for the objects
         //     in the annular region defined the the half-open radial interval
@@ -6309,10 +6918,11 @@ public:
         //                   preference to the nearest
         // shell:          if true, the search only returns hits in the 
         //                   nearest thin shell
-        // closed:         if true, the search in inlcusive of the inner radius
+        // closed:         if true, the search is inlcusive of the inner radius
         // dDistanceCache: a parallel map to m_ObjectStore containing
         //                   cached distances from the probe to that object or 
         //                   DBL_MAX;
+        // sExclusionSet:  the set of indices of excluded elements in ObjectStore
         // dRadiusInner:   the lower bound on the search radius
         // dRadiusOuter:   the excluded upper bound on the search radius,
         //                   which will be updated when the internal store is resized
@@ -6324,30 +6934,59 @@ public:
         //
         // returns the number of objects returned in the container (for sets, 
         // that may not equal the number found)
-        //
         /*=======================================================================*/
 
 #ifndef CNEARTREE_OBS
         inline long K_Near ( const size_t k,
                        const bool shell,
                        const bool closed,
-                       std::map<size_t,double> &dDistanceCache,
+                       std::map<size_t,double>& dDistanceCache,
                        const DistanceTypeNode dRadiusInner,
                        DistanceTypeNode& dRadiusOuter,
                        std::vector<std::pair<DistanceTypeNode,size_t> >& tClosest,
                        const TNode& t
                        #ifdef CNEARTREE_INSTRUMENTED
                      , size_t& VisitCount
-                     , std::map<size_t,size_t> &sDistanceCacheHits
+                     , std::map<size_t,size_t>& sDistanceCacheHits
+                       #endif
+        ) {
+            std::set<size_t> sExclusionSet;
+            bool near=true;
+            bool cache=true;
+            bool exclude=false;
+            DistanceTypeNode tmpdRadiusInner=dRadiusInner;
+            const TNode ttmp = t;
+            std::vector<TNode>  probe_container={ttmp};
+            return K_Extreme(k, near, shell, closed, cache, exclude, dDistanceCache, 
+                sExclusionSet, tmpdRadiusInner, dRadiusOuter, tClosest,probe_container
+                #ifdef CNEARTREE_INSTRUMENTED
+              , VisitCount
+	      , sDistanceCacheHits 
+                #endif
+            );
+        } 
+        inline long K_Near ( const size_t k,
+                       const bool shell,
+                       const bool closed,
+                       std::map<size_t,double>& dDistanceCache,
+                       std::set<size_t>& sExclusionSet,
+                       const DistanceTypeNode dRadiusInner,
+                       DistanceTypeNode& dRadiusOuter,
+                       std::vector<std::pair<DistanceTypeNode,size_t> >& tClosest,
+                       const TNode& t
+                       #ifdef CNEARTREE_INSTRUMENTED
+                     , size_t& VisitCount
+                     , std::map<size_t,size_t>& sDistanceCacheHits
                        #endif
         ) {
             bool near=true;
             bool cache=true;
+            bool exclude=true;
             DistanceTypeNode tmpdRadiusInner=dRadiusInner;
             const TNode ttmp = t;
             std::vector<TNode>  probe_container={ttmp};
-            return K_Extreme(k, near, shell, closed, cache, dDistanceCache, 
-                tmpdRadiusInner, dRadiusOuter, tClosest,probe_container
+            return K_Extreme(k, near, shell, closed, cache, exclude, dDistanceCache, 
+                sExclusionSet, tmpdRadiusInner, dRadiusOuter, tClosest,probe_container
                 #ifdef CNEARTREE_INSTRUMENTED
               , VisitCount
 	      , sDistanceCacheHits 
@@ -6634,10 +7273,12 @@ public:
                      , size_t& VisitCount
                        #endif
         ) {
+            std::set<size_t> sExclusionSet;
             bool near=true;
             bool shell=false;
             bool closed=true;
             bool cache=false;
+            bool exclude=false;
             std::map<size_t,double> dDistanceCache;
             #ifdef CNEARTREE_INSTRUMENTED
             std::map<size_t,size_t> sDistanceCacheHits;
@@ -6645,8 +7286,38 @@ public:
             DistanceTypeNode tmpdRadiusInner=0;
             const TNode ttmp = t;
             std::vector<TNode> probe_container={ttmp};
-            return K_Extreme(k, near, shell, closed, cache, dDistanceCache, 
-                tmpdRadiusInner, dRadiusOuter, tClosest, probe_container
+            return K_Extreme(k, near, shell, closed, cache, exclude, dDistanceCache, 
+                sExclusionSet, tmpdRadiusInner, dRadiusOuter, tClosest, probe_container
+                #ifdef CNEARTREE_INSTRUMENTED
+              , VisitCount
+	      , sDistanceCacheHits 
+                #endif
+            );
+        } 
+        inline long K_Near ( 
+                       const size_t k,
+                       std::set<size_t>& sExclusionSet,
+                       DistanceTypeNode& dRadiusOuter,
+                       std::vector<std::pair<DistanceTypeNode,size_t> >& tClosest,
+                       const TNode& t
+                       #ifdef CNEARTREE_INSTRUMENTED
+                     , size_t& VisitCount
+                       #endif
+        ) {
+            bool near=true;
+            bool shell=false;
+            bool closed=true;
+            bool cache=false;
+            bool exclude=true;
+            std::map<size_t,double> dDistanceCache;
+            #ifdef CNEARTREE_INSTRUMENTED
+            std::map<size_t,size_t> sDistanceCacheHits;
+            #endif
+            DistanceTypeNode tmpdRadiusInner=0;
+            const TNode ttmp = t;
+            std::vector<TNode> probe_container={ttmp};
+            return K_Extreme(k, near, shell, closed, cache, exclude, dDistanceCache, 
+                sExclusionSet, tmpdRadiusInner, dRadiusOuter, tClosest, probe_container
                 #ifdef CNEARTREE_INSTRUMENTED
               , VisitCount
 	      , sDistanceCacheHits 
@@ -6846,6 +7517,11 @@ public:
         //  long K_Far ( const DistanceTypeNode dRadius, 
         //      std::vector<std::pair<DistanceTypeNode,size_t> >& tFarthest,
         //       tFarthest, const TNode& t ) const
+        //  long K_Far ( const DistanceTypeNode dRadius,
+        //      const bool exclude,
+        //      std::set<size_t>& sExclusionSet,
+        //      std::vector<std::pair<DistanceTypeNode,size_t> >& tFarthest,
+        //       tFarthest, const TNode& t ) const
         //
         //  Private function to search a NearTree for the objects inside of 
         //     the specified radius from the probe point. Distances are stored 
@@ -6873,10 +7549,12 @@ public:
                      , size_t& VisitCount
                        #endif
         ) {
+            std::set<size_t> sExclusionSet;
             bool near=false;
             bool shell=false;
             bool closed=true;
             bool cache=false;
+            bool exclude=false;
             std::map<size_t,double> dDistanceCache;
             #ifdef CNEARTREE_INSTRUMENTED
             std::map<size_t,size_t> sDistanceCacheHits;
@@ -6884,8 +7562,38 @@ public:
             DistanceTypeNode tmpdRadiusOuter=DBL_MAX;
             const TNode ttmp = t;
             std::vector<TNode> probe_container={ttmp};
-            return K_Extreme(k, near, shell, closed, cache, dDistanceCache, 
-                dRadiusInner, tmpdRadiusOuter, tFarthest, probe_container
+            return K_Extreme(k, near, shell, closed, cache, exclude, dDistanceCache, 
+                sExclusionSet, dRadiusInner, tmpdRadiusOuter, tFarthest, probe_container
+                #ifdef CNEARTREE_INSTRUMENTED
+              , VisitCount
+	      , sDistanceCacheHits 
+                #endif
+            );
+        } 
+        inline long K_Far ( 
+                       const size_t k,
+                       std::set<size_t>& sExclusionSet,
+                       DistanceTypeNode& dRadiusInner,
+                       std::vector<std::pair<DistanceTypeNode,size_t> >& tFarthest,
+                       const TNode& t
+                       #ifdef CNEARTREE_INSTRUMENTED
+                     , size_t& VisitCount
+                       #endif
+        ) {
+            bool near=false;
+            bool shell=false;
+            bool closed=true;
+            bool cache=false;
+            bool exclude=true;
+            std::map<size_t,double> dDistanceCache;
+            #ifdef CNEARTREE_INSTRUMENTED
+            std::map<size_t,size_t> sDistanceCacheHits;
+            #endif
+            DistanceTypeNode tmpdRadiusOuter=DBL_MAX;
+            const TNode ttmp = t;
+            std::vector<TNode> probe_container={ttmp};
+            return K_Extreme(k, near, shell, closed, cache, exclude, dDistanceCache, 
+                sExclusionSet, dRadiusInner, tmpdRadiusOuter, tFarthest, probe_container
                 #ifdef CNEARTREE_INSTRUMENTED
               , VisitCount
 	      , sDistanceCacheHits 

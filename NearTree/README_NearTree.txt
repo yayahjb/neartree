@@ -1,9 +1,15 @@
+   +------------------------------------------------------------------------+
+   | CVector | Get NearTree at SourceForge.net. Fast, secure and Free Open  |
+   |         |                  Source software downloads                   |
+   +------------------------------------------------------------------------+
+
+     ----------------------------------------------------------------------
 
                                     NearTree
 
-                                 Release 5.1.1
-                                 24 April 2016
-     (c) Copyright 2001, 2008, 2009, 2010, 2011, 2014, 2016 Larry Andrews.
+                                  Release 6.0
+                                  21 July 2020
+   © Copyright 2001, 2008, 2009, 2010, 2011, 2014, 2016, 2020 Larry Andrews.
                               All rights reserved
                                     based on
      Lawrence C. Andrews, Herbert J. Bernstein, "NearTree, a data structure
@@ -41,6 +47,7 @@
                          23 April 2016 Release 5.0 HJB
                          25 April 2016 Release 5.1 LCA
                     30 April 2016 Release 5.1.1 LCA and HJB
+                          21 July 2020 Release 6.0 HJB
 
     YOU MAY REDISTRIBUTE NearTree UNDER THE TERMS OF THE LGPL
 
@@ -65,6 +72,9 @@
    This is a release of an API for finding nearest neighbors among points in
    spaces of arbitrary dimensions. This release provides a C++ template,
    TNear.h, and a C library, CNearTree.c, with example/test programs.
+
+   Released 6.0 added a hook to use the CS6Dist metric and removed all the
+   Left... variants.
 
    Release 5.1.1 added a pdf of the 2001 Dr. Dobbs article, added with
    permission of the editor.
@@ -343,9 +353,7 @@
    or a stack (current version) for searches instead of a double-linked tree
    and simplified. The default search algorithm no longer favors the left
    branch first, but follows the more balanced Kalantari and McDonald
-   approach. The prior search algorithm is available in "Left" versions of
-   the search routines doing a bit less checking for things like is the
-   distance to the right less than the distance to the left.
+   approach.
 
    This template is used to contain a collection of objects. After the
    collection has been loaded into this structure, it can be quickly queried
@@ -394,14 +402,14 @@
    functionality for the template to work. For the built-in numerics of C++,
    they are provided by the system.
 
- DistanceType Norm( void ); 
-                            // a function "Norm( void )" of the templated class 
-                            // to return DistanceType (usually will return a    
-                            // "length" of type double)                         
- operator- ( );             // geometrical (vector) difference of two objects   
-                            // a copy constructor would be nice                 
-                            // a constructor would be nice                      
-                            // a destructor would be nice                       
+DistanceType Norm( void ); 
+                           // a function "Norm( void )" of the templated class 
+                           // to return DistanceType (usually will return a    
+                           // "length" of type double)                         
+operator- ( );             // geometrical (vector) difference of two objects   
+                           // a copy constructor would be nice                 
+                           // a constructor would be nice                      
+                           // a destructor would be nice                       
 
    The provided interface is:
 
@@ -600,33 +608,6 @@
         return value is true if some object was found, false otherwise
            If false is returned, tFarthest is invalid (at best).
 
-     iterator LeftNearestNeighbor ( const DistanceType & dRadius, const T& t ) const;
-        returns an iterator to the nearest point to the probe point t or end() if there is none
-     bool LeftNearestNeighbor ( const DistanceType& dRadius,  T& tClosest,   const T& t ) const;
-        dRadius is the largest radius within which to search; make it
-           very large if you want to include every point that was loaded.
-        tClosest is returned as the object that was found closest to the probe
-           point (if any were within radius dRadius of the probe)
-        t is the probe point, used to search in the group of points insert'ed
-
-        return value is true if some object was found within the search radius, false otherwise.
-            If false is returned, tClosest is invalid (at best).
-
-
-     iterator LeftFarthestNeighbor ( T& const T& t ) const;
-        returns an iterator to the nearest point to the probe point t or end() if there is none
-     bool LeftFarthestNeighbor ( T& tFarthest,   const T& t ) const;
-        tFarthest is returned as the object that was found farthest from the probe
-           point
-        t is the probe point, used to search in the group of points Insert'ed
-        return value is true if some object was found, false otherwise
-           If false is returned, tFarthest is invalid (at best).
-
-     The "Left..." versions of NearestNeighbor and FarthestNeighbor are deprecated versions
-     provided for compatibility with earlier releases of NearTree.  There are also "Short..."
-     and "LeftShort..." versions of NearestNeighbor to support experimental prepruning logic.
-
-
      The following functions (BelongsToPoints, SeparateByRadius, FindInSphere, FindOutSphere,
      and FindInAnnulus) all return a container (ContainerType) that can be any standard library
      container (such as std::vector< T >) or CNearTree.
@@ -695,24 +676,7 @@
           std::vector<size_t>& tIndices, const T& t ) const;
      long FindInSphere ( const DistanceType& dRadius,
           CNearTree<  T >& tInside,  const T& t ) const;
-     long LeftFindInSphere ( const DistanceType& dRadius, 
-          ContainerType& tInside,   const T& t ) const;
-     long LeftFindInSphere ( const DistanceType& dRadius, 
-          ContainerType& tInside,  
-          std::vector<size_t>& tIndices, const T& t ) const;
-     long LeftFindInSphere ( const DistanceType& dRadius,
-          CNearTree<  T >& tInside,  const T& t ) const;
-        dRadius is the radius within which to search; make it very large if you want to
-            include every point that was loaded;
-        tInside is returned as the NearTree or container of objects that were found within a radius dRadius
-           of the probe point
-        if the tIndices argument is given it will be returned as a vector
-           of indices in the near tree of the objects returned.
-        t is the probe point, used to search in the group of points Insert'ed
-
         return value is the count of the number of points found within the search radius
-        the "Left..." versions are deprecated versions provided for compatibility with
-        earlier NearTree releases.
 
      long FindOutSphere ( const DistanceType& dRadius,
           ContainerType& tOutside,   const T& t ) const;
@@ -721,23 +685,7 @@
           std::vector<size_t>& tIndices, const T& t ) const;
      long FindOutSphere ( const DistanceType& dRadius,
           CNearTree<  T >& tOutside,   const T& t ) const;
-     long LeftFindOutSphere ( const DistanceType& dRadius,
-          ContainerType& tOutside,   const T& t ) const;
-     long LeftFindOutSphere ( const DistanceType& dRadius,
-          ContainerType& tOutside,
-          std::vector<size_t>& tIndices, const T& t ) const;
-     long LeftFindOutSphere ( const DistanceType& dRadius,
-          CNearTree<  T >& tOutside,   const T& t ) const;
-        dRadius is the radius outside of which to search
-        tOutside is returned as the NearTree or container of objects that were found at
-           or outside of radius dRadius of the probe point
-        if the tIndices argument is given it will be returned as a vector
-           of indices in the near tree of the objects returned.
-        t is the probe point, used to search in the group of points Insert'ed
-
         return value is the count of the number of points found outside the search radius
-        the "Left..." versions are deprecated versions provided for compatibility with
-        earlier NearTree releases.
     
      long FindInAnnulus ( const DistanceType& dRadius1,
           const DistanceType& dRadius2,
@@ -749,51 +697,33 @@
      long FindInAnnulus ( const DistanceType& dRadius1,
           const DistanceType& dRadius2,
           CNearTree<  T >& tInRing,   const T& t ) const;
-     long LeftFindInAnnulus ( const DistanceType& dRadius1,
-          const DistanceType& dRadius2,
-          ContainerType& tInRing,   const T& t ) const;
-     long LeftFindInAnnulus ( const DistanceType& dRadius1,
-          const DistanceType& dRadius2,
-          ContainerType& tInRing,
-          std::vector<size_t>& tIndices,  const T& t ) const;
-     long LeftFindInAnnulus ( const DistanceType& dRadius1,
-          const DistanceType& dRadius2,
-          CNearTree<  T >& tInRing,   const T& t ) const;
-        dRadius1 and  dRadius2 are the two radii between which to find data points
-        tInRing is returned as the NearTree or container of objects that were found at
-           or outside of a radius dRadius1 and at or inside of radius dRadius2 of the probe point
-        if the tIndices argument is given it will be returned as a vector
-           of indices in the near tree of the objects returned.
-        t is the probe point, used to search in the group of points Insert'ed
-
         return value is the count of the number of points found within the annulus
-        the "Left..." versions are deprecated versions provided for compatibility with
-        earlier NearTree releases.
     
-     long FindK_NearestNeighbors ( const size_t k, const DistanceType& dRadius,
+     long FindK_NearestNeighbors ( const size_t k,
+          const DistanceType& dRadius,
           ContainerType& tClosest, const T& t );
-     long FindK_NearestNeighbors ( const size_t k, const DistanceType& dRadius,
+     long FindK_NearestNeighbors ( const size_t k,
+          const DistanceType& dRadius,
           ContainerType& tClosest,
           std::vector<size_t>& tIndices, const T& t );
-     long FindK_NearestNeighbors ( const size_t k, const DistanceType& dRadius,
+     long FindK_NearestNeighbors ( const size_t k,
+          const DistanceType& dRadius,
           CNearTree<  T >& tClosest, const T& t );
-     long LeftFindK_NearestNeighbors ( const size_t k, const DistanceType& dRadius,
-          ContainerType& tClosest, const T& t );
-     long LeftFindK_NearestNeighbors ( const size_t k, const DistanceType& dRadius,
-          ContainerType& tClosest,
-          std::vector<size_t>& tIndices, const T& t );
-     long LeftFindK_NearestNeighbors ( const size_t k, const DistanceType& dRadius,
-          CNearTree<  T >& tClosest, const T& t );
-        k is the maximum number of nearest neighbors to return. Finds this many if possible
-        dRadius within a sphere defined by dRadius, to search for the k-nearest-neighbors
-        tClosest is returned as the ContainerType or NearTree of the objects found
-        if the tIndices argument is given it will be returned as a vector
-           of indices in the near tree of the objects returned.
-        t is the probe point, used to search in the group of points insert'ed
-
         return value is the count of the number of points found within the sphere
-        the "Left..." versions are deprecated versions provided for compatibility with
-        earlier NearTree releases.
+     long FindK_NearestNeighbors ( const size_t k,
+          std::vector<size_t>& ExclusionVector,
+          const DistanceType& dRadius,
+          ContainerType& tClosest, const T& t );
+     long FindK_NearestNeighbors ( const size_t k,
+          std::vector<size_t>& ExclusionVector,
+          const DistanceType& dRadius,
+          ContainerType& tClosest,
+          std::vector<size_t>& tIndices, const T& t );
+     long FindK_NearestNeighbors ( const size_t k,
+          std::vector<size_t>& ExclusionVector,
+          const DistanceType& dRadius,
+          CNearTree<  T >& tClosest, const T& t );
+        return value is the count of the number of points found within the sphere
 
 
      long FindK_FarthestNeighbors ( const size_t k,
@@ -803,22 +733,7 @@
           std::vector<size_t>& tIndices, const T& t );
      long FindK_FarthestNeighbors ( const size_t k,
            CNearTree<  T >& tFarthest, const T& t );
-     long LeftFindK_FarthestNeighbors ( const size_t k,
-          ContainerType& tFarthest, const T& t );
-     long LeftFindK_FarthestNeighbors ( const size_t k,
-          ContainerType& tFarthest,
-          std::vector<size_t>& tIndices, const T& t );
-     long LeftFindK_FarthestNeighbors ( const size_t k,
-           CNearTree<  T >& tFarthest, const T& t );
-        k is the maximum number of farthest neighbors to return. Finds this many if possible
-        tFarthest is returned as the ContainerType or NearTree of the objects found
-        if the tIndices argument is given it will be returned as a vector
-           of indices in the near tree of the objects returned.
-        t is the probe point, used to search in the group of points insert'ed
-
         return value is the count of the number of points found within the sphere
-        the "Left..." versions are deprecated versions provided for compatibility with
-        earlier NearTree releases.
 
    
 
@@ -1080,10 +995,6 @@
      double dRadius, void * * coordClosest, void * * objClosest, const void *
      coord );
 
-     int CNearLeftTreeNearestNeighbor ( const CNearTreeHandle treehandle,
-     const double dRadius, void * * coordClosest, void * * objClosest, const
-     void * coord ); /* ***DEPRECATED*** */
-
      int CNearTreeFarthestNeighbor ( const CNearTreeHandle treehandle, void *
      * coordFarthest, void * * objFarthest, const void * coord );
 
@@ -1131,10 +1042,6 @@
      int CNearTreeNearest ( const CNearTreeHandle treehandle, double *
      dRadius, void * * coordClosest, void * * objClosest, const void * coord
      );
-
-     int CNearTreeLeftNearest ( const CNearTreeHandle treehandle, double *
-     dRadius, void * * coordClosest, void * * objClosest, const void * coord
-     ); /* ***DEPRECATED*** */
 
      int CNearTreeFindFarthest ( const CNearTreeHandle treehandle, double *
      dRadius, void * * coordFarthest, void * * objFarthest, const void *

@@ -724,12 +724,29 @@ The provided interface is:
          <b>CNearTree&lt;  T &gt;&amp;</b> <i>tInRing</i>,   <b>const T&amp;</b> t ) <b>const</b>;
        return value is the count of the number of points found within the annulus
     
-    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>,
+    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, 
+         <b>const DistanceType&amp;</b> <i>dRadius</i>,
          <b>ContainerType&amp;</b> <i>tClosest</i>, <b>const T&amp;</b> t );
-    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>,
+    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, 
+         <b>const DistanceType&amp;</b> <i>dRadius</i>,
          <b>ContainerType&amp;</b> <i>tClosest</i>,
          <b>std::vector&lt;size_t&gt;&amp;</b> tIndices, <b>const T&amp;</b> t );
-    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, <b>const DistanceType&amp;</b> <i>dRadius</i>,
+    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, 
+         <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>CNearTree&lt;  T &gt;&amp;</b> <i>tClosest</i>, <b>const T&amp;</b> t );
+       return value is the count of the number of points found within the sphere
+    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>,
+         <b>std::vector&lt;size_t&gt;&amp;</b> <i>ExclusionVector</i>, 
+         <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>ContainerType&amp;</b> <i>tClosest</i>, <b>const T&amp;</b> t );
+    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, 
+         <b>std::vector&lt;size_t&gt;&amp;</b> <i>ExclusionVector</i>, 
+         <b>const DistanceType&amp;</b> <i>dRadius</i>,
+         <b>ContainerType&amp;</b> <i>tClosest</i>,
+         <b>std::vector&lt;size_t&gt;&amp;</b> tIndices, <b>const T&amp;</b> t );
+    <b>long FindK_NearestNeighbors</b> ( <b>const size_t</b> <i>k</i>, 
+         <b>std::vector&lt;size_t&gt;&amp;</b> <i>ExclusionVector</i>, 
+         <b>const DistanceType&amp;</b> <i>dRadius</i>,
          <b>CNearTree&lt;  T &gt;&amp;</b> <i>tClosest</i>, <b>const T&amp;</b> t );
        return value is the count of the number of points found within the sphere
 

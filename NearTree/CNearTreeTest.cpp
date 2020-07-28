@@ -3017,7 +3017,9 @@ void testKNearFar( size_t testdim, size_t xnorm_delay )
 {
     CNearTree<int> tree;
     CNearTree<int> outTree;
+    CNearTree<int> outTree2;
     std::vector<size_t> outIndices;
+    std::vector<size_t> outIndices2;
     long flags;
     
     if (testdim == 0)  {
@@ -3057,7 +3059,7 @@ void testKNearFar( size_t testdim, size_t xnorm_delay )
                     (long)lFound0, (long)outIndices.size());
         }
     }
-    
+
     
     if (testdim == 0) {
         for( int i=0; i<100; ++i )
@@ -3069,17 +3071,33 @@ void testKNearFar( size_t testdim, size_t xnorm_delay )
             const int searchPoint = 50;
             const long nToFind1 = 13;
             const double radius1 = 1000.0;
+            const double radius2 = 6.5;
             
             const size_t lFound1 = tree.FindK_NearestNeighbors(
                                                                nToFind1,
                                                                radius1,
                                                                outTree,
+                                                               outIndices,
                                                                searchPoint );
             outTree.CompleteDelayedInsert( );
-            if( lFound1 != 13 )
+            if( lFound1 != 13 || outIndices.size() != 13 )
             {
                 ++g_errorCount;
                 fprintf(stdout, "testKNearFar, Near: #1: found wrong count %ld\n", (long)lFound1 );
+            }
+
+            const size_t lFound2 = tree.FindK_NearestNeighbors(
+                                                               nToFind1,
+                                                               outIndices,
+                                                               radius2,
+                                                               outTree2,
+                                                               outIndices2,
+                                                               searchPoint );
+            outTree.CompleteDelayedInsert( );
+            if( lFound2 != 0  )
+            {
+                ++g_errorCount;
+                fprintf(stdout, "testKNearFar, Near: #1: found wrong count %ld after exclusion\n", (long)lFound2 );
             }
         }
         

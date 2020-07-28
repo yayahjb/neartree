@@ -54,14 +54,15 @@ SHELL = /bin/bash
 #
 CC	= gcc
 CXX     = g++
+OPTLEVEL = -O3
 ifneq ($(MSYSTEM),MINGW32)
-CFLAGS  = -g -O3  -Wall  -ansi -pedantic -DCNEARTREE_SAFE_TRIANG=1
+CFLAGS  = -g $(OPTLEVEL)  -Wall  -ansi -pedantic -DCNEARTREE_SAFE_TRIANG=1
 TIME = time
 else
 CFLAGS  = -g -O2 -Wall  -DCNEARTREE_SAFE_TRIANG=1
 TIME = 
 endif
-CXXFLAGS = $(CFLAGS) -std=C++11
+CXXFLAGS = $(CFLAGS) -std=c++11
 
 #
 # libtool path if system default is not suitable
@@ -122,7 +123,7 @@ COMPILE_COMMAND        =  $(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(INCLUDES) 
 CPPCOMPILE_COMMAND     =  $(LIBTOOL) --mode=compile $(CXX) $(CXXFLAGS) $(INCLUDES) $(WARNINGS) -c
 LIBRARY_LINK_COMMAND   =  $(LIBTOOL) --mode=link $(CC) -version-info $(VERSION) -no-undefined -rpath $(INSTALL_PREFIX)/lib
 BUILD_COMMAND_LOCAL    =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) $(INCLUDES)
-CPPBUILD_COMMAND_LOCAL =  $(LIBTOOL) --mode=link $(CXX) -no-undefined $(CCCFLAGS) $(INCLUDES)
+CPPBUILD_COMMAND_LOCAL =  $(LIBTOOL) --mode=link $(CXX) -no-undefined $(CXXFLAGS) $(INCLUDES)
 BUILD_COMMAND_DYNAMIC  =  $(LIBTOOL) --mode=link $(CC) -no-undefined $(CFLAGS) -shared -I$(INSTALL_PREFIX)/include
 BUILD_COMMAND_STATIC   =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) -static-libtool-libs -I$(INSTALL_PREFIX)/include
 INSTALL_COMMAND        =  $(LIBTOOL) --mode=install cp
