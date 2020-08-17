@@ -1172,15 +1172,20 @@ extern "C" {
         double estdimsq = 0.;
         size_t trials;
         size_t n, ii;
-        size_t probe_index;
+        static size_t probe_index;
         double testlim;
         double meanSpacing;
         double pointdensity;
         double targetradius;
         double rat;
         double shrinkfactor;
-        double dummy;
-        int bResult;
+        static double dummy;
+        static int bResult;
+        struct {
+            void* probe_index;
+            void* dummy_ADDRESS;
+            void* bResult_ADDRESS;
+        } SET_VAR_USE = {&probe_index, &dummy, &bResult};
         size_t elsize;
         long goodtrials;
         
@@ -1190,7 +1195,8 @@ extern "C" {
         if ( !treehandle || !dimest ) return CNEARTREE_BAD_ARGUMENT;
         
         if ( treehandle->m_DelayedIndices ) {
-            if (CNearTreeCompleteDelayedInsert(treehandle)!=CNEARTREE_SUCCESS) return CNEARTREE_BAD_ARGUMENT;
+            if (CNearTreeCompleteDelayedInsert(treehandle)!=CNEARTREE_SUCCESS) 
+                return CNEARTREE_BAD_ARGUMENT;
         }
         
         elsize = sizeof(double);

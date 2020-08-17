@@ -1,7 +1,8 @@
 #ifndef S6_WITH_CS6DIST_H
 #define S6_WITH_CS6DIST_H
 #include "S6.h"
-#include "CS6Dist.h"
+/* #include "CS6Dist.h" */
+double CS6Dist(double ds1[6], double ds2[6]);
 #include <cmath>
 class S6_with_CS6Dist : public S6
 {

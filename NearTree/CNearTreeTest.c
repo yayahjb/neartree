@@ -226,6 +226,8 @@ void testEmptyTree( void )
         ++g_errorCount;
         fprintf(stdout, "CNearTreeTest: testEmptyTree: CNearTreeFree failed\n");
     }
+    (void)nFar;
+    (void)close;
 }
 
 /*
@@ -514,7 +516,7 @@ void testFindLastObject( void )
     int count;
     
     count = 0;
-    fFinal = DBL_MAX;
+    fFinal = DBL_MAX; (void)fFinal;
     bReturn = !CNearTreeCreate(&tree,1,CNEARTREE_TYPE_DOUBLE);
     if (!bReturn)
     {
@@ -1549,6 +1551,7 @@ void testBigVector(  )
             fprintf(stdout, "CNearTreeTest: testBigVector: CNearTreeFree has failed\n" );
         }
     }
+    (void)vExtreme;
 }
 
 /*=======================================================================*/

@@ -56,10 +56,10 @@ CC	= gcc
 CXX     = g++
 OPTLEVEL = -O3
 ifneq ($(MSYSTEM),MINGW32)
-CFLAGS  = -g $(OPTLEVEL)  -Wall  -ansi -pedantic -DCNEARTREE_SAFE_TRIANG=1
+CFLAGS  = -g $(OPTLEVEL) -fopenmp  -Wall  -ansi -pedantic -DCNEARTREE_SAFE_TRIANG=1
 TIME = time
 else
-CFLAGS  = -g -O2 -Wall  -DCNEARTREE_SAFE_TRIANG=1
+CFLAGS  = -g -fopenmp -O2 -Wall  -DCNEARTREE_SAFE_TRIANG=1
 TIME = 
 endif
 CXXFLAGS = $(CFLAGS) -std=c++11
@@ -296,43 +296,55 @@ $(BIN)/CPPMain: $(INC)/TNear.h $(EXAMPLES)/main.cpp $(EXAMPLES)/v.cpp $(BIN)
 $(BIN)/CPPMain_Flip: $(INC)/TNear.h $(EXAMPLES)/main_flip.cpp $(EXAMPLES)/v.cpp $(BIN)
 	$(CPPBUILD_COMMAND_LOCAL) $(EXAMPLES)/main_flip.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
 		  -o $@
-		  
-$(BIN)/CPPNearTreeTest: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
+		 
+CS6Dist.$(OBJ_EXT):	CS6Dist.c
+	$(CPPCOMPILE_COMMAND) CS6Dist.c -o CS6Dist.$(OBJ_EXT)
+ 
+$(BIN)/CPPNearTreeTest: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN) CS6Dist.$(OBJ_EXT)
 	$(CPPBUILD_COMMAND_LOCAL) $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
+	CS6Dist.$(OBJ_EXT) \
 		  -o $@
 
-$(BIN)/CPPNearTreeTest_2SAMP: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
+$(BIN)/CPPNearTreeTest_2SAMP: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN) CS6Dist.$(OBJ_EXT)
 		$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_DIMSAMPLES=2 $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
+		CS6Dist.$(OBJ_EXT) \
 		  -o $@
 
-$(BIN)/CPPNearTreeTest_6SAMP: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
+$(BIN)/CPPNearTreeTest_6SAMP: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN) CS6Dist.$(OBJ_EXT)
 	$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_DIMSAMPLES=6 $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
+	CS6Dist.$(OBJ_EXT) \
 		  -o $@
 
 
-$(BIN)/CPPNearTreeTest_8SAMP: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
+$(BIN)/CPPNearTreeTest_8SAMP: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN) CS6Dist.$(OBJ_EXT)
 		$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_DIMSAMPLES=8 $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
+		CS6Dist.$(OBJ_EXT) \
 		  -o $@
 
 
-$(BIN)/CPPNearTreeTestInst: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
+$(BIN)/CPPNearTreeTestInst: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN) CS6Dist.$(OBJ_EXT)
 	$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
-		  -o $@
+	CS6Dist.$(OBJ_EXT) \
+	  -o $@
 
-$(BIN)/CPPNearTreeTestInstFlip: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
+$(BIN)/CPPNearTreeTestInstFlip: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN) CS6Dist.$(OBJ_EXT)
 	$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED -DCNEARTREE_FORCEFLIP $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
-		  -o $@
+	CS6Dist.$(OBJ_EXT) \
+	  -o $@
 		  
-$(BIN)/CPPNearTreeTestInstNoDefer: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
+$(BIN)/CPPNearTreeTestInstNoDefer: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN) CS6Dist.$(OBJ_EXT)
 	$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED -DCNEARTREE_NODEFER $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
+	CS6Dist.$(OBJ_EXT) \
 		  -o $@
 
-$(BIN)/CPPNearTreeTestInstNoFlip: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
+$(BIN)/CPPNearTreeTestInstNoFlip: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN) CS6Dist.$(OBJ_EXT)
 	$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED -DCNEARTREE_NOFLIP $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
+	CS6Dist.$(OBJ_EXT) \
 		      -o $@
 
-$(BIN)/CPPNearTreeTestInstNoFlipNoDefer: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
+$(BIN)/CPPNearTreeTestInstNoFlipNoDefer: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN) CS6Dist.$(OBJ_EXT)
 	$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED -DCNEARTREE_NOFLIP -DCNEARTREE_NODEFER $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
+	CS6Dist.$(OBJ_EXT) \
 		  -o $@
 		  
 $(BIN)/CMain: $(INC)/CNearTree.h $(EXAMPLES)/main.c $(SRC)/CNearTree.c $(BIN) $(LIB)/libCNearTree.$(LIB_EXT)
@@ -394,12 +406,11 @@ empty:
 #
 clean:
 	@-rm -f core 
-	@-rm -f *.o
 	@-rm -f *.$(OBJ_EXT)
 	@-rm -f *.c.*
 	@-rm -rf .libs
-	@-rm CMain.lst
-	@-rm CPPMain.lst
+	@-rm -f CMain.lst
+	@-rm -f CPPMain.lst
 
 #
 # Restore to distribution state
