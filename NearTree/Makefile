@@ -76,11 +76,8 @@ endif
 #USE_LOCAL_HEADERS = 1
 
 #
-# Uncomment the next two lines if CVector is installed locally in $(HOME)/include
-# and $(HOME)/lib
-#
-#CVECTOR_INCLUDE = -I$(HOME)/include 
-#CVECTOR_LIBLOC = -L$(HOME)/lib
+CVECTOR_INCLUDE = -I$(NEARTREE_PREFIX)/include
+CVECTOR_LIBLOC = -L$(NEARTREE_PREFIX)/lib
 
 #
 # Directories
@@ -92,10 +89,7 @@ SRC      = $(ROOT)
 INC      = $(ROOT)
 EXAMPLES = $(ROOT)
 TESTDATA = $(ROOT)
-ifndef INSTALL_PREFIX
-INSTALL_PREFIX = /usr/local
-#INSTALL_PREFIX  = $(HOME)
-endif
+NEARTREE_PREFIX ?= /usr/local
 
 #
 # Include directories
@@ -119,11 +113,11 @@ CLIBRARIES = $(CVECTOR_LIBLOC) -lCVector -lm
 
 COMPILE_COMMAND        =  $(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(INCLUDES) $(WARNINGS) -c
 CPPCOMPILE_COMMAND     =  $(LIBTOOL) --mode=compile $(CXX) $(CFLAGS) $(INCLUDES) $(WARNINGS) -c
-LIBRARY_LINK_COMMAND   =  $(LIBTOOL) --mode=link $(CC) -version-info $(VERSION) -no-undefined -rpath $(INSTALL_PREFIX)/lib
+LIBRARY_LINK_COMMAND   =  $(LIBTOOL) --mode=link $(CC) -version-info $(VERSION) -no-undefined -rpath $(NEARTREE_PREFIX)/lib
 BUILD_COMMAND_LOCAL    =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) $(INCLUDES)
 CPPBUILD_COMMAND_LOCAL =  $(LIBTOOL) --mode=link $(CXX) -no-undefined $(CFLAGS) $(INCLUDES)
-BUILD_COMMAND_DYNAMIC  =  $(LIBTOOL) --mode=link $(CC) -no-undefined $(CFLAGS) -shared -I$(INSTALL_PREFIX)/include
-BUILD_COMMAND_STATIC   =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) -static-libtool-libs -I$(INSTALL_PREFIX)/include
+BUILD_COMMAND_DYNAMIC  =  $(LIBTOOL) --mode=link $(CC) -no-undefined $(CFLAGS) -shared -I$(NEARTREE_PREFIX)/include
+BUILD_COMMAND_STATIC   =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) -static-libtool-libs -I$(NEARTREE_PREFIX)/include
 INSTALL_COMMAND        =  $(LIBTOOL) --mode=install cp
 INSTALL_FINISH_COMMAND =  $(LIBTOOL) --mode=finish
 
@@ -197,7 +191,7 @@ endif
 	@echo ' '
 	@echo ' The current values are :'
 	@echo ' '
-	@echo '   $(INSTALL_PREFIX) '	
+	@echo '   $(NEARTREE_PREFIX) '	
 	@echo '   $(INSTALL_COMMAND) '	
 	@echo '   $(INSTALL_FINISH) '	
 	@echo ' '
@@ -228,28 +222,28 @@ all:	$(LIB) $(BIN) $(SOURCE) $(HEADERS) \
 		$(LIB)/libCNearTree.$(LIB_EXT) \
 		$(BIN)/CPPMain $(BIN)/CMain $(BIN)/CPPNearTreeTest $(BIN)/CNearTreeTest $(BIN)/CNearTreeTestInst 
 		
-install:  all $(INSTALL_PREFIX) $(INSTALL_PREFIX)/lib $(INSTALL_PREFIX)/include \
+install:  all $(NEARTREE_PREFIX) $(NEARTREE_PREFIX)/lib $(NEARTREE_PREFIX)/include \
 		  $(INC) $(LIB)/libCNearTree.$(LIB_EXT)  $(INC)/TNear.h $(INC)/CNearTree.h \
 		  $(INC)/rhrand.h $(INC)/triple.h
-		  $(INSTALL_COMMAND) $(LIB)/libCNearTree.$(LIB_EXT) $(INSTALL_PREFIX)/lib/libCNearTree.$(LIB_EXT)
-		  $(INSTALL_FINISH_COMMAND) $(INSTALL_PREFIX)/lib/libCNearTree.$(LIB_EXT)
-		  -cp $(INSTALL_PREFIX)/include/TNear.h $(INSTALL_PREFIX)/include/TNear_old.h
-		  -cp $(INSTALL_PREFIX)/include/CNearTree.h $(INSTALL_PREFIX)/include/CNearTree_old.h
-		  cp $(INC)/TNear.h $(INSTALL_PREFIX)/include/TNear.h
-		  cp $(INC)/rhrand.h $(INSTALL_PREFIX)/include/rhrand.h
-		  cp $(INC)/triple.h $(INSTALL_PREFIX)/include/triple.h
-		  cp $(INC)/CNearTree.h $(INSTALL_PREFIX)/include/CNearTree.h
-		  chmod 644 $(INSTALL_PREFIX)/include/TNear.h
-		  chmod 644 $(INSTALL_PREFIX)/include/CNearTree.h
-		  chmod 644 $(INSTALL_PREFIX)/include/rhrand.h
-		  chmod 644 $(INSTALL_PREFIX)/include/triple.h
+		  $(INSTALL_COMMAND) $(LIB)/libCNearTree.$(LIB_EXT) $(NEARTREE_PREFIX)/lib/libCNearTree.$(LIB_EXT)
+		  $(INSTALL_FINISH_COMMAND) $(NEARTREE_PREFIX)/lib/libCNearTree.$(LIB_EXT)
+		  -cp $(NEARTREE_PREFIX)/include/TNear.h $(NEARTREE_PREFIX)/include/TNear_old.h
+		  -cp $(NEARTREE_PREFIX)/include/CNearTree.h $(NEARTREE_PREFIX)/include/CNearTree_old.h
+		  cp $(INC)/TNear.h $(NEARTREE_PREFIX)/include/TNear.h
+		  cp $(INC)/rhrand.h $(NEARTREE_PREFIX)/include/rhrand.h
+		  cp $(INC)/triple.h $(NEARTREE_PREFIX)/include/triple.h
+		  cp $(INC)/CNearTree.h $(NEARTREE_PREFIX)/include/CNearTree.h
+		  chmod 644 $(NEARTREE_PREFIX)/include/TNear.h
+		  chmod 644 $(NEARTREE_PREFIX)/include/CNearTree.h
+		  chmod 644 $(NEARTREE_PREFIX)/include/rhrand.h
+		  chmod 644 $(NEARTREE_PREFIX)/include/triple.h
 		  echo "Testing final install static"
 		  $(BUILD_COMMAND_STATIC) $(INCLUDES) $(EXAMPLES)/CNearTreeTest.c \
-		  -L$(INSTALL_PREFIX)/lib -lCNearTree $(CLIBRARIES) -o $(BIN)/CNearTreeTest_static
+		  -L$(NEARTREE_PREFIX)/lib -lCNearTree $(CLIBRARIES) -o $(BIN)/CNearTreeTest_static
 		  $(BIN)/CNearTreeTest_static 
 		  echo "Testing final install dynamic"
 		  $(BUILD_COMMAND_DYNAMIC) $(INCLUDES) $(EXAMPLES)/CNearTreeTest.c \
-		  -L$(INSTALL_PREFIX)/lib -lCNearTree $(CLIBRARIES) -o $(BIN)/CNearTreeTest_dynamic
+		  -L$(NEARTREE_PREFIX)/lib -lCNearTree $(CLIBRARIES) -o $(BIN)/CNearTreeTest_dynamic
 		  $(BIN)/CNearTreeTest_dynamic 
 		
 		  
@@ -257,17 +251,17 @@ install:  all $(INSTALL_PREFIX) $(INSTALL_PREFIX)/lib $(INSTALL_PREFIX)/include 
 #
 # Directories
 #
-$(INSTALL_PREFIX):
-	mkdir -p $(INSTALL_PREFIX)
+$(NEARTREE_PREFIX):
+	mkdir -p $(NEARTREE_PREFIX)
 
-$(INSTALL_PREFIX)/lib:  $(INSTALL_PREFIX)
-	mkdir -p $(INSTALL_PREFIX)/lib
+$(NEARTREE_PREFIX)/lib:  $(NEARTREE_PREFIX)
+	mkdir -p $(NEARTREE_PREFIX)/lib
 
-$(INSTALL_PREFIX)/bin:  $(INSTALL_PREFIX)
-	mkdir -p $(INSTALL_PREFIX)/bin
+$(NEARTREE_PREFIX)/bin:  $(NEARTREE_PREFIX)
+	mkdir -p $(NEARTREE_PREFIX)/bin
 
-$(INSTALL_PREFIX)/include:  $(INSTALL_PREFIX)
-	mkdir -p $(INSTALL_PREFIX)/include
+$(NEARTREE_PREFIX)/include:  $(NEARTREE_PREFIX)
+	mkdir -p $(NEARTREE_PREFIX)/include
 	
 
 $(LIB):
