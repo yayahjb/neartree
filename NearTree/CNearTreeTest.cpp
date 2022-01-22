@@ -146,7 +146,6 @@ fprintf( stdout, "%s time %f, visits %ld \n", idstring, ((double)(tc2-tc1))/CLOC
 /*=======================================================================*/
 int main(int argc, char* argv[])
 {
-    size_t testdim;
     size_t norm_delay;
     g_errorCount = 0;
     
@@ -756,17 +755,6 @@ void testFindInSphereFromBottom( void )
             fprintf(stdout, "FindInSphere failed in testFindInSphereFromBottom for i=%d\n", i );
         }
     }
-    for( int i=1; i<=nmax; ++i )
-    {
-        const double radius = 0.05 + (double)i;
-        CNearTree<double> sphereReturn;
-        const long lReturned = tree.LeftFindInSphere( radius, sphereReturn, 0.9 );
-        if( lReturned != (long)i )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "LeftFindInSphere failed in testFindInSphereFromBottom for i=%d\n", i );
-        }
-    }
     
 }  //  end testFindInSphereFromBottom
 
@@ -1291,8 +1279,8 @@ class vecn
 public:
     std::vector< double > pd;
     int dim;
-    size_t delay;
     double length;  // just for a signature for debugging
+    size_t delay;
     vecn( ) :
     dim(17), length(0), delay(norm_delay)
     {
@@ -1643,190 +1631,6 @@ void testBigVector(  )
                     }}
                     });
     
-    timetreecommand(tree,"FarthestNeighbor Left",{
-                    {size_t estdim = (size_t)(0.5+tree.GetDimEstimate());;
-                    if ( estdim < 6) {
-                    ++g_errorCount;   
-                    fprintf(stdout, "testBigVector: dimension estimate %ld <6 \n",(long)estdim);
-                    } else {
-                    fprintf(stdout, "testBigVector: dimension estimate %ld\n",(long)estdim);
-                    }
-                    
-                    {
-                    /* Find the point farthest from the point that was nearest the origin. */
-                    vec17 vFarthest;
-                    tree.LeftFarthestNeighbor( vFarthest, v17min );
-                    
-                    /* Brute force search for the farthest */
-                    vec17 vSearch;
-                    double dmax = -DBL_MAX;
-                    for( int i=0; i<vectorsize; ++i )
-                    {
-                    if( ( vAll[i] - v17min ).Norm( ) > dmax )
-                    {
-                    dmax = ( vAll[i] - v17min ).Norm( );
-                    vSearch = vAll[i];
-                    }
-                    }
-                    
-                    double distdiff = ( (vSearch-v17min) - (vFarthest-v17min) ).Norm( );
-                    distdiff = (distdiff<0)?-distdiff:distdiff;
-                    if( distdiff > DBL_MIN )
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "in testBigVector, apparently LeftFarthestNeighbor has failed\n" );
-                    }
-                    }
-                    
-                    {
-                    /* somewhere in the middle, find a point and its nearest neighbor */
-                    /* make sure that each includes the other in sphere search */
-                    
-                    const vec17 vBox17Center( (double)(RHrand::RHRAND_MAX/2) );
-                    vec17 vNearCenter;
-                    vec17 vCloseToNearCenter;
-                    tree.LeftNearestNeighbor( double(RHrand::RHRAND_MAX/2)*sqrt(17.), vNearCenter, vBox17Center );
-                    CNearTree<vec17> sphereReturn;
-                    std::vector<size_t> sphereIndices;
-                    unsigned long iFoundNearCenter = (unsigned long)tree.LeftFindInSphere( double(RHrand::RHRAND_MAX/2)*sqrt(17.)/2., sphereReturn, vNearCenter );
-                    
-                    /* Brute force search for the point closest to the point closest to the center */
-                    double dmin = DBL_MAX;
-                    for( unsigned long i=0; i<iFoundNearCenter; ++i )
-                    {
-                    if( (vNearCenter - sphereReturn[i]).Norm( ) > DBL_MIN && ( vNearCenter-sphereReturn[i] ).Norm( ) < dmin )
-                    {
-                    dmin = ( vNearCenter-sphereReturn[i] ).Norm( );
-                    vCloseToNearCenter = sphereReturn[i];
-                    }
-                    }
-                    
-                    {
-                    //const double radius = ( vCloseToNearCenter - vNearCenter ).Norm( );
-                    const double radius = RHrand::RHRAND_MAX*sqrt(17.0);
-                    unsigned long iSphereFoundNearCenter = (unsigned long)tree.LeftFindInSphere( radius, sphereReturn, vNearCenter );
-                    
-                    double searchRadius = radius/2;
-                    double delta        = searchRadius;
-                    int count = 0;
-                    while( iSphereFoundNearCenter != 2 && count < 100 )
-                    {
-                    iSphereFoundNearCenter = (unsigned long)tree.LeftFindInSphere( searchRadius, sphereReturn, vNearCenter );
-                    if( iSphereFoundNearCenter > 2 )
-                    {
-                    searchRadius = searchRadius - delta/2;
-                    }
-                    else if( iSphereFoundNearCenter < 2 )
-                    {
-                    searchRadius = searchRadius + delta/2;
-                    }
-                    delta /= 2;
-                    ++count;
-                    }  // end while
-                    
-                    if( iSphereFoundNearCenter != 2 )
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "testBigVector: LeftFindInSphere failed to find only 2 points\n" );
-                    }
-                    }
-                    
-                    {
-                    //const double radius = ( vCloseToNearCenter - vNearCenter ).Norm( );
-                    const double radius = RHrand::RHRAND_MAX*sqrt(17.0);
-                    unsigned long iSphereFoundNearCenter = (unsigned long)tree.LeftFindInSphere( radius, sphereReturn, vNearCenter );
-                    
-                    double searchRadius = radius/2;
-                    double delta        = searchRadius;
-                    int count = 0;
-                    while( iSphereFoundNearCenter != 2 && count < 100 )
-                    {
-                    iSphereFoundNearCenter = (unsigned long)tree.LeftFindInSphere( searchRadius, sphereReturn, sphereIndices, vNearCenter );
-                    if ((size_t)iSphereFoundNearCenter != sphereIndices.size()) {
-                    ++g_errorCount;
-                    fprintf(stdout, "testBigVector: LeftFindInSphere mismatch size %ld with indices %ld\n",
-                            (long)iSphereFoundNearCenter, (long)sphereIndices.size());
-                    } else {
-                    for (size_t ii = 0; ii < sphereIndices.size(); ii++) {
-                    if ((tree[sphereIndices[ii]]-sphereReturn[ii]).Norm() != 0.) {
-                    fprintf(stdout, "testBigVector: LeftFindInSphere mismatch tree[%ld] != sphereReturn[%ld]\n",
-                            (long)sphereIndices[ii], (long)ii);
-                    }
-                    }
-                    }
-                    if( iSphereFoundNearCenter > 2 )
-                    {
-                    searchRadius = searchRadius - delta/2;
-                    }
-                    else if( iSphereFoundNearCenter < 2 )
-                    {
-                    searchRadius = searchRadius + delta/2;
-                    }
-                    delta /= 2;
-                    ++count;
-                    }  // end while
-                    
-                    if( iSphereFoundNearCenter != 2 || sphereIndices.size() != 2 )
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "testBigVector: Left FindInSphere failed to find only 2 points or indices !=2\n" );
-                    }
-                    }
-                    
-                    if( dmin == DBL_MAX ) 
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "testBigVector: apparently LeftFindInSphere failed\n" );
-                    }
-                    
-                    {
-                    /* Using zero radius, check that only one point is found when a point is searched
-     with FindInSphere */
-                    sphereReturn.clear( );
-                    const long iFound = tree.LeftFindInSphere( 0.0, sphereReturn, vNearCenter );
-                    if( iFound < 1 )
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "testBigVector: LeftFindInSphere found no points using zero radius\n" );
-                    }
-                    else if( iFound != 1 )
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "testBigVector: LeftFindInSphere found more than %ld points using zero radius\n", iFound );
-                    }
-                    }
-                    
-                    {
-                    /* Using minimal radius, check that at least 2 points are found when a point is searched
-     with FindInSphere */
-                    sphereReturn.clear( );
-                    const long iFound = tree.LeftFindInSphere( (1.+DBL_EPSILON)*(vCloseToNearCenter-vNearCenter).Norm( ), sphereReturn, vNearCenter );
-                    if( iFound < 2 )
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "testBigVector: LeftFindInSphere found only 1 point\n" );
-                    }
-                    }
-                    
-                    {
-                    /* Using small radius, check that only one point is found when a point is searched
-     with FindInSphere */
-                    sphereReturn.clear( );
-                    const long iFound = tree.LeftFindInSphere( (vCloseToNearCenter-vNearCenter).Norm( )*0.9, sphereReturn, vNearCenter );
-                    if( iFound < 1 )
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "testBigVector: LeftFindInSphere found no points using %f radius\n", (vCloseToNearCenter-vNearCenter).Norm( )*0.9 );
-                    }
-                    else if( iFound != 1 )
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "testBigVector: LeftFindInSphere found %ld points using %f radius\n", iFound, (vCloseToNearCenter-vNearCenter).Norm( )*0.9 );
-                    }
-                    }
-                    
-                    }}
-                    });        
     
 }  // testBigVector
 
@@ -2665,33 +2469,6 @@ void testBigIntVec( void )
                     }
                     });
     
-    timetreecommand(tree, "testBigIntVector Left",{
-                    {
-                    /* Find the point farthest from the point that was nearest the origin. */
-                    intVec17 vFarthest;
-                    tree.LeftFarthestNeighbor( vFarthest, v17min );
-                    
-                    /* Brute force search for the farthest */
-                    intVec17 vSearch;
-                    double dmax = -DBL_MAX;
-                    for( int i=0; i<vectorsize; ++i )
-                    {
-                    if( ( vAll[i] - v17min ).Norm( ) > dmax )
-                    {
-                    dmax = ( vAll[i] - v17min ).Norm( );
-                    vSearch = vAll[i];
-                    }
-                    }
-                    
-                    int distdiff = (int)((vSearch-v17min).Norm( )-(vFarthest-v17min).Norm( ));
-                    distdiff = (distdiff<0)?-distdiff:distdiff;
-                    if( distdiff > DBL_MIN )
-                    {
-                    ++g_errorCount;
-                    fprintf(stdout, "in testBigIntVector Left, apparently FarthestNeighbor has failed\n" );
-                    }
-                    }
-                    });
     
     {
         /* somewhere in the middle, find a point and its nearest neighbor */
@@ -2902,21 +2679,6 @@ void test2Containers_InSphere( T1 & t1, T2 & t2 )
             fprintf(stdout, "test2Containers_InSphere: size(t2) %lu !=nFound\n", (unsigned long)t2.size( ) );
         }
     }
-    {
-        const unsigned long nFound = nt.LeftFindInSphere( 1.1, t2, 5 );
-        
-        if( nFound != 6 && nFound != 3 ) // sets do not allow duplicates
-        {
-            ++g_errorCount;
-            fprintf(stdout, "test2Containers_LeftInSphere: Found wrong # points %lu, expected 3 or 6\n", (unsigned long)nFound );
-        }
-        
-        if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
-        {
-            ++g_errorCount;
-            fprintf(stdout, "test2Containers_LeftInSphere: size(t2) %lu !=nFound\n", (unsigned long)t2.size( ) );
-        }
-    }
     
 }  //  end test2Containers_InSphere
 
@@ -2958,21 +2720,6 @@ void test2Containers_OutSphere( T1 & t1, T2 & t2 )
         }
     };
     
-    {
-        const unsigned long nFound = nt.LeftFindOutSphere( 1.1, t2, 5 );
-        
-        if( nFound != 14 && nFound != 7 ) // sets do not allow duplicates
-        {
-            ++g_errorCount;
-            fprintf(stdout, "test2Containers_LeftOutSphere: Found wrong # points %lu, expected 7 or 14\n", (unsigned long)nFound );
-        }
-        
-        if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
-        {
-            ++g_errorCount;
-            fprintf(stdout, "test2Containers_LeftOutSphere: size(t2) %lu !=nFound\n", (unsigned long)t2.size( ) );
-        }
-    };
     
 }  // end test2Containers_OutSphere
 
@@ -3013,21 +2760,6 @@ void test2Containers_InAnnulus( T1 & t1, T2 & t2 )
         }
     };
     
-    {
-        const unsigned long nFound = nt.LeftFindInAnnulus( 1.1, 3.9, t2, 5 );
-        
-        if( nFound != 8 && nFound != 4 )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "test2Containers_LeftInAnnulus: Found wrong # points %lu, expected 8 or 4\n", (unsigned long)nFound );
-        }
-        
-        if( nFound != t2.size( ) && nFound/2 != t2.size( ) ) // sets do not allow duplicates
-        {
-            ++g_errorCount;
-            fprintf(stdout, "test2Containers_LeftInAnnulus: size(t2) %lu !=nFound\n", (unsigned long)t2.size( ) );
-        }
-    };
     
 }  //  end test2Containers_InAnnulus
 
@@ -3284,7 +3016,9 @@ void testKNearFar( size_t testdim, size_t xnorm_delay )
 {
     CNearTree<int> tree;
     CNearTree<int> outTree;
+    CNearTree<int> outTree2;
     std::vector<size_t> outIndices;
+    std::vector<size_t> outIndices2;
     long flags;
     
     if (testdim == 0)  {
@@ -3302,23 +3036,6 @@ void testKNearFar( size_t testdim, size_t xnorm_delay )
         {
             ++g_errorCount;
             fprintf(stdout, "testKNearFar, Near: #0: found wrong count %ld\n",  (long)lFound0);
-        }
-    }
-    if (testdim == 0) {
-        const int searchPoint = 50;
-        const long nToFind0 = 0;
-        const double radius0 = 1000.0;
-        
-        const size_t lFound0 = tree.LeftFindK_NearestNeighbors(
-                                                               nToFind0,
-                                                               radius0,
-                                                               outTree,
-                                                               searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound0 != 0 )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Left Near: #0: found wrong count %ld\n",  (long)lFound0);
         }
     }
     
@@ -3341,28 +3058,8 @@ void testKNearFar( size_t testdim, size_t xnorm_delay )
                     (long)lFound0, (long)outIndices.size());
         }
     }
-    
-    if (testdim == 0) {
-        const int searchPoint = 50;
-        const long nToFind0 = 0;
-        const double radius0 = 1000.0;
-        
-        const size_t lFound0 = tree.LeftFindK_NearestNeighbors(
-                                                               nToFind0,
-                                                               radius0,
-                                                               outTree,
-                                                               outIndices,
-                                                               searchPoint );
-        outTree.CompleteDelayedInsert( );
-        if( lFound0 != 0 || outIndices.size() != 0 )
-        {
-            ++g_errorCount;
-            fprintf(stdout, "testKNearFar, Left Near: #0: found wrong count %ld and unexpected indices %ld \n",
-                    (long)lFound0, (long)outIndices.size());
-        }
-    }
-    
-    
+
+
     if (testdim == 0) {
         for( int i=0; i<100; ++i )
         {
@@ -3373,38 +3070,36 @@ void testKNearFar( size_t testdim, size_t xnorm_delay )
             const int searchPoint = 50;
             const long nToFind1 = 13;
             const double radius1 = 1000.0;
+            const double radius2 = 6.5;
             
             const size_t lFound1 = tree.FindK_NearestNeighbors(
                                                                nToFind1,
                                                                radius1,
                                                                outTree,
+                                                               outIndices,
                                                                searchPoint );
             outTree.CompleteDelayedInsert( );
-            if( lFound1 != 13 )
+            if( lFound1 != 13 || outIndices.size() != 13 )
             {
                 ++g_errorCount;
                 fprintf(stdout, "testKNearFar, Near: #1: found wrong count %ld\n", (long)lFound1 );
             }
-        }
-        
-        {
-            
-            const int searchPoint = 50;
-            const long nToFind1 = 13;
-            const double radius1 = 1000.0;
-            
-            const size_t lFound1 = tree.LeftFindK_NearestNeighbors(
-                                                                   nToFind1,
-                                                                   radius1,
-                                                                   outTree,
-                                                                   searchPoint );
+
+            const size_t lFound2 = tree.FindK_NearestNeighbors(
+                                                               nToFind1,
+                                                               outIndices,
+                                                               radius2,
+                                                               outTree2,
+                                                               outIndices2,
+                                                               searchPoint );
             outTree.CompleteDelayedInsert( );
-            if( lFound1 != 13 )
+            if( lFound2 != 0  )
             {
                 ++g_errorCount;
-                fprintf(stdout, "testKNearFar, Left Near: #1: found wrong count %ld\n", (long)lFound1 );
+                fprintf(stdout, "testKNearFar, Near: #1: found wrong count %ld after exclusion\n", (long)lFound2 );
             }
         }
+        
         
         {
             const int searchPoint = 50;
@@ -3434,33 +3129,6 @@ void testKNearFar( size_t testdim, size_t xnorm_delay )
             }
         }
         
-        {
-            const int searchPoint = 50;
-            const long nToFind1 = 13;
-            const double radius1 = 1000.0;
-            
-            const size_t lFound1 = tree.LeftFindK_NearestNeighbors(
-                                                                   nToFind1,
-                                                                   radius1,
-                                                                   outTree,
-                                                                   outIndices,
-                                                                   searchPoint );
-            outTree.CompleteDelayedInsert( );
-            if( lFound1 != 13 || outIndices.size() !=13)
-            {
-                ++g_errorCount;
-                fprintf(stdout, "testKNearFar, Left Near: #1: found wrong count %ld or wrong indices %ld\n",
-                        (long)lFound1, (long)outIndices.size());
-            } else {
-                for (size_t ii = 0; ii < outIndices.size(); ii++) {
-                    if (tree[outIndices[ii]] != outTree[ii]) {
-                        ++g_errorCount;
-                        fprintf(stdout, "testKNearFar, Left Near: #1: mismatch between tree[%ld] and outTree[%ld]\n",
-                                (long)outIndices[ii], (long)ii);
-                    }
-                }
-            }
-        }
         
         {
             const int searchPoint = 98;
@@ -3607,11 +3275,10 @@ void testKNearFar( size_t testdim, size_t xnorm_delay )
         const unsigned int n2Store = 100000*testdim;
         double testrad1 = (double)RHrand::RHRAND_MAX/3.;
         double testrad2 = testrad1*std::sqrt((double)(testdim));
-        size_t subspdim, ibase, i, j, k, kk;
+        size_t subspdim, ibase, i, k;
         std::vector<vecn>basis;
         vecn coeff;
         vecn datapt;
-        double coeff_norm;
         double cluster_scale[5] = {.005,.01,.05,.1,.5};
         size_t i_cluster;
         
@@ -3630,7 +3297,7 @@ void testKNearFar( size_t testdim, size_t xnorm_delay )
                 for (k=0; k < 200*subspdim && i< n2Store; k++) {
                     for (ibase=0; ibase < subspdim && i < n2Store; ibase++) {
                         basis[ibase] = vecn(testdim);
-                        for (j = 0; j < testdim; j++) {
+                        for (size_t j = 0; j < testdim; j++) {
                             datapt.pd[j] += (basis[ibase].pd[j]- ((double)RHrand::RHRAND_MAX)/2.)*cluster_scale[i_cluster];
                         }
                         tree.insert(datapt);
@@ -3655,10 +3322,10 @@ void testKNearFar( size_t testdim, size_t xnorm_delay )
                 vecn probe;
                 do {
                     probe = vecn(testdim, norm_delay);
-                    for (int ii = 0; ii < testdim; ii++) probe.pd[ii]-= (double)RHrand::RHRAND_MAX/2.;
-                    for (int ii = 0; ii < testdim; ii++) probe.pd[ii] *= (testrad1/((double)RHrand::RHRAND_MAX))/100.;
+                    for (size_t ii = 0; ii < testdim; ii++) probe.pd[ii]-= (double)RHrand::RHRAND_MAX/2.;
+                    for (size_t ii = 0; ii < testdim; ii++) probe.pd[ii] *= (testrad1/((double)RHrand::RHRAND_MAX))/100.;
                 } while (probe.Norm()>testrad1/2.);
-                for (int ii = 0; ii < testdim; ii++) probe.pd[ii]+= datapt.pd[ii];
+                for (size_t ii = 0; ii < testdim; ii++) probe.pd[ii]+= datapt.pd[ii];
                 
                 /* First do an annular search with a cache */
                 
@@ -4239,8 +3906,6 @@ void testLloyd_N( )
     vk.push_back( double(100) );
 
     std::vector<std::vector<double> > vvd = vdata.BelongsToPoints( vk );
-    const int i19191 = 19191;
-
     if (vvd.size( ) != vk.size( ))
     {
        ++g_errorCount;

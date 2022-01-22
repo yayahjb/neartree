@@ -15,8 +15,9 @@
 #
 #  Revised 31 October 2009, adding triple.h
 #
-#  Revised 8 Octber 2012, remove duplicate library load
+#  Revised 8 October 2012, remove duplicate library load
 #
+#  Revised 21 January 2022, cleanup for gcc-11
 
 
 #**********************************************************************
@@ -45,22 +46,24 @@
 #**********************************************************************/
 
 # Version string
-VERSION = 7:0:0
-RELEASE = 4.0
-
+VERSION = 7:0:1
+RELEASE = 4.0.1
+SHELL = /bin/bash
 
 #
 # Compiler and compilation flags
 #
-CC	= gcc
-CXX     = g++
+CC	?= gcc
+CXX     ?= g++
+OPTLEVEL = -O3
 ifneq ($(MSYSTEM),MINGW32)
-CFLAGS  = -g -O3  -Wall  -ansi -pedantic -DCNEARTREE_SAFE_TRIANG=1
+CFLAGS  = -g $(OPTLEVEL) -fopenmp  -Wall  -ansi -pedantic -DCNEARTREE_SAFE_TRIANG=1
 TIME = time
 else
-CFLAGS  = -g -O2 -Wall  -DCNEARTREE_SAFE_TRIANG=1
+CFLAGS  = -g -fopenmp -O2 -Wall  -DCNEARTREE_SAFE_TRIANG=1
 TIME = 
 endif
+CXXFLAGS = $(CFLAGS) -std=c++11
 
 #
 # libtool path if system default is not suitable
@@ -111,13 +114,13 @@ CPPLIBRARIES = -lm
 #
 CLIBRARIES = $(CVECTOR_LIBLOC) -lCVector -lm
 
-COMPILE_COMMAND        =  $(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(INCLUDES) $(WARNINGS) -c
-CPPCOMPILE_COMMAND     =  $(LIBTOOL) --mode=compile $(CXX) $(CFLAGS) $(INCLUDES) $(WARNINGS) -c
-LIBRARY_LINK_COMMAND   =  $(LIBTOOL) --mode=link $(CC) -version-info $(VERSION) -no-undefined -rpath $(NEARTREE_PREFIX)/lib
-BUILD_COMMAND_LOCAL    =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) $(INCLUDES)
-CPPBUILD_COMMAND_LOCAL =  $(LIBTOOL) --mode=link $(CXX) -no-undefined $(CFLAGS) $(INCLUDES)
-BUILD_COMMAND_DYNAMIC  =  $(LIBTOOL) --mode=link $(CC) -no-undefined $(CFLAGS) -shared -I$(NEARTREE_PREFIX)/include
-BUILD_COMMAND_STATIC   =  $(LIBTOOL) --mode=link $(CC) $(CFLAGS) -static-libtool-libs -I$(NEARTREE_PREFIX)/include
+COMPILE_COMMAND        =  $(LIBTOOL) --tag=CC  --mode=compile $(CC) $(CFLAGS) $(INCLUDES) $(WARNINGS) -c
+CPPCOMPILE_COMMAND     =  $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(CFLAGS) $(INCLUDES) $(WARNINGS) -c
+LIBRARY_LINK_COMMAND   =  $(LIBTOOL) --tag=CC  --mode=link $(CC) -version-info $(VERSION) -no-undefined -rpath $(NEARTREE_PREFIX)/lib
+BUILD_COMMAND_LOCAL    =  $(LIBTOOL) --tag=CC  --mode=link $(CC) $(CFLAGS) $(INCLUDES)
+CPPBUILD_COMMAND_LOCAL =  $(LIBTOOL) --tag=CXX --mode=link $(CXX) -no-undefined $(CFLAGS) $(INCLUDES)
+BUILD_COMMAND_DYNAMIC  =  $(LIBTOOL) --tag=CC  --mode=link $(CC) -no-undefined $(CFLAGS) -shared -I$(NEARTREE_PREFIX)/include
+BUILD_COMMAND_STATIC   =  $(LIBTOOL) --tag=CC  --mode=link $(CC) $(CFLAGS) -static-libtool-libs -I$(NEARTREE_PREFIX)/include
 INSTALL_COMMAND        =  $(LIBTOOL) --mode=install cp
 INSTALL_FINISH_COMMAND =  $(LIBTOOL) --mode=finish
 
@@ -288,7 +291,7 @@ $(BIN)/CPPMain: $(INC)/TNear.h $(EXAMPLES)/main.cpp $(EXAMPLES)/v.cpp $(BIN)
 $(BIN)/CPPMain_Flip: $(INC)/TNear.h $(EXAMPLES)/main_flip.cpp $(EXAMPLES)/v.cpp $(BIN)
 	$(CPPBUILD_COMMAND_LOCAL) $(EXAMPLES)/main_flip.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
 		  -o $@
-		  
+		 
 $(BIN)/CPPNearTreeTest: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
 	$(CPPBUILD_COMMAND_LOCAL) $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
 		  -o $@
@@ -309,11 +312,11 @@ $(BIN)/CPPNearTreeTest_8SAMP: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXA
 
 $(BIN)/CPPNearTreeTestInst: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
 	$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
-		  -o $@
+	  -o $@
 
 $(BIN)/CPPNearTreeTestInstFlip: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
 	$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED -DCNEARTREE_FORCEFLIP $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
-		  -o $@
+	  -o $@
 		  
 $(BIN)/CPPNearTreeTestInstNoDefer: $(INC)/TNear.h $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(BIN)
 	$(CPPBUILD_COMMAND_LOCAL) -DCNEARTREE_INSTRUMENTED -DCNEARTREE_NODEFER $(EXAMPLES)/CNearTreeTest.cpp $(EXAMPLES)/v.cpp $(CPPLIBRARIES) \
@@ -386,12 +389,11 @@ empty:
 #
 clean:
 	@-rm -f core 
-	@-rm -f *.o
 	@-rm -f *.$(OBJ_EXT)
 	@-rm -f *.c.*
 	@-rm -rf .libs
-	@-rm CMain.lst
-	@-rm CPPMain.lst
+	@-rm -f CMain.lst
+	@-rm -f CPPMain.lst
 
 #
 # Restore to distribution state
